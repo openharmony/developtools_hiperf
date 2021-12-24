@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright (c) 2021 Huawei Device Co., Ltd.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<configuration ver="2.0">
+    <target name="hiperf_unittest">
+        <preparer>
+            <option name="push" value="testdata/dummpfile -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/empytfile -> /data/test/resource/testdata/" src="res"/>
+
+            <option name="push" value="testdata/vmlinux -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/vmlinux_stripped -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/vmlinux_stripped_nobuildid -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/vmlinux_stripped_broken -> /data/test/resource/testdata/" src="res"/>
+
+            <option name="push" value="testdata/perf.data -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/proto_test -> /data/test/resource/testdata/" src="res"/>
+
+            <option name="push" value="testdata/elf_test -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf_test_stripped -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf_test_stripped_nobuildid -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf_test_stripped_broken -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf_test_stripped_noehframehdr -> /data/test/resource/testdata/" src="res"/>
+
+            <option name="push" value="testdata/elf32_test -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf32_test_stripped -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf32_test_stripped_nobuildid -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf32_test_broken -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/elf32_test_stripped_noehframehdr -> /data/test/resource/testdata/" src="res"/>
+
+            <option name="push" value="testdata/source/elf_test_source_code.cpp -> /data/testresource/testdata/" src="res"/>
+
+            <option name="push" value="testdata/ehdr_from_readelf_32 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/ehdr_from_readelf_64 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/shdrs_from_readelf_32 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/shdrs_from_readelf_64 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/phdrs_from_readelf_32 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/phdrs_from_readelf_64 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/syms_from_readelf_32 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/syms_from_readelf_64 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/symbols_file_test_elf32 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/symbols_file_test_elf32 -> /data/test/resource/testdata/" src="res"/>
+
+            <!--dwarf-->
+            <option name="push" value="testdata/dwarf/user_regs.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
+            <option name="push" value="testdata/dwarf/user_data.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
+            <option name="push" value="testdata/dwarf/hiperf_example_cmd -> /data/test/resource/testdata/dwarf/" src="res"/>
+            <option name="push" value="testdata/dwarf/hiperf_643_644_sample_record_213_6754913387560.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
+
+            <option name="push" value="testdata/dummpfile -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/empytfile -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/perf.data -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/proto_test -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report/buildid_test_elf_32 -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/buildid_test_elf_64-> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/elf32_test_broken -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/perf.data.error.format.libreport -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/perf.data.libreport -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/perf.disable.unwind.hiperf_example_cmd.data -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/hiperf_example_cmd -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/perf.dwarf.data -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/perf.dwarf.data.txt -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/libc++.so -> /data/test/resource/testdata/report/" src="res"/>
+
+            <option name="push" value="testdata/perfnew.data -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test.data -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_i.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_diff.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_sort1.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_sort2.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_symbol.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_limit.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_limit1.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_callstack.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_tids.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_tids1.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_dsos.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/report_test_funcs.txt -> /data/test/resource/testdata/" src="res"/>
+        </preparer>
+    </target>
+</configuration>

@@ -1,0 +1,17 @@
+loading data
+prepare report
+<<Hiperf Report>>
+hostname: localhost
+osrelease: 5.10.57
+arch: armv7l
+cpudesc: ARMv7 Processor rev 5 (v7l)
+cmdline: hiperf record -d 1 -o /data/local/tmp/dlh.data
+hiperf_record_time: Thu Jan  1 01:18:34 1970
+
+Event: hw-cpu-cycles (type 0 id 0)
+Samples Count: 20
+Event Count: 4774
+Heating count comm   pid  tid  dso               func               
+80.12%   3825 hiperf 1204 1204 [kernel.kallsyms] finish_task_switch 
+19.88%    949 hiperf 1204 1205 [kernel.kallsyms] finish_task_switch 
+report done

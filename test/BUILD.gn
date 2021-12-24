@@ -1,0 +1,197 @@
+# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//developtools/hiperf/hiperf.gni")
+
+module_output_path = "developtools/hiperf"
+
+sources_base = [
+  "unittest/common/native/hiperf_client_test.cpp",
+  "unittest/common/native/command_test.cpp",
+  "unittest/common/native/perf_events_test.cpp",
+  "unittest/common/native/perf_event_record_test.cpp",
+  "unittest/common/native/perf_file_format_test.cpp",
+  "unittest/common/native/perf_file_writer_test.cpp",
+  "unittest/common/native/subcommand_test.cpp",
+  "unittest/common/native/utilities_test.cpp",
+  "unittest/common/native/elf_parser_test.cpp",
+  "unittest/common/native/register_test.cpp",
+  "unittest/common/native/option_test.cpp",
+  "unittest/common/native/perf_file_reader_test.cpp",
+  "unittest/common/native/virtual_thread_test.cpp",
+  "unittest/common/native/virtual_runtime_test.cpp",
+  "unittest/common/native/callstack_test.cpp",
+  "unittest/common/native/ring_buffer_test.cpp",
+  "unittest/common/native/symbols_file_test.cpp",
+  "unittest/common/native/tracked_command_test.cpp",
+  "unittest/common/native/dwarf_test.cpp",
+  "unittest/common/native/subcommand_help_test.cpp",
+  "unittest/common/native/subcommand_list_test.cpp",
+  "unittest/common/native/subcommand_dump_test.cpp",
+  "unittest/common/native/hashlist_test.cpp",
+  "unittest/common/native/report_test.cpp",
+  "unittest/common/native/report_json_file_test.cpp"
+]
+
+if(hiperf_debug) {
+  sources_base +=  [ "unittest/common/native/debug_logger_test.cpp" ]
+  sources_base +=  [ "unittest/common/native/option_debug_test.cpp" ]
+}
+
+if(!hiperf_target_static) {
+  sources_base +=  [ "unittest/common/native/report_protobuf_file_test.cpp" ]
+}
+
+sources_interface = [
+  "unittest/common/native/subcommand_record_test.cpp",
+  "unittest/common/native/subcommand_stat_test.cpp",
+  "unittest/common/native/subcommand_report_test.cpp",
+  "unittest/common/native/hiperf_libreport_test.cpp",
+]
+
+common_deps = [
+  "//third_party/googletest:gtest_main",
+  "//third_party/googletest:gmock_main",
+  "${hiperf_path}/:hiperf_platform_common",
+  "${hiperf_path}/:hiperf_platform_linux",
+  "${hiperf_path}/:hiperf_platform_host",
+  "${hiperf_path}/interfaces/innerkits/native:hiperf_client",
+]
+
+config("hiperf_test_config") {
+  cflags = code_check_flag
+  ldflags = []
+  defines = []
+
+  if(hiperf_test_coverage && is_ohos) {
+    defines += [ "TEST_COVERAGE" ]
+    cflags += [ "-fprofile-arcs", "-ftest-coverage" ]
+    ldflags += [ "--coverage" ]
+  }
+
+  defines += [ "DEFAULT_LOG_LEVEL=LEVEL_VERBOSE" ]
+
+
+  configs = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_pub_config",
+  ]
+
+  include_dirs = [
+    "${hiperf_path}/test/unittest/common/native/include",
+  ]
+}
+
+ohos_unittest("hiperf_unittest") {
+  configs = [":hiperf_test_config"]
+  module_out_path = module_output_path
+  resource_config_file = "unittest/resource/ohos_test.xml"
+  deps = common_deps
+
+  sources = sources_interface
+  sources += sources_base
+  if (is_linux) {
+    static_link = false
+  }
+}
+
+fuzz_cflags = [
+  "-g",
+  "-O0",
+  "-Wno-unused-variable",
+  "-fno-omit-frame-pointer",
+]
+
+ohos_fuzztest("hiperf_commandline_fuzztest") {
+  module_out_path = module_output_path
+  configs = [":hiperf_test_config"]
+  cflags = fuzz_cflags
+  deps = common_deps
+  defines = [ "FUZZER_TEST" ]
+  sources = [
+    "fuzztest/CommandLine_fuzzer/CommandLine_fuzzer.cpp",
+    "${hiperf_path}/src/main.cpp"
+  ]
+}
+
+ohos_fuzztest("hiperf_libreport_fuzztest") {
+  module_out_path = module_output_path
+  configs = [":hiperf_test_config"]
+  cflags = fuzz_cflags
+  deps = common_deps
+  defines = [ "FUZZER_TEST" ]
+  sources = [
+    "fuzztest/LibReport_fuzzer/LibReport_fuzzer.cpp",
+  ]
+}
+
+ohos_fuzztest("hiperf_client_api_fuzztest") {
+  module_out_path = module_output_path
+  configs = [":hiperf_test_config"]
+  cflags = fuzz_cflags
+  deps = common_deps
+  defines = [ "FUZZER_TEST" ]
+  sources = [
+    "fuzztest/ClientApi_fuzzer/ClientApi_fuzzer.cpp",
+  ]
+}
+
+ohos_fuzztest("hiperf_perf_file_fuzztest") {
+  module_out_path = module_output_path
+  resource_config_file = "fuzztest/resource/ohos_test.xml"
+  configs = [":hiperf_test_config"]
+  cflags = fuzz_cflags
+  deps = common_deps
+  defines = [ "FUZZER_TEST" ]
+  sources = [
+    "fuzztest/PerfFile_fuzzer/PerfFile_fuzzer.cpp",
+  ]
+}
+
+ohos_fuzztest("hiperf_elf_parser_fuzztest") {
+  module_out_path = module_output_path
+  resource_config_file = "fuzztest/resource/ohos_test.xml"
+  configs = [":hiperf_test_config"]
+  cflags = fuzz_cflags
+  deps = common_deps
+  defines = [ "FUZZER_TEST" ]
+  sources = [
+    "fuzztest/ElfParser_fuzzer/ElfParser_fuzzer.cpp",
+  ]
+}
+
+group("hiperf_fuzztest") {
+  testonly = true
+  deps = [
+    ":hiperf_commandline_fuzztest",
+    ":hiperf_libreport_fuzztest",
+    ":hiperf_client_api_fuzztest",
+    ":hiperf_perf_file_fuzztest",
+    ":hiperf_elf_parser_fuzztest"
+  ]
+}
+
+group("hiperf_test") {
+  testonly = true
+  if(hiperf_target_host) {
+    deps = [
+      ":hiperf_unittest(${host_toolchain})",
+      ":hiperf_fuzztest(${host_toolchain})"
+    ]
+  } else {
+    deps = [
+      ":hiperf_unittest",
+      ":hiperf_fuzztest"
+    ]
+  }
+}
