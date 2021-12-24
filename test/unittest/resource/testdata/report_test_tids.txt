@@ -1,0 +1,19 @@
+loading data
+prepare report
+<<Hiperf Report>>
+hostname: localhost
+osrelease: 5.10.57
+arch: armv7l
+cpudesc: ARMv7 Processor rev 5 (v7l)
+cmdline: hiperf record -d 1 -o /data/local/tmp/dlh.data
+hiperf_record_time: Thu Jan  1 01:18:34 1970
+
+Event: hw-cpu-cycles (type 0 id 0)
+Samples Count: 20
+Event Count: 80277
+Heating count comm   pid  tid  dso                          func 
+33.66%  27024 hiperf 1204 1205 /system/lib/libc++.so        std::__h::condition_variable::__do_timed_wait(std::__h::unique_lock<std::__h::mutex>&, std::__h::chrono::time_point<std::__h::chrono::system_clock, std::__h::chrono::duration<long long, std::__h::ratio<1ll, 1000000000ll> > >) 
+32.58%  26152 hiperf 1204 1205 [kernel.kallsyms]            arm_copy_from_user 
+32.58%  26152 hiperf 1204 1205 /system/lib/ld-musl-arm.so.1 __clock_gettime64 
+ 1.18%    949 hiperf 1204 1205 [kernel.kallsyms]            finish_task_switch 
+report done

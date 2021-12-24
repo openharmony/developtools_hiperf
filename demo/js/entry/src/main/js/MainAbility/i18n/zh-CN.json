@@ -1,0 +1,15 @@
+{
+  "strings": {
+    "hello": "您好",
+    "world": "世界",
+    "page": "第二页",
+    "next": "下一页",
+    "back": "返回",
+    "test_record": "测试 record",
+    "test_option": "测试 option",
+    "test_click": "测试 点击",
+    "output": "测试输出"
+  },
+  "Files": {
+  }
+}

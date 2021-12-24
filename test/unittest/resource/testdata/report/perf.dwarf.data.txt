@@ -1,0 +1,83 @@
+<<Hiperf Report>>
+hostname: localhost
+osrelease: 4.19.155+
+arch: armv7l
+cpudesc: ARMv7 Processor rev 5 (v7l)
+cmdline: ./hiperf record -s dwarf -d 10 -o perf.dwarf.data ./hiperf_example_cmd --nowait
+hiperf_workloader_cmd: ./hiperf_example_cmd
+hiperf_record_time: Thu Jan  1 00:24:46 1970
+
+Event: hw-cpu-cycles (type 0 id 0)
+Samples Count: 31718
+Event Count: 7050498722
+Heating count     comm            pid tid dso                                          func 
+ 1.98%  139942756 hiperf_example_ 385 388 /apex/com.android.runtime/lib/bionic/libc.so je_free 
+     |- 73.69% LoopFunction(std::__1::chrono::duration<long long, std::__1::ratio<1ll, 1000ll> >, Option const&)
+               CallStack10(int, Option const&)
+               CallStack9(int, Option const&)
+               CallStack8(int, Option const&)
+               CallStack7(int, Option const&)
+               CallStack6(int, Option const&)
+               CallStack5(int, Option const&)
+               CallStack4(int, Option const&)
+               CallStack3(int, Option const&)
+               CallStack2(int, Option const&)
+               CallStack1(int, Option const&)
+               CallStack0(int, Option const&)
+               ExampleThread(Option const&)
+               void* std::__1::__thread_proxy<std::__1::tuple<std::__1::unique_ptr<std::__1::__thread_struct, std::__1::default_delete<std::__1::__thread_struct> >, void (*)(Option const&), Option> >(void*)
+               __pthread_start(void*)
+               __start_thread
+     |- 12.11% __vfprintf
+               printf
+               LoopDummy(std::__1::chrono::duration<long long, std::__1::ratio<1ll, 1000ll> >)
+               LoopFunction(std::__1::chrono::duration<long long, std::__1::ratio<1ll, 1000ll> >, Option const&)
+               CallStack10(int, Option const&)
+               CallStack9(int, Option const&)
+               CallStack8(int, Option const&)
+               CallStack7(int, Option const&)
+               CallStack6(int, Option const&)
+               CallStack5(int, Option const&)
+               CallStack4(int, Option const&)
+               CallStack3(int, Option const&)
+               CallStack2(int, Option const&)
+               CallStack1(int, Option const&)
+               CallStack0(int, Option const&)
+               ExampleThread(Option const&)
+               void* std::__1::__thread_proxy<std::__1::tuple<std::__1::unique_ptr<std::__1::__thread_struct, std::__1::default_delete<std::__1::__thread_struct> >, void (*)(Option const&), Option> >(void*)
+               __pthread_start(void*)
+               __start_thread
+     |-  7.95% /data/local/tmp/hiperf_example_cmd+0x13f3
+     |-  6.25% hiperf_example_@0x7b1e0bcb
+ 1.74%  122711258 hiperf_example_ 385 388 /data/local/tmp/hiperf_example_cmd           LoopFunction(std::__1::chrono::duration<long long, std::__1::ratio<1ll, 1000ll> >, Option const&) 
+     |- 97.99% CallStack10(int, Option const&)
+               CallStack9(int, Option const&)
+               CallStack8(int, Option const&)
+               CallStack7(int, Option const&)
+               CallStack6(int, Option const&)
+               CallStack5(int, Option const&)
+               CallStack4(int, Option const&)
+               CallStack3(int, Option const&)
+               CallStack2(int, Option const&)
+               CallStack1(int, Option const&)
+               CallStack0(int, Option const&)
+               ExampleThread(Option const&)
+               void* std::__1::__thread_proxy<std::__1::tuple<std::__1::unique_ptr<std::__1::__thread_struct, std::__1::default_delete<std::__1::__thread_struct> >, void (*)(Option const&), Option> >(void*)
+               __pthread_start(void*)
+               __start_thread
+     |-  2.01% LoopFunction(std::__1::chrono::duration<long long, std::__1::ratio<1ll, 1000ll> >, Option const&)
+               CallStack10(int, Option const&)
+               CallStack9(int, Option const&)
+               CallStack8(int, Option const&)
+               CallStack7(int, Option const&)
+               CallStack6(int, Option const&)
+               CallStack5(int, Option const&)
+               CallStack4(int, Option const&)
+               CallStack3(int, Option const&)
+               CallStack2(int, Option const&)
+               CallStack1(int, Option const&)
+               CallStack0(int, Option const&)
+               ExampleThread(Option const&)
+               void* std::__1::__thread_proxy<std::__1::tuple<std::__1::unique_ptr<std::__1::__thread_struct, std::__1::default_delete<std::__1::__thread_struct> >, void (*)(Option const&), Option> >(void*)
+               __pthread_start(void*)
+               __start_thread

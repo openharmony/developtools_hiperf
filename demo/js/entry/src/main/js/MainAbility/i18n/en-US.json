@@ -1,0 +1,15 @@
+{
+  "strings": {
+    "hello": "Hello",
+    "world": "World",
+    "page": "Second Page",
+    "next": "Next Page",
+    "back": "Back",
+    "test_record": "Test record",
+    "test_option": "Test option",
+    "test_click": "Test click",
+    "output": "Output"
+  },
+  "Files": {
+  }
+}
