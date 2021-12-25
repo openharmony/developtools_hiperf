@@ -278,7 +278,7 @@ foreach(proto_file, proto_file_defines) {
 if(is_double_framework) {
   protoc_subsystem_out_path = "developtools/profiler"
 } else {
-  protoc_subsystem_out_path = "developtools/developtools"
+  protoc_subsystem_out_path = "developtools/profiler"
 }
 if(default_toolchain == current_toolchain) {
   #if target build
