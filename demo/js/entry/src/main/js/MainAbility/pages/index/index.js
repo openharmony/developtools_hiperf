@@ -20,6 +20,7 @@ export default {
         clickTimes: 0,
         total: 20,
         output: '',
+        sleepTicks: 0,
     },
 
     onInit() {
@@ -28,8 +29,8 @@ export default {
 
     sleep(delay) {
         let start = (new Date()).getTime();
-        while ((new Date()).getTime() - start < delay) {
-            continue;
+        while (((new Date()).getTime() - start) < delay) {
+            this.sleepTicks++;
         }
     },
 
@@ -116,7 +117,7 @@ export default {
             return;
         }
 
-        hiperf.setup("/data/accounts/account_0/appdata/com.example.hiperfdemo/files");
+        result = hiperf.setup("/data/accounts/account_0/appdata/com.example.hiperfdemo/files");
         this.output += ('Setup: ' + result+ '\n');
 
         if(!result) {

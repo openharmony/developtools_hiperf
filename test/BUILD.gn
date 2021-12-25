@@ -41,16 +41,16 @@ sources_base = [
   "unittest/common/native/subcommand_dump_test.cpp",
   "unittest/common/native/hashlist_test.cpp",
   "unittest/common/native/report_test.cpp",
-  "unittest/common/native/report_json_file_test.cpp"
+  "unittest/common/native/report_json_file_test.cpp",
 ]
 
-if(hiperf_debug) {
-  sources_base +=  [ "unittest/common/native/debug_logger_test.cpp" ]
-  sources_base +=  [ "unittest/common/native/option_debug_test.cpp" ]
+if (hiperf_debug) {
+  sources_base += [ "unittest/common/native/debug_logger_test.cpp" ]
+  sources_base += [ "unittest/common/native/option_debug_test.cpp" ]
 }
 
-if(!hiperf_target_static) {
-  sources_base +=  [ "unittest/common/native/report_protobuf_file_test.cpp" ]
+if (!hiperf_target_static) {
+  sources_base += [ "unittest/common/native/report_protobuf_file_test.cpp" ]
 }
 
 sources_interface = [
@@ -61,12 +61,12 @@ sources_interface = [
 ]
 
 common_deps = [
-  "//third_party/googletest:gtest_main",
-  "//third_party/googletest:gmock_main",
   "${hiperf_path}/:hiperf_platform_common",
-  "${hiperf_path}/:hiperf_platform_linux",
   "${hiperf_path}/:hiperf_platform_host",
+  "${hiperf_path}/:hiperf_platform_linux",
   "${hiperf_path}/interfaces/innerkits/native:hiperf_client",
+  "//third_party/googletest:gmock_main",
+  "//third_party/googletest:gtest_main",
 ]
 
 config("hiperf_test_config") {
@@ -74,26 +74,26 @@ config("hiperf_test_config") {
   ldflags = []
   defines = []
 
-  if(hiperf_test_coverage && is_ohos) {
+  if (hiperf_test_coverage && is_ohos) {
     defines += [ "TEST_COVERAGE" ]
-    cflags += [ "-fprofile-arcs", "-ftest-coverage" ]
+    cflags += [
+      "-fprofile-arcs",
+      "-ftest-coverage",
+    ]
     ldflags += [ "--coverage" ]
   }
 
   defines += [ "DEFAULT_LOG_LEVEL=LEVEL_VERBOSE" ]
 
-
   configs = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_pub_config",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_pub_config",
   ]
 
-  include_dirs = [
-    "${hiperf_path}/test/unittest/common/native/include",
-  ]
+  include_dirs = [ "${hiperf_path}/test/unittest/common/native/include" ]
 }
 
 ohos_unittest("hiperf_unittest") {
-  configs = [":hiperf_test_config"]
+  configs = [ ":hiperf_test_config" ]
   module_out_path = module_output_path
   resource_config_file = "unittest/resource/ohos_test.xml"
   deps = common_deps
@@ -114,84 +114,76 @@ fuzz_cflags = [
 
 ohos_fuzztest("hiperf_commandline_fuzztest") {
   module_out_path = module_output_path
-  configs = [":hiperf_test_config"]
+  configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
   sources = [
+    "${hiperf_path}/src/main.cpp",
     "fuzztest/CommandLine_fuzzer/CommandLine_fuzzer.cpp",
-    "${hiperf_path}/src/main.cpp"
   ]
 }
 
 ohos_fuzztest("hiperf_libreport_fuzztest") {
   module_out_path = module_output_path
-  configs = [":hiperf_test_config"]
+  configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [
-    "fuzztest/LibReport_fuzzer/LibReport_fuzzer.cpp",
-  ]
+  sources = [ "fuzztest/LibReport_fuzzer/LibReport_fuzzer.cpp" ]
 }
 
 ohos_fuzztest("hiperf_client_api_fuzztest") {
   module_out_path = module_output_path
-  configs = [":hiperf_test_config"]
+  configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [
-    "fuzztest/ClientApi_fuzzer/ClientApi_fuzzer.cpp",
-  ]
+  sources = [ "fuzztest/ClientApi_fuzzer/ClientApi_fuzzer.cpp" ]
 }
 
 ohos_fuzztest("hiperf_perf_file_fuzztest") {
   module_out_path = module_output_path
   resource_config_file = "fuzztest/resource/ohos_test.xml"
-  configs = [":hiperf_test_config"]
+  configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [
-    "fuzztest/PerfFile_fuzzer/PerfFile_fuzzer.cpp",
-  ]
+  sources = [ "fuzztest/PerfFile_fuzzer/PerfFile_fuzzer.cpp" ]
 }
 
 ohos_fuzztest("hiperf_elf_parser_fuzztest") {
   module_out_path = module_output_path
   resource_config_file = "fuzztest/resource/ohos_test.xml"
-  configs = [":hiperf_test_config"]
+  configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [
-    "fuzztest/ElfParser_fuzzer/ElfParser_fuzzer.cpp",
-  ]
+  sources = [ "fuzztest/ElfParser_fuzzer/ElfParser_fuzzer.cpp" ]
 }
 
 group("hiperf_fuzztest") {
   testonly = true
   deps = [
-    ":hiperf_commandline_fuzztest",
-    ":hiperf_libreport_fuzztest",
     ":hiperf_client_api_fuzztest",
+    ":hiperf_commandline_fuzztest",
+    ":hiperf_elf_parser_fuzztest",
+    ":hiperf_libreport_fuzztest",
     ":hiperf_perf_file_fuzztest",
-    ":hiperf_elf_parser_fuzztest"
   ]
 }
 
 group("hiperf_test") {
   testonly = true
-  if(hiperf_target_host) {
+  if (hiperf_target_host) {
     deps = [
+      ":hiperf_fuzztest(${host_toolchain})",
       ":hiperf_unittest(${host_toolchain})",
-      ":hiperf_fuzztest(${host_toolchain})"
     ]
   } else {
     deps = [
+      ":hiperf_fuzztest",
       ":hiperf_unittest",
-      ":hiperf_fuzztest"
     ]
   }
 }

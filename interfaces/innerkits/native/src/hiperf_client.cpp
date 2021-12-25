@@ -266,6 +266,7 @@ Client::Client(const std::string &outputDir)
 
     // review: maybe change to some nice check , not just ign th pipe broken?
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);
 }
 
 bool Client::Setup(std::string outputDir)
@@ -490,7 +491,7 @@ void Client::KillChild()
         close(serverToClientFd_);
     }
     if (hperfPid_ > 0) {
-        kill(hperfPid_, SIGINT);
+        kill(hperfPid_, SIGKILL);
     }
 }
 

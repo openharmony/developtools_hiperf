@@ -642,10 +642,11 @@ bool SubCommandRecord::SetPerfMaxSampleRate()
 {
     int rate = 0;
     if (ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", rate)) {
-        if (rate >= frequency_) {
+        int frequency = frequency_ != 0 ? frequency_ : PerfEvents::DEFAULT_SAMPLE_FREQUNCY;
+        if (rate >= frequency) {
             return true;
         }
-        return WriteIntToProcFile("/proc/sys/kernel/perf_event_max_sample_rate", frequency_);
+        return WriteIntToProcFile("/proc/sys/kernel/perf_event_max_sample_rate", frequency);
     } else {
         if (!IsRoot()) {
             printf("root privillege is needed to change perf_event_max_sample_rate\n");
