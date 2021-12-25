@@ -3,7 +3,8 @@
   "parts": {
     "hiperf": {
       "module_list": [
-        "//developtools/hiperf/:hiperf_target"
+        "//developtools/hiperf/:hiperf_target",
+        "//developtools/hiperf/:hiperf_target_all"
       ],
       "inner_kits": [
         {

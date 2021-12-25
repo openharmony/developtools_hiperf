@@ -127,7 +127,7 @@ void HiperfLibReportTest::UnwindJsonContentCheck(const std::string &content, boo
     ASSERT_EQ(content.front(), '{');
     ASSERT_EQ(content.back(), '}');
     // CallStack10(int, Option const&) will count nothing in disable unwind
-    ASSERT_EQ(content.find("{\"symbol\":8,\"counts\":[0,0,186952]}") != std::string::npos,
+    ASSERT_EQ(content.find("{\"symbol\":8,\"counts\":[0,0,797933]}") != std::string::npos,
               haveUnwind);
 }
 

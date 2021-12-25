@@ -18,16 +18,16 @@ innerkits_path = "${hiperf_path}/interfaces/innerkits"
 kits_path = "${hiperf_path}/interfaces/kits"
 
 declare_args() {
-  hiperf_target_host=false
-  hiperf_target_static=false
-  hiperf_test_coverage=false
-  hiperf_sanitize=false
-  hiperf_check_time=false
-  hiperf_use_libunwind=true
-  hiperf_debug=true
-  hiperf_code_analyze=false
-  hiperf_use_syspara=true
-  have_common_tools=true
+  hiperf_target_host = false
+  hiperf_target_static = false
+  hiperf_test_coverage = false
+  hiperf_sanitize = false
+  hiperf_check_time = false
+  hiperf_use_libunwind = true
+  hiperf_debug = true
+  hiperf_code_analyze = false
+  hiperf_use_syspara = true
+  have_common_tools = true
 }
 
 code_check_flag = [
@@ -63,10 +63,9 @@ code_analyze_flag = [
   "-analyzer-checker=unix",
 ]
 
-
-if(is_double_framework && target_cpu == "arm64") {
-# format specifies type 'long' but the argument has type
-# 'std::__1::chrono::duration<long long, std::__1::ratio<1, 1000> >::rep' (aka 'long long')
-# [-Werror,-Wformat]
-  code_check_flag += ["-Wno-format"]
+if (is_double_framework && target_cpu == "arm64") {
+  # format specifies type 'long' but the argument has type
+  # 'std::__1::chrono::duration<long long, std::__1::ratio<1, 1000> >::rep' (aka 'long long')
+  # [-Werror,-Wformat]
+  code_check_flag += [ "-Wno-format" ]
 }

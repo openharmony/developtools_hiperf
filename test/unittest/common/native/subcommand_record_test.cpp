@@ -181,22 +181,22 @@ HWTEST_F(SubCommandRecordTest, SelectCpuInputErr, TestSize.Level1)
 // cpu percent
 HWTEST_F(SubCommandRecordTest, CpuLimitMin, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 1 --cpu-limit 1 ");
+    TestRecordCommand("-d 2 --cpu-limit 1 ");
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 1 --cpu-limit 0 ", false);
+    TestRecordCommand("-d 2 --cpu-limit 0 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitMax, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 100000 --cpu-limit 100 ");
+    TestRecordCommand("-d 2 --cpu-limit 100 ");
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitMaxErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 100000 --cpu-limit 101 ", false);
+    TestRecordCommand("-d 2 --cpu-limit 101 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitInputErr, TestSize.Level1)

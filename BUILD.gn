@@ -14,8 +14,7 @@
 import("//build/ohos.gni")
 import("//developtools/hiperf/hiperf.gni")
 
-function_disable_define = [
-]
+function_disable_define = []
 
 config("hiperf_inner_config") {
   visibility = [ ":*" ]
@@ -23,32 +22,40 @@ config("hiperf_inner_config") {
   cflags = code_check_flag
   defines = function_disable_define
 
-  if(hiperf_code_analyze && is_ohos) {
+  if (hiperf_code_analyze && is_ohos) {
     cflags += code_analyze_flag
     cflags -= [ "-Werror" ]
   }
 
-  if(is_mingw) {
+  if (is_mingw) {
     # lld: error: unable to find library -latomic
     # lld: error: unable to find library -ldl
     # lld: error: unable to find library -lrt
-    ldflags += [ "-Wl,--whole-archive", "-lpthread", "-Wl,--no-whole-archive"]
-  } else if(is_linux) {
-    ldflags += [ "-Wl,--whole-archive", "-lpthread", "-latomic", "-ldl", "-lrt", "-Wl,--no-whole-archive"]
+    ldflags += [
+      "-Wl,--whole-archive",
+      "-lpthread",
+      "-Wl,--no-whole-archive",
+    ]
+  } else if (is_linux) {
+    ldflags += [
+      "-Wl,--whole-archive",
+      "-lpthread",
+      "-latomic",
+      "-ldl",
+      "-lrt",
+      "-Wl,--no-whole-archive",
+    ]
   }
 
-  include_dirs = [
-    "${hiperf_path}/include",
-  ]
-
+  include_dirs = [ "${hiperf_path}/include" ]
 
   # debug link
   # ldflags += [ "-v"]
 
-  if(hiperf_debug) {
+  if (hiperf_debug) {
     defines += [
       "HIPERF_DEBUG",
-      "HIPERF_DEBUG_PRINTF", # if u want to see printf in the log ?
+      "HIPERF_DEBUG_PRINTF",  # if u want to see printf in the log ?
     ]
   } else {
     # some value just for debug, but also can be opt by clang ,don't as error
@@ -56,37 +63,41 @@ config("hiperf_inner_config") {
     cflags += [ "-Wno-unused-variable" ]
   }
 
-  if(hiperf_check_time) {
-    defines += [ "HIPERF_DEBUG_TIME", ]
+  if (hiperf_check_time) {
+    defines += [ "HIPERF_DEBUG_TIME" ]
   }
 
   cflags += [ "-std=c++17" ]
-  if(is_linux) {
-    cflags += [ "-g" ] # we need debug info when it crash.
+  if (is_linux) {
+    cflags += [ "-g" ]  # we need debug info when it crash.
   }
   defines += [ "is_mingw=${is_mingw}" ]
   defines += [ "is_linux=${is_linux}" ]
   defines += [ "is_ohos=${is_ohos}" ]
   defines += [ "is_double_framework=${is_double_framework}" ]
-  if(hiperf_target_host) {
+  if (hiperf_target_host) {
     defines += [ "target_cpu_${host_cpu}" ]
   } else {
     defines += [ "target_cpu_${target_cpu}" ]
   }
 
-  if(is_mingw) {
+  if (is_mingw) {
     cflags += [ "-includeMingW64Fix.h" ]
-    cflags += [ "-Wno-inconsistent-dllimport" ] # in mingw some sec api will overwrite by utilsecurec
-    defines +=[ "WIN32_LEAN_AND_MEAN" ]
+    cflags += [ "-Wno-inconsistent-dllimport" ]  # in mingw some sec api will
+                                                 # overwrite by utilsecurec
+    defines += [ "WIN32_LEAN_AND_MEAN" ]
 
     include_dirs += [
       "${hiperf_path}/include/nonlinux/",
-      "//third_party/Linux_Kernel/include/uapi"
+      "//third_party/Linux_Kernel/include/uapi",
     ]
   }
 
-  if(hiperf_test_coverage && is_ohos) {
-    cflags += [ "-fprofile-arcs", "-ftest-coverage" ]
+  if (hiperf_test_coverage && is_ohos) {
+    cflags += [
+      "-fprofile-arcs",
+      "-ftest-coverage",
+    ]
     ldflags += [ "--coverage" ]
   }
 }
@@ -117,7 +128,7 @@ sources_platform_common = [
   "./src/callstack.cpp",
 ]
 
-if(hiperf_debug) {
+if (hiperf_debug) {
   sources_platform_common += [
     "./src/debug_logger.cpp",
     "./src/option_debug.cpp",
@@ -135,39 +146,41 @@ sources_platform_linux = [
 ]
 
 common_deps = [
-    "//utils/native/base:utilsecurec",
-    "//third_party/zlib:libz",
-    ":support_elf",
-    ":support_protobuf",
-    ":support_libunwind"
+  ":support_elf",
+  ":support_libunwind",
+  ":support_protobuf",
+  "//third_party/zlib:libz",
+  "//utils/native/base:utilsecurec",
 ]
 
-if(!hiperf_use_libunwind) {
-    common_deps -= [ ":support_libunwind" ]
+if (!hiperf_use_libunwind) {
+  common_deps -= [ ":support_libunwind" ]
 }
 
 if (is_ohos) {
-    common_deps += [ "//utils/native/base:utilsecurec_shared" ]
-    common_deps -= [ "//utils/native/base:utilsecurec" ]
+  common_deps += [ "//utils/native/base:utilsecurec_shared" ]
+  common_deps -= [ "//utils/native/base:utilsecurec" ]
 }
 
-if(hiperf_target_static) {
+if (hiperf_target_static) {
   common_deps -= [ ":support_protobuf" ]
 }
 
 common_configs = [
-   ":hiperf_inner_config",
-   "//utils/native/base:utils_config",
-   "//third_party/googletest:gtest_config",
+  ":hiperf_inner_config",
+  "//utils/native/base:utils_config",
+  "//third_party/googletest:gtest_config",
 ]
 
 config("hiperf_syspara_config") {
   defines = [ "CONFIG_HAS_SYSPARA" ]
 }
 
-if(is_ohos && hiperf_use_syspara) {
+if (is_ohos && hiperf_use_syspara) {
   common_configs += [ ":hiperf_syspara_config" ]
-  common_deps += [ "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara" ]
+  common_deps += [
+    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
+  ]
 }
 
 ohos_source_set("hiperf_platform_common") {
@@ -176,18 +189,16 @@ ohos_source_set("hiperf_platform_common") {
   public_configs = common_configs
   defines = []
 
-  if(is_ohos) {
-    external_deps = [
-      "hiviewdfx_hilog_native:libhilog",
-    ]
+  if (is_ohos) {
+    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   } else {
-     defines += [ "CONFIG_NO_HILOG" ]
+    defines += [ "CONFIG_NO_HILOG" ]
   }
   sources = sources_platform_common
 }
 
 config("platform_linux_config") {
-  defines = ["SUPPORT_PERF_EVENT"]
+  defines = [ "SUPPORT_PERF_EVENT" ]
 }
 
 ohos_source_set("hiperf_platform_linux") {
@@ -207,10 +218,8 @@ config("unwind_config") {
 
 ohos_source_set("support_libunwind") {
   public_configs = common_configs
-  public_configs += [
-    ":unwind_config",
-  ]
-  if(hiperf_target_host) {
+  public_configs += [ ":unwind_config" ]
+  if (hiperf_target_host) {
     public_deps = [ "//third_party/libunwind:unwind_source_${host_cpu}" ]
   } else {
     public_deps = [ "//third_party/libunwind:unwind_source_${target_cpu}" ]
@@ -220,32 +229,29 @@ ohos_source_set("support_libunwind") {
 config("elf_config") {
 }
 ohos_source_set("support_elf") {
-    public_configs = common_configs
-    public_configs += [
-    ":elf_config",
-  ]
+  public_configs = common_configs
+  public_configs += [ ":elf_config" ]
 }
 
 config("protobuf_config") {
   defines = [ "HAVE_PROTOBUF=1" ]
-  cflags = [ "-Wno-unused-parameter" ] # proto buf head build error
+  cflags = [ "-Wno-unused-parameter" ]  # proto buf head build error
   include_dirs = [
     "//third_party/protobuf/src",
     "//third_party/protobuf/src/google",
-    "//third_party/protobuf/src/google/protobuf"
+    "//third_party/protobuf/src/google/protobuf",
   ]
 }
 
 ohos_source_set("support_protobuf") {
   use_exceptions = true
+
   #protobuf
   public_configs = common_configs
-  public_configs += [
-    ":protobuf_config",
-  ]
+  public_configs += [ ":protobuf_config" ]
   public_deps = [
     ":proto_file_cpp",
-    "//utils/native/base:utilsecurec"
+    "//utils/native/base:utilsecurec",
   ]
 
   sources = [ "./src/report_protobuf_file.cpp" ]
@@ -254,7 +260,7 @@ ohos_source_set("support_protobuf") {
 #protobuf {
 proto_file_defines = [
   # add your proto file here
-  "report_sample"
+  "report_sample",
 ]
 
 proto_base_dir = "proto"
@@ -268,26 +274,22 @@ foreach(proto_file, proto_file_defines) {
     "$proto_out_dir" + "/" + "$proto_file.pb.h",
     "$proto_out_dir" + "/" + "$proto_file.pb.cc",
   ]
-  proto_file_sources += [
-    "$proto_base_dir" + "/" + "$proto_file.proto"
-  ]
+  proto_file_sources += [ "$proto_base_dir" + "/" + "$proto_file.proto" ]
 }
 
 # this is so bad , but someone config the protoc's subsystem_name
 # the better way is build system need provider host tools path or prebuild tools path
-if(is_double_framework) {
-  protoc_subsystem_out_path = "developtools/profiler"
-} else {
-  protoc_subsystem_out_path = "developtools/profiler"
-}
-if(default_toolchain == current_toolchain) {
+protoc_subsystem_out_path = "developtools/profiler"
+
+if (default_toolchain == current_toolchain) {
   #if target build
-  host_out_path = "/" + get_label_info(host_toolchain,"name")
+  host_out_path = "/" + get_label_info(host_toolchain, "name")
 } else {
   #if host build (for some linke mingw)
-  host_out_path = "/../" + get_label_info(host_toolchain,"name")
+  host_out_path = "/../" + get_label_info(host_toolchain, "name")
 }
-host_protoc_path = root_out_dir + host_out_path + "/" + protoc_subsystem_out_path + "/protoc"
+host_protoc_path =
+    root_out_dir + host_out_path + "/" + protoc_subsystem_out_path + "/protoc"
 
 action("hiperf_host_build_proto") {
   deps = [ "//third_party/protobuf:protoc(//build/toolchain/linux:clang_x64)" ]
@@ -297,8 +299,14 @@ action("hiperf_host_build_proto") {
   script = "proto/build_proto.sh"
 
   args += [ rebase_path(host_protoc_path) ]
-  args += [ "--proto_path", rebase_path(proto_base_dir) ]
-  args += [ "--cpp_out",rebase_path(proto_out_dir)]
+  args += [
+    "--proto_path",
+    rebase_path(proto_base_dir),
+  ]
+  args += [
+    "--cpp_out",
+    rebase_path(proto_out_dir),
+  ]
 
   foreach(proto_file_source, proto_file_sources) {
     #tell gn to check which files as source time
@@ -308,20 +316,19 @@ action("hiperf_host_build_proto") {
 }
 
 config("proto_file_cpp_config") {
-  include_dirs = [
-      proto_out_dir
-    ]
+  include_dirs = [ proto_out_dir ]
 }
 
 ohos_source_set("proto_file_cpp") {
   cflags = []
 
-  deps = [ ":hiperf_host_build_proto"]
+  deps = [ ":hiperf_host_build_proto" ]
   public_deps = [ "//third_party/protobuf:protobuf_lite_static" ]
 
   sources = proto_file_codegen
   public_configs = [ ":proto_file_cpp_config" ]
 }
+
 #protobuf }
 
 ohos_executable("hiperf") {
@@ -332,11 +339,11 @@ ohos_executable("hiperf") {
     ":hiperf_platform_linux",
   ]
 
-  if(hiperf_target_static) {
+  if (hiperf_target_static) {
     static_link = true
   }
 
-  if(is_linux || is_mingw) {
+  if (is_linux || is_mingw) {
     # ld.lld: error: attempted static link of dynamic object hiviewdfx/hilog_native/libhilog.so
     static_link = true
   }
@@ -397,10 +404,10 @@ ohos_source_set("hiperf_code_analyze") {
 }
 
 group("hiperf_target") {
-  if(hiperf_target_host) {
+  if (hiperf_target_host) {
     deps = [ ":hiperf(${host_toolchain})" ]
   } else {
-    deps = [ ":hiperf"]
+    deps = [ ":hiperf" ]
   }
 }
 
@@ -410,66 +417,54 @@ group("hiperf_test_target") {
 }
 
 group("hiperf_target_all") {
-  if(is_double_framework) {
-    deps = [
-      ":hiperf_target"
-    ]
+  if (is_double_framework) {
+    deps = [ ":hiperf_target" ]
   } else {
     deps = [
-      ":hiperf_target",
-      ":hiperf_host(//build/toolchain/linux:clang_x64)", # host linux
-      ":hiperf_host(//build/toolchain/mingw:mingw_x86_64)", # host mingw
-      ":hiperf_host_lib_demo(//build/toolchain/linux:clang_x64)", # host linux
-      ":hiperf_host_lib(//build/toolchain/linux:clang_x64)", # host linux
-      ":hiperf_host_lib(//build/toolchain/mingw:mingw_x86_64)", # host mingw
+      ":hiperf_host(//build/toolchain/linux:clang_x64)",  # host linux
+      ":hiperf_host(//build/toolchain/mingw:mingw_x86_64)",  # host mingw
+      ":hiperf_host_lib(//build/toolchain/linux:clang_x64)",  # host linux
+      ":hiperf_host_lib(//build/toolchain/mingw:mingw_x86_64)",  # host mingw
+      ":hiperf_host_lib_demo(//build/toolchain/linux:clang_x64)",  # host linux
       ":hiperf_host_python",
-      "interfaces/innerkits/native:hiperf_client", # c++ api
-      ]
-    if(is_ohos) {
-      deps += [ "interfaces/kits/js/napi:hiperf_client_napi", ] # js api
+      ":hiperf_target",
+      "interfaces/innerkits/native:hiperf_client",  # c++ api
+    ]
+    if (is_ohos) {
+      deps += [ "interfaces/kits/js/napi:hiperf_client_napi" ]  # js api
     }
   }
 }
 
 group("hiperf_demo") {
-  if(hiperf_target_host) {
-    deps = [
-      "demo/cpp:hiperf_demo(${host_toolchain})",
-      ]
+  if (hiperf_target_host) {
+    deps = [ "demo/cpp:hiperf_demo(${host_toolchain})" ]
   } else {
-    deps = [
-      "demo/cpp:hiperf_demo",
-      ]
+    deps = [ "demo/cpp:hiperf_demo" ]
   }
 }
 
 group("hiperf_example_cmd") {
-  if(hiperf_target_host) {
-    deps = [
-      "demo/cpp:hiperf_example_cmd(${host_toolchain})",
-      ]
+  if (hiperf_target_host) {
+    deps = [ "demo/cpp:hiperf_example_cmd(${host_toolchain})" ]
   } else {
-    deps = [
-      "demo/cpp:hiperf_example_cmd",
-      ]
+    deps = [ "demo/cpp:hiperf_example_cmd" ]
   }
 }
 
 group("hiperf_all") {
   testonly = true
   if (hiperf_code_analyze) {
-    deps = [
-      ":hiperf_code_analyze"
-    ]
+    deps = [ ":hiperf_code_analyze" ]
   } else {
     deps = [
-      ":hiperf_target_all",
       ":hiperf_example_cmd",
+      ":hiperf_target_all",
     ]
-    if(!is_double_framework) {
+    if (!is_double_framework) {
       deps += [
+        ":hiperf_demo",
         ":hiperf_test_target",
-        ":hiperf_demo"
       ]
     }
   }
