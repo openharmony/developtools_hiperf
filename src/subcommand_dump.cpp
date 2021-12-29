@@ -109,6 +109,11 @@ bool SubCommandDump::ParseOption(std::vector<std::string> &args)
     return CheckInputFile();
 }
 
+SubCommandDump::~SubCommandDump()
+{
+    SymbolsFile::onRecording_ = true; // back to default for UT
+}
+
 bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
 {
     HLOGV("enter");

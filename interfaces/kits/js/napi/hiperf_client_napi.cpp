@@ -469,12 +469,11 @@ static napi_value GetOptionVecString(napi_env env, napi_callback_info info)
 static napi_value StartWithOption(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
-    bool result = false;
 
     // for js api , we always use hilog
     g_hiperfClient->EnableHilog();
 
-    result = g_hiperfClient->Setup(g_hiperfRecordOption->GetOutputFileName());
+    bool result = g_hiperfClient->Setup(g_hiperfRecordOption->GetOutputFileName());
     if (result) {
         const HiperfClient::RecordOption *option = g_hiperfRecordOption.get();
         result = g_hiperfClient->Start(*option);
@@ -501,13 +500,12 @@ static napi_value Start(napi_env env, napi_callback_info info)
 static napi_value Setup(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
-    bool result = false;
 
     std::string outputPath = GetJsStringFromOption(env, info);
 
     // for js api , we always use hilog
     g_hiperfClient->EnableHilog();
-    result = g_hiperfClient->Setup(outputPath);
+    bool result = g_hiperfClient->Setup(outputPath);
 
     NAPI_CALL(env, napi_create_int32(env, result, &napiValue));
     HIPERF_HILOGD(MODULE_JS_NAPI, "%{public}d", result);

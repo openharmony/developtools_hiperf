@@ -48,7 +48,8 @@ public:
 };
 void SubCommandReportTest::SetUpTestCase() {}
 
-void SubCommandReportTest::TearDownTestCase() {}
+void SubCommandReportTest::TearDownTestCase() {
+}
 
 void SubCommandReportTest::SetUp()
 {
@@ -61,6 +62,7 @@ void SubCommandReportTest::TearDown()
 {
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
+    MemoryHold::Get().Clean();
 }
 
 bool SubCommandReportTest::FindExpectStr(const std::string &stringOut,

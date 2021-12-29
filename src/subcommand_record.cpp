@@ -847,7 +847,7 @@ void SubCommandRecord::ClientCommandHandle()
         std::string command;
         while (true) {
             char c;
-            size_t result = TEMP_FAILURE_RETRY(read(clientPipeInput_, &c, 1));
+            ssize_t result = TEMP_FAILURE_RETRY(read(clientPipeInput_, &c, 1));
             if (result <= 0) {
                 HLOGD("server :read from pipe file failed");
                 break;
@@ -995,7 +995,7 @@ bool SubCommandRecord::WaitFifoReply(int fd)
     if (polled > 0) {
         while (true) {
             char c;
-            size_t result = TEMP_FAILURE_RETRY(read(fd, &c, 1));
+            ssize_t result = TEMP_FAILURE_RETRY(read(fd, &c, 1));
             if (result <= 0) {
                 HLOGD("read from fifo file(%s) failed", CONTROL_FIFO_FILE_S2C.c_str());
                 break;
@@ -1255,9 +1255,11 @@ void SubCommandRecord::AddMemTotalFeature()
             continue;
         }
 
-        it++;
-        uint64_t memTotal = std::stoul(*it);
-        fileWriter_->AddU64Feature(FEATURE::TOTAL_MEM, memTotal);
+        if ((it + 1) != subStrs.end()) {
+            uint64_t memTotal = std::stoul(*(it + 1));
+            fileWriter_->AddU64Feature(FEATURE::TOTAL_MEM, memTotal);
+        }
+        break;
     }
 }
 

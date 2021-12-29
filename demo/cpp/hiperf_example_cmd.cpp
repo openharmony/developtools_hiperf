@@ -138,9 +138,6 @@ USED_FUNCTION void LoopFunction(milliseconds timeOutMS, const Option &option)
     auto now = std::chrono::steady_clock::now();
     auto sleepTime = now + seconds(1);
     int count = 0;
-    int a {};
-    int b {};
-    int c {};
     while (std::chrono::steady_clock::now() < (now + timeOutMS)) {
         if (option.sleepms > 0) {
             if (std::chrono::steady_clock::now() >= sleepTime) {
@@ -158,9 +155,15 @@ USED_FUNCTION void LoopFunction(milliseconds timeOutMS, const Option &option)
             LoopBranch();
         }
 
-        a = b++ * c++;
-        b = a++ * c++;
-        c = b++ * a++;
+        std::default_random_engine rnd;
+        int a = rnd();
+        int b = rnd();
+        int c = rnd();
+        a = (a++) * (b++) * (c++);
+
+        if (a == 0) {
+            continue;
+        }
 
         if (!option.nonew) {
             auto p = new unsigned int;

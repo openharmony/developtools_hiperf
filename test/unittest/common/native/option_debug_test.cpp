@@ -39,12 +39,19 @@ public:
     default_random_engine rnd_;
 };
 
-void OptionDebugTest::SetUpTestCase() {}
+void OptionDebugTest::SetUpTestCase()
+{
+    DebugLogger::GetInstance()->Reset();
+}
 
-void OptionDebugTest::TearDownTestCase() {}
+void OptionDebugTest::TearDownTestCase()
+{
+    DebugLogger::GetInstance()->Reset();
+}
 
 void OptionDebugTest::SetUp()
 {
+    Option::ClearMainOptions();
     SubCommand::RegisterSubCommand(TEST_CMD_NOTHING,
                                    std::make_unique<SubCommandTest>(TEST_CMD_NOTHING));
     RegisterMainCommandDebug();
@@ -94,9 +101,9 @@ HWTEST_F(OptionDebugTest, TestRegisterMainCommandDebug, TestSize.Level1)
 {
     // see RegisterMainCommandDebug
 #if is_ohos
-    EXPECT_GE(Option::GetMainOptions().size(), 9u);
+    EXPECT_EQ(Option::GetMainOptions().size(), 8u);
 #else
-    EXPECT_GE(Option::GetMainOptions().size(), 8u);
+    EXPECT_EQ(Option::GetMainOptions().size(), 7u);
 #endif
 }
 

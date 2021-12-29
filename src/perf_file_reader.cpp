@@ -361,7 +361,6 @@ const std::vector<std::unique_ptr<PerfFileSection>> &PerfFileReader::GetFeatureS
 
 const std::string PerfFileReader::GetFeatureString(const FEATURE feature) const
 {
-    std::string result;
     std::string featureName = PerfFileSection::GetFeatureName(feature);
     HLOGV("GetFeatureSection %s", featureName.c_str());
     if (!IsFeatrureStringSection(feature)) {

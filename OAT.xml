@@ -61,6 +61,7 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="test/unittest/resource/testdata/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/report/.*" desc="test resource file, no license header"/>
+                <filteritem type="filepath" name="test/fuzztest/resource/testdata/.*" desc="test resource file, no license header"/>
             </filefilter>
             <filefilter name="copyrightPolicyFilter" desc="Filters for copyright header policies" >
                 <filteritem type="filepath" name="test/unittest/resource/testdata/.*" desc="test resource file, no copyright header"/>
@@ -103,6 +104,7 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="test/unittest/resource/testdata/report/.*" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/symbols_file_test_elf32" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/symbols_file_test_elf64" desc="the binary file for test, the file is self-developed"/>
+                <filteritem type="filepath" name="test/fuzztest/resource/testdata/elf_test" desc="the binary file for test, the file is self-developed"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>

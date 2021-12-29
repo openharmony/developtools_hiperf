@@ -71,11 +71,10 @@ void CallStack::dumpUDI(unw_dyn_info_t &di)
 bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemMapItem &mmap,
                         const VirtualThread &thread)
 {
-    uint64_t fdeTableElfOffset, fdeTableSize, ehFrameHdrElfOffset;
-    uint64_t SectionVaddr, SectionSize, SectionFileOffset;
     di.start_ip = mmap.begin_;
     di.end_ip = mmap.end_;
 #ifndef target_cpu_arm
+    uint64_t fdeTableElfOffset, fdeTableSize, ehFrameHdrElfOffset;
     if ((UNW_INFO_FORMAT_REMOTE_TABLE == di.format) &&
         symbolsFile.GetHDRSectionInfo(ehFrameHdrElfOffset, fdeTableElfOffset, fdeTableSize)) {
         /*
@@ -118,8 +117,11 @@ bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemM
         HLOGV(" fdeTableElfOffset:      0x%016" PRIx64 "", fdeTableElfOffset);
         HLOGV(" fdeTableSize:           0x%016" PRIx64 "", fdeTableSize);
         return true;
+    } else {
+        HLOGD("SymbolsFile::GetHDRSectionInfo() failed");
     }
 #else
+    uint64_t SectionVaddr, SectionSize, SectionFileOffset;
     if ((UNW_INFO_FORMAT_ARM_EXIDX == di.format) &&
         symbolsFile.GetSectionInfo(ARM_EXIDX, SectionVaddr, SectionSize, SectionFileOffset)) {
         const MemMapItem *targetMmap = thread.FindMapByFileInfo(mmap.name_, SectionFileOffset);
@@ -140,6 +142,8 @@ bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemM
         // GetSectionInfo return true, but SectionVaddr || SectionSize is 0 ???
         HLOG_ASSERT(SectionVaddr != 0 && SectionSize != 0);
         return true;
+    } else {
+        HLOGD("SymbolsFile::GetSectionInfo() failed");
     }
 #endif
     return false;
@@ -161,9 +165,6 @@ int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, const MemMapItem &mmap,
     dsoUnwDynInfoMap &dynFileMap = dynInfoProcessMap[unwindInfoPtr->thread.pid_];
     // find use dso name as key
     if (dynFileMap.find(symbolsFile->filePath_) == dynFileMap.end()) {
-        // we make a option empty value first
-        std::optional<unw_dyn_info_t> &odi = dynFileMap[symbolsFile->filePath_];
-
         unw_dyn_info_t newdi;
         memset_s(&newdi, sizeof(unw_dyn_info_t), 0, sizeof(unw_dyn_info_t));
 #ifdef target_cpu_arm
@@ -175,7 +176,12 @@ int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, const MemMapItem &mmap,
 #endif
         if (fillUDI(newdi, *symbolsFile, mmap, unwindInfoPtr->thread)) {
             dumpUDI(newdi);
+            // we make a option empty value first
+            std::optional<unw_dyn_info_t> &odi = dynFileMap[symbolsFile->filePath_];
             odi = newdi;
+        } else {
+            HLOGV("fillUDI failed()");
+            return -UNW_EUNSPEC;
         }
     }
 
@@ -265,10 +271,8 @@ int CallStack::AccessMem([[maybe_unused]] unw_addr_space_t as, unw_word_t addr,
                          unw_word_t *valuePoint, int writeOperation, void *arg)
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
-    size_t stackOffset = 0;
     *valuePoint = 0;
     HLOGDUMMY("try access addr 0x%" UNW_WORD_PFLAG " ", addr);
-
     HLOG_ASSERT(writeOperation == 0);
 
     /* Check overflow. */
@@ -290,7 +294,7 @@ int CallStack::AccessMem([[maybe_unused]] unw_addr_space_t as, unw_word_t addr,
             return -UNW_EUNSPEC;
         }
     } else {
-        stackOffset = addr - unwindInfoPtr->callStack.stackPoint_;
+        size_t stackOffset = addr - unwindInfoPtr->callStack.stackPoint_;
         *valuePoint = *(unw_word_t *)&unwindInfoPtr->callStack.stack_[stackOffset];
         HLOGM("access_mem addr %p val %" UNW_WORD_PFLAG ", from stack offset %zu",
               reinterpret_cast<void *>(addr), *valuePoint, stackOffset);
@@ -580,11 +584,10 @@ size_t CallStack::ExpendCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
     if (!cachedCallFramesMap_.count(tid)) {
         cachedCallFramesMap_[tid].reserve(MAX_CALL_FRAME_EXPEND_CACHE_SIZE);
     }
-    HashList<uint64_t, std::vector<CallFrame>> &cachedCallFrames = cachedCallFramesMap_[tid];
     if (callFrames.size() >= 1u) {
         // get top  (Earliest caller)
+        HashList<uint64_t, std::vector<CallFrame>> &cachedCallFrames = cachedCallFramesMap_[tid];
         HLOGV("find call stack frames in cahce %zu", cachedCallFrames.size());
-
         // compare
         using namespace std::rel_ops; // enable complement comparing operators
         for (auto itr = cachedCallFrames.begin(); itr < cachedCallFrames.end(); ++itr) {

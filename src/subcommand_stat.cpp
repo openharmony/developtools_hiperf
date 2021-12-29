@@ -139,19 +139,20 @@ void SubCommandStat::Report(
     }
 }
 
-__u64 SubCommandStat::FindEventCount(
+bool SubCommandStat::FindEventCount(
     const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
-    const std::string &configName, const __u64 group_id, double &scale)
+    const std::string &configName, const __u64 group_id, __u64 &eventCount, double &scale)
 {
     auto itr = countEvents.find(configName);
     if (itr != countEvents.end() && itr->second->id == group_id) {
-        if (itr->second->time_running < itr->second->time_enabled
-            && itr->second->time_running != 0) {
+        if (itr->second->time_running < itr->second->time_enabled &&
+            itr->second->time_running != 0) {
             scale = static_cast<double>(itr->second->time_enabled) / itr->second->time_running;
         }
-        return itr->second->eventCount;
+        eventCount = itr->second->eventCount;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 std::string SubCommandStat::GetCommentConfigName(
@@ -221,10 +222,10 @@ void SubCommandStat::GetComments(
         if (configName == commentConfigName && it->second->eventCount != 0) {
             std::string cpuSyclesName = GetCommentConfigName(it->second, "hw-cpu-cycles");
             double otherScale = 1.0;
-            __u64 cpuCyclesCount =
-                FindEventCount(countEvents, cpuSyclesName, it->second->id, otherScale);
-            if (cpuCyclesCount != 0
-                || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) {
+            __u64 cpuCyclesCount = 0;
+            bool other = FindEventCount(countEvents, cpuSyclesName, it->second->id, cpuCyclesCount,
+                                        otherScale);
+            if (other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) {
                 double cpi = static_cast<double>(cpuCyclesCount) / it->second->eventCount;
                 comments[configName] = StringPrintf("%lf cycles per instruction", cpi);
                 continue;
@@ -234,13 +235,14 @@ void SubCommandStat::GetComments(
         if (configName == commentConfigName) {
             std::string branchInsName = GetCommentConfigName(it->second, "hw-branch-instructions");
             double otherScale = 1.0;
-            __u64 branchInstructionsCount =
-                FindEventCount(countEvents, branchInsName, it->second->id, otherScale);
-            if (branchInstructionsCount != 0
-                || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) {
+            __u64 branchInstructionsCount = 0;
+            bool other = FindEventCount(countEvents, branchInsName, it->second->id,
+                                        branchInstructionsCount, otherScale);
+            if ((other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) &&
+                branchInstructionsCount != 0) {
                 double miss_rate =
                     static_cast<double>(it->second->eventCount) / branchInstructionsCount;
-                comments[configName] = StringPrintf("%lf%% miss rate", miss_rate * ONE_HUNDRED);
+                comments[configName] = StringPrintf("%lf miss rate", miss_rate * ONE_HUNDRED);
                 continue;
             }
         }
@@ -290,14 +292,12 @@ bool SubCommandStat::FindRunningTime(
 
 bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
 {
-    int rc = 0;
-
     if (pids.empty()) {
         return true;
     }
 
     for (auto pid : pids) {
-        rc = kill(pid, 0);
+        int rc = kill(pid, 0);
         if (rc == -1 || rc == ESRCH) {
             printf("not exit pid = %d\n", pid);
             return false;

@@ -58,11 +58,11 @@ size_t SubStringCount(const std::string &source, const std::string &sub)
 
 std::vector<std::string> StringSplit(std::string source, std::string split)
 {
-    size_t pos = 0;
     std::vector<std::string> result;
 
     // find
     if (!split.empty()) {
+        size_t pos = 0;
         while ((pos = source.find(split)) != std::string::npos) {
             // split
             std::string token = source.substr(0, pos);
@@ -223,7 +223,7 @@ std::string PlatformPathConvert(const std::string &path)
 std::string ReadFileToString(const std::string &fileName)
 {
     std::ifstream inputString(fileName, std::ios::in);
-    if (!inputString) {
+    if (!inputString or !inputString.is_open()) {
         return EMPTY_STRING;
     }
     std::istreambuf_iterator<char> firstIt = {inputString};
@@ -411,7 +411,7 @@ std::vector<std::string> GetSubDirs(const std::string &basePath)
     return result;
 }
 
-bool IsSameCommand(std::string cmdLine, std::string cmdName)
+bool IsSameCommand(const std::string &cmdLine, const std::string &cmdName)
 {
     std::vector<std::string> cmdpaths = StringSplit(cmdLine, "/");
     if (!cmdpaths.empty()) {

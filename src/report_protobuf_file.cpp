@@ -246,7 +246,7 @@ bool ReportProtobufFileReader::CheckFileMagic()
 
 bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readBack)
 {
-    int defaultIndent = 0;
+    const int defaultIndent = 0;
     fileName_ = fileName;
     try {
         protobufFileStream_->exceptions(std::ifstream::failbit | std::ifstream::badbit);

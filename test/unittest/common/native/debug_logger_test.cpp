@@ -25,10 +25,10 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-#ifdef DEFAULT_LOG_LEVEL
+
 DebugLevel DebugLogger::debugLevel_ = DEFAULT_LOG_LEVEL;
 bool DebugLogger::logDisabled_ = false;
-#endif
+
 class DebugLoggerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -40,9 +40,15 @@ public:
     std::random_device rd_;
 };
 
-void DebugLoggerTest::SetUpTestCase() {}
+void DebugLoggerTest::SetUpTestCase()
+{
+    DebugLogger::GetInstance()->Reset();
+}
 
-void DebugLoggerTest::TearDownTestCase() {}
+void DebugLoggerTest::TearDownTestCase()
+{
+    DebugLogger::GetInstance()->Reset();
+}
 
 void DebugLoggerTest::SetUp() {}
 

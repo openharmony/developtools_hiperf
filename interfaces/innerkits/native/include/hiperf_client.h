@@ -309,8 +309,7 @@ private:
     std::string outputFileName_ = "";
     std::string executeCommandPath_ = "";
     bool ready_ = false;
-    pid_t myPid_ = false;
-    pid_t myTid_ = false;
+    pid_t myPid_ = -1;
     bool debug_ = false;
     bool debugMuch_ = false;
     bool hilog_ = false;

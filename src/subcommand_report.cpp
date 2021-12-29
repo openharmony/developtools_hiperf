@@ -561,6 +561,8 @@ SubCommandReport::~SubCommandReport()
     if (output_ != nullptr && output_ != stdout) {
         fclose(output_);
     }
+
+    SymbolsFile::onRecording_ = true; // back to default for UT
 }
 
 bool SubCommandReport::OnSubCommand(std::vector<std::string> &args)

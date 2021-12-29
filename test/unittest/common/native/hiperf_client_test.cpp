@@ -40,14 +40,17 @@ public:
 
 void HiperfClientTest::SetUpTestCase() {}
 
-void HiperfClientTest::TearDownTestCase() {}
+void HiperfClientTest::TearDownTestCase()
+{
+    DebugLogger::GetInstance()->Reset();
+}
 
 void HiperfClientTest::SetUp() {}
 
-void HiperfClientTest::TearDown() {
+void HiperfClientTest::TearDown()
+{
     this_thread::sleep_for(1s);
 }
-
 
 /**
  * @tc.name:

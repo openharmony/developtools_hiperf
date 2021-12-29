@@ -306,12 +306,6 @@ bool Client::Setup(std::string outputDir)
 
     myPid_ = getpid();
 
-#ifndef gettid
-    myTid_ = syscall(SYS_gettid);
-#else
-    myTid_ = gettid();
-#endif
-
     // every thing check ok
     ready_ = true;
 
@@ -456,7 +450,7 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
     if (polled > 0) {
         while (true) {
             char c;
-            size_t result = TEMP_FAILURE_RETRY(read(serverToClientFd_, &c, 1));
+            ssize_t result = TEMP_FAILURE_RETRY(read(serverToClientFd_, &c, 1));
             if (result <= 0) {
                 HIPERF_HILOGD(MODULE_CPP_API, "read failed from pipe");
                 return false; // read fial means not ok

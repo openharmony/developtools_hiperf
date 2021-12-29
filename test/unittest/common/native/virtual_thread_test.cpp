@@ -55,9 +55,15 @@ public:
 
 std::string VirtualThreadTest::myFilePath_;
 
-void VirtualThreadTest::SetUpTestCase() {}
+void VirtualThreadTest::SetUpTestCase()
+{
+    DebugLogger::GetInstance()->OpenLog(DEFAULT_UT_LOG_DIR + "VirtualThreadTest.txt");
+}
 
-void VirtualThreadTest::TearDownTestCase() {}
+void VirtualThreadTest::TearDownTestCase()
+{
+    DebugLogger::GetInstance()->RestoreLog();
+}
 
 void VirtualThreadTest::SetUp() {}
 

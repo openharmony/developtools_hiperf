@@ -20,6 +20,7 @@ void TestGlobalChildFunction()
 {
     static volatile int gTestGlobalCounter {0};
     std::string gTestString = std::to_string(gTestGlobalCounter++);
+    printf(gTestString.c_str());
 }
 
 void TestGlobalParentFunction()
