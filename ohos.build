@@ -19,8 +19,7 @@
         }
       ],
       "test_list": [
-        "//developtools/hiperf/test:hiperf_unittest",
-        "//developtools/hiperf/test:hiperf_fuzztest"
+        "//developtools/hiperf/test:hiperf_unittest"
       ]
     }
   }
