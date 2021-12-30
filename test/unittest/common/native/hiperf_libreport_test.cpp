@@ -217,7 +217,10 @@ attr 1:
 }
 void HiperfLibReportTest::SetUpTestCase() {}
 
-void HiperfLibReportTest::TearDownTestCase() {}
+void HiperfLibReportTest::TearDownTestCase()
+{
+    DebugLogger::GetInstance()->Reset();
+}
 
 void HiperfLibReportTest::SetUp() {}
 

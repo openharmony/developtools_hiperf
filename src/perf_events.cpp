@@ -1186,7 +1186,7 @@ void PerfEvents::ReadRecordsFromMmaps()
 #endif
     // get readable mmap at this time
     for (auto &it : cpuMmap_) {
-        size_t dataSize = it.second.mmapPage->data_head - it.second.mmapPage->data_tail;
+        ssize_t dataSize = it.second.mmapPage->data_head - it.second.mmapPage->data_tail;
         __sync_synchronize(); // this same as rmb in gcc, after reading mmapPage->data_head
         if (dataSize <= 0) {
             continue;

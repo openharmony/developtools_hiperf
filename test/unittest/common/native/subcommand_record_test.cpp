@@ -66,6 +66,7 @@ void SubCommandRecordTest::TearDown()
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
+    MemoryHold::Get().Clean();
 }
 
 void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool expect, bool fixPid)
@@ -280,13 +281,13 @@ void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk)
         int testEventCount = MAX_TESTEVENT;
         std::string cmdline = opt;
         for (auto config : configs) {
-             if (testEventCount <= 0) {
-                 break;
-             }
-             cmdline += config.second;
-             cmdline += uk;
-             cmdline += ",";
-             testEventCount--;
+            if (testEventCount <= 0) {
+                break;
+            }
+            cmdline += config.second;
+            cmdline += uk;
+            cmdline += ",";
+            testEventCount--;
         }
         cmdline.pop_back(); // remove the last ','
         TestRecordCommand(cmdline);
@@ -496,7 +497,6 @@ HWTEST_F(SubCommandRecordTest, CallStackInputErr, TestSize.Level1)
     SetUp();
     TestRecordCommand("-d 2 -s what ", false);
 }
-
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeMin, TestSize.Level1)
 {

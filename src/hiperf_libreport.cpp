@@ -101,7 +101,7 @@ int ReportUnwindJson(const char *perfFile, const char *reportFile, const char *s
     return -1;
 }
 
-static std::unique_ptr<PerfFileReader> GetReader(const std::string fileName)
+static std::unique_ptr<PerfFileReader> GetReader(const std::string &fileName)
 {
     // check if file exist
     if (access(fileName.c_str(), F_OK) != 0) {

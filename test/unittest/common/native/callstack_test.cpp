@@ -30,9 +30,16 @@ public:
     default_random_engine rnd_;
 };
 
-void CallStackTest::SetUpTestCase() {}
+void CallStackTest::SetUpTestCase()
+{
+    DebugLogger::GetInstance()->Reset();
+    DebugLogger::GetInstance()->OpenLog(DEFAULT_UT_LOG_DIR + "CallStackTest.txt");
+}
 
-void CallStackTest::TearDownTestCase() {}
+void CallStackTest::TearDownTestCase()
+{
+    DebugLogger::GetInstance()->RestoreLog();
+}
 
 void CallStackTest::SetUp() {}
 
@@ -531,26 +538,13 @@ HWTEST_F(CallStackTest, GetUnwErrorName, TestSize.Level1)
 HWTEST_F(CallStackTest, ExpendCallStackSmall, TestSize.Level1)
 {
     CallStack callStack;
-    StdoutRecord stdoutRecord;
-    std::string stringOut;
-
     std::vector<CallFrame> stack0 = {};
     std::vector<CallFrame> stack1 = {{0x1, 0x1}};
     std::vector<CallFrame> stack2 = {{0x1, 0x1}, {0x2, 0x2}};
-    ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
-
-    stdoutRecord.Start();
     ASSERT_EQ(callStack.ExpendCallStack(0, stack0), 0u);
-
     ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
     ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
     ASSERT_EQ(callStack.ExpendCallStack(0, stack2, 2), 0u);
-    stringOut = stdoutRecord.Stop();
-
-    // for stack0
-    EXPECT_EQ(stringOut.find("new callstack is too small") != std::string::npos, true);
-    // for stack2 , 2
-    EXPECT_EQ(stringOut.find("cache callstack is too small") != std::string::npos, true);
 }
 /**
  * @tc.name: UnwindCallStack

@@ -171,12 +171,15 @@ void PerfRecordSample::ReplaceWithCallStack()
         }
         // add user context mark
         ips_.emplace_back(PERF_CONTEXT_USER);
-        std::all_of(callFrames_.begin(), callFrames_.end(), [&](const CallFrame &frame) {
+        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const CallFrame &frame) {
             ips_.emplace_back(frame.ip_);
             return true;
         });
-
-        HLOGV("combed %zu", callFrames_.size());
+        if (ret) {
+            HLOGV("combed %zu", callFrames_.size());
+        } else {
+            HLOGV("failed to combed %zu", callFrames_.size());
+        }
 
         if (sampleType_ & PERF_SAMPLE_REGS_USER) {
             data_.reg_nr = 0;

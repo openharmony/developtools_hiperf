@@ -64,7 +64,7 @@ common_deps = [
   "${hiperf_path}/:hiperf_platform_common",
   "${hiperf_path}/:hiperf_platform_host",
   "${hiperf_path}/:hiperf_platform_linux",
-  "${hiperf_path}/interfaces/innerkits/native:hiperf_client",
+  "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static",
   "//third_party/googletest:gmock_main",
   "//third_party/googletest:gtest_main",
 ]
@@ -180,9 +180,13 @@ group("hiperf_test") {
       ":hiperf_fuzztest(${host_toolchain})",
       ":hiperf_unittest(${host_toolchain})",
     ]
-  } else {
+  } else if (hiperf_test_fuzz){
     deps = [
       ":hiperf_fuzztest",
+      ":hiperf_unittest",
+    ]
+  } else {
+    deps = [
       ":hiperf_unittest",
     ]
   }

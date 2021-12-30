@@ -90,13 +90,11 @@ namespace HiPerf {
 const std::string EMPTY_STRING = "";
 
 // string function
-static class StringViewMemoryHold {
+class MemoryHold {
 public:
-    ~StringViewMemoryHold()
+    ~MemoryHold()
     {
-        for (auto &p : holder_) {
-            delete[] p;
-        }
+        Clean();
     }
     const char *HoldStringView(std::string_view view)
     {
@@ -110,10 +108,23 @@ public:
         holder_.emplace_back(p);
         return p;
     };
+    // only use in UT
+    void Clean()
+    {
+        for (auto &p : holder_) {
+            delete[] p;
+        }
+        holder_.clear();
+    }
+    static MemoryHold &Get()
+    {
+        static MemoryHold instance;
+        return instance;
+    }
 
 private:
     std::vector<char *> holder_;
-} memHolder;
+};
 
 std::string StringReplace(std::string source, const std::string &from, const std::string &to);
 
@@ -158,7 +169,7 @@ bool StringStartsWith(const std::string &string, const std::string &with);
 
 bool StringEndsWith(const std::string &string, const std::string &with);
 
-bool IsSameCommand(std::string cmdLine, std::string cmdName);
+bool IsSameCommand(const std::string &cmdLine, const std::string &cmdName);
 
 std::vector<pid_t> GetSubthreadIDs(const pid_t pid);
 

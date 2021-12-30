@@ -48,7 +48,7 @@ bool FuzzCommandLine(const char *subcommand, const uint8_t *data, size_t size)
         }
     }
 #ifdef DEBUG_HIPERF_FUZZ
-    std::cout << " size " << argv.size() << " subcommand " << subcommand << std::endl;
+    std::cout << " size " << argv.size() << std::endl;
 #endif
     hiperf_fuzzer_main(static_cast<int>(argv.size()), argv.data());
 

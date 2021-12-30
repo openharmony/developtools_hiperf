@@ -48,9 +48,15 @@ public:
     void PrepareUserSymbol();
 };
 
-void VirtualRuntimeTest::SetUpTestCase() {}
+void VirtualRuntimeTest::SetUpTestCase()
+{
+    DebugLogger::GetInstance()->OpenLog(DEFAULT_UT_LOG_DIR + "VirtualRuntimeTest.txt");
+}
 
-void VirtualRuntimeTest::TearDownTestCase() {}
+void VirtualRuntimeTest::TearDownTestCase()
+{
+    DebugLogger::GetInstance()->RestoreLog();
+}
 
 void VirtualRuntimeTest::SetUp()
 {

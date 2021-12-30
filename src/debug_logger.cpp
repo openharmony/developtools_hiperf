@@ -29,7 +29,6 @@ namespace Developtools {
 namespace HiPerf {
 DebugLogger::DebugLogger() : timeStamp_(steady_clock::now()), logPath_(DEFAULT_LOG_PATH)
 {
-    logFileBuffer_.resize(LOG_BUFFER_SIZE);
     OpenLog();
 }
 
@@ -108,11 +107,11 @@ int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fm
 
     if (enableHilog_) {
 #if is_ohos && !defined(CONFIG_NO_HILOG)
-        std::lock_guard<std::mutex> lock(logMutex_);
+        std::lock_guard<std::recursive_mutex> lock(logMutex_);
         ret = HiLog(buffer); // to the hilog
 #endif
     } else if (file_ != nullptr) {
-        std::lock_guard<std::mutex> lock(logMutex_);
+        std::lock_guard<std::recursive_mutex> lock(logMutex_);
 #ifdef HIPERF_DEBUG_TIME
         const auto startWriteTime = steady_clock::now();
 #endif
@@ -138,8 +137,10 @@ int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fm
 bool DebugLogger::EnableHiLog(bool enable)
 {
     enableHilog_ = enable;
-    if (fprintf(stdout, "change to use hilog\n") < 0) {
-        // what can we do here ???
+    if (enable) {
+        if (fprintf(stdout, "change to use hilog\n") < 0) {
+            // what can we do here ???
+        }
     }
     return enableHilog_;
 }
@@ -168,8 +169,8 @@ bool DebugLogger::SetMixLogOutput(bool enable)
 bool DebugLogger::SetLogPath(const std::string &newLogPath)
 {
     // make sure not write happend when rename
-    std::lock_guard<std::mutex> lock(logMutex_);
-    if (newLogPath.empty()) {
+    std::lock_guard<std::recursive_mutex> lock(logMutex_);
+    if (newLogPath.empty() and newLogPath != logPath_) {
         return false;
     }
     if (file_ != nullptr) {
@@ -228,11 +229,33 @@ DebugLevel DebugLogger::GetLogLevelByName(const std::string &name) const
     return LEVEL_MUCH;
 }
 
-bool DebugLogger::OpenLog()
+// only use for UT
+void DebugLogger::Reset()
 {
+    EnableHiLog(false);
+    SetLogLevel(LEVEL_VERBOSE);
+    Disable(false);
+    SetLogPath(DEFAULT_LOG_PATH);
+    SetLogTags("");
+}
+
+bool DebugLogger::RestoreLog()
+{
+    // use append not write for continually write
+    return OpenLog(logPath_, "a");
+}
+
+bool DebugLogger::OpenLog(const std::string &tempLogPath, const std::string &flags)
+{
+    std::lock_guard<std::recursive_mutex> lock(logMutex_);
+
     if (logDisabled_) {
         // don't reopen it when we crash or soemthing else.
         return false;
+    }
+    if (!tempLogPath.empty()) {
+        fclose(file_);
+        file_ = fopen(tempLogPath.c_str(), flags.c_str());
     }
     if (file_ != nullptr) {
         // already open
@@ -247,7 +270,6 @@ bool DebugLogger::OpenLog()
     } else {
         fseek(file_, 0, SEEK_SET);
         // ecach log can save 6ms (29ms -> 23ms)
-        setvbuf(file_, logFileBuffer_.data(), _IOFBF, logFileBuffer_.size());
         fprintf(stdout, "log will save at '%s'\n", logPath_.c_str());
         return true;
     }

@@ -80,9 +80,9 @@ struct Symbol {
         : funcVaddr_(vaddr),
           fileVaddr_(vaddr),
           len_(len),
-          name_(memHolder.HoldStringView(name)),
-          demangle_(memHolder.HoldStringView(demangle)),
-          module_(memHolder.HoldStringView(module)) {};
+          name_(MemoryHold::Get().HoldStringView(name)),
+          demangle_(MemoryHold::Get().HoldStringView(demangle)),
+          module_(MemoryHold::Get().HoldStringView(module)) {};
     Symbol(uint64_t vaddr, uint64_t len, const std::string &name, const std::string &module)
         : Symbol(vaddr, len, name, name, module) {};
 
@@ -142,7 +142,7 @@ struct Symbol {
             } else {
                 sstream << comm_ << "@0x" << std::hex << taskVaddr_;
             }
-            unknow_ = memHolder.HoldStringView(sstream.str());
+            unknow_ = MemoryHold::Get().HoldStringView(sstream.str());
         }
         return unknow_;
     }

@@ -14,10 +14,11 @@
 import("//build/ohos.gni")
 import("//developtools/hiperf/hiperf.gni")
 
+
 config("hiperf_client_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "include",
+    "include" ,
     "${hiperf_path}/include",
   ]
 }
@@ -27,10 +28,28 @@ ohos_shared_library("hiperf_client") {
   public_configs = [ ":hiperf_client_config" ]
   sources = [ "src/hiperf_client.cpp" ]
   defines = []
-  if (is_linux) {
+  if(is_linux) {
     defines += [ "CONFIG_NO_HILOG" ]
   } else {
-    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+    external_deps = [
+      "hiviewdfx_hilog_native:libhilog",
+    ]
+  }
+
+  subsystem_name = "developtools"
+  part_name = "hiperf"
+}
+
+ohos_static_library("hiperf_client_static") {
+  public_configs = [ ":hiperf_client_config" ]
+  sources = [ "src/hiperf_client.cpp" ]
+  defines = []
+  if(is_linux) {
+    defines += [ "CONFIG_NO_HILOG" ]
+  } else {
+    external_deps = [
+      "hiviewdfx_hilog_native:libhilog",
+    ]
   }
 
   subsystem_name = "developtools"

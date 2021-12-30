@@ -37,5 +37,9 @@ int main(const int argc, const char *argv[])
         sleep(wartTime);
     }
     printf("demo stop \n");
+    if (temp != nullptr) {
+        free(temp);
+        temp = nullptr;
+    }
     return 0;
 };

@@ -29,11 +29,13 @@ ohos_shared_library("hiperf_client_napi") {
   configs = [ ":hiperf_client_napi_config" ]
   sources = [ "hiperf_client_napi.cpp" ]
   deps = [
-    "${innerkits_path}/native:hiperf_client",
     "//foundation/ace/napi:ace_napi",
+    "${innerkits_path}/native:hiperf_client",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+  ]
 
   output_name = "hiperf_napi"
   relative_install_dir = "module"

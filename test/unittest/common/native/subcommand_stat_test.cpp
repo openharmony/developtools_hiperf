@@ -53,7 +53,6 @@ public:
                             const std::string &groupCounterName) const;
 
     const std::vector<std::string> defaultConfigNames_ = {
-        "hw-branch-instructions",
         "hw-branch-misses",
         "hw-cpu-cycles",
         "hw-instructions",
@@ -1009,7 +1008,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
 
     std::string cmdstr = "stat -p ";
     cmdstr += std::to_string(tid1);
-    cmdstr += " -e hw-branch-instructions -c 0 -d 3 --dumpoptions";
+    cmdstr += " -e hw-instructions -c 0 -d 3 --dumpoptions";
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -1023,7 +1022,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
     }
-    const std::vector<std::string> configNmaes = {"hw-branch-instructions"};
+    const std::vector<std::string> configNmaes = {"hw-instructions"};
     uint effectiveHeadCounter = 0u;
     EXPECT_GE(EffectiveCounter(stringOut, configNmaes, effectiveHeadCounter), configNmaes.size());
     t1.join();
@@ -1078,7 +1077,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
 
     std::string cmdstr = "stat -p ";
     cmdstr += std::to_string(tid1);
-    cmdstr += " -g hw-branch-instructions,hw-branch-misses"
+    cmdstr += " -g hw-branch-misses"
               " -g hw-cpu-cycles,hw-instructions"
               " -c 0 -d 3 --dumpoptions";
 
@@ -1096,7 +1095,6 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
     }
 
     const std::vector<std::string> configNmaes = {
-        "hw-branch-instructions",
         "hw-branch-misses",
         "hw-cpu-cycles",
         "hw-instructions",
@@ -1121,7 +1119,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
 
     std::string cmdstr = "stat -p ";
     cmdstr += std::to_string(tid1);
-    cmdstr += " -g hw-branch-instructions,hw-branch-misses"
+    cmdstr += " -g hw-instructions,hw-branch-misses"
               " -c 0 -d 3 --dumpoptions";
 
     StdoutRecord stdoutRecord;
@@ -1138,7 +1136,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
     }
 
     const std::vector<std::string> configNmaes = {
-        "hw-branch-instructions",
+        "hw-instructions",
         "hw-branch-misses",
     };
     uint effectiveHeadCounter = 0u;
@@ -1237,7 +1235,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
 
     std::string cmdstr = "stat -p ";
     cmdstr += std::to_string(tid1);
-    cmdstr += " -g hw-branch-instructions:k,hw-branch-misses:k"
+    cmdstr += " -g hw-branch-misses:k"
               " -g hw-cpu-cycles:k,hw-instructions:k"
               " -c 0 -d 3 --dumpoptions";
 
@@ -1254,7 +1252,6 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
         printf("output:\n%s", stringOut.c_str());
     }
     const std::vector<std::string> configNmaes = {
-        "hw-branch-instructions:k",
         "hw-branch-misses:k",
         "hw-cpu-cycles:k",
         "hw-instructions:k",
@@ -1262,7 +1259,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
     // some times 'sw-page-faults' is 0
     uint effectiveHeadCounter = 0u;
     EXPECT_GE(EffectiveCounter(stringOut, configNmaes, effectiveHeadCounter), configNmaes.size());
-    CheckGroupCoverage(stringOut, "hw-branch-instructions:k,hw-branch-misses:k");
+    CheckGroupCoverage(stringOut, "hw-branch-misses:k");
     CheckGroupCoverage(stringOut, "hw-cpu-cycles:k,hw-instructions:k");
     t1.join();
 }

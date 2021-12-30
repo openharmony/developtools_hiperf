@@ -70,7 +70,6 @@
             <option name="push" value="testdata/report/perf.disable.unwind.hiperf_example_cmd.data -> /data/test/resource/testdata/report/" src="res"/>
             <option name="push" value="testdata/report/hiperf_example_cmd -> /data/test/resource/testdata/report/" src="res"/>
             <option name="push" value="testdata/report/perf.dwarf.data -> /data/test/resource/testdata/report/" src="res"/>
-            <option name="push" value="testdata/report/perf.dwarf.data.txt -> /data/test/resource/testdata/report/" src="res"/>
 
             <option name="push" value="testdata/perfnew.data -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/report_test.data -> /data/test/resource/testdata/" src="res"/>

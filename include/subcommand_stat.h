@@ -90,9 +90,9 @@ private:
     bool helpOption_ {false};
     PerfEventParanoid request_ = USER;
     bool CheckOptionPid(std::vector<pid_t> pids);
-    static __u64 FindEventCount(
+    static bool FindEventCount(
         const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
-        const std::string &configName, const __u64 group_id, double &scale);
+        const std::string &configName, const __u64 group_id, __u64 &eventcount, double &scale);
     static void GetComments(
         const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
         std::map<std::string, std::string> &comments);

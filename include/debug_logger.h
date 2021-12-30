@@ -56,10 +56,12 @@ enum DebugLevel {
 
 #ifdef HIPERF_DEBUG
 #if is_ohos || is_double_framework
+const std::string DEFAULT_UT_LOG_DIR = "/data/local/tmp/";
 const std::string DEFAULT_LOG_PATH = "/data/local/tmp/hiperf_log.txt";
 #elif is_mingw
 const std::string DEFAULT_LOG_PATH = ".\\hiperf_log.txt";
 #elif is_linux
+const std::string DEFAULT_UT_LOG_DIR = "./";
 const std::string DEFAULT_LOG_PATH = "hiperf_log.txt";
 #else
 #error unkow os
@@ -113,6 +115,11 @@ public:
     mutable std::chrono::microseconds logSprintfTimes_ = std::chrono::microseconds::zero();
 #endif
 
+    // used in UT
+    bool OpenLog(const std::string & = "", const std::string & = "w");
+    bool RestoreLog();
+    void Reset();
+
 private:
     bool ShouldLog(DebugLevel debugLevel, const std::string &logTag) const;
     DebugLevel GetLogLevelByName(const std::string &) const;
@@ -122,12 +129,10 @@ private:
     int HiLog(std::string &buffer) const;
 
     static std::unique_ptr<DebugLogger> logInstance_;
-    std::string logFileBuffer_;
 
-    mutable std::mutex logMutex_;
+    mutable std::recursive_mutex logMutex_;
     static DebugLevel debugLevel_;
     const std::chrono::steady_clock::time_point timeStamp_;
-    bool OpenLog();
     FILE *file_ = nullptr;
     bool mixLogOutput_ = false; // log mix to std
     bool enableHilog_ = false;
