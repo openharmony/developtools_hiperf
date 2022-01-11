@@ -536,9 +536,9 @@ void PerfEvents::WaitRecordThread()
 
     const auto usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - trackingEndTime_);
     if (verboseReport_) {
-        printf("Record Process Completed (wait %" PRId64 " ms)\n", usedTimeMsTick.count());
+        printf("Record Process Completed (wait %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
     }
-    HLOGV("Record Process Completed (wait %" PRId64 " ms)\n", usedTimeMsTick.count());
+    HLOGV("Record Process Completed (wait %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
 #ifdef HIPERF_DEBUG_TIME
     printf("%zu record processed, used %0.3f ms(%4.2f us/record)\n", recordEventCount_,
            recordCallBackTime_.count() / MS_DUARTION,
@@ -1460,7 +1460,7 @@ bool PerfEvents::HaveTargetsExit(const std::chrono::steady_clock::time_point &st
         if (trackedCommand_->WaitCommand(wstatus)) {
             milliseconds usedMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
             printf("tracked command(%s) has exited (total %" PRId64 " ms)\n",
-                   trackedCommand_->GetCommandName().c_str(), usedMsTick.count());
+                   trackedCommand_->GetCommandName().c_str(), (uint64_t)usedMsTick.count());
             return true;
         }
         return false;
@@ -1476,7 +1476,7 @@ bool PerfEvents::HaveTargetsExit(const std::chrono::steady_clock::time_point &st
     }
     if (pids_.empty()) {
         milliseconds usedMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
-        printf("tracked processes have exited (total %" PRId64 " ms)\n", usedMsTick.count());
+        printf("tracked processes have exited (total %" PRId64 " ms)\n", (uint64_t)usedMsTick.count());
         return true;
     }
     return false;
@@ -1505,7 +1505,7 @@ void PerfEvents::RecordLoop()
 
         if (thisTime >= endTime) {
             usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
-            printf("Timeout exit (total %" PRId64 " ms)\n", usedTimeMsTick.count());
+            printf("Timeout exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
             if (trackedCommand_) {
                 trackedCommand_->Stop();
             }
@@ -1517,7 +1517,7 @@ void PerfEvents::RecordLoop()
     if (!g_trackRunning) {
         // for user interrupt situation, print time statistic
         usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
-        printf("User interrupt exit (total %" PRId64 " ms)\n", usedTimeMsTick.count());
+        printf("User interrupt exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
     }
 }
 
@@ -1544,7 +1544,7 @@ void PerfEvents::StatLoop()
                 durationInSec = usedTimeMsTick.count();
                 auto lefTimeMsTick = duration_cast<milliseconds>(endTime - thisTime);
                 printf("\nReport at %" PRId64 " ms (%" PRId64 " ms left):\n",
-                       usedTimeMsTick.count(), lefTimeMsTick.count());
+                       (uint64_t)usedTimeMsTick.count(), (uint64_t)lefTimeMsTick.count());
                 // end of comments
                 nextReportTime += timeReport_;
                 StatReport(durationInSec);
@@ -1558,7 +1558,7 @@ void PerfEvents::StatLoop()
         if (thisTime >= endTime) {
             usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
             durationInSec = usedTimeMsTick.count();
-            printf("Timeout exit (total %" PRId64 " ms)\n", usedTimeMsTick.count());
+            printf("Timeout exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
             if (trackedCommand_) {
                 trackedCommand_->Stop();
             }
@@ -1580,7 +1580,7 @@ void PerfEvents::StatLoop()
     if (!g_trackRunning) {
         // for user interrupt situation, print time statistic
         usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
-        printf("User interrupt exit (total %" PRId64 " ms)\n", usedTimeMsTick.count());
+        printf("User interrupt exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
     }
 
     if (timeReport_ == milliseconds::zero()) {
