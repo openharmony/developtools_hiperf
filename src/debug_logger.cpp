@@ -116,7 +116,7 @@ int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fm
         const auto startWriteTime = steady_clock::now();
 #endif
         milliseconds timeStamp = duration_cast<milliseconds>(startTime - timeStamp_);
-        fprintf(file_, "%05" PRId64 "ms %s", timeStamp.count(), buffer.data()); // to the file
+        fprintf(file_, "%05" PRId64 "ms %s", (uint64_t)timeStamp.count(), buffer.data()); // to the file
 #ifdef HIPERF_DEBUG_TIME
         logWriteTimes_ += duration_cast<microseconds>(steady_clock::now() - startWriteTime);
 #endif

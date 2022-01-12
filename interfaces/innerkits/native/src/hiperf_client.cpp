@@ -463,7 +463,7 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
         }
     } else if (polled == 0) {
         HIPERF_HILOGD(MODULE_CPP_API, "Client:command no response %" HILOG_PUBLIC "" PRIu64 ".\n",
-                      timeOut.count());
+                      (uint64_t)timeOut.count());
     } else {
         HIPERF_HILOGD(MODULE_CPP_API, "Client:command poll failed.\n");
     }
