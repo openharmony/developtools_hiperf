@@ -354,7 +354,7 @@ ohos_executable("hiperf") {
 
 ohos_executable("hiperf_host") {
   sources = [ "./src/main.cpp" ]
-  deps = [ ":hiperf_platform_common"
+  deps = [ ":hiperf_platform_common" ]
 
   if (use_musl) {
     static_link = true
