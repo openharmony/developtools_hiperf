@@ -19,6 +19,9 @@ namespace Developtools {
 namespace HiPerf {
 static bool OnVerboseLevel(const std::vector<std::string> &debugLevel)
 {
+    if (debugLevel.size() <= 0) {
+        return false;
+    }
     DebugLogger::GetInstance()->SetLogLevel(LEVEL_VERBOSE);
     DebugLogger::GetInstance()->Disable(false);
     return true;
@@ -26,6 +29,9 @@ static bool OnVerboseLevel(const std::vector<std::string> &debugLevel)
 
 static bool OnMuchLevel(const std::vector<std::string> &debugLevel)
 {
+    if (debugLevel.size() <= 0) {
+        return false;
+    }
     DebugLogger::GetInstance()->SetLogLevel(LEVEL_MUCH);
     DebugLogger::GetInstance()->Disable(false);
     return true;
@@ -33,6 +39,9 @@ static bool OnMuchLevel(const std::vector<std::string> &debugLevel)
 
 static bool OnDebugLevel(const std::vector<std::string> &debugLevel)
 {
+    if (debugLevel.size() <= 0) {
+        return false;
+    }
     DebugLogger::GetInstance()->SetLogLevel(LEVEL_DEBUG);
     DebugLogger::GetInstance()->Disable(false);
     return true;
@@ -40,12 +49,18 @@ static bool OnDebugLevel(const std::vector<std::string> &debugLevel)
 
 static bool OnNoDebug(const std::vector<std::string> &debugLevel)
 {
+    if (debugLevel.size() <= 0) {
+        return false;
+    }
     DebugLogger::GetInstance()->Disable();
     return true;
 }
 
 static bool OnMixLogOutput(const std::vector<std::string> &debugLevel)
 {
+    if (debugLevel.size() <= 0) {
+        return false;
+    }
     DebugLogger::GetInstance()->SetMixLogOutput(true);
     return true;
 }
@@ -55,6 +70,8 @@ static bool OnLogPath(std::vector<std::string> &args)
     if (args.size() > 0) {
         DebugLogger::GetInstance()->SetLogPath(args[0]);
         args.erase(args.begin());
+    } else {
+        return false;
     }
     return true;
 }
@@ -64,6 +81,8 @@ static bool OnLogTag(std::vector<std::string> &args)
     if (args.size() > 0) {
         DebugLogger::GetInstance()->SetLogTags(args[0]);
         args.erase(args.begin());
+    } else {
+        return false;
     }
     return true;
 }
@@ -76,15 +95,24 @@ static bool OnHiLog(const std::vector<std::string> &args)
 #endif
 void RegisterMainCommandDebug()
 {
-    Option::RegisterMainOption("--nodebug", "disbale debug log", OnNoDebug);
-    Option::RegisterMainOption("--debug", "show debug log", OnDebugLevel);
-    Option::RegisterMainOption("--verbose", "show debug log", OnVerboseLevel);
-    Option::RegisterMainOption("--much", "show extremely much debug log", OnMuchLevel);
-    Option::RegisterMainOption("--mixlog", "mix the log in output", OnMixLogOutput);
-    Option::RegisterMainOption("--logpath", "log file name full path", OnLogPath);
-    Option::RegisterMainOption(
-        "--logtag", "enable log level for HILOG_TAG, usage format: <tag>[:level][,<tag>[:level]]",
-        OnLogTag);
+    Option::RegisterMainOption("--nodebug", "disbale debug log, usage format: --nodebug [command] [args]",
+                               OnNoDebug);
+    Option::RegisterMainOption("--debug", "show debug log, usage format: --debug [command] [args]",
+                               OnDebugLevel);
+    Option::RegisterMainOption("--verbose", "show debug log, usage format: --verbose [command] [args]",
+                               OnVerboseLevel);
+    Option::RegisterMainOption("--much", "show extremely much debug log, usage format: --much [command] [args]",
+                               OnMuchLevel);
+    Option::RegisterMainOption("--mixlog", "mix the log in output, usage format: --much [command] [args]",
+                               OnMixLogOutput);
+    Option::RegisterMainOption("--logpath",
+                               "log file name full path, usage format: --logpath [filepath] [command] [args]",
+                               OnLogPath);
+    std::string tagUsage = StringPrintf("%s\t%-20s\t%s\t%-20s\t%s",
+        "enable log level for HILOG_TAG, usage format: --logtag <tag>[:level][,<tag>[:level]] [command] [args]\n", " ",
+        "tag: Dump, Report, Record, Stat... level: D, V, M...\n", " ",
+        "example: hiperf --verbose --logtag Record:D [command] [args]");
+    Option::RegisterMainOption("--logtag", tagUsage.c_str(), OnLogTag);
 #if is_ohos && !is_double_framework
     Option::RegisterMainOption("--hilog", "use hilog not file to record log", OnHiLog);
 #endif

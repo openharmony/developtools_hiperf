@@ -245,7 +245,9 @@ public:
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     virtual void DumpData(int indent = 0) const override;
     virtual void DumpLog(const std::string &prefix) const override;
-    void ReplaceWithCallStack();
+
+    // originalSize is use for expand callstack
+    void ReplaceWithCallStack(size_t originalSize = 0);
     pid_t GetPid() const override;
 
     // only for UT

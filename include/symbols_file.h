@@ -92,7 +92,12 @@ struct Symbol {
 
     // Symbolic use this
     Symbol(uint64_t taskVaddr = 0, const std::string &comm = "")
-        : taskVaddr_(taskVaddr), comm_(comm) {};
+        : taskVaddr_(taskVaddr), comm_(comm)
+    {
+    };
+
+    // copy
+    Symbol(const Symbol &other) = default;
 
     static bool SameVaddr(const Symbol &a, const Symbol &b)
     {
@@ -142,7 +147,8 @@ struct Symbol {
             } else {
                 sstream << comm_ << "@0x" << std::hex << taskVaddr_;
             }
-            unknow_ = MemoryHold::Get().HoldStringView(sstream.str());
+            std::string hold = sstream.str();
+            unknow_ = MemoryHold::Get().HoldStringView(hold);
         }
         return unknow_;
     }
@@ -170,6 +176,11 @@ struct Symbol {
         sstream << demangle_ << "|";
         sstream << name_ << "|";
         sstream << (matched_ ? "matched" : "");
+        sstream << " unknowname:" << unknow_.size();
+        sstream << " task:" << (comm_.size() > 0 ? comm_ : "");
+        sstream << "@" << taskVaddr_;
+        sstream << " file:" << (module_.size() > 0 ? module_ : "");
+        sstream << "@" << fileVaddr_;
 
         return sstream.str();
     };

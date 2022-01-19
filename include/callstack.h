@@ -38,9 +38,9 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-const int MAX_CALL_FRAME_EXPEND_CYCLE = 10;
-const size_t MAX_CALL_FRAME_EXPEND_CACHE_SIZE = 10;
-const size_t MAX_CALL_FRAME_UNWIND_SIZE = 30;
+const int MAX_CALL_FRAME_EXPAND_CYCLE = 10;
+const size_t MAX_CALL_FRAME_EXPAND_CACHE_SIZE = 10;
+const size_t MAX_CALL_FRAME_UNWIND_SIZE = 256;
 // if ip is 0 , 1 both not usefule
 const uint64_t BAD_IP_ADDRESS = 2;
 
@@ -55,7 +55,7 @@ public:
     bool UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *regs, u64 regsNum,
                          const u8 *stack, u64 stackSize, std::vector<CallFrame> &,
                          size_t maxStackLevel = MAX_CALL_FRAME_UNWIND_SIZE);
-    size_t ExpendCallStack(pid_t tid, std::vector<CallFrame> &callFrames, size_t expendLimit = 1u);
+    size_t ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames, size_t expandLimit = 1u);
 
 private:
     uint64_t stackPoint_ = 0;
@@ -66,8 +66,8 @@ private:
     u64 stackSize_ = 0;
 
     void LogFrame(const std::string msg, const std::vector<CallFrame> &frames);
-    size_t ExpendCallStack(std::vector<CallFrame> &newCallFrames,
-                           const std::vector<CallFrame> &cachedCallFrames, size_t expendLimit);
+    size_t DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
+                           const std::vector<CallFrame> &cachedCallFrames, size_t expandLimit);
 
     // we have a cache for all thread
     std::map<pid_t, HashList<uint64_t, std::vector<CallFrame>>> cachedCallFramesMap_;

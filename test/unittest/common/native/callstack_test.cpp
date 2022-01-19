@@ -16,6 +16,7 @@
 #include "callstack_test.h"
 
 using namespace testing::ext;
+using namespace testing;
 using namespace std;
 using namespace OHOS::HiviewDFX;
 namespace OHOS {
@@ -46,7 +47,7 @@ void CallStackTest::SetUp() {}
 void CallStackTest::TearDown() {}
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -56,7 +57,7 @@ HWTEST_F(CallStackTest, ExpendCallStackEmpty, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new               C
-        expend  A -> B -> C
+        expand  A -> B -> C
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -68,13 +69,13 @@ HWTEST_F(CallStackTest, ExpendCallStackEmpty, TestSize.Level1)
     };
     std::vector<CallFrame> stack2 = {};
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 0u);
     ASSERT_NE(stack1, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -84,7 +85,7 @@ HWTEST_F(CallStackTest, ExpendCallStackC, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new               C
-        expend  A -> B -> C
+        expand  A -> B -> C
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -98,13 +99,13 @@ HWTEST_F(CallStackTest, ExpendCallStackC, TestSize.Level1)
         {0x1u, 0x1u},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2), 2u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 2u);
     ASSERT_EQ(stack1, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -114,7 +115,7 @@ HWTEST_F(CallStackTest, ExpendCallStackBC, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new          B -> C
-        expend  A -> B -> C
+        expand  A -> B -> C
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -129,13 +130,13 @@ HWTEST_F(CallStackTest, ExpendCallStackBC, TestSize.Level1)
         {0x2u, 0x2u},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2), 1u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 1u);
     ASSERT_EQ(stack1, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -145,7 +146,7 @@ HWTEST_F(CallStackTest, ExpendCallStackABC, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new     A -> B -> C
-        expend  A -> B -> C
+        expand  A -> B -> C
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -161,13 +162,13 @@ HWTEST_F(CallStackTest, ExpendCallStackABC, TestSize.Level1)
         {0x3u, 0x3u},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 0u);
     ASSERT_EQ(stack1, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -177,7 +178,7 @@ HWTEST_F(CallStackTest, ExpendCallStackAB, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new     A -> B
-        expend  A -> B
+        expand  A -> B
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -192,13 +193,13 @@ HWTEST_F(CallStackTest, ExpendCallStackAB, TestSize.Level1)
         {0x3u, 0x3u},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 0u);
     ASSERT_NE(stack1, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -208,7 +209,7 @@ HWTEST_F(CallStackTest, ExpendCallStackA, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new     A
-        expend  A
+        expand  A
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -222,13 +223,13 @@ HWTEST_F(CallStackTest, ExpendCallStackA, TestSize.Level1)
         {0x3u, 0x3u},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 0u);
     ASSERT_NE(stack1, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -238,7 +239,7 @@ HWTEST_F(CallStackTest, ExpendCallStackB, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new          B
-        expend  A -> B
+        expand  A -> B
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -255,14 +256,14 @@ HWTEST_F(CallStackTest, ExpendCallStackB, TestSize.Level1)
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2), 1u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 1u);
     ASSERT_NE(stack1, stack2);
     ASSERT_EQ(stack3, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -272,7 +273,7 @@ HWTEST_F(CallStackTest, ExpendCallStackB2, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new          B
-        expend  A -> B
+        expand  A -> B
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -289,14 +290,14 @@ HWTEST_F(CallStackTest, ExpendCallStackB2, TestSize.Level1)
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1, 2), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2, 2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1, 2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2, 2), 0u);
     ASSERT_NE(stack1, stack2);
     ASSERT_NE(stack3, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -306,7 +307,7 @@ HWTEST_F(CallStackTest, ExpendCallStackB0, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new          B
-        expend  A -> B
+        expand  A -> B
     */
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
@@ -323,14 +324,14 @@ HWTEST_F(CallStackTest, ExpendCallStackB0, TestSize.Level1)
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1, 0), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2, 0), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1, 0), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2, 0), 0u);
     ASSERT_NE(stack1, stack2);
     ASSERT_NE(stack3, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -340,9 +341,9 @@ HWTEST_F(CallStackTest, ExpendCallStackBC2, TestSize.Level1)
                 3    2    1
         cache   A -> B -> C
         new          B -> C
-        expend  A -> B -> C
+        expand  A -> B -> C
     */
-    ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
+    ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
     CallStack callStack;
 
     std::vector<CallFrame> stack1 = {
@@ -355,13 +356,13 @@ HWTEST_F(CallStackTest, ExpendCallStackBC2, TestSize.Level1)
         {0x2u, 0x2u},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1, 2), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2, 2), 1u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1, 2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2, 2), 1u);
     ASSERT_EQ(stack1, stack2);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -400,17 +401,17 @@ HWTEST_F(CallStackTest, ExpendCallStackABCDE, TestSize.Level1)
         {0xB, 0xB},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackFull), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackBC), 1u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackABC), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackBFF), 1u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackFull), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackBC), 1u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackABC), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackBFF), 1u);
 
     // use stackBFF
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackBFF2, 2), 1u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackBFF2, 2), 1u);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -436,12 +437,12 @@ HWTEST_F(CallStackTest, ExpendCallStackFailure, TestSize.Level1)
         {0xD, 0xD},
     };
 
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackFull), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackDE), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackFull), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackDE), 0u);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -471,28 +472,28 @@ HWTEST_F(CallStackTest, ExpendCallStackTwoChance, TestSize.Level1)
         {0xC, 0xC},
         {0x2, 0x2},
     };
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack0), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stackC), 1u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack0), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stackC), 1u);
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
 HWTEST_F(CallStackTest, ExpendCallStackFullCache, TestSize.Level1)
 {
     CallStack callStack;
-    for (size_t i = 0; i < MAX_CALL_FRAME_EXPEND_CACHE_SIZE; i++) {
+    for (size_t i = 0; i < MAX_CALL_FRAME_EXPAND_CACHE_SIZE; i++) {
         std::vector<CallFrame> stack = {{rnd_(), rnd_()}};
-        callStack.ExpendCallStack(0, stack);
+        callStack.ExpandCallStack(0, stack);
     }
-    for (size_t i = 0; i < MAX_CALL_FRAME_EXPEND_CACHE_SIZE; i++) {
+    for (size_t i = 0; i < MAX_CALL_FRAME_EXPAND_CACHE_SIZE; i++) {
         std::vector<CallFrame> stack = {{rnd_(), rnd_()}};
-        callStack.ExpendCallStack(0, stack);
+        callStack.ExpandCallStack(0, stack);
     }
-    EXPECT_EQ(callStack.cachedCallFramesMap_[0].size(), MAX_CALL_FRAME_EXPEND_CACHE_SIZE);
+    EXPECT_EQ(callStack.cachedCallFramesMap_[0].size(), MAX_CALL_FRAME_EXPAND_CACHE_SIZE);
 }
 
 /**
@@ -531,7 +532,7 @@ HWTEST_F(CallStackTest, GetUnwErrorName, TestSize.Level1)
 }
 
 /**
- * @tc.name: ExpendCallStack
+ * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -541,10 +542,100 @@ HWTEST_F(CallStackTest, ExpendCallStackSmall, TestSize.Level1)
     std::vector<CallFrame> stack0 = {};
     std::vector<CallFrame> stack1 = {{0x1, 0x1}};
     std::vector<CallFrame> stack2 = {{0x1, 0x1}, {0x2, 0x2}};
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack0), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack1), 0u);
-    ASSERT_EQ(callStack.ExpendCallStack(0, stack2, 2), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack0), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2, 2), 0u);
+}
+
+/**
+ * @tc.name: ExpandCallStack
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(CallStackTest, ExpendCallStackLimit, TestSize.Level1)
+{
+    /*
+                3    2    1    0
+        cache   A -> B -> C
+        stack2            C
+        expand            C
+
+        stack3       B -> C
+        expand  A -> B -> C
+
+        stack4            C -> D
+        expand            C
+    */
+    ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
+    CallStack callStack;
+
+    std::vector<CallFrame> stack1 = {
+        {0x1u, 0x1u},
+        {0x2u, 0x2u},
+        {0x3u, 0x3u},
+    };
+    std::vector<CallFrame> stack2 = {
+        {0x1u, 0x1u},
+    };
+    std::vector<CallFrame> stack3 = {
+        {0x1u, 0x1u},
+        {0x2u, 0x2u},
+    };
+    std::vector<CallFrame> stack4 = {
+        {0x0u, 0x0u},
+        {0x1u, 0x1u},
+    };
+
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1, 2u), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2, 2u), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack3, 2u), 1u);
+    EXPECT_THAT(stack1, ContainerEq(stack3));
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack4, 2u), 0u);
+}
+
+/**
+ * @tc.name: ExpandCallStack
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(CallStackTest, ExpendCallStackABABAB, TestSize.Level1)
+{
+    /*
+                Caller                         Called
+        cache   A -> B -> C -> A -> B -> C -> A -> B
+        stack2                           C
+        expand  A -> B -> C -> A -> B -> C
+
+        stack3                      B -> C
+        expand  A -> B -> C -> A -> B -> C
+
+        stack4                           C -> D
+        expand  A -> B -> C -> A -> B -> C -> D
+    */
+    ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
+    CallStack callStack;
+
+    std::vector<CallFrame> stack1 = {
+        {0xb, 0xb}, {0xa, 0xa}, {0xc, 0xc}, {0xb, 0xb},
+        {0xa, 0xa}, {0xc, 0xc}, {0xb, 0xb}, {0xa, 0xa},
+    };
+    std::vector<CallFrame> stack2 = {
+        {0xc, 0xc},
+    };
+    std::vector<CallFrame> stack3 = {
+        {0xc, 0xc},
+        {0xb, 0xb},
+    };
+    std::vector<CallFrame> stack4 = {
+        {0xd, 0xd},
+        {0xc, 0xc},
+    };
+
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 5u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack3), 4u);
+    ASSERT_EQ(callStack.ExpandCallStack(0, stack4), 5u);
 }
 /**
  * @tc.name: UnwindCallStack

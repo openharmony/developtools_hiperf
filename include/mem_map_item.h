@@ -16,11 +16,14 @@
 #ifndef MEMMAPITEM_H
 #define MEMMAPITEM_H
 
+#include <utilities.h>
+
 #include <sstream>
 #include <string>
 
-#include <sys/types.h>
-
+namespace OHOS {
+namespace Developtools {
+namespace HiPerf {
 class MemMapItem {
 public:
     uint64_t begin_ = 0;
@@ -32,10 +35,15 @@ public:
     uint64_t minor_ = 0;
     ino_t inode = 0;
     std::string name_;
+    std::string_view nameHold_;
 
     MemMapItem() {}
     MemMapItem(uint64_t begin, uint64_t end, uint64_t offset, const std::string &name)
-        : begin_(begin), end_(end), pageoffset_(offset), name_(name)
+        : begin_(begin),
+          end_(end),
+          pageoffset_(offset),
+          name_(name),
+          nameHold_(MemoryHold::Get().HoldStringView(name))
     {
     }
 
@@ -87,4 +95,7 @@ public:
         return addr >= begin_ and addr < end_;
     }
 };
+} // namespace HiPerf
+} // namespace Developtools
+} // namespace OHOS
 #endif

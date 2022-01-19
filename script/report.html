@@ -2901,7 +2901,7 @@ input{
                                         if (rowElement.querySelector('.tree-icon')) {
                                             rowElement.querySelector('.tree-icon').name = 'plus-square';
                                         }
-                                        rowElement.removeAttribute('expend');
+                                        rowElement.removeAttribute('expand');
                                     };
                                     const expendNode = (rowElement) => {
                                         let id = rowElement.getAttribute('id');
@@ -2915,9 +2915,9 @@ input{
                                         if (rowElement.querySelector('.tree-icon')) {
                                             rowElement.querySelector('.tree-icon').name = 'minus-square';
                                         }
-                                        rowElement.setAttribute('expend', '');
+                                        rowElement.setAttribute('expand', '');
                                     }
-                                    if (rowElement.hasAttribute('expend')) {
+                                    if (rowElement.hasAttribute('expand')) {
                                         foldNode(rowElement);
                                     } else {
                                         expendNode(rowElement);
@@ -2942,7 +2942,7 @@ input{
                     parentNode.append(rowElement);
                     rowElement.setAttribute('id', rowData[ids[0]]);
                     rowElement.setAttribute('pid', rowData[ids[1]]);
-                    rowElement.setAttribute('expend', '');
+                    rowElement.setAttribute('expand', '');
                     if (rowData.children && rowData.children.length > 0) {
                         //有子节点的 前面加上 + 图标 表示可以展开节点
 

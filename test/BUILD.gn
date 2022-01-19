@@ -180,14 +180,10 @@ group("hiperf_test") {
       ":hiperf_fuzztest(${host_toolchain})",
       ":hiperf_unittest(${host_toolchain})",
     ]
-  } else if (hiperf_test_fuzz){
-    deps = [
-      ":hiperf_fuzztest",
-      ":hiperf_unittest",
-    ]
   } else {
-    deps = [
-      ":hiperf_unittest",
-    ]
+    deps = [ ":hiperf_unittest" ]
+  }
+  if (hiperf_test_fuzz) {
+    deps += [ ":hiperf_fuzztest" ]
   }
 }

@@ -1574,27 +1574,11 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_cmd, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_ni, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-    std::string testCMD {"stat -c 0 -d 3 --dumpoptions -e "};
     const std::string configName {"sw-cpu-clock"};
-    testCMD += configName;
-    const std::string cmdPath {" ./../../../../developtools/hiperf/hiperf_example_cmd"};
-    testCMD += cmdPath;
-    const auto tick1 = std::chrono::steady_clock::now();
-    EXPECT_EQ(Command::DispatchCommand(testCMD), true);
-    const auto tock1 = std::chrono::steady_clock::now();
-    const auto costMs1 = std::chrono::duration_cast<std::chrono::milliseconds>(tock1 - tick1);
-    EXPECT_LE(costMs1.count(), defaultRunTimeoutMs);
-    std::string stringOut = stdoutRecord.Stop();
-    if (HasFailure()) {
-        printf("output:\n%s", stringOut.c_str());
-    }
-    int counterValueWithInherit = CounterValue(stringOut, configName);
-    EXPECT_NE(counterValueWithInherit, 0);
-    HLOGD("%s  %d", configName.c_str(), counterValueWithInherit);
+    const std::string cmdPath {" ls"};
 
     stdoutRecord.Start();
-    testCMD = "stat --no-inherit -c 0 -d 3 --dumpoptions -e ";
+    std::string testCMD = "stat --no-inherit -c 0 -d 3 --dumpoptions -e ";
     testCMD += configName;
     testCMD += cmdPath;
     const auto tick2 = std::chrono::steady_clock::now();
@@ -1602,7 +1586,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_ni, TestSize.Level1)
     const auto tock2 = std::chrono::steady_clock::now();
     const auto costMs2 = std::chrono::duration_cast<std::chrono::milliseconds>(tock2 - tick2);
     EXPECT_LE(costMs2.count(), defaultRunTimeoutMs);
-    stringOut = stdoutRecord.Stop();
+    std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
     }

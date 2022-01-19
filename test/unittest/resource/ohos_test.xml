@@ -50,7 +50,7 @@
             <option name="push" value="testdata/syms_from_readelf_32 -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/syms_from_readelf_64 -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/symbols_file_test_elf32 -> /data/test/resource/testdata/" src="res"/>
-            <option name="push" value="testdata/symbols_file_test_elf32 -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/symbols_file_test_elf64 -> /data/test/resource/testdata/" src="res"/>
 
             <!--dwarf-->
             <option name="push" value="testdata/dwarf/user_regs.dump -> /data/test/resource/testdata/dwarf/" src="res"/>

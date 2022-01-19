@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define HILOG_TAG "Stat"
+
 #include <csignal>
 #include <iostream>
 #include <memory>
@@ -144,13 +146,14 @@ bool SubCommandStat::FindEventCount(
     const std::string &configName, const __u64 group_id, __u64 &eventCount, double &scale)
 {
     auto itr = countEvents.find(configName);
-    if (itr != countEvents.end() && itr->second->id == group_id) {
-        if (itr->second->time_running < itr->second->time_enabled &&
-            itr->second->time_running != 0) {
-            scale = static_cast<double>(itr->second->time_enabled) / itr->second->time_running;
-        }
+    if (itr != countEvents.end()) {
         eventCount = itr->second->eventCount;
-        return true;
+        if (itr->second->id == group_id
+            && itr->second->time_running < itr->second->time_enabled
+            && itr->second->time_running != 0) {
+            scale = static_cast<double>(itr->second->time_enabled) / itr->second->time_running;
+            return true;
+        }
     }
     return false;
 }
@@ -306,33 +309,6 @@ bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
     return true;
 }
 
-bool SubCommandStat::ParseEventList(std::vector<std::string> &list)
-{
-    for (auto &nameStr : list) {
-        std::string name;
-        bool isUser = false;
-        bool isKernel = false;
-        bool isTracePoint = false;
-        if (!perfEvents_.ParseEventName(nameStr, name, isKernel, isUser, isTracePoint)) {
-            return false;
-        }
-        if (isKernel) {
-            request_ = KERNEL_USER;
-        }
-    }
-    return true;
-}
-
-bool SubCommandStat::ParseGroupList(std::vector<std::vector<std::string>> &list)
-{
-    for (auto &evnetList : list) {
-        if (!ParseEventList(evnetList)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 {
     HLOGV("enter");
@@ -367,10 +343,6 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         printf("-t <tid>        stat events on existing thread id\n");
         return false;
     }
-    // check event
-    if (!ParseGroupList(selectEvents_) || !ParseGroupList(selectGroups_)) {
-        return false;
-    }
     perfEvents_.SetSystemTarget(targetSystemWide_);
     perfEvents_.SetTimeOut(timeStopSec_);
     perfEvents_.SetTimeReport(timeReportMs_);
@@ -401,9 +373,6 @@ bool RegisterSubCommandStat()
 
 bool SubCommandStat::PrepairEvents()
 {
-    if (!perfEvents_.CheckPermissions(request_)) {
-        return false;
-    }
     if (selectEvents_.empty() && selectGroups_.empty()) {
         perfEvents_.AddDefaultEvent(PERF_TYPE_HARDWARE);
         perfEvents_.AddDefaultEvent(PERF_TYPE_SOFTWARE);
@@ -436,7 +405,6 @@ bool SubCommandStat::CheckSelectCpuPidOption()
                     return false;
                 }
             }
-            request_ = KERNEL_USER_CPU;
         }
     } else {
         // the cpu default -1

@@ -49,7 +49,6 @@ void HiperfClientTest::SetUp() {}
 
 void HiperfClientTest::TearDown()
 {
-    this_thread::sleep_for(1s);
 }
 
 /**

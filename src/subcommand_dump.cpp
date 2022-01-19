@@ -242,6 +242,8 @@ void SubCommandDump::DumpPrintFileHeader(int indent)
     // read here , because we need found symbols
     reader_->ReadFeatureSection();
 
+    SetDeviceArch(GetArchTypeFromUname(reader_->GetFeatureString(FEATURE::ARCH)));
+
     // found symbols in file
     for (auto &featureSection : reader_->GetFeatureSections()) {
         if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_SYMBOL) {
@@ -396,7 +398,8 @@ void SubCommandDump::DumpCallChain(int indent, std::unique_ptr<PerfRecordSample>
         indent += LEVEL1;
         for (auto frameIt = sample->callFrames_.begin(); frameIt != sample->callFrames_.end();
              frameIt++) {
-            PrintIndent(indent, "%s\n", frameIt->ToSymbolString().c_str());
+            PrintIndent(indent, "%02zd:%s\n", std::distance(frameIt, sample->callFrames_.end()),
+                        frameIt->ToSymbolString().c_str());
         }
     }
 }

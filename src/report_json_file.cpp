@@ -148,7 +148,7 @@ void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNo
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
                 grandchildren.nodeIndex_ = nodeIndex_++;
-                grandchildren.funcName_ = std::get<1>(functionList_.at(funcId));
+                grandchildren.funcName_ = std::get<keyfuncName>(functionList_.at(funcId));
             }
             // only the last one need count
             if (it + 1 == frames.rend()) {

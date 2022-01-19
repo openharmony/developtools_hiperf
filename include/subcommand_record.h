@@ -23,7 +23,7 @@
 #define HIDEBUG_SKIP_MATCH_SYMBOLS       0
 #define HIDEBUG_SKIP_LOAD_KERNEL_SYMBOLS 0
 #define HIDEBUG_SKIP_SAVE_SYMBOLS        0
-#define USE_COLLECT_SYMBOLIC
+#define USE_COLLECT_SYMBOLIC             1
 
 #include <thread>
 #include <unordered_map>
@@ -122,7 +122,7 @@ public:
         "   --disable-unwind\n"
         "         If '-s dwarf' is used, stack will be unwind while recording by default\n"
         "         use this option to disable unwinding.\n"
-        "   --disable-callstack-expend\n"
+        "   --disable-callstack-expand\n"
         "         If '-s dwarf' is used, to break the 64k stack limit, callstack is merged by default\n"
         "         to build more complete call stack. that may not be correct sometimes.\n"
         "   --clockid <clock_id>\n"
@@ -191,7 +191,7 @@ private:
     std::vector<pid_t> selectTids_ = {};
     std::vector<std::string> selectEvents_ = {};
     std::vector<std::vector<std::string>> selectGroups_ = {};
-    std::vector<std::string> sampleTypes_ = {};
+    std::vector<std::string> callStackType_ = {};
     std::vector<std::string> vecBranchFilters_ = {};
     std::vector<std::string> trackedCommand_ = {};
 
@@ -201,9 +201,9 @@ private:
     bool CheckSelectCpuPidOption();
     bool GetOptionFrequencyAndPeriod(std::vector<std::string> &args);
 
-    bool dwarfCallchainSample_ = false;
-    bool fpCallchainSample_ = false;
-    uint32_t dwarfSampleStackSize_ = MAX_SAMPLE_STACK_SIZE;
+    bool isCallStackDwarf_ = false;
+    bool isCallStackFp_ = false;
+    uint32_t callStackDwarfSize_ = MAX_SAMPLE_STACK_SIZE;
     uint64_t branchSampleType_ = 0;
     uint64_t dataSizeLimit_ = 0;
     bool isDataSizeLimitStop_ = false;
@@ -228,22 +228,9 @@ private:
     bool WaitFifoReply(int fd);
     void CloseClientThread();
 
-    // just a debug test function
-    bool AddSelectEvent(std::vector<std::string> &events, bool groups = false);
-
-    enum EventSpaceType {
-        NONE = 0,
-        USER = 1,
-        KERNEL = 2,
-        USER_KERNEL = 3,
-    };
-    uint8_t eventSpaceType_ = EventSpaceType::NONE;
-    PerfEventParanoid request_ = PerfEventParanoid::USER;
-    bool ParseEventList(std::vector<std::string> &list);
-    bool ParseGroupList(std::vector<std::vector<std::string>> &list);
     bool PreparePerfEvent();
-    bool PrepareSys();
-    bool PrepareVR();
+    bool PrepareSysKernel();
+    bool PrepareVirtualRuntime();
 
     size_t recordSamples_ = 0;
     size_t recordNoSamples_ = 0;
@@ -277,7 +264,7 @@ private:
     bool SetPerfMaxSampleRate();
 
     bool TraceOffCpu();
-    bool ParseCallStackOption(const std::vector<std::string> &vecSampleTypes);
+    bool ParseCallStackOption(const std::vector<std::string> &callStackType);
     bool ParseDataLimitOption(const std::string &str);
     bool ParseBranchSampleType(const std::vector<std::string> &vecBranchSampleTypes);
     bool ParseControlCmd(const std::string cmd);
@@ -287,7 +274,7 @@ private:
     pid_t GetAppPackagePid(const std::string &appPackge);
 
     VirtualRuntime virtualRuntime_;
-#ifdef USE_COLLECT_SYMBOLIC
+#if USE_COLLECT_SYMBOLIC
     std::unordered_set<uint64_t> kernelSymbolsHits_;
     std::unordered_map<pid_t, std::unordered_set<uint64_t>> userSymbolsHits_;
     void SymbolicHits();

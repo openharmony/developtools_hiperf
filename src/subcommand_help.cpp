@@ -25,7 +25,7 @@ namespace HiPerf {
 bool SubCommandHelp::OnSubCommand(std::vector<std::string> &args)
 {
     HLOGV("enter");
-
+    OnHelp(args);
     return true;
 }
 
@@ -40,9 +40,9 @@ bool SubCommandHelp::OnHelp(std::vector<std::string> &args)
     if (args.empty()) {
         const auto &mainOptions = Option::GetMainOptions();
         HLOGD("%zu options found:", mainOptions.size());
-        printf("Usage: hiperf [options] COMMAND [args for command]\n");
+        printf("Usage: hiperf [options] command [args for command]\n");
 
-        printf("Options:\n");
+        printf("options:\n");
         for (const auto &commandOption : mainOptions) {
             printf("\t%-20s\t%s\n", commandOption.first.c_str(),
                    commandOption.second->help.c_str());
@@ -50,11 +50,11 @@ bool SubCommandHelp::OnHelp(std::vector<std::string> &args)
 
         auto &commands = SubCommand::GetSubCommands();
         HLOGD("%zu cmds found:", commands.size());
-        printf("Command:\n");
+        printf("command:\n");
         for (const auto &command : commands) {
             printf("\t%s:\t%s\n", command.second->Name().c_str(), command.second->Brief().c_str());
         }
-        printf("\nSee 'hiperf help COMMAND' for more information on a specific command.\n\n");
+        printf("\nSee 'hiperf help [command]' for more information on a specific command.\n\n");
     } else {
         auto command = SubCommand::FindSubCommand(args.front());
         if (command != nullptr) {

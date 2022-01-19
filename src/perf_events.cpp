@@ -205,6 +205,17 @@ bool PerfEvents::AddDefaultEvent(perf_type_id type)
     return true;
 }
 
+bool PerfEvents::AddOffCpuEvent()
+{
+    std::string eventName = "sched:sched_switch";
+    if (eventSpaceType_ == EventSpaceType::USER) {
+        eventName += ":u";
+    } else if (eventSpaceType_ == EventSpaceType::KERNEL) {
+        eventName += ":k";
+    }
+    return AddEvent(eventName);
+}
+
 bool PerfEvents::AddEvents(const std::vector<std::string> &eventStrings, bool group)
 {
     bool followGroup = false;
@@ -289,6 +300,17 @@ bool PerfEvents::AddEvent(const std::string &eventString, bool followGroup)
     bool isTracePointEvent = false;
     if (!ParseEventName(eventString, eventName, excludeUser, excludeKernel, isTracePointEvent)) {
         return false;
+    }
+    if (excludeUser) {
+        if (requestPermission_ > PerfEventParanoid::KERNEL_USER) {
+            requestPermission_ = PerfEventParanoid::KERNEL_USER;
+        }
+
+        eventSpaceType_ |= EventSpaceType::KERNEL;
+    } else if (excludeKernel) {
+        eventSpaceType_ |= EventSpaceType::USER;
+    } else {
+        eventSpaceType_ |= EventSpaceType::USER_KERNEL;
     }
 
     if (isTracePointEvent) {
@@ -471,6 +493,11 @@ static void RecoverCaptureSig()
 bool PerfEvents::PrepareTracking(void)
 {
     HLOGV("enter");
+
+    if (!CheckPermissions(requestPermission_)) {
+        return false;
+    }
+
     // 1. prepare cpu pid
     if (!PrepareFdEvents()) {
         HLOGE("PrepareFdEvents() failed");
@@ -682,6 +709,12 @@ void PerfEvents::SetSystemTarget(bool systemTarget)
 void PerfEvents::SetCpu(std::vector<pid_t> cpus)
 {
     cpus_ = cpus;
+
+    if (!cpus_.empty()) {
+        if (requestPermission_ > PerfEventParanoid::KERNEL_USER_CPU) {
+            requestPermission_ = PerfEventParanoid::KERNEL_USER_CPU;
+        }
+    }
 }
 
 void PerfEvents::SetPid(std::vector<pid_t> pids)
