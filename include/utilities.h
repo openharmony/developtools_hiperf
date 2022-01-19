@@ -195,7 +195,7 @@ std::string StringPrintf(const char *stringFormat, VA... args)
     }
 
     // print it to bytes
-    if (snprintf_s(bytes, DEFAULT_STRING_BUF_SIZE, DEFAULT_STRING_BUF_SIZE - 1, stringFormat,
+    if (snprintf_s(bytes, sizeof(bytes), sizeof(bytes) - 1, stringFormat,
                    args...) < 0) {
         return EMPTY_STRING;
     }

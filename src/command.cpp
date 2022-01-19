@@ -40,7 +40,7 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
             arguments.erase(arguments.begin());
 
             if (!commandOption->callBackFunction(arguments)) {
-                printf("unknown options: %s\n", arguments.front().c_str());
+                printf("unknown options: %s\nUse the help command to view help.\n", arguments.front().c_str());
                 return false;
             }
             // goto next args

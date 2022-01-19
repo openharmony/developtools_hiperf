@@ -200,8 +200,6 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     event.SetMmapPages(DEFAULT_SAMPLE_MMAPAGE);
     event.SetRecordCallBack(RecordCount);
 
-    ASSERT_TRUE(event.CheckPermissions());
-
     std::vector<pid_t> selectCpus_;
     event.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
@@ -254,7 +252,6 @@ HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level1)
     g_recordCount = 0;
     event.SetMmapPages(DEFAULT_SAMPLE_MMAPAGE);
     event.SetRecordCallBack(RecordCount);
-    ASSERT_TRUE(event.CheckPermissions());
     SetAllConfig(event);
     ASSERT_EQ(event.PrepareTracking(), true);
     std::thread runThread(RunTrack, std::ref(event));

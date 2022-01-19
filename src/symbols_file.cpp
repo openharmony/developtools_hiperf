@@ -981,7 +981,7 @@ public:
                 const auto thisTime = std::chrono::steady_clock::now();
                 const auto usedTimeMsTick =
                     std::chrono::duration_cast<std::chrono::milliseconds>(thisTime - startTime);
-                HLOGV("Load kernel symbols (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
+                HLOGV("Load kernel symbols (total %" PRId64 " ms)\n", (int64_t)usedTimeMsTick.count());
                 // load complete
                 return true;
             }

@@ -159,20 +159,30 @@ void PerfRecordSample::DumpLog(const std::string &prefix) const
           data_.reg_nr, data_.dyn_size, data_.time);
 }
 
-void PerfRecordSample::ReplaceWithCallStack()
+void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
 {
     // first we check if we have some user unwind stack need to merge ?
     if (callFrames_.size() != 0) {
         // when we have some kernel ips , we cp it first
-        // new size is user call frames + kernel call frames + PERF_CONTEXT_USER(last +1)
-        ips_.reserve(callFrames_.size() + data_.nr + 1);
+        // new size is user call frames + kernel call frames
+        // + PERF_CONTEXT_USER(last + 1) + expand mark(also PERF_CONTEXT_USER)
+        const unsigned int perfContextSize = 2;
+        ips_.reserve(data_.nr + callFrames_.size() + perfContextSize);
         if (data_.nr > 0) {
             ips_.assign(data_.ips, data_.ips + data_.nr);
         }
         // add user context mark
         ips_.emplace_back(PERF_CONTEXT_USER);
+        // we also need make a expand mark just for debug only
+        const size_t beginIpsSize = ips_.size();
         bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const CallFrame &frame) {
             ips_.emplace_back(frame.ip_);
+            if (originalSize != 0 and (originalSize != callFrames_.size()) and
+                ips_.size() == (originalSize + beginIpsSize)) {
+                // just for debug
+                // so we can see which frame begin is expand call frames
+                ips_.emplace_back(PERF_CONTEXT_USER);
+            }
             return true;
         });
         if (ret) {
@@ -343,9 +353,22 @@ void PerfRecordSample::DumpData(int indent) const
         PrintIndent(indent, "period %lld\n", data_.period);
     }
     if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
+        bool userContext = false;
         PrintIndent(indent, "callchain nr=%lld\n", data_.nr);
         for (uint64_t i = 0; i < data_.nr; ++i) {
-            PrintIndent(indent + 1, "0x%llx\n", data_.ips[i]);
+            std::string_view supplement = "";
+            if ((sampleType_ & PERF_SAMPLE_STACK_USER) == 0 || data_.ips[i] != PERF_CONTEXT_USER) {
+                PrintIndent(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
+                continue;
+            }
+            // is PERF_SAMPLE_STACK_USER type and is PERF_CONTEXT_USER
+            if (!userContext) {
+                userContext = true;
+                supplement = " <unwind callstack>";
+            } else {
+                supplement = " <expand callstack>";
+            }
+            PrintIndent(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
         }
     }
     if (sampleType_ & PERF_SAMPLE_RAW) {

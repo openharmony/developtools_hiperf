@@ -27,10 +27,9 @@ protoc_cmdline=$*
 echo protoc_cmdline $protoc_cmdline
 
 # search one by bone
-PREBUILD_HOST_AOSP_RUNTIME=$BUILD_TOP/prebuilts/aosp_prebuilt_libs/host_tools/lib64
 PREBUILD_HOST_CLANG_RUNTIME=$BUILD_TOP/prebuilts/clang/host/linux-x86/clang-r353983c/lib64
 PREBUILD_OHOS_CLANG_RUNTIME=$BUILD_TOP/prebuilts/clang/ohos/linux-x86_64/llvm/lib
-export LD_LIBRARY_PATH=$PREBUILD_HOST_AOSP_RUNTIME:$PREBUILD_HOST_CLANG_RUNTIME:$PREBUILD_OHOS_CLANG_RUNTIME:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PREBUILD_HOST_CLANG_RUNTIME:$PREBUILD_OHOS_CLANG_RUNTIME:$LD_LIBRARY_PATH
 cmd="$protoc_cmdline"
 echo $cmd
 $cmd

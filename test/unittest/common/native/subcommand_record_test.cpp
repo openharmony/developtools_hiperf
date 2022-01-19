@@ -569,7 +569,7 @@ HWTEST_F(SubCommandRecordTest, DisableUnwind, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, DisableCallstackMerge, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -s dwarf,16 --disable-callstack-expend ");
+    TestRecordCommand("-d 2 -s dwarf,16 --disable-callstack-expand ");
 }
 
 // symbol dir

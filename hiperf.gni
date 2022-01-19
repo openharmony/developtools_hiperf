@@ -28,7 +28,6 @@ declare_args() {
   hiperf_debug = true
   hiperf_code_analyze = false
   hiperf_use_syspara = true
-  have_common_tools = true
 }
 
 code_check_flag = [

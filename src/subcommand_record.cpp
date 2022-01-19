@@ -126,7 +126,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" clockId_:\t%s\n", clockId_.c_str());
     printf(" mmapPages_:\t%d\n", mmapPages_);
     printf(" dataLimit:\t%s\n", strLimit_.c_str());
-    printf(" callStack:\t%s\n", VectorToString(sampleTypes_).c_str());
+    printf(" callStack:\t%s\n", VectorToString(callStackType_).c_str());
     printf(" branchSampleTypes:\t%s\n", VectorToString(vecBranchFilters_).c_str());
     printf(" trackedCommand:\t%s\n", VectorToString(trackedCommand_).c_str());
     printf(" pipe_input:\t%d\n", clientPipeInput_);
@@ -156,7 +156,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--disable-unwind", disableUnwind_)) {
         return false;
     }
-    if (!Option::GetOptionValue(args, "--disable-callstack-expend", disableCallstackExpend_)) {
+    if (!Option::GetOptionValue(args, "--disable-callstack-expand", disableCallstackExpend_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--verbose", verboseReport_)) {
@@ -201,21 +201,21 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-g", selectGroups_)) {
         return false;
     }
-    if (!Option::GetOptionValue(args, "-s", sampleTypes_)) {
+    if (!Option::GetOptionValue(args, "-s", callStackType_)) {
         return false;
     }
-    std::vector<std::string> sampleTypesB = {};
-    if (!Option::GetOptionValue(args, "--call-stack", sampleTypesB)) {
+    std::vector<std::string> callStackType = {};
+    if (!Option::GetOptionValue(args, "--call-stack", callStackType)) {
         return false;
     }
-    if (!sampleTypes_.empty()) {
-        if (!sampleTypesB.empty()) {
+    if (!callStackType_.empty()) {
+        if (!callStackType.empty()) {
             printf("'-s %s --call-stack %s' option usage error, please check usage.\n",
-                   VectorToString(sampleTypes_).c_str(), VectorToString(sampleTypesB).c_str());
+                   VectorToString(callStackType_).c_str(), VectorToString(callStackType).c_str());
             return false;
         }
     } else {
-        sampleTypes_ = sampleTypesB;
+        callStackType_ = callStackType;
     }
 
     if (!Option::GetOptionValue(args, "--data-limit", strLimit_)) {
@@ -293,9 +293,6 @@ bool SubCommandRecord::CheckSelectCpuPidOption()
                 return false;
             }
         }
-        if (request_ > PerfEventParanoid::KERNEL_USER_CPU) {
-            request_ = PerfEventParanoid::KERNEL_USER_CPU;
-        }
     }
 
     if (!selectPids_.empty()) {
@@ -346,13 +343,10 @@ bool SubCommandRecord::CheckOptions()
     if (!CheckDataLimitOption()) {
         return false;
     }
-    if (!ParseCallStackOption(sampleTypes_)) {
+    if (!ParseCallStackOption(callStackType_)) {
         return false;
     }
     if (!ParseBranchSampleType(vecBranchFilters_)) {
-        return false;
-    }
-    if (!ParseEventList(selectEvents_) || !ParseGroupList(selectGroups_)) {
         return false;
     }
     if (!CheckSelectCpuPidOption()) {
@@ -363,40 +357,6 @@ bool SubCommandRecord::CheckOptions()
     }
     if (!CheckTargetProcessOptions()) {
         return false;
-    }
-    return true;
-}
-
-bool SubCommandRecord::ParseEventList(std::vector<std::string> &list)
-{
-    for (auto &nameStr : list) {
-        std::string name;
-        bool excludeUser = false;
-        bool excludeKernel = false;
-        bool isTracePoint = false;
-        if (!perfEvents_.ParseEventName(nameStr, name, excludeUser, excludeKernel, isTracePoint)) {
-            return false;
-        }
-        if (excludeUser) {
-            if (request_ > PerfEventParanoid::KERNEL_USER) {
-                request_ = PerfEventParanoid::KERNEL_USER;
-            }
-            eventSpaceType_ |= EventSpaceType::KERNEL;
-        } else if (excludeKernel) {
-            eventSpaceType_ |= EventSpaceType::USER;
-        } else {
-            eventSpaceType_ |= EventSpaceType::USER_KERNEL;
-        }
-    }
-    return true;
-}
-
-bool SubCommandRecord::ParseGroupList(std::vector<std::vector<std::string>> &list)
-{
-    for (auto &evnetList : list) {
-        if (!ParseEventList(evnetList)) {
-            return false;
-        }
     }
     return true;
 }
@@ -543,47 +503,47 @@ bool SubCommandRecord::ParseDataLimitOption(const std::string &str)
     return true;
 }
 
-bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &vecSampleTypes)
+bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &callStackType)
 {
-    if (vecSampleTypes.empty()) {
+    if (callStackType.empty()) {
         return true;
-    } else if (vecSampleTypes[0] == "fp") {
-        if (vecSampleTypes.size() != 1) {
-            printf("Invalid -s value %s.\n", VectorToString(vecSampleTypes).c_str());
+    } else if (callStackType[0] == "fp") {
+        if (callStackType.size() != 1) {
+            printf("Invalid -s value %s.\n", VectorToString(callStackType).c_str());
             return false;
         }
-        fpCallchainSample_ = true;
-    } else if (vecSampleTypes[0] == "dwarf") {
-        if (vecSampleTypes.size() > MAX_DWARF_CALL_CHAIN) {
-            printf("Invalid -s value %s.\n", VectorToString(vecSampleTypes).c_str());
+        isCallStackFp_ = true;
+    } else if (callStackType[0] == "dwarf") {
+        if (callStackType.size() > MAX_DWARF_CALL_CHAIN) {
+            printf("Invalid -s value %s.\n", VectorToString(callStackType).c_str());
             return false;
-        } else if (vecSampleTypes.size() == MAX_DWARF_CALL_CHAIN) {
+        } else if (callStackType.size() == MAX_DWARF_CALL_CHAIN) {
             try {
-                dwarfSampleStackSize_ = std::stoul(vecSampleTypes.at(1));
+                callStackDwarfSize_ = std::stoul(callStackType.at(1));
             } catch (...) {
                 printf("Invalid -s value, dwarf stack size, '%s' is illegal.\n",
-                       vecSampleTypes.at(1).c_str());
+                       callStackType.at(1).c_str());
                 return false;
             }
-            if (dwarfSampleStackSize_ < MIN_SAMPLE_STACK_SIZE) {
+            if (callStackDwarfSize_ < MIN_SAMPLE_STACK_SIZE) {
                 printf("Invalid -s value, dwarf stack size, '%s' is too small.\n",
-                       vecSampleTypes.at(1).c_str());
+                       callStackType.at(1).c_str());
                 return false;
             }
-            if (dwarfSampleStackSize_ > MAX_SAMPLE_STACK_SIZE) {
+            if (callStackDwarfSize_ > MAX_SAMPLE_STACK_SIZE) {
                 printf("Invalid -s value, dwarf stack size, '%s' is bigger than max value %d.\n",
-                       vecSampleTypes.at(1).c_str(), MAX_SAMPLE_STACK_SIZE);
+                       callStackType.at(1).c_str(), MAX_SAMPLE_STACK_SIZE);
                 return false;
             }
-            if ((dwarfSampleStackSize_ & MASK_ALIGNED_8) != 0) {
+            if ((callStackDwarfSize_ & MASK_ALIGNED_8) != 0) {
                 printf("Invalid -s value, dwarf stack size, '%s' is not 8 byte aligned.\n",
-                       vecSampleTypes.at(1).c_str());
+                       callStackType.at(1).c_str());
                 return false;
             }
         }
-        dwarfCallchainSample_ = true;
+        isCallStackDwarf_ = true;
     } else {
-        printf("Invalid -s value '%s'.\n", vecSampleTypes.at(0).c_str());
+        printf("Invalid -s value '%s'.\n", callStackType.at(0).c_str());
         return false;
     }
     return true;
@@ -675,9 +635,10 @@ bool SubCommandRecord::TraceOffCpu()
 
 bool SubCommandRecord::PreparePerfEvent()
 {
-    if (!perfEvents_.CheckPermissions(request_)) {
-        return false;
-    }
+    // we need to notify perfEvents_ sampling mode by SetRecordCallBack first
+    auto processRecord = std::bind(&SubCommandRecord::ProcessRecord, this, std::placeholders::_1);
+    perfEvents_.SetRecordCallBack(processRecord);
+
     perfEvents_.SetCpu(selectCpus_);
     perfEvents_.SetPid(selectPids_); // Tids has insert Pids in CheckTargetProcessOptions()
 
@@ -685,11 +646,11 @@ bool SubCommandRecord::PreparePerfEvent()
     perfEvents_.SetTimeOut(timeStopSec_);
     perfEvents_.SetVerboseReport(verboseReport_);
     perfEvents_.SetMmapPages(mmapPages_);
-    if (fpCallchainSample_) {
+    if (isCallStackFp_) {
         perfEvents_.SetSampleStackType(PerfEvents::SampleStackType::FP);
-    } else if (dwarfCallchainSample_) {
+    } else if (isCallStackDwarf_) {
         perfEvents_.SetSampleStackType(PerfEvents::SampleStackType::DWARF);
-        perfEvents_.SetDwarfSampleStackSize(dwarfSampleStackSize_);
+        perfEvents_.SetDwarfSampleStackSize(callStackDwarfSize_);
     }
     if (!perfEvents_.SetBranchSampleType(branchSampleType_)) {
         printf("branch sample %s is not supported\n", VectorToString(vecBranchFilters_).c_str());
@@ -714,24 +675,6 @@ bool SubCommandRecord::PreparePerfEvent()
         selectEvents_.push_back("hw-cpu-cycles");
     }
 
-    // cpu off add after default event (we need both sched_switch and user selected events)
-    if (offCPU_) {
-        if (std::find(selectEvents_.begin(), selectEvents_.end(), "sched_switch") ==
-            selectEvents_.end()) {
-            // insert a sched_switch event to trace offcpu event
-            if (eventSpaceType_ == EventSpaceType::USER_KERNEL) {
-                selectEvents_.push_back("sched:sched_switch");
-            } else if (eventSpaceType_ == EventSpaceType::KERNEL) {
-                selectEvents_.push_back("sched:sched_switch:k");
-            } else if (eventSpaceType_ == EventSpaceType::USER) {
-                selectEvents_.push_back("sched:sched_switch:u");
-            }
-        } else {
-            printf("--offcpu is not supported event sched_switch\n");
-            return false;
-        }
-    }
-
     if (!perfEvents_.AddEvents(selectEvents_)) {
         HLOGE("Fail to AddEvents events");
         return false;
@@ -742,11 +685,24 @@ bool SubCommandRecord::PreparePerfEvent()
             return false;
         }
     }
+    // cpu off add after default event (we need both sched_switch and user selected events)
+    if (offCPU_) {
+        if (std::find(selectEvents_.begin(), selectEvents_.end(), "sched_switch") !=
+            selectEvents_.end()) {
+            printf("--offcpu is not supported event sched_switch\n");
+            return false;
+        }
+        // insert a sched_switch event to trace offcpu event
+        if (!perfEvents_.AddOffCpuEvent()) {
+            HLOGE("Fail to AddEOffCpuvent");
+            return false;
+        }
+    }
 
     return true;
 }
 
-bool SubCommandRecord::PrepareSys()
+bool SubCommandRecord::PrepareSysKernel()
 {
     if (!SetPerfMaxSampleRate()) {
         HLOGE("Fail to call SetPerfMaxSampleRate(%d)", frequency_);
@@ -764,8 +720,11 @@ bool SubCommandRecord::PrepareSys()
     return true;
 }
 
-bool SubCommandRecord::PrepareVR()
+bool SubCommandRecord::PrepareVirtualRuntime()
 {
+    auto saveRecord = std::bind(&SubCommandRecord::SaveRecord, this, std::placeholders::_1);
+    virtualRuntime_.SetRecordMode(saveRecord);
+
     // do some config for virtualRuntime_
     virtualRuntime_.SetCallStackExpend(disableCallstackExpend_ ? 0 : 1);
     // these is same for virtual runtime
@@ -777,6 +736,12 @@ bool SubCommandRecord::PrepareVR()
         }
     }
 
+    // load vsdo first
+    virtualRuntime_.LoadVdso();
+
+    // prepare from kernel and ko
+    virtualRuntime_.UpdateKernelSpaceMaps();
+    virtualRuntime_.UpdateKernelModulesSpaceMaps();
     return true;
 }
 
@@ -1025,18 +990,8 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
         return true;
     }
 
-    // we need do some record in CreateInitRecordFile , so we need set callback before it
-    auto processRecord = std::bind(&SubCommandRecord::ProcessRecord, this, std::placeholders::_1);
-    auto saveRecord = std::bind(&SubCommandRecord::SaveRecord, this, std::placeholders::_1);
-
-    // two ways:
-    // perfEvents_ -> processRecord -> virtualRuntime_ -> saveRecord
-    //                              -> saveRecord
-    perfEvents_.SetRecordCallBack(processRecord);
-    virtualRuntime_.SetRecordMode(saveRecord);
-
     // prepare PerfEvents
-    if (!PrepareSys() || !PreparePerfEvent() || !PrepareVR()) {
+    if (!PrepareSysKernel() or !PreparePerfEvent()) {
         return false;
     }
 
@@ -1051,17 +1006,14 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
         return false;
     }
 
+    if (!PrepareVirtualRuntime()) {
+        return false;
+    }
+
     // make a thread wait the other command
     if (clientPipeOutput_ != -1) {
         clientCommandHanle_ = std::thread(&SubCommandRecord::ClientCommandHandle, this);
     }
-
-    // load vsdo first
-    virtualRuntime_.LoadVdso();
-
-    // prepare from kernel and ko
-    virtualRuntime_.UpdateKernelSpaceMaps();
-    virtualRuntime_.UpdateKernelModulesSpaceMaps();
 
     // start tracking
     if (!perfEvents_.StartTracking(!isFifoServer_)) {
@@ -1072,16 +1024,14 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     if (!FinishWriteRecordFile()) {
         HLOGE("Fail to finish record file %s", outputFilename_.c_str());
         return false;
-    }
-
-    // post process record file
-    if (!PostProcessRecordFile()) {
+    } else if (!PostProcessRecordFile()) {
         HLOGE("Fail to post process record file");
         return false;
     }
 
     // finial report
     RecordCompleted();
+
     CloseClientThread();
     return true;
 }
@@ -1405,8 +1355,8 @@ bool SubCommandRecord::PostProcessRecordFile()
     }
     return true;
 }
-#define USE_COLLECT_SYMBOLIC
 
+#if USE_COLLECT_SYMBOLIC
 void SubCommandRecord::SymbolicHits()
 {
     for (auto &vaddr : kernelSymbolsHits_) {
@@ -1420,12 +1370,13 @@ void SubCommandRecord::SymbolicHits()
         }
     }
 }
+#endif
 
 bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 {
     if (record->GetType() == PERF_RECORD_SAMPLE) {
         PerfRecordSample *sample = static_cast<PerfRecordSample *>(record.get());
-#ifdef USE_COLLECT_SYMBOLIC
+#if USE_COLLECT_SYMBOLIC
         perf_callchain_context context = record->inKernel() ? PERF_CONTEXT_KERNEL
                                                             : PERF_CONTEXT_USER;
         // if no nr use ip
@@ -1475,7 +1426,7 @@ bool SubCommandRecord::FinishWriteRecordFile()
         HLOGD("Load user symbols");
         fileWriter_->ReadDataSection(
             std::bind(&SubCommandRecord::CollectionSymbol, this, std::placeholders::_1));
-#ifdef USE_COLLECT_SYMBOLIC
+#if USE_COLLECT_SYMBOLIC
         SymbolicHits();
 #endif
         HLOGD("Write the symbols to perf.data");

@@ -256,6 +256,7 @@ public:
     void SetTimeOut(float timeOut);
     void SetTimeReport(int);
     void SetVerboseReport(bool);
+    bool AddOffCpuEvent();
 
     inline void SetTrackedCommand(const std::vector<std::string> &trackedCommand)
     {
@@ -346,7 +347,6 @@ public:
     };
 
     static const std::string GetTypeName(perf_type_id type_id);
-    bool CheckPermissions(PerfEventParanoid request = KERNEL_USER_CPU);
     bool ParseEventName(const std::string &nameStr, std::string &name, bool &excludeUser,
                         bool &excludeKernel, bool &isTracePoint);
 
@@ -399,6 +399,16 @@ private:
     bool HaveTargetsExit(const std::chrono::steady_clock::time_point &startTime);
     void ExitReadRecordBufThread();
 
+    enum EventSpaceType {
+        UNKNOW = 0,
+        USER = 1,
+        KERNEL = 2,
+        USER_KERNEL = 3,
+    };
+    uint8_t eventSpaceType_ = EventSpaceType::UNKNOW;
+
+    PerfEventParanoid requestPermission_ = PerfEventParanoid::USER;
+    bool CheckPermissions(PerfEventParanoid request = KERNEL_USER_CPU);
     bool CheckOhosPermissions();
 
     static PerfEventParanoid perfEventParanoid_;

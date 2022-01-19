@@ -88,7 +88,6 @@ private:
     bool verboseReport_ {false};
     std::vector<std::string> trackedCommand_ {};
     bool helpOption_ {false};
-    PerfEventParanoid request_ = USER;
     bool CheckOptionPid(std::vector<pid_t> pids);
     static bool FindEventCount(
         const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
@@ -113,8 +112,6 @@ private:
     bool PrepairEvents();
     bool CheckOptions(const std::vector<pid_t> &pids);
     bool CheckSelectCpuPidOption();
-    bool ParseEventList(std::vector<std::string> &list);
-    bool ParseGroupList(std::vector<std::vector<std::string>> &list);
 };
 
 bool RegisterSubCommandStat(void);

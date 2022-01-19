@@ -300,6 +300,7 @@ void VirtualRuntime::MakeCallFrame(Symbol &symbol, CallFrame &callFrame)
     callFrame.symbolName_ = symbol.Name();
     callFrame.symbolIndex_ = symbol.index_;
     callFrame.filePath_ = symbol.module_.empty() ? symbol.comm_ : symbol.module_;
+    HLOG_ASSERT_MESSAGE(!callFrame.symbolName_.empty(), "%s", symbol.ToDebugString().c_str());
 }
 
 void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
@@ -362,11 +363,12 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 #endif
         size_t oldSize = recordSample.callFrames_.size();
         HLOGV("unwind %zu", recordSample.callFrames_.size());
-        callstack_.ExpendCallStack(thread.tid_, recordSample.callFrames_, callstackMergeLevel_);
-        HLOGV("expend %zu (+%zu)", recordSample.callFrames_.size(),
+        callstack_.ExpandCallStack(thread.tid_, recordSample.callFrames_, callstackMergeLevel_);
+        HLOGV("expand %zu (+%zu)", recordSample.callFrames_.size(),
               recordSample.callFrames_.size() - oldSize);
+
+        recordSample.ReplaceWithCallStack(oldSize);
     }
-    recordSample.ReplaceWithCallStack();
 
 #ifdef HIPERF_DEBUG_TIME
     unwindFromRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
@@ -521,7 +523,7 @@ const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thr
         if (symbolsFile != nullptr) {
             vaddrSymbol.fileVaddr_ =
                 symbolsFile->GetVaddrInSymbols(ip, mmap->begin_, mmap->pageoffset_);
-            vaddrSymbol.module_ = mmap->name_;
+            vaddrSymbol.module_ = mmap->nameHold_;
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
                   vaddrSymbol.fileVaddr_, ip, mmap->name_.c_str());
             if (!symbolsFile->SymbolsLoaded()) {
@@ -557,13 +559,14 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, pid_t pid, pid_t tid, Symbol &s
         }
         Symbol &foundSymbol = kernelSymbolCache_[ip];
         foundSymbol.hit_++;
-        HLOGM("hit kernel cache 0x%" PRIx64 " %d", ip, foundSymbol.hit_);
+        HLOGV("hit kernel cache 0x%" PRIx64 " %d", ip, foundSymbol.hit_);
         symbol = foundSymbol;
         return true;
-    } else if (threadSymbolCache_[tid].count(ip)) {
+    } else if (threadSymbolCache_[tid].count(ip) != 0) {
         Symbol &foundSymbol = threadSymbolCache_[tid][ip];
         foundSymbol.hit_++;
-        HLOGM("hit user cache 0x%" PRIx64 " %d", ip, foundSymbol.hit_);
+        HLOGV("hit user cache 0x%" PRIx64 " %d %s", ip, foundSymbol.hit_,
+              foundSymbol.ToDebugString().c_str());
         symbol = foundSymbol;
         return true;
     } else {
@@ -575,9 +578,9 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, pid_t pid, pid_t tid, Symbol &s
 const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                                        const perf_callchain_context &context)
 {
-    HLOGM("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles ", tid, ip, symbolsFiles_.size());
+    HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles ", tid, ip, symbolsFiles_.size());
     Symbol symbol;
-    if (!threadSymbolCache_.count(tid)) {
+    if (threadSymbolCache_.find(tid) == threadSymbolCache_.end()) {
         threadSymbolCache_[tid].reserve(THREAD_SYMBOL_CACHE_LIMIT);
     }
     if (GetSymbolCache(ip, pid, tid, symbol, context)) {
@@ -587,6 +590,8 @@ const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
         // check userspace memmap
         symbol = GetUserSymbol(ip, GetThread(pid, tid));
         threadSymbolCache_[tid][ip] = symbol;
+        HLOGV("cache ip  0x%" PRIx64 " to %s", ip,
+              threadSymbolCache_[tid][ip].ToDebugString().c_str());
     }
 
     if (context == PERF_CONTEXT_KERNEL or (context == PERF_CONTEXT_MAX and !symbol.isValid())) {

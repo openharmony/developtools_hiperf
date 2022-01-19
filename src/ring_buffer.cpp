@@ -21,7 +21,12 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-RingBuffer::RingBuffer(size_t size) : buf_(new uint8_t[size]), size_(size) {}
+RingBuffer::RingBuffer(size_t size) : size_(size)
+{
+    if (size > 0) {
+        buf_ = std::make_unique<uint8_t[]>(size);
+    }
+}
 
 RingBuffer::~RingBuffer() {}
 

@@ -312,7 +312,7 @@ struct ReportConfigItem {
     ReportConfigItem(int index, std::string eventName) : index_(index), eventName_(eventName) {}
 };
 
-using functionKey = std::tuple<int, std::string>;
+using functionKey = std::tuple<int, std::string_view>;
 static constexpr const int keyLibId = 0;
 static constexpr const int keyfuncName = 1;
 

@@ -510,7 +510,7 @@ void CallStack::LogFrame(const std::string msg, const std::vector<CallFrame> &fr
 
 /*
 we should have CallStack cache for each thread
-
+end                    begin
 0. A -> B -> C -> E -> F
 1.           C -> E -> F
 2.      B -> C
@@ -521,73 +521,90 @@ we should have CallStack cache for each thread
 0 is our cache
 1 2 3... is from record
 
-use expendLimit to setup how may frame match is needs
+use expandLimit to setup how may frame match is needs
 
 */
-size_t CallStack::ExpendCallStack(std::vector<CallFrame> &newCallFrames,
-                                  const std::vector<CallFrame> &cachedCallFrames,
-                                  size_t expendLimit)
+size_t CallStack::DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
+                                    const std::vector<CallFrame> &cachedCallFrames,
+                                    size_t expandLimit)
 {
     int maxCycle = 0;
-    HLOG_ASSERT(expendLimit != 0u);
-    HLOG_ASSERT(newCallFrames.size() >= expendLimit);
 
-    // begin is ip (Bottom), this will change when compare
-    auto cachedIt = cachedCallFrames.begin(); // from begin
-    // end is caller (Top) , this will not change when compare
-    const auto newIt = std::prev(newCallFrames.end());
+    if (expandLimit == 0 or newCallFrames.size() < expandLimit or
+        cachedCallFrames.size() < expandLimit) {
+        HLOGM("expandLimit %zu not match new %zu cache %zu", expandLimit, newCallFrames.size(),
+              cachedCallFrames.size());
+        return 0; // size not enough
+    }
 
-    HLOGDUMMY("find %s + %zu", newIt->ToString().c_str(), expendLimit);
+    // called (Stack Buttom) , this will NOT change when compare
+    // in case1 newIt -> C
+    // in case2 newIt -> B
+    const auto newIt = newCallFrames.end() - expandLimit;
 
-    // first time earch
-    cachedIt = find(cachedIt, cachedCallFrames.end(), *newIt);
+    HLOGM("try find new call chain bottom %s for limit %zu", newIt->ToString().c_str(),
+          expandLimit);
+
+    // first frame earch, from called - > caller
+    // for case 2 it should found B
+    ssize_t distances = expandLimit - 1;
+    auto cachedIt = find(cachedCallFrames.begin(), cachedCallFrames.end(), *newIt);
+    if (cachedIt == cachedCallFrames.end()) {
+        HLOGM("not found in first search");
+    }
 
     // cache frame found
-    while (std::distance(cachedIt, cachedCallFrames.end()) >=
-           std::distance(newIt, newCallFrames.end())) {
-        HLOG_ASSERT_MESSAGE(maxCycle++ < MAX_CALL_FRAME_EXPEND_CYCLE, "MAX_UNWIND_CYCLE = %d reach",
-                            MAX_CALL_FRAME_EXPEND_CYCLE);
+    while (std::distance(cachedIt, cachedCallFrames.end()) >= signed(expandLimit)) {
+        HLOG_ASSERT_MESSAGE(maxCycle++ < MAX_CALL_FRAME_EXPAND_CYCLE, "MAX_UNWIND_CYCLE = %d reach",
+                            MAX_CALL_FRAME_EXPAND_CYCLE);
 
-        if (std::equal(newIt, newIt + expendLimit - 1u, cachedIt)) {
-            HLOGM("match %s + %zu", newIt->ToString().c_str(), expendLimit);
-            cachedIt++;
+        if (std::equal(newIt, newIt + expandLimit, cachedIt)) {
+            HLOGM("match %s + %zu", newIt->ToString().c_str(), expandLimit);
+            cachedIt += expandLimit; // in while we check the boundary safe
             if (cachedIt == cachedCallFrames.end()) {
-                HLOGM("nothing need copy , the rest of the frame is the same");
+                // same but no more need expand
                 break;
             }
 
-            // expend the frame and make some log ?
+            // expand the frame and make some log ?
             LogFrame("newCallStack:", newCallFrames);
             LogFrame("cachedCallStack:", cachedCallFrames);
+
             newCallFrames.insert(newCallFrames.end(), cachedIt, cachedCallFrames.end());
-            HLOGV("merge callstack increse to %zu (+%zu) ", newCallFrames.size(),
-                  std::distance(cachedIt, cachedCallFrames.end()));
+            auto expands = std::distance(cachedIt, cachedCallFrames.end());
+            HLOGV("merge callstack increse to %zu (+%zd) ", newCallFrames.size(), expands);
             // we done the deal
-            return std::distance(cachedIt, cachedCallFrames.end());
+            return expands;
         } else {
-            // quick search again
-            cachedIt = find(cachedIt, cachedCallFrames.end(), *newIt);
+            // quick search next same farme again
+            cachedIt++;
+            if (cachedIt != cachedCallFrames.end()) {
+                HLOGM("search next");
+                cachedIt = find(cachedIt, cachedCallFrames.end(), *newIt);
+            }
         }
     }
-    return 0u; // nothing expend
+    HLOGM("cachedIt distance %zd , need %zd", std::distance(cachedCallFrames.begin(), cachedIt),
+          distances);
+    return 0u; // nothing expand
 }
 
-size_t CallStack::ExpendCallStack(pid_t tid, std::vector<CallFrame> &callFrames, size_t expendLimit)
+size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames, size_t expandLimit)
 {
-    size_t expend = 0u;
-    if (expendLimit == 0) {
-        return expend; // nothing need to do
-    } else if (callFrames.size() < expendLimit) {
+    size_t expand = 0u;
+    if (expandLimit == 0) {
+        return expand; // nothing need to do
+    } else if (callFrames.size() < expandLimit) {
         HLOGM("new callstack is too small, skip it");
-        return expend;
+        return expand;
     }
     if (!cachedCallFramesMap_.count(tid)) {
-        cachedCallFramesMap_[tid].reserve(MAX_CALL_FRAME_EXPEND_CACHE_SIZE);
+        cachedCallFramesMap_[tid].reserve(MAX_CALL_FRAME_EXPAND_CACHE_SIZE);
     }
     if (callFrames.size() >= 1u) {
         // get top  (Earliest caller)
         HashList<uint64_t, std::vector<CallFrame>> &cachedCallFrames = cachedCallFramesMap_[tid];
-        HLOGV("find call stack frames in cahce %zu", cachedCallFrames.size());
+        HLOGV("find call stack frames in cahce size %zu", cachedCallFrames.size());
         // compare
         using namespace std::rel_ops; // enable complement comparing operators
         for (auto itr = cachedCallFrames.begin(); itr < cachedCallFrames.end(); ++itr) {
@@ -603,12 +620,12 @@ size_t CallStack::ExpendCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
                 4 insert A after B in new stack
             */
             const std::vector<CallFrame> &cachedCallStack = *itr;
-            if (cachedCallStack.size() < expendLimit) {
+            if (cachedCallStack.size() < expandLimit) {
                 HLOGM("cache callstack is too small, skip it");
-                break;
+                continue; // check next
             }
-            expend = ExpendCallStack(callFrames, cachedCallStack, expendLimit);
-            if (expend > 0) {
+            expand = DoExpandCallStack(callFrames, cachedCallStack, expandLimit);
+            if (expand > 0) {
                 break;
             }
         }
@@ -617,8 +634,8 @@ size_t CallStack::ExpendCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
         // vector
         cachedCallFrames[callFrames[0].ip_] = callFrames;
     }
-    HLOGM("expend %zu", expend);
-    return expend;
+    HLOGM("expand %zu", expand);
+    return expand;
 }
 
 CallStack::CallStack() {}
