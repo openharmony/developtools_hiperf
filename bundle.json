@@ -1,0 +1,49 @@
+{
+  "name": "@ohos/hiperf",
+  "description": "hiperf interface provided for system",
+  "version": "3.1",
+  "license": "Apache License 2.0",
+  "publishAs": "code-segment",
+  "segment": {
+    "destPath": "developtools/hiperf"
+  },
+  "dirs": {},
+  "scripts": {},
+  "component": {
+    "name": "hiperf",
+    "subsystem": "developtools",
+    "adapted_system_type": [
+      "standard"
+    ],
+    "rom": "188KB",
+    "ram": "2000KB",
+    "deps": {
+      "components": [
+        "utils_base"
+      ],
+      "third_party": [
+        "libz",
+        "utilsecurec"
+      ]
+    },
+    "build": {
+      "sub_component": [
+          "//developtools/hiperf:hiperf_target",
+          "//developtools/hiperf:hiperf_target_all"
+      ],
+      "inner_kits": [
+          {
+            "name": "//developtools/hiperf/interfaces/innerkits/native:hiperf_client",
+            "header": {
+              "header_files": [
+                "hiperf_client.h"
+              ],
+              "header_base": "//developtools/hiperf/interfaces/innerkits/native/include"
+            }
+          }
+        ],
+      "test": [ "//developtools/hiperf/test:hiperf_test" ]
+    }
+  }
+}
+  
