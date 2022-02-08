@@ -16,7 +16,6 @@
 #define HIPERF_PERF_FILE_FORMAT_H
 
 #include <string>
-#include <vector>
 
 #include "perf_event_record.h"
 

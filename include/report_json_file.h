@@ -19,10 +19,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
-#include <linux/perf_event.h>
 #include <map>
-#include <optional>
-#include <set>
 #include <stdio.h>
 
 #include "debug_logger.h"
@@ -95,7 +92,9 @@ template<class K, class T>
 void OutputJsonPair(FILE *output, const K &key, const T &value, bool first = false)
 {
     if (!first) {
-        fprintf(output, ",");
+        if (fprintf(output, ",") < 0) {
+            return;
+        }
     }
     OutputJsonKey(output, key);
     OutputJsonValue(output, value);
@@ -109,16 +108,20 @@ void OutputJsonVectorList(FILE *output, const std::string &key, const std::vecto
                           bool first = false)
 {
     if (!first) {
-        fprintf(output, ",");
+        if (fprintf(output, ",") < 0) {
+            return;
+        }
     }
-    fprintf(output, "\"%s\":", key.c_str());
-    fprintf(output, "[");
-    auto it = value.begin();
-    while (it != value.end()) {
-        OutputJsonValue(output, *it, it == value.begin());
-        it++;
+    if (fprintf(output, "\"%s\":[", key.c_str()) != -1) {
+        auto it = value.begin();
+        while (it != value.end()) {
+            OutputJsonValue(output, *it, it == value.begin());
+            it++;
+        }
+        if (fprintf(output, "]") < 0) {
+            return;
+        }
     }
-    fprintf(output, "]");
 }
 
 /*
@@ -129,16 +132,21 @@ void OutputJsonMapList(FILE *output, const std::string &key, const std::map<K, V
                        bool first = false)
 {
     if (!first) {
-        fprintf(output, ",");
+        if (fprintf(output, ",") < 0) {
+            return;
+        }
     }
-    fprintf(output, "\"%s\":", key.c_str());
-    fprintf(output, "[");
-    auto it = value.begin();
-    while (it != value.end()) {
-        OutputJsonValue(output, it->second, it == value.begin());
-        it++;
+    if (fprintf(output, "\"%s\":[", key.c_str()) != -1) {
+        fprintf(output, "[");
+        auto it = value.begin();
+        while (it != value.end()) {
+            OutputJsonValue(output, it->second, it == value.begin());
+            it++;
+        }
+        if (fprintf(output, "]") < 0) {
+            return;
+        }
     }
-    fprintf(output, "]");
 }
 
 /*
@@ -149,16 +157,20 @@ void OutputJsonMap(FILE *output, const std::string &key, const std::map<K, V> &v
                    bool first = false)
 {
     if (!first) {
-        fprintf(output, ",");
+        if (fprintf(output, ",") < 0) {
+            return;
+        }
     }
-    fprintf(output, "\"%s\":", key.c_str());
-    fprintf(output, "{");
-    auto it = value.begin();
-    while (it != value.end()) {
-        OutputJsonPair(output, it->first, it->second, it == value.begin());
-        it++;
+    if (fprintf(output, "\"%s\":{", key.c_str()) != -1) {
+        auto it = value.begin();
+        while (it != value.end()) {
+            OutputJsonPair(output, it->first, it->second, it == value.begin());
+            it++;
+        }
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
-    fprintf(output, "}");
 }
 
 template<class K, class V>
@@ -177,10 +189,14 @@ struct ReportFuncMapItem {
     std::string_view funcName_;
     void OutputJson(FILE *output) const
     {
-        fprintf(output, "{");
+        if (fprintf(output, "{") < 0) {
+            return;
+        }
         OutputJsonPair(output, "file", libId_, true);
         OutputJsonPair(output, "symbol", funcName_);
-        fprintf(output, "}");
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
     ReportFuncMapItem(int libId, std::string_view funcName) : libId_(libId), funcName_(funcName) {}
 };
@@ -194,11 +210,15 @@ struct ReportFuncItem {
     ReportFuncItem(int functionId) : functionId_(functionId) {}
     void OutputJson(FILE *output) const
     {
-        fprintf(output, "{");
+        if (fprintf(output, "{") < 0) {
+            return;
+        }
         OutputJsonPair(output, "symbol", functionId_, true);
         OutputJsonVectorList(output, "counts",
                              std::vector<uint64_t> {sampleCount_, eventCount_, subTreeEventCount_});
-        fprintf(output, "}");
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
 };
 
@@ -214,7 +234,9 @@ struct ReportCallNodeItem {
 
     void OutputJson(FILE *output) const
     {
-        fprintf(output, "{");
+        if (fprintf(output, "{") < 0) {
+            return;
+        }
         OutputJsonPair(output, "selfEvents", selfEventCount_, true);
         OutputJsonPair(output, "subEvents", subTreeEventCount_);
         OutputJsonPair(output, "symbol", functionId_);
@@ -224,7 +246,9 @@ struct ReportCallNodeItem {
             OutputJsonPair(output, "reversed", reverseCaller_);
         }
         OutputJsonMapList(output, "callStack", childrenMap);
-        fprintf(output, "}");
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
 
     uint64_t UpdateChildrenEventCount()
@@ -252,11 +276,15 @@ struct ReportLibItem {
     std::map<int, ReportFuncItem> funcs_;
     void OutputJson(FILE *output) const
     {
-        fprintf(output, "{");
+        if (fprintf(output, "{") < 0) {
+            return;
+        }
         OutputJsonPair(output, "fileId", libId_, true);
         OutputJsonPair(output, "eventCount", eventCount_);
         OutputJsonMapList(output, "functions", funcs_);
-        fprintf(output, "}");
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
 };
 
@@ -269,14 +297,18 @@ struct ReportThreadItem {
     ReportCallNodeItem callNodeReverse;
     void OutputJson(FILE *output) const
     {
-        fprintf(output, "{");
+        if (fprintf(output, "{") < 0) {
+            return;
+        }
         OutputJsonPair(output, "tid", tid_, true);
         OutputJsonPair(output, "eventCount", eventCount_);
         OutputJsonPair(output, "sampleCount", sampleCount_);
         OutputJsonMapList(output, "libs", libs_);
         OutputJsonPair(output, "CallOrder", callNode);
         OutputJsonPair(output, "CalledOrder", callNodeReverse);
-        fprintf(output, "}");
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
     ReportThreadItem(pid_t id) : tid_(id), callNode(-1), callNodeReverse(-1) {}
 };
@@ -287,11 +319,15 @@ struct ReportProcessItem {
     std::map<pid_t, ReportThreadItem> threads_;
     void OutputJson(FILE *output) const
     {
-        fprintf(output, "{");
+        if (fprintf(output, "{") < 0) {
+            return;
+        }
         OutputJsonPair(output, "pid", pid_, true);
         OutputJsonPair(output, "eventCount", eventCount_);
         OutputJsonMapList(output, "threads", threads_);
-        fprintf(output, "}");
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
     ReportProcessItem(pid_t pid) : pid_(pid) {}
 };
@@ -303,11 +339,15 @@ struct ReportConfigItem {
     std::map<pid_t, ReportProcessItem> processes_;
     void OutputJson(FILE *output) const
     {
-        fprintf(output, "{");
+        if (fprintf(output, "{") < 0) {
+            return;
+        }
         OutputJsonPair(output, "eventConfigName", eventName_, true);
         OutputJsonPair(output, "eventCount", eventCount_);
         OutputJsonMapList(output, "processes", processes_);
-        fprintf(output, "}");
+        if (fprintf(output, "}") < 0) {
+            return;
+        }
     }
     ReportConfigItem(int index, std::string eventName) : index_(index), eventName_(eventName) {}
 };

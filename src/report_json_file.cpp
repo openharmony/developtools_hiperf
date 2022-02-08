@@ -14,10 +14,8 @@
  */
 #define HILOG_TAG "Report"
 
+#include <set>
 #include "report_json_file.h"
-
-#include <memory>
-#include <sstream>
 
 #if is_mingw
 #include <windows.h>

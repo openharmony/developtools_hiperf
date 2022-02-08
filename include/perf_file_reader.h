@@ -19,7 +19,6 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include "perf_event_record.h"
 #include "perf_file_format.h"

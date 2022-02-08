@@ -18,7 +18,7 @@
 
 #include <cstdint>
 #include <iostream>
-#include <stdio.h>
+#include <stdio>
 #include <thread>
 #include <vector>
 
