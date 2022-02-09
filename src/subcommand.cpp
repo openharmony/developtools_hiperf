@@ -15,10 +15,6 @@
 
 #include "subcommand.h"
 
-#include <map>
-#include <memory>
-#include <vector>
-
 #include "debug_logger.h"
 #include "option.h"
 #include "subcommand_help.h"

@@ -19,14 +19,12 @@
 #include <iostream>
 #include <memory>
 
-#include <math.h>
-
 #include "debug_logger.h"
 #include "subcommand_stat.h"
 #include "utilities.h"
 
-#define ONE_HUNDRED         100
-#define THOUSNADS_SEPARATOR 3
+const uint16_t ONE_HUNDRED = 100;
+const uint16_t THOUSNADS_SEPARATOR = 3;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {

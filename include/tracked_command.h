@@ -17,10 +17,6 @@
 
 #include <memory>
 #include <string>
-#include <unistd.h>
-#include <vector>
-
-#include "noncopyable.h"
 #include <utilities.h>
 namespace OHOS {
 namespace Developtools {

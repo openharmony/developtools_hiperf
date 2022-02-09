@@ -15,13 +15,9 @@
 #ifndef HIPERF_SUBCOMMAND_H_
 #define HIPERF_SUBCOMMAND_H_
 
-#include "utilities.h"
 #include <cstdlib>
-#include <functional>
-#include <map>
-#include <memory>
 #include <string>
-#include <vector>
+#include "utilities.h"
 
 namespace OHOS {
 namespace Developtools {

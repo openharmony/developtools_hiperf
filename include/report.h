@@ -19,10 +19,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
-#include <linux/perf_event.h>
 #include <map>
 #include <optional>
-#include <set>
 #include <stdio.h>
 
 #include "debug_logger.h"

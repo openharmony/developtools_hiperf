@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef HIPERF_HASHLIST_HPP
+#define HIPERF_HASHLIST_HPP
+
 #include "hashlist.h"
 
 namespace OHOS {
@@ -997,4 +1000,4 @@ HashList<Key, Val>::ReclaimNode(LinkNode<Key, Val> *&pnode)
 }
 } // namespace HiPerf
 } // namespace Developtools
-} // namespace OHOS
+} // namespace OHOS#endif // HIPERF_HASHLIST_HPP
