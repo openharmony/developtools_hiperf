@@ -31,9 +31,9 @@
 #include <poll.h>
 #endif
 
-#include <linux/perf_event.h>
 #include <sys/types.h>
 #include <unique_fd.h>
+#include <linux/perf_event.h>
 
 #include "debug_logger.h"
 #include "perf_event_record.h"

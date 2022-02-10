@@ -685,7 +685,7 @@ bool PerfEvents::EnableTracking()
                     trackedCommand_->Stop();
                 }
                 std::string commandName = trackedCommand_->GetCommandName();
-                printf("failed to execute command: %zu: %s\n", commandName.size(),commandName.c_str());
+                printf("failed to execute command: %zu: %s\n", commandName.size(), commandName.c_str());
                 return false;
             }
         } else if (trackedCommand_->GetState() != TrackedCommand::State::COMMAND_STARTED) {

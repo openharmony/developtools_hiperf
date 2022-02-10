@@ -108,7 +108,11 @@ USED_FUNCTION void LoopBranch()
 USED_FUNCTION void LoopIowait()
 {
     std::default_random_engine rnd;
-    std::unique_ptr<FILE, decltype(&fclose)> fd {fopen("temp", "rw"), &fclose};
+    FILE *fp = fopen("temp", "rw");
+    if (fp == nullptr) {
+        return;
+    }
+    std::unique_ptr<FILE, decltype(&fclose)> fd {fp, &fclose};
     if (fd != nullptr) {
         const std::string tempBuf = std::to_string(rnd());
         fwrite(tempBuf.c_str(), tempBuf.size(), 1, fd.get());

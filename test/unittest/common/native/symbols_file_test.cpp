@@ -391,7 +391,7 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr2, TestSize.Level1)
         part of elf32_test's symbols
         vaddr(hex)  size(dec)   name
         00001000    0           _init
-        00001030    0       
+        00001030    0
         00001320    58           _start
         00001512    27          main
         0000145d    124         TestGlobalChildFunction
@@ -477,7 +477,7 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
             // last one
             0000124c T _fini
         */
-    #ifdef __arm__
+#ifdef __arm__
         enum SymbolAddr : uint64_t {
             INIT = 0X1000U,
             START = 0X1070U,
@@ -490,7 +490,7 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
             CSU_FINI = 0X1240U,
             FINI = 0X124CU,
         };
-    #else
+#else
         enum SymbolAddr : uint64_t {
             INIT = 0X1000U,
             START = 0X1040U,
@@ -503,7 +503,7 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
             CSU_FINI = 0X11B0U,
             FINI = 0X11B8U,
         };
-    #endif
+#endif
         for (uint64_t addr = SymbolAddr::INIT; addr < SymbolAddr::START; ++addr) {
             if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "_init");

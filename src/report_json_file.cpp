@@ -286,10 +286,14 @@ void ReportJsonFile::OutputJsonRuntimeInfo()
     }
 
     OutputJsonVectorList(output_, "symbolsFileList", jsonFilePaths);
-    fprintf(output_, ",");
+    if (fprintf(output_, ",") < 0) {
+        return;
+    }
 
     OutputJsonMap(output_, "SymbolMap", functionMap_, true);
-    fprintf(output_, ",");
+    if (fprintf(output_, ",") < 0) {
+        return;
+    }
 
     OutputJsonMapList(output_, "recordSampleInfo", reportConfigItems_, true);
 }
@@ -300,11 +304,15 @@ bool ReportJsonFile::OutputJson(FILE *output)
         return false;
     }
     output_ = output;
-    fprintf(output_, "{");
+    if (fprintf(output, "{") < 0) {
+        return false;
+    }
     OutputJsonFeatureString();
     OutputJsonRuntimeInfo();
 
-    fprintf(output_, "}");
+    if (fprintf(output, "}") < 0) {
+        return false;
+    }
     return true;
 }
 } // namespace HiPerf

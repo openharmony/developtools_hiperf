@@ -265,8 +265,12 @@ Client::Client(const std::string &outputDir)
     Setup(outputDir);
 
     // review: maybe change to some nice check , not just ign th pipe broken?
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
+    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+        HIPERF_HILOGD(MODULE_CPP_API, "signal failed.");
+    }
+    if (signal(SIGCHLD, SIG_IGN) == SIG_ERR) {
+        HIPERF_HILOGD(MODULE_CPP_API, "signal failed.");
+    }
 }
 
 bool Client::Setup(std::string outputDir)

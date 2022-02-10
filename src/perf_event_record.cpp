@@ -14,10 +14,10 @@
  */
 #define HILOG_TAG "PerfRecord"
 
-#include <cinttypes>
-
 #include "perf_event_record.h"
+#include <cinttypes>
 #include "utilities.h"
+
 
 using namespace std;
 namespace OHOS {

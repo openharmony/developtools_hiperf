@@ -78,7 +78,9 @@ void OptionDebugTest::LogLevelTest(std::vector<std::string> args, const DebugLev
     HLOGV("%s", logMessage.c_str());
     HLOGM("%s", logMessage.c_str());
 
-    fflush(DebugLogger::GetInstance()->file_);
+    if (fflush(DebugLogger::GetInstance()->file_) != 0) {
+        HLOGD("fflush failed.");
+    }
     std::string log = ReadFileToString(DebugLogger::GetInstance()->logPath_);
     ASSERT_EQ(log.empty(), false);
     // we have 6 level log

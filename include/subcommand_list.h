@@ -15,8 +15,6 @@
 #ifndef SUBCOMMAND_LIST_H_
 #define SUBCOMMAND_LIST_H_
 
-#include "subcommand.h"
-
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -25,7 +23,7 @@
 #include "debug_logger.h"
 #include "option.h"
 #include "perf_events.h"
-#include "subcommand_list.h"
+#include "subcommand.h"
 #include "utilities.h"
 
 namespace OHOS {

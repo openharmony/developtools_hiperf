@@ -363,7 +363,11 @@ bool PerfFileWriter::WriteFeatureData()
             return false;
         }
     }
-    HLOGV("features data at file '0x%lx'", ftell(fp_));
+    long offset = ftell(fp_);
+    if (offset < 0) {
+        return false;
+    }
+    HLOGV("features data at file '0x%lx'", offset);
 
     i = 0;
     for (auto &featureSection : featureSections_) {

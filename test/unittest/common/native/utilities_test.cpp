@@ -14,10 +14,9 @@
  */
 
 #include "utilities_test.h"
-
-#include "utilities.h"
 #include <chrono>
 #include <thread>
+#include "utilities.h"
 
 using namespace testing::ext;
 using namespace std;

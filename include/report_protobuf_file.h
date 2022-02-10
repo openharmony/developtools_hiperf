@@ -17,8 +17,8 @@
 #define HIPERF_REPORT_PROTOBUF_FILE
 
 #include <fstream>
-#include <linux/perf_event.h>
 #include <stdint.h>
+#include <linux/perf_event.h>
 
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"

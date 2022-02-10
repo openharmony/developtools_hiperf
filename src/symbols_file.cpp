@@ -502,8 +502,12 @@ private:
     {
 #ifndef HIPERF_ELF_READ_USE_MMAP
         if (readFd_ == nullptr) {
+            FILE *fp = fopen(loadElfPath.c_str(), "rb");
+            if (fp == nullptr) {
+                return;
+            }
             readFd_ =
-                std::unique_ptr<FILE, decltype(&fclose)>(fopen(loadElfPath.c_str(), "rb"), &fclose);
+                std::unique_ptr<FILE, decltype(&fclose)>(fp, &fclose);
             return;
         }
 #else
@@ -1215,7 +1219,6 @@ const Symbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
         4 < 5 at index 3
         5 < 6 at index 5
         6 < not found
-
     if key symbol vaddr is { 1, 2, 4, 5, 5, 6 };
      check ip vaddr for each val :
        ip   sym

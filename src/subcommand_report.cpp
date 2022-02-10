@@ -475,7 +475,9 @@ bool SubCommandReport::LoadPerfData()
 
 bool SubCommandReport::OutputStd()
 {
-    fprintf(output_, "<<Hiperf Report%s>>\n", diffMode_ ? " Diff" : "");
+    if (fprintf(output_, "<<Hiperf Report%s>>\n", diffMode_ ? " Diff" : "") < 0) {
+        return false;
+    }
 
     // feature string:
     const auto &featureSections = recordFileReader_->GetFeatureSections();

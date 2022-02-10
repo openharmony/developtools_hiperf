@@ -32,22 +32,21 @@ template<typename Key, typename Val>
 LinkNode<Key, Val>::LinkNode(const Key &key, Val &&val) : key_ {key}, val_ {std::move(val)} {}
 
 template<typename Key, typename Val>
-LinkNode<Key, Val>::LinkNode(const LinkNode& node) 
+LinkNode<Key, Val>::LinkNode(const LinkNode& node)
     :link_ {node.link_},
     key_ {node.key_},
     val_ {node.val_}
 {}
 
 template<typename Key, typename Val>
-LinkNode<Key, Val>::LinkNode(LinkNode&& node) 
+LinkNode<Key, Val>::LinkNode(LinkNode&& node)
     :link_ {std::move(node.link_)},
     key_ {std::move(node.key_)},
     val_ {std::move(node.val_)}
 {}
 
 template<typename Key, typename Val>
-auto
-LinkNode<Key, Val>::operator=(const LinkNode& node)
+auto LinkNode<Key, Val>::operator=(const LinkNode& node)
 -> LinkNode<Key, Val>&
 {
     link_ = node.link_;
@@ -56,8 +55,7 @@ LinkNode<Key, Val>::operator=(const LinkNode& node)
 }
 
 template<typename Key, typename Val>
-auto
-LinkNode<Key, Val>::operator=(LinkNode&& node)
+auto LinkNode<Key, Val>::operator=(LinkNode&& node)
 -> LinkNode<Key, Val>&
 {
     link_ = std::move(node.link_);
@@ -66,8 +64,7 @@ LinkNode<Key, Val>::operator=(LinkNode&& node)
 }
 
 template<typename Key, typename Val>
-auto
-LinkNode<Key, Val>::GetLinkNode(Val *pval)
+auto LinkNode<Key, Val>::GetLinkNode(Val *pval)
 -> LinkNode<Key, Val>*
 {
     if (pval) {
@@ -80,8 +77,7 @@ LinkNode<Key, Val>::GetLinkNode(Val *pval)
 }
 
 template<typename Key, typename Val>
-auto
-LinkNode<Key, Val>::GetLinkNode(Link *plink)
+auto LinkNode<Key, Val>::GetLinkNode(Link *plink)
 -> LinkNode<Key, Val>*
 {
     if (plink) {
@@ -128,8 +124,7 @@ HashList<Key, Val>::Iterator::Iterator(Iterator&& itr)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::Iterator::operator=(const Iterator& itr)
+auto HashList<Key, Val>::Iterator::operator=(const Iterator& itr)
 -> HashList<Key, Val>::Iterator&
 {
     Iterator temp {itr};
@@ -138,8 +133,7 @@ HashList<Key, Val>::Iterator::operator=(const Iterator& itr)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::Iterator::operator=(Iterator&& itr)
+auto HashList<Key, Val>::Iterator::operator=(Iterator&& itr)
 -> HashList<Key, Val>::Iterator&
 {
     Iterator temp {std::move(itr)};
@@ -148,8 +142,7 @@ HashList<Key, Val>::Iterator::operator=(Iterator&& itr)
 }
 
 template<typename Key, typename Val>
-auto 
-HashList<Key, Val>::Iterator::operator++() noexcept 
+auto HashList<Key, Val>::Iterator::operator++() noexcept
 -> HashList<Key, Val>::Iterator &
 {
     if (pnode_ == nullptr or phashList_ == nullptr) {
@@ -167,8 +160,7 @@ HashList<Key, Val>::Iterator::operator++() noexcept
 }
 
 template<typename Key, typename Val>
-auto 
-HashList<Key, Val>::Iterator::operator++(int) noexcept 
+auto HashList<Key, Val>::Iterator::operator++(int) noexcept
 -> HashList<Key, Val>::Iterator
 {
     Iterator res {*this};
@@ -187,8 +179,7 @@ HashList<Key, Val>::Iterator::operator++(int) noexcept
 }
 
 template<typename Key, typename Val>
-auto 
-HashList<Key, Val>::Iterator::operator--() noexcept 
+auto HashList<Key, Val>::Iterator::operator--() noexcept
 -> HashList<Key, Val>::Iterator &
 {
     if (phashList_ == nullptr) {
@@ -204,14 +195,13 @@ HashList<Key, Val>::Iterator::operator--() noexcept
         pnode_ = nullptr;
         phashList_ = nullptr;
         return *this;
-    } 
+    }
     pnode_ = LinkNode<Key, Val>::GetLinkNode(plink);
     return *this;
 }
 
 template<typename Key, typename Val>
-auto 
-HashList<Key, Val>::Iterator::operator--(int) noexcept 
+auto HashList<Key, Val>::Iterator::operator--(int) noexcept
 -> HashList<Key, Val>::Iterator
 {
     Iterator res {*this};
@@ -234,8 +224,7 @@ HashList<Key, Val>::Iterator::operator--(int) noexcept
 }
 
 template<typename Key, typename Val>
-bool 
-HashList<Key, Val>::Iterator::operator<(const HashList<Key, Val>::Iterator &itr) const noexcept
+bool HashList<Key, Val>::Iterator::operator<(const HashList<Key, Val>::Iterator &itr) const noexcept
 {
     if (IsDangled() or itr.IsDangled()) {
         return false;
@@ -257,8 +246,7 @@ HashList<Key, Val>::Iterator::operator<(const HashList<Key, Val>::Iterator &itr)
 }
 
 template<typename Key, typename Val>
-bool
-HashList<Key, Val>::Iterator::operator==(const HashList<Key, Val>::Iterator &itr) const noexcept
+bool HashList<Key, Val>::Iterator::operator==(const HashList<Key, Val>::Iterator &itr) const noexcept
 {
     if (IsDangled() or itr.IsDangled()) {
         return false;
@@ -270,36 +258,31 @@ HashList<Key, Val>::Iterator::operator==(const HashList<Key, Val>::Iterator &itr
 }
 
 template<typename Key, typename Val>
-Val &
-HashList<Key, Val>::Iterator::operator*()
+Val& HashList<Key, Val>::Iterator::operator*()
 {
     return pnode_->val_;
 }
 
 template<typename Key, typename Val>
-const Val &
-HashList<Key, Val>::Iterator::operator*() const
+const Val& HashList<Key, Val>::Iterator::operator*() const
 {
     return pnode_->val_;
 }
 
 template<typename Key, typename Val>
-Val *
-HashList<Key, Val>::Iterator::operator->()
+Val* HashList<Key, Val>::Iterator::operator->()
 {
     return &pnode_->val_;
 }
 
 template<typename Key, typename Val>
-const Val *
-HashList<Key, Val>::Iterator::operator->() const
+const Val* HashList<Key, Val>::Iterator::operator->() const
 {
     return &pnode_->val_;
 }
 
 template<typename Key, typename Val>
-void
-HashList<Key, Val>::Iterator::swap(HashList<Key, Val>::Iterator& other)
+void HashList<Key, Val>::Iterator::swap(HashList<Key, Val>::Iterator& other)
 {
     using std::swap;
     swap(pnode_, other.pnode_);
@@ -319,8 +302,8 @@ HashList<Key, Val>::ReverseIterator::ReverseIterator(LinkNode<Key, Val> *pnode, 
 
 template<typename Key, typename Val>
 HashList<Key, Val>::ReverseIterator::ReverseIterator(const LinkNode<Key, Val> *pnode, const HashList *phashList)
-    : pnode_ {const_cast<LinkNode<Key, Val> *>(pnode)}, 
-      phashList_ {const_cast<HashList *>(phashList)}
+    : pnode_ {const_cast<LinkNode<Key, Val> *>(pnode)},
+    phashList_ {const_cast<HashList *>(phashList)}
 {
     if (phashList_ == nullptr) {
         pnode_ = nullptr;
@@ -341,8 +324,7 @@ HashList<Key, Val>::ReverseIterator::ReverseIterator(ReverseIterator &&itr)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::ReverseIterator::operator=(const ReverseIterator& itr)
+auto HashList<Key, Val>::ReverseIterator::operator=(const ReverseIterator& itr)
 -> HashList<Key, Val>::ReverseIterator&
 {
     ReverseIterator temp {itr};
@@ -351,8 +333,7 @@ HashList<Key, Val>::ReverseIterator::operator=(const ReverseIterator& itr)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::ReverseIterator::operator=(ReverseIterator&& itr)
+auto HashList<Key, Val>::ReverseIterator::operator=(ReverseIterator&& itr)
 -> HashList<Key, Val>::ReverseIterator&
 {
     ReverseIterator temp {std::move(itr)};
@@ -361,7 +342,7 @@ HashList<Key, Val>::ReverseIterator::operator=(ReverseIterator&& itr)
 }
 
 template<typename Key, typename Val>
-auto HashList<Key, Val>::ReverseIterator::operator++() noexcept 
+auto HashList<Key, Val>::ReverseIterator::operator++() noexcept
 -> HashList<Key, Val>::ReverseIterator &
 {
     if (pnode_ == nullptr or phashList_ == nullptr) {
@@ -379,7 +360,7 @@ auto HashList<Key, Val>::ReverseIterator::operator++() noexcept
 }
 
 template<typename Key, typename Val>
-auto HashList<Key, Val>::ReverseIterator::operator++(int) noexcept 
+auto HashList<Key, Val>::ReverseIterator::operator++(int) noexcept
 -> HashList<Key, Val>::ReverseIterator
 {
     ReverseIterator res {*this};
@@ -398,7 +379,7 @@ auto HashList<Key, Val>::ReverseIterator::operator++(int) noexcept
 }
 
 template<typename Key, typename Val>
-auto HashList<Key, Val>::ReverseIterator::operator--() noexcept 
+auto HashList<Key, Val>::ReverseIterator::operator--() noexcept
 -> HashList<Key, Val>::ReverseIterator &
 {
     if (phashList_ == nullptr) {
@@ -420,7 +401,7 @@ auto HashList<Key, Val>::ReverseIterator::operator--() noexcept
 }
 
 template<typename Key, typename Val>
-auto HashList<Key, Val>::ReverseIterator::operator--(int) noexcept 
+auto HashList<Key, Val>::ReverseIterator::operator--(int) noexcept
 -> HashList<Key, Val>::ReverseIterator
 {
     ReverseIterator res {*this};
@@ -479,36 +460,31 @@ bool HashList<Key, Val>::ReverseIterator::operator==(
 }
 
 template<typename Key, typename Val>
-Val &
-HashList<Key, Val>::ReverseIterator::operator*()
+Val& HashList<Key, Val>::ReverseIterator::operator*()
 {
     return pnode_->val_;
 }
 
 template<typename Key, typename Val>
-const Val &
-HashList<Key, Val>::ReverseIterator::operator*() const
+const Val& HashList<Key, Val>::ReverseIterator::operator*() const
 {
     return pnode_->val_;
 }
 
 template<typename Key, typename Val>
-Val *
-HashList<Key, Val>::ReverseIterator::operator->()
+Val* HashList<Key, Val>::ReverseIterator::operator->()
 {
     return &pnode_->val_;
 }
 
 template<typename Key, typename Val>
-const Val *
-HashList<Key, Val>::ReverseIterator::operator->() const
+const Val* HashList<Key, Val>::ReverseIterator::operator->() const
 {
     return &pnode_->val_;
 }
 
 template<typename Key, typename Val>
-void
-HashList<Key, Val>::ReverseIterator::swap(HashList<Key, Val>::ReverseIterator& other)
+void HashList<Key, Val>::ReverseIterator::swap(HashList<Key, Val>::ReverseIterator& other)
 {
     using std::swap;
     swap(pnode_, other.pnode_);
@@ -586,7 +562,7 @@ HashList<Key, Val>::~HashList()
 }
 
 template<typename Key, typename Val>
-HashList<Key, Val>::HashList(HashList<Key, Val> &&source) 
+HashList<Key, Val>::HashList(HashList<Key, Val> &&source)
     : numItem_ {source.numItem_},
     pData_ {source.pData_},
     dataHead_ {std::move(source.dataHead_)},
@@ -597,8 +573,7 @@ HashList<Key, Val>::HashList(HashList<Key, Val> &&source)
 }
 
 template<typename Key, typename Val>
-auto 
-HashList<Key, Val>::operator=(HashList &&source) 
+auto HashList<Key, Val>::operator=(HashList &&source)
 -> HashList<Key, Val>&
 {
     if (this == &source) {
@@ -618,8 +593,7 @@ HashList<Key, Val>::operator=(HashList &&source)
 }
 
 template<typename Key, typename Val>
-auto 
-HashList<Key, Val>::begin()
+auto HashList<Key, Val>::begin()
 -> HashList<Key, Val>::Iterator
 {
     if (empty()) {
@@ -629,8 +603,7 @@ HashList<Key, Val>::begin()
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::cbegin() const
+auto HashList<Key, Val>::cbegin() const
 -> const HashList<Key, Val>::Iterator
 {
     if (empty()) {
@@ -640,24 +613,21 @@ HashList<Key, Val>::cbegin() const
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::end()
+auto HashList<Key, Val>::end()
 -> HashList<Key, Val>::Iterator
 {
     return Iterator(nullptr, this);
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::cend() const
+auto HashList<Key, Val>::cend() const
 -> const HashList<Key, Val>::Iterator
 {
     return Iterator(nullptr, this);
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::rbegin()
+auto HashList<Key, Val>::rbegin()
 -> HashList<Key, Val>::ReverseIterator
 {
     if (empty()) {
@@ -667,8 +637,7 @@ HashList<Key, Val>::rbegin()
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::crbegin() const
+auto HashList<Key, Val>::crbegin() const
 -> const HashList<Key, Val>::ReverseIterator
 {
     if (empty()) {
@@ -678,39 +647,34 @@ HashList<Key, Val>::crbegin() const
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::rend()
+auto HashList<Key, Val>::rend()
 -> HashList<Key, Val>::ReverseIterator
 {
     return ReverseIterator(nullptr, this);
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::crend() const
+auto HashList<Key, Val>::crend() const
 -> const HashList<Key, Val>::ReverseIterator
 {
     return ReverseIterator(nullptr, this);
 }
 
 template<typename Key, typename Val>
-Val&
-HashList<Key, Val>::front()
+Val& HashList<Key, Val>::front()
 {
     LinkNode<Key, Val> *pnode = LinkNode<Key, Val>::GetLinkNode(dataHead_.next_);
     return pnode->val_;
 }
 
 template<typename Key, typename Val>
-const Val&
-HashList<Key, Val>::front() const
+const Val& HashList<Key, Val>::front() const
 {
     return front();
 }
 
 template<typename Key, typename Val>
-Val&
-HashList<Key, Val>::back(bool prepend)
+Val& HashList<Key, Val>::back(bool prepend)
 {
     auto pnode = LinkNode<Key, Val>::GetLinkNode(dataHead_.prev_);
     if (prepend) {
@@ -720,8 +684,7 @@ HashList<Key, Val>::back(bool prepend)
 }
 
 template<typename Key, typename Val>
-Val&
-HashList<Key, Val>::operator[](const Key &key)
+Val& HashList<Key, Val>::operator[](const Key &key)
 {
     LinkNode<Key, Val> *pnode {nullptr};
     if (valueTab_.find(key) == valueTab_.end()) {
@@ -737,8 +700,7 @@ HashList<Key, Val>::operator[](const Key &key)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::find(const Key &key)
+auto HashList<Key, Val>::find(const Key &key)
 -> HashList<Key, Val>::Iterator
 {
     const auto &itr = valueTab_.find(key);
@@ -749,8 +711,7 @@ HashList<Key, Val>::find(const Key &key)
 }
 
 template<typename Key, typename Val>
-void 
-HashList<Key, Val>::push_front(const Key& key, const Val& val)
+void HashList<Key, Val>::push_front(const Key& key, const Val& val)
 {
     if (valueTab_.find(key) == valueTab_.end()) {
         LinkNode<Key, Val>* pnode = AllocateNode(key, val);
@@ -763,8 +724,7 @@ HashList<Key, Val>::push_front(const Key& key, const Val& val)
 }
 
 template<typename Key, typename Val>
-void 
-HashList<Key, Val>::push_front(const Key& key, Val&& val)
+void HashList<Key, Val>::push_front(const Key& key, Val&& val)
 {
     if (valueTab_.find(key) == valueTab_.end()) {
         LinkNode<Key, Val>* pnode = AllocateNode(key, std::move(val));
@@ -777,8 +737,7 @@ HashList<Key, Val>::push_front(const Key& key, Val&& val)
 }
 
 template<typename Key, typename Val>
-void 
-HashList<Key, Val>::push_back(const Key& key, const Val& val)
+void HashList<Key, Val>::push_back(const Key& key, const Val& val)
 {
     if (valueTab_.find(key) == valueTab_.end()) {
         LinkNode<Key, Val>* pnode = AllocateNode(key, val);
@@ -791,8 +750,7 @@ HashList<Key, Val>::push_back(const Key& key, const Val& val)
 }
 
 template<typename Key, typename Val>
-void 
-HashList<Key, Val>::push_back(const Key& key, Val&& val)
+void HashList<Key, Val>::push_back(const Key& key, Val&& val)
 {
     if (valueTab_.find(key) == valueTab_.end()) {
         LinkNode<Key, Val>* pnode = AllocateNode(key, std::move(val));
@@ -805,8 +763,7 @@ HashList<Key, Val>::push_back(const Key& key, Val&& val)
 }
 
 template<typename Key, typename Val>
-void 
-HashList<Key, Val>::pop_front()
+void HashList<Key, Val>::pop_front()
 {
     if (empty()) {
         return;
@@ -817,8 +774,7 @@ HashList<Key, Val>::pop_front()
 }
 
 template<typename Key, typename Val>
-void
-HashList<Key, Val>::pop_back()
+void HashList<Key, Val>::pop_back()
 {
     if (empty()) {
         return;
@@ -829,8 +785,7 @@ HashList<Key, Val>::pop_back()
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::erase(const Key& key)
+auto HashList<Key, Val>::erase(const Key& key)
 -> HashList<Key, Val>::Iterator
 {
     if (valueTab_.find(key) == valueTab_.end()) {
@@ -845,8 +800,7 @@ HashList<Key, Val>::erase(const Key& key)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::erase(const Iterator pos)
+auto HashList<Key, Val>::erase(const Iterator pos)
 -> HashList<Key, Val>::Iterator
 {
     // assume pos is valid, otherwise the result is undefined
@@ -859,8 +813,7 @@ HashList<Key, Val>::erase(const Iterator pos)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::erase(const Iterator first, const Iterator last)
+auto HashList<Key, Val>::erase(const Iterator first, const Iterator last)
 -> HashList<Key, Val>::Iterator
 {
     // assume pos is valid, otherwise the result is undefined
@@ -875,8 +828,7 @@ HashList<Key, Val>::erase(const Iterator first, const Iterator last)
 }
 
 template<typename Key, typename Val>
-bool
-HashList<Key, Val>::MoveNode(const Iterator& pos, LinkNode<Key, Val> *&pnode)
+bool HashList<Key, Val>::MoveNode(const Iterator& pos, LinkNode<Key, Val> *&pnode)
 {
     LinkNode<Key, Val> *curNode = pos.GetNode();
     if (curNode == pnode) {
@@ -889,7 +841,7 @@ HashList<Key, Val>::MoveNode(const Iterator& pos, LinkNode<Key, Val> *&pnode)
     Link* nextLink = pnode->link_.next_;
     if (prevLink and nextLink) {
         prevLink->next_ = nextLink;
-        nextLink->prev_ = prevLink;   
+        nextLink->prev_ = prevLink;  
     }
     Link *currLink = &curNode->link_;
     prevLink = currLink->prev_;
@@ -902,15 +854,13 @@ HashList<Key, Val>::MoveNode(const Iterator& pos, LinkNode<Key, Val> *&pnode)
 }
 
 template<typename Key, typename Val>
-void
-HashList<Key, Val>::MoveToHead(LinkNode<Key, Val> *&pnode)
+void HashList<Key, Val>::MoveToHead(LinkNode<Key, Val> *&pnode)
 {
     if (pnode->link_.prev_ and pnode->link_.next_) {
         Link* prev = pnode->link_.prev_;
         Link* next = pnode->link_.next_;
         prev->next_ = next;
         next->prev_ = prev;
-        
     }
     pnode->link_.next_ = dataHead_.next_;
     dataHead_.next_->prev_ = &pnode->link_;
@@ -919,8 +869,7 @@ HashList<Key, Val>::MoveToHead(LinkNode<Key, Val> *&pnode)
 }
 
 template<typename Key, typename Val>
-void
-HashList<Key, Val>::MoveToTail(LinkNode<Key, Val> *&pnode)
+void HashList<Key, Val>::MoveToTail(LinkNode<Key, Val> *&pnode)
 {
     if (pnode->link_.prev_ and pnode->link_.next_) {
         Link* prev = pnode->link_.prev_;
@@ -935,8 +884,7 @@ HashList<Key, Val>::MoveToTail(LinkNode<Key, Val> *&pnode)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::AllocateNode(const Key &key)
+auto HashList<Key, Val>::AllocateNode(const Key &key)
 ->LinkNode<Key, Val> *
 {
     if (IsFull()) {
@@ -952,8 +900,7 @@ HashList<Key, Val>::AllocateNode(const Key &key)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::AllocateNode(const Key &key, const Val &val)
+auto HashList<Key, Val>::AllocateNode(const Key &key, const Val &val)
 ->LinkNode<Key, Val> *
 {
     if (IsFull()) {
@@ -969,8 +916,7 @@ HashList<Key, Val>::AllocateNode(const Key &key, const Val &val)
 }
 
 template<typename Key, typename Val>
-auto
-HashList<Key, Val>::AllocateNode(const Key &key, Val &&val)
+auto HashList<Key, Val>::AllocateNode(const Key &key, Val &&val)
 ->LinkNode<Key, Val> *
 {
     if (IsFull()) {
@@ -986,8 +932,7 @@ HashList<Key, Val>::AllocateNode(const Key &key, Val &&val)
 }
 
 template<typename Key, typename Val>
-void
-HashList<Key, Val>::ReclaimNode(LinkNode<Key, Val> *&pnode)
+void HashList<Key, Val>::ReclaimNode(LinkNode<Key, Val> *&pnode)
 {
     Link *prevLink = pnode->link_.prev_;
     Link *nextLink = pnode->link_.next_;

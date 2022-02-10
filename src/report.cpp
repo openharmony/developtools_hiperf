@@ -321,10 +321,16 @@ bool Report::MultiLevelSorting(const ReportItem &a, const ReportItem &b)
 
 void Report::OutputStdStatistics(ReportEventConfigItem &config)
 {
-    fprintf(output_, "\n"); // make a blank line for new event
-    fprintf(output_, "Event: %s (type %" PRIu32 " id %" PRIu64 ")\n", config.eventName_.c_str(),
-            config.type_, config.config_);
-    fprintf(output_, "Samples Count: %" PRIu64 "\n", config.sampleCount_);
+    if (fprintf(output_, "\n") < 0) {
+        return;
+    } // make a blank line for new event
+    if (fprintf(output_, "Event: %s (type %" PRIu32 " id %" PRIu64 ")\n", config.eventName_.c_str(),
+            config.type_, config.config_) < 0) {
+        return;
+    }
+    if (fprintf(output_, "Samples Count: %" PRIu64 "\n", config.sampleCount_) < 0) {
+        return;
+    }
     if (!config.coutMode_) {
         fprintf(output_, "Time in ns: ");
     } else {
@@ -356,7 +362,9 @@ void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
 {
     // head print
     const std::string head = "Heating";
-    fprintf(output_, "%-*s ", FULL_PERCENTAGE_LEN, head.c_str());
+    if (fprintf(output_, "%-*s ", FULL_PERCENTAGE_LEN, head.c_str()) < 0) {
+        return;
+    }
 
     if (diffMode) {
         const std::string diff = "Diff";
@@ -378,12 +386,16 @@ void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
         if (remainingWidth <= 0) {
             key.maxLen_ = 0;
         }
-        fprintf(output_, "%-*s ", (remainingWidth > 0) ? static_cast<int>(key.maxLen_) : 0,
-                key.keyName_.c_str());
+        if (fprintf(output_, "%-*s ", (remainingWidth > 0) ? static_cast<int>(key.maxLen_) : 0,
+            key.keyName_.c_str()) < 0) {
+            return;
+        }
         HLOGD("'%s' max len %zu(from '%s') console width %d", key.keyName_.c_str(), key.maxLen_,
               key.maxValue_.c_str(), remainingWidth);
     }
-    fprintf(output_, "\n");
+    if (fprintf(output_, "\n") < 0) {
+        return;
+    }
 }
 
 bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, uint64_t eventCount,
@@ -507,9 +519,13 @@ void Report::OutputStdContentItem(const ReportItem &reportItem)
     // output by sort keys
     for (auto sortKey : displayKeyNames_) {
         ReportKey &reportKey = Report::reportKeyMap_.at(sortKey);
-        fprintf(output_, "%s ", reportKey.GetValue(reportItem).c_str());
+        if (fprintf(output_, "%s ", reportKey.GetValue(reportItem).c_str()) < 0) {
+            return;
+        }
     }
-    fprintf(output_, "\n");
+    if (fprintf(output_, "\n") < 0) {
+        return;
+    }
 }
 
 void Report::OutputStdItemHeating(float heat, float heat2)

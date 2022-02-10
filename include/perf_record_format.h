@@ -15,8 +15,8 @@
 #ifndef HIPERF_PERF_RECORD_FORMAT_H
 #define HIPERF_PERF_RECORD_FORMAT_H
 
-#include <linux/types.h>
 #include <string>
+#include <linux/types.h>
 
 #include "utilities.h"
 
