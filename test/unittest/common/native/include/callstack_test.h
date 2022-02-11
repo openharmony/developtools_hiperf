@@ -109,7 +109,11 @@ static const std::vector<frame> TEST_DWARF_FRAMES = {
 template<class T>
 void LoadFromFile(const std::string &fileName, std::vector<T> &data)
 {
-    std::unique_ptr<FILE, decltype(&fclose)> fp(fopen(fileName.c_str(), "r"), fclose);
+    FILE* fp_ = fopen(fileName.c_str(), "r");
+    if (fp_ == nullptr) {
+        return;
+    }
+    std::unique_ptr<FILE, decltype(&fclose)> fp(fp_, fclose);
     if (fp) {
         struct stat sb = {};
         ASSERT_NE(fstat(fileno(fp.get()), &sb), -1);

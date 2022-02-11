@@ -63,7 +63,11 @@ public:
     static std::unique_ptr<PerfFileReaderFuzzer> Instance(const std::string &fileName,
                                                           const uint8_t *data, size_t size)
     {
-        std::unique_ptr<FILE, decltype(&fclose)> fp(fopen(fileName.c_str(), "rb"), fclose);
+        FILE *fp_ = fopen(fileName.c_str(), "rb");
+        if (fp_ == nullptr) {
+            return nullptr;
+        }
+        std::unique_ptr<FILE, decltype(&fclose)> fp(fp_, fclose);
         if (fp == nullptr) {
             HLOGE("fail to open file %s", fileName.c_str());
             return nullptr;

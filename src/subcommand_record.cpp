@@ -626,7 +626,7 @@ bool SubCommandRecord::TraceOffCpu()
     if (!ReadIntFromProcFile(node.c_str(), enable) and
         !ReadIntFromProcFile(nodeDebug.c_str(), enable)) {
         printf("Cannot trace off CPU, event sched:sched_switch is not avilable (%s or %s)\n",
-              node.c_str(), nodeDebug.c_str());
+            node.c_str(), nodeDebug.c_str());
         return false;
     }
 

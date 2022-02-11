@@ -110,7 +110,7 @@ std::unique_ptr<SymbolTable> SymbolTable::MakeUnique(const std::string &symNames
             Symbol table '.symtab' contains 2 entries:
             Num:    Value          Size Type    Bind   Vis      Ndx Name
                 0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND
-                1: 000000009c868f20   356 FUNC    GLOBAL DEFAULT    1 
+                1: 000000009c868f20   356 FUNC    GLOBAL DEFAULT    1
         */
         if ((curPos + entrySize) > secSize) {
             break;

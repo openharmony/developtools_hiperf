@@ -251,27 +251,13 @@ bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readB
     try {
         protobufFileStream_->exceptions(std::ifstream::failbit | std::ifstream::badbit);
         protobufFileStream_->open(fileName_.c_str(), std::fstream::in | std::fstream::binary);
-
         printf("open proto buf file succeed.\n");
-
         if (!CheckFileMagic()) {
             return false;
         }
-
-        protpbufInputStream_ =
-            std::make_unique<google::protobuf::io::CopyingInputStreamAdaptor>(this);
+        protpbufInputStream_ =std::make_unique<google::protobuf::io::CopyingInputStreamAdaptor>(this);
         protpbufCodedInputStream_ =
             std::make_unique<google::protobuf::io::CodedInputStream>(protpbufInputStream_.get());
-
-        // LittleEndian32(sample_size)
-        // message Record(sample)
-        // LittleEndian32(sample_size)
-        // message Record(sample)
-        // ...
-        // LittleEndian32(sample_size)
-        // message Record(sample)
-        // LittleEndian32(0)
-        // let's read one by one
         uint32_t recordLength = 0;
         do {
             protpbufCodedInputStream_->ReadLittleEndian32(&recordLength);

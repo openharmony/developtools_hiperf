@@ -25,7 +25,6 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-
 DebugLevel DebugLogger::debugLevel_ = DEFAULT_LOG_LEVEL;
 bool DebugLogger::logDisabled_ = false;
 

@@ -330,7 +330,9 @@ bool CompressFile(const std::string &dataFile, const std::string &destFile)
             return false;
         }
     }
-    fclose(fp);
+    if (fclose(fp) < 0) {
+        return false;
+    }
     return true;
 }
 
@@ -368,7 +370,9 @@ bool UncompressFile(const std::string &gzipFile, const std::string &dataFile)
             return false;
         }
     }
-    fclose(fp);
+    if (fclose(fp) < 0) {
+        return false;
+    }
     return true;
 }
 

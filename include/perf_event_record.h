@@ -21,13 +21,12 @@
 #include <memory>
 #include <stdint.h>
 #include <string>
-#include <variant>
-#include <vector>
-
-#include <linux/perf_event.h>
-#include <linux/types.h>
 #include <sys/types.h>
 #include <unique_fd.h>
+#include <linux/perf_event.h>
+#include <linux/types.h>
+#include <variant>
+#include <vector>
 
 #include "debug_logger.h"
 #include "mem_map_item.h"

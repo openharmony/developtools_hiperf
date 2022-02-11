@@ -15,12 +15,13 @@
 
 #define HILOG_TAG "Stat"
 
+#include "subcommand_stat.h"
+
 #include <csignal>
 #include <iostream>
 #include <memory>
 
 #include "debug_logger.h"
-#include "subcommand_stat.h"
 #include "utilities.h"
 
 const uint16_t ONE_HUNDRED = 100;
@@ -179,8 +180,7 @@ bool SubCommandStat::IsMonitoredAtAllTime(const double &scale)
     return (fabs(scale - 1.0) < SCALE_ERROR_LIMIT);
 }
 
-void SubCommandStat::GetComments(
-    const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
+void SubCommandStat::GetComments(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
     std::map<std::string, std::string> &comments)
 {
     double running_time_in_sec = 0;
