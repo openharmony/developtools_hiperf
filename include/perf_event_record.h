@@ -23,10 +23,10 @@
 #include <string>
 #include <sys/types.h>
 #include <unique_fd.h>
-#include <linux/perf_event.h>
-#include <linux/types.h>
 #include <variant>
 #include <vector>
+#include <linux/perf_event.h>
+#include <linux/types.h>
 
 #include "debug_logger.h"
 #include "mem_map_item.h"
