@@ -149,8 +149,8 @@ common_deps = [
   ":support_elf",
   ":support_libunwind",
   ":support_protobuf",
-  "//third_party/zlib:libz",
   "//third_party/bounds_checking_function:libsec_static",
+  "//third_party/zlib:libz",
 ]
 
 if (!hiperf_use_libunwind) {
