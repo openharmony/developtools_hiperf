@@ -14,6 +14,7 @@
  */
 
 #include <elf_parser.h>
+#include "utilities.h"
 
 using namespace OHOS::Developtools::HiPerf::ELF;
 namespace OHOS {
@@ -22,9 +23,11 @@ namespace HiPerf {
 ElfFile::ElfFile(const std::string &filename)
 {
 #if is_mingw
-    fd_ = open(filename.c_str(), O_RDONLY | O_BINARY);
+    std::string resolvedPath = CanonicalizeSpecPath(filename.c_str());
+    fd_ = open(resolvedPath.c_str(), O_RDONLY | O_BINARY);
 #else
-    fd_ = open(filename.c_str(), O_RDONLY);
+    std::string resolvedPath = CanonicalizeSpecPath(filename.c_str());
+    fd_ = open(resolvedPath.c_str(), O_RDONLY);
 #endif
     if (fd_ != -1) {
         struct stat sb;

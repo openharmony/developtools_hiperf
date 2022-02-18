@@ -502,7 +502,8 @@ private:
     {
 #ifndef HIPERF_ELF_READ_USE_MMAP
         if (readFd_ == nullptr) {
-            FILE *fp = fopen(loadElfPath.c_str(), "rb");
+            std::string resolvedPath = CanonicalizeSpecPath(loadElfPath.c_str());
+            FILE *fp = fopen(resolvedPath.c_str(), "rb");
             if (fp == nullptr) {
                 return;
             }
@@ -515,9 +516,11 @@ private:
             return;
         }
 #if is_mingw
-        fd_ = OHOS::UniqueFd(open(loadElfPath.c_str(), O_RDONLY | O_BINARY));
+        std::string resolvedPath = CanonicalizeSpecPath(loadElfPath.c_str());
+        fd_ = OHOS::UniqueFd(open(resolvedPath.c_str(), O_RDONLY | O_BINARY));
 #else
-        fd_ = OHOS::UniqueFd(open(loadElfPath.c_str(), O_RDONLY));
+        std::string resolvedPath = CanonicalizeSpecPath(loadElfPath.c_str());
+        fd_ = OHOS::UniqueFd(open(resolvedPath.c_str(), O_RDONLY));
 #endif
         if (fd_ != -1) {
             struct stat sb = {};
@@ -542,7 +545,7 @@ private:
                 }
             }
         } else {
-            HLOGD("elf file open failed with %s by %s", loadElfPath.c_str(), strerror(errno));
+            HLOGD("elf file open failed with %s by %d", loadElfPath.c_str(), errno);
             return;
         }
 #endif

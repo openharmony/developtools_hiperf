@@ -159,8 +159,8 @@ private:
 #define perror(format, ...)                                                                        \
     do {                                                                                           \
         std::perror(format);                                                                       \
-        DebugLogger::GetInstance()->Log(LEVEL_STDOUT, HILOG_TAG, format "<%d:%s>\n",               \
-                                        ##__VA_ARGS__, errno, strerror(errno));                    \
+        DebugLogger::GetInstance()->Log(LEVEL_STDOUT, HILOG_TAG, format "<%d>\n",                  \
+                                        ##__VA_ARGS__, errno);                                     \
     } while (0)
 #endif
 #endif
@@ -263,7 +263,7 @@ private:
 
 #ifndef HLOGEP
 #define HLOGEP(format, ...)                                                                        \
-    HLOG(LEVEL_ERROR, format "(errno %d:%s)", ##__VA_ARGS__, errno, strerror(errno))
+    HLOG(LEVEL_ERROR, format "(errno %d)", ##__VA_ARGS__, errno)
 #endif
 
 #ifndef HLOGF

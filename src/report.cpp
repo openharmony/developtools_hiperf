@@ -378,7 +378,7 @@ void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
         displayKeyNames_.insert(displayKeyNames_.begin(), "count");
     }
 
-    int remainingWidth = consoleWidth_;
+    unsigned int remainingWidth = consoleWidth_;
     // sort key head
     for (auto &keyName : displayKeyNames_) {
         auto &key = reportKeyMap_.at(keyName);
@@ -431,7 +431,7 @@ void Report::PrepareConsole()
 #if is_mingw
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    consoleWidth_ = static_cast<int>(csbi.srWindow.Right - csbi.srWindow.Left + 1);
+    consoleWidth_ = static_cast<unsigned int>(csbi.srWindow.Right - csbi.srWindow.Left + 1);
     const auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD mode;
     GetConsoleMode(handle, &mode);
@@ -440,7 +440,7 @@ void Report::PrepareConsole()
 #else
     struct winsize w = {0, 0, 0, 0};
     ioctl(fileno(stdout), TIOCGWINSZ, &w);
-    consoleWidth_ = static_cast<int>(w.ws_col);
+    consoleWidth_ = static_cast<unsigned int>(w.ws_col);
 #endif
     if (consoleWidth_ == 0) {
         consoleWidth_ = ConsoleDefaultWidth;

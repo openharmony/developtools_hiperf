@@ -41,15 +41,19 @@ bool PerfFileWriter::Open(const std::string &fileName, bool compressData)
     if (access(fileName.c_str(), F_OK) == 0) {
         // file exists
         if (remove(fileName.c_str()) != 0) {
+			char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
             printf("can't remove exist file(%s). %d:%s\n", fileName.c_str(), errno,
-                   strerror(errno));
+                   errInfo);
             return false;
         }
     }
-
-    fp_ = fopen(fileName.c_str(), "web+");
+    std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
+    fp_ = fopen(resolvedPath.c_str(), "web+");
     if (fp_ == nullptr) {
-        printf("can't create file(%s). %d:%s\n", fileName.c_str(), errno, strerror(errno));
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        printf("can't create file(%s). %d:%s\n", fileName.c_str(), errno, errInfo);
         return false;
     }
 
@@ -90,15 +94,22 @@ bool PerfFileWriter::Close()
         std::string gzName = fileName_ + ".gz";
         if (CompressFile(fileName_, gzName)) {
             if (remove(fileName_.c_str()) != 0) {
-                printf("can't remove file(%s). %d:%s\n", fileName_.c_str(), errno, strerror(errno));
+                char errInfo[ERRINFOLEN] = { 0 };
+                strerror_r(errno, errInfo, ERRINFOLEN);
+                printf("can't remove file(%s). %d:%s\n",
+                    fileName_.c_str(), errno, errInfo);
             }
             if (rename(gzName.c_str(), fileName_.c_str()) != 0) {
+                char errInfo[ERRINFOLEN] = { 0 };
+                strerror_r(errno, errInfo, ERRINFOLEN);
                 printf("can't rename file(%s) to (%s). %d:%s\n", gzName.c_str(), fileName_.c_str(),
-                       errno, strerror(errno));
+                       errno, errInfo);
             }
         } else {
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
             printf("failed to compress file(%s). %d:%s\n", fileName_.c_str(), errno,
-                   strerror(errno));
+                   errInfo);
         }
     }
 

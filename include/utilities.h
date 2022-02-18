@@ -87,7 +87,9 @@ constexpr uint64_t KILO = 1024;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+std::string CanonicalizeSpecPath(const char* src);
 const std::string EMPTY_STRING = "";
+const ssize_t ERRINFOLEN = 512;
 
 // string function
 class MemoryHold {
@@ -103,6 +105,9 @@ public:
         }
         // for null end
         char *p = new char[view.size() + 1];
+        if (p == nullptr) {
+            return "";
+        }
         p[view.size()] = '\0';
         std::copy(view.data(), view.data() + view.size(), p);
         holder_.emplace_back(p);
@@ -293,7 +298,7 @@ float Percentage(const T &a, const T &b)
 }
 
 bool IsRoot();
-bool PowerOfTwo(int n);
+bool PowerOfTwo(uint64_t n);
 
 #define INDENT_ONE_LEVEL (indent + 1)
 #define INDENT_TWO_LEVEL (indent + 2)

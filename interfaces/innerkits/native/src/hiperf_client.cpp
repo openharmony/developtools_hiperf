@@ -35,6 +35,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 namespace HiperfClient {
+const ssize_t ERRINFOLEN = 512;
 void RecordOption::SetOption(const std::string &name, bool enable)
 {
     auto it = std::find(args_.begin(), args_.end(), name);
@@ -384,13 +385,17 @@ bool Client::Start(const std::vector<std::string> &args)
     int clientToServerFd[2];
     int serverToClientFd[2];
     if (pipe(clientToServerFd) != 0 || pipe(serverToClientFd) != 0) {
-        HIPERF_HILOGD(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", strerror(errno));
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGD(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", errInfo);
         return false;
     }
 
     hperfPid_ = fork();
     if (hperfPid_ == -1) {
-        HIPERF_HILOGD(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", strerror(errno));
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGD(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
         return false;
     } else if (hperfPid_ == 0) {
         // child process
@@ -411,9 +416,11 @@ bool Client::Start(const std::vector<std::string> &args)
         argv[i] = nullptr;
 
         execv(argv[0], argv);
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
         HIPERF_HILOGD(MODULE_CPP_API,
                       "failed to call exec: '%" HILOG_PUBLIC "s' %" HILOG_PUBLIC "s\n",
-                      executeCommandPath_.c_str(), strerror(errno));
+                      executeCommandPath_.c_str(), errInfo);
         exit(0);
     } else {
         // parent process

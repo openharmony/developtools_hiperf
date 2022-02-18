@@ -537,10 +537,10 @@ bool SubCommandReport::PrepareOutput()
     }
 
     if (!reportFile_.empty()) {
-        output_ = fopen(reportFile_.c_str(), "w");
+        std::string resolvedPath = CanonicalizeSpecPath(reportFile_.c_str());
+        output_ = fopen(resolvedPath.c_str(), "w");
         if (output_ == nullptr) {
-            printf("unable open file to '%s' because '%d:%s'\n", reportFile_.c_str(), errno,
-                   strerror(errno));
+            printf("unable open file to '%s' because '%d'\n", reportFile_.c_str(), errno);
             return false;
         } else {
             printf("report will save at '%s'\n", reportFile_.c_str());

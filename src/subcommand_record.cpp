@@ -751,16 +751,20 @@ bool SubCommandRecord::ClientCommandResponse(bool OK)
     if (OK) {
         size_t size = write(clientPipeOutput_, ReplyOK.c_str(), ReplyOK.size());
         if (size != ReplyOK.size()) {
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
             HLOGD("Server:%s -> %d : %zd %d:%s", ReplyOK.c_str(), clientPipeOutput_, size, errno,
-                  strerror(errno));
+                  errInfo);
             return false;
         }
         return true;
     } else {
         size_t size = write(clientPipeOutput_, ReplyFAIL.c_str(), ReplyFAIL.size());
         if (size != ReplyFAIL.size()) {
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
             HLOGD("Server:%s -> %d : %zd %d:%s", ReplyFAIL.c_str(), clientPipeOutput_, size, errno,
-                  strerror(errno));
+                  errInfo);
             return false;
         }
         return true;
@@ -889,20 +893,26 @@ bool SubCommandRecord::CreateFifoServer()
             remove(CONTROL_FIFO_FILE_S2C.c_str());
             remove(CONTROL_FIFO_FILE_C2S.c_str());
         }
-        HLOGE("create fifo file failed. %d:%s", errno, strerror(errno));
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HLOGE("create fifo file failed. %d:%s", errno, errInfo);
         return false;
     }
 
     pid_t pid = fork();
     if (pid == -1) {
-        HLOGE("fork failed. %d:%s", errno, strerror(errno));
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HLOGE("fork failed. %d:%s", errno, errInfo);
         return false;
     } else if (pid == 0) { // child process
         isFifoServer_ = true;
         clientPipeOutput_ = open(CONTROL_FIFO_FILE_S2C.c_str(), O_WRONLY);
         if (clientPipeOutput_ == -1) {
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
             HLOGE("open fifo file(%s) failed. %d:%s", CONTROL_FIFO_FILE_S2C.c_str(), errno,
-                  strerror(errno));
+                  errInfo);
             return false;
         }
         fclose(stdout); // for XTS, because popen in CmdRun
@@ -914,7 +924,9 @@ bool SubCommandRecord::CreateFifoServer()
             kill(pid, SIGINT);
             remove(CONTROL_FIFO_FILE_C2S.c_str());
             remove(CONTROL_FIFO_FILE_S2C.c_str());
-            printf("create control hiperf sampling failed. %d:%s\n", errno, strerror(errno));
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
+            printf("create control hiperf sampling failed. %d:%s\n", errno, errInfo);
             return false;
         }
         close(fd);
