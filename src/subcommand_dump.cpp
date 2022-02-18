@@ -355,14 +355,16 @@ void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
         std::string userRegs =
             StringPrintf("hiperf_%d_%d_user_regs_%zu.dump", recordSample.data_.pid,
                          recordSample.data_.tid, exportSampleIndex_);
-        std::unique_ptr<FILE, decltype(&fclose)> fpUserRegs(fopen(userRegs.c_str(), "wb"), fclose);
+        std::string resolvedPath = CanonicalizeSpecPath(userRegs.c_str());
+        std::unique_ptr<FILE, decltype(&fclose)> fpUserRegs(fopen(resolvedPath.c_str(), "wb"), fclose);
         fwrite(recordSample.data_.user_regs, sizeof(u64), recordSample.data_.reg_nr,
                fpUserRegs.get());
 
         std::string userData =
             StringPrintf("hiperf_%d_%d_user_data_%zu.dump", recordSample.data_.pid,
                          recordSample.data_.tid, exportSampleIndex_);
-        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(userData.c_str(), "wb"), fclose);
+        std::string resolvePath = CanonicalizeSpecPath(userData.c_str());
+        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvePath.c_str(), "wb"), fclose);
         fwrite(recordSample.data_.stack_data, sizeof(u8), recordSample.data_.dyn_size,
                fpUserData.get());
     }
@@ -380,7 +382,8 @@ void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
         std::string userData =
             StringPrintf("hiperf_%d_%d_sample_record_%zu_%" PRIu64 ".dump", recordSample->data_.pid,
                          recordSample->data_.tid, exportSampleIndex_, recordSample->data_.time);
-        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(userData.c_str(), "wb"), fclose);
+        std::string resolvedPath = CanonicalizeSpecPath(userData.c_str());
+        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvedPath.c_str(), "wb"), fclose);
         std::vector<u8> buf(RECORD_SIZE_LIMIT);
         if (!recordSample->GetBinary(buf)) {
             HLOGE("export user sample data failed");

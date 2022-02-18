@@ -294,8 +294,8 @@ public:
     void EnableHilog();
 
 private:
-    static const int PIPE_READ = 0;
-    static const int PIPE_WRITE = 1;
+    static const uint64_t PIPE_READ = 0;
+    static const uint64_t PIPE_WRITE = 1;
     static constexpr size_t SIZE_ARGV_TAIL = 1; // nullptr
     static constexpr int64_t THOUSAND = 1000;
 

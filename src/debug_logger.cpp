@@ -255,17 +255,18 @@ bool DebugLogger::OpenLog(const std::string &tempLogPath, const std::string &fla
     }
     if (!tempLogPath.empty()) {
         fclose(file_);
-        file_ = fopen(tempLogPath.c_str(), flags.c_str());
+        std::string resolvedPath = CanonicalizeSpecPath(tempLogPath.c_str());
+        file_ = fopen(resolvedPath.c_str(), flags.c_str());
     }
     if (file_ != nullptr) {
         // already open
         return true;
     } else {
-        file_ = fopen(logPath_.c_str(), "w");
+        std::string resolvedPath = CanonicalizeSpecPath(logPath_.c_str());
+        file_ = fopen(resolvedPath.c_str(), "w");
     }
     if (file_ == nullptr) {
-        fprintf(stdout, "unable save log file to '%s' because '%d:%s'\n", logPath_.c_str(), errno,
-                strerror(errno));
+        fprintf(stdout, "unable save log file to '%s' because '%d'\n", logPath_.c_str(), errno);
         return false;
     } else {
         fseek(file_, 0, SEEK_SET);

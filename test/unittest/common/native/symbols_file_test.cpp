@@ -281,7 +281,10 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     }
 
     std::string modulesMap = ReadFileToString("/proc/modules");
-    size_t lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
+    int lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
+    if (lines < 0) {
+        return;
+    }
     std::set<std::string> modulesCount;
     for (auto &symbol : symbols) {
         if (symbol.module_.length()) {
@@ -674,8 +677,8 @@ HWTEST_F(SymbolsFileTest, ReadRoMemory, TestSize.Level1)
 
     std::unique_ptr<SymbolsFile> symbolsFile =
         SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_FILE_ELF_FULL_PATH);
-
-    std::unique_ptr<FILE, decltype(&fclose)> fp(fopen(TEST_FILE_ELF_FULL_PATH.c_str(), "rb"),
+    std::string resolvedPath = CanonicalizeSpecPath(TEST_FILE_ELF_FULL_PATH.c_str());
+    std::unique_ptr<FILE, decltype(&fclose)> fp(fopen(resolvedPath.c_str(), "rb"),
                                                 fclose);
 
     ASSERT_NE(symbolsFile, nullptr);
@@ -892,7 +895,7 @@ HWTEST_F(SymbolsFileTest, CreateSymbolsFile, TestSize.Level1)
 HWTEST_F(SymbolsFileTest, LoadSymbolsFromSaved, TestSize.Level1)
 {
     SymbolFileStruct sfs;
-    for (int type = 0; type < SYMBOL_UNKNOW_FILE; type++) {
+    for (unsigned int type = 0; type < SYMBOL_UNKNOW_FILE; type++) {
         sfs.filePath_ = std::to_string(rnd_());
         sfs.symbolType_ = type;
         sfs.textExecVaddrFileOffset_ = rnd_();

@@ -15,6 +15,7 @@
 #define HILOG_TAG "Protobuf"
 
 #include "report_protobuf_file.h"
+#include "utilities.h"
 
 using namespace Proto;
 namespace OHOS {
@@ -71,7 +72,8 @@ bool ReportProtobufFileWriter::Create(std::string fileName)
     try {
         protobufFileStream_->exceptions(std::ofstream::failbit | std::ofstream::badbit |
                                         std::ofstream::eofbit);
-        protobufFileStream_->open(fileName_.c_str(),
+        std::string resolvedPath = CanonicalizeSpecPath(fileName_.c_str());
+        protobufFileStream_->open(resolvedPath.c_str(),
                                   std::fstream::out | std::fstream::trunc | std::fstream::binary);
         protpbufOutputStream_ =
             std::make_unique<google::protobuf::io::CopyingOutputStreamAdaptor>(this);
@@ -250,7 +252,8 @@ bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readB
     fileName_ = fileName;
     try {
         protobufFileStream_->exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        protobufFileStream_->open(fileName_.c_str(), std::fstream::in | std::fstream::binary);
+        std::string resolvedPath = CanonicalizeSpecPath(fileName_.c_str());
+        protobufFileStream_->open(resolvedPath.c_str(), std::fstream::in | std::fstream::binary);
         printf("open proto buf file succeed.\n");
         if (!CheckFileMagic()) {
             return false;

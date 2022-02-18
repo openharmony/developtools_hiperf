@@ -33,7 +33,8 @@ const int SIZE_FETURE_COUNT = 8;
 
 std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &fileName)
 {
-    FILE *fp = fopen(fileName.c_str(), "rb");
+    std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
+    FILE *fp = fopen(resolvedPath.c_str(), "rb");
     if (fp == nullptr) {
         HLOGE("fail to open file %s", fileName.c_str());
         return nullptr;
@@ -78,6 +79,7 @@ end:
 
 PerfFileReader::PerfFileReader(const std::string &fileName, FILE *fp) : fp_(fp), fileName_(fileName)
 {
+    featureSectionOffset_ = 0;
     struct stat fileStat;
     if (fp != nullptr) {
         if (fstat(fileno(fp), &fileStat) != -1 and fileStat.st_size > 0) {
@@ -320,7 +322,7 @@ bool PerfFileReader::Read(void *buf, size_t len)
     }
 
     if (fread(buf, len, 1, fp_) != 1) {
-        printf("failed to read file: %s", strerror(errno));
+        printf("failed to read file: %d", errno);
         return false;
     }
     return true;
@@ -342,7 +344,7 @@ bool PerfFileReader::Read(char *buf, uint64_t offset, size_t len)
     }
 
     if (fread(buf, len, 1, fp_) != 1) {
-        printf("failed to read file: %s", strerror(errno));
+        printf("failed to read file: %d", errno);
         return false;
     }
     HLOGM("offset %" PRIx64 " len %zu buf %x %x %x %x", offset, len, buf[0], buf[1], buf[2],

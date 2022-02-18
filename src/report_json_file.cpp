@@ -37,7 +37,7 @@ void ReportJsonFile::ProcessSymbolsFiles(
 {
     auto symbolsFileIt = symbolsFiles.begin();
     while (symbolsFileIt != symbolsFiles.end()) {
-        int libId = libList_.size();
+        size_t libId = libList_.size();
         libList_.emplace_back(symbolsFileIt->get()->filePath_);
         const auto &symbols = symbolsFileIt->get()->GetSymbols();
         auto symbolIt = symbols.begin();

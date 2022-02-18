@@ -22,6 +22,24 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+std::string CanonicalizeSpecPath(const char* src)
+{
+    char resolvedPath[PATH_MAX] = { 0 };
+#if defined(_WIN32)
+    if (!_fullpath(resolvedPath, src, PATH_MAX)) {
+        fprintf(stderr, "Error: _fullpath %s failed", src);
+        return "";
+    }
+#else
+    if (realpath(src, resolvedPath) == nullptr) {
+        fprintf(stderr, "Error: _fullpath %s failed", src);
+        return "";
+    }
+#endif
+    std::string res(resolvedPath);
+    return res;
+}
+
 uint32_t RoundUp(uint32_t x, const int align)
 {
     return (((x) + (align)-1) / (align)) * (align);
@@ -81,7 +99,8 @@ std::vector<std::string> StringSplit(std::string source, std::string split)
 StdoutRecord::StdoutRecord(const std::string &tempFile, const std::string &mode)
 {
     if (!tempFile.empty()) {
-        recordFile_ = fopen(tempFile.c_str(), mode.c_str());
+        std::string resolvedPath = CanonicalizeSpecPath(tempFile.c_str());
+        recordFile_ = fopen(resolvedPath.c_str(), mode.c_str());
         if (recordFile_ == nullptr) {
             HLOGE("tmpfile create failed '%s' with mode '%s'", tempFile.c_str(), mode.c_str());
         } else {
@@ -102,7 +121,8 @@ bool StdoutRecord::Start()
     if (recordFile_ == nullptr) {
         // try second way
         std::string fileName = "temp.stdout";
-        recordFile_ = fopen(fileName.c_str(), "w+");
+        std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
+        recordFile_ = fopen(resolvedPath.c_str(), "w+");
         if (recordFile_ == nullptr) {
             HLOGF("tmpfile create failed '%s'", fileName.c_str());
             return false;
@@ -236,7 +256,8 @@ std::string ReadFileToString(const std::string &fileName)
 bool ReadFileToString(const std::string &fileName, std::string &fileData, size_t fileSize)
 {
     fileData.clear();
-    OHOS::UniqueFd fd(open(fileName.c_str(), O_RDONLY | O_BINARY));
+    std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
+    OHOS::UniqueFd fd(open(resolvedPath.c_str(), O_RDONLY | O_BINARY));
     if (fileSize == 0) {
         struct stat fileStat;
         if (fstat(fd.Get(), &fileStat) != -1 && fileStat.st_size > 0) {
@@ -275,7 +296,7 @@ bool IsRoot()
 #endif
 }
 
-bool PowerOfTwo(int n)
+bool PowerOfTwo(uint64_t n)
 {
     return n && (!(n & (n - 1)));
 }
@@ -300,7 +321,8 @@ bool WriteIntToProcFile(const std::string &path, int value)
 // compress specified dataFile into gzip file
 bool CompressFile(const std::string &dataFile, const std::string &destFile)
 {
-    FILE *fp = fopen(dataFile.c_str(), "rb");
+    std::string resolvedPath = CanonicalizeSpecPath(dataFile.c_str());
+    FILE *fp = fopen(resolvedPath.c_str(), "rb");
     if (fp == nullptr) {
         HLOGE("Fail to open data file %s", dataFile.c_str());
         perror("Fail to fopen(rb)");
@@ -339,7 +361,8 @@ bool CompressFile(const std::string &dataFile, const std::string &destFile)
 // uncompress specified gzip file into dataFile
 bool UncompressFile(const std::string &gzipFile, const std::string &dataFile)
 {
-    FILE *fp = fopen(dataFile.c_str(), "wb");
+    std::string resolvedPath = CanonicalizeSpecPath(dataFile.c_str());
+    FILE *fp = fopen(resolvedPath.c_str(), "wb");
     if (fp == nullptr) {
         HLOGE("Fail to open data file %s", dataFile.c_str());
         perror("Fail to fopen(rb)");

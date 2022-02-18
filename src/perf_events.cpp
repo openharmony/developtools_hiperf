@@ -1023,11 +1023,15 @@ bool PerfEvents::CreateFdEvents(void)
                         } else {
                             // clang-format off
                             if (verboseReport_) {
+                                char errInfo[ERRINFOLEN] = { 0 };
+                                strerror_r(errno, errInfo, ERRINFOLEN);
                                 printf("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
-                                    eventItem.configName.c_str(), cpus_[icpu], errno, strerror(errno));
+                                    eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
                             }
+                            char errInfo[ERRINFOLEN] = { 0 };
+                            strerror_r(errno, errInfo, ERRINFOLEN);
                             HLOGE("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
-                                eventItem.configName.c_str(), cpus_[icpu], errno, strerror(errno));
+                                eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
                             // clang-format on
                             break; // jump to next cpu
                         }

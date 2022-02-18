@@ -478,7 +478,9 @@ USED_FUNCTION int main(int argc, char *argv[])
         CPU_ZERO(&mask);
         CPU_SET(option.boundCpu, &mask);
         if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) == -1) {
-            printf("Set CPU(%d) affinity failue, ERROR:%s\n", option.boundCpu, strerror(errno));
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
+            printf("Set CPU(%d) affinity failue, ERROR:%s\n", option.boundCpu, errInfo);
         }
     }
     if (!option.noWait) {
