@@ -128,9 +128,10 @@ public:
     virtual bool GetBinary(char *buf, size_t size) = 0;
     virtual size_t GetSize() = 0;
     virtual ~PerfFileSection() {};
-
-    explicit PerfFileSection(const FEATURE featureId) : featureId_(featureId) {}
-
+    explicit PerfFileSection(const FEATURE featureId) : featureId_(featureId)
+    {
+        header.size = 0;
+    }
     static std::string GetFeatureName(FEATURE featureId);
 
 protected:

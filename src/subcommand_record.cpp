@@ -1139,9 +1139,9 @@ bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record)
     return false;
 }
 
-int SubCommandRecord::GetCountFromFile(const std::string &fileName)
+uint32_t SubCommandRecord::GetCountFromFile(const std::string &fileName)
 {
-    int ret = 0;
+    uint32_t ret = 0;
     std::string str = ReadFileToString(fileName);
     std::vector<std::string> subStrs = StringSplit(str);
     for (auto subStr : subStrs) {

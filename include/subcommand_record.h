@@ -239,7 +239,7 @@ private:
     bool SaveRecord(std::unique_ptr<PerfEventRecord>);
 
     // file format like as 0,1-3,4-6,7,8
-    int GetCountFromFile(const std::string &fileName);
+    uint32_t GetCountFromFile(const std::string &fileName);
     std::string GetCpuDescFromFile();
     bool AddCpuFeature();
     void AddMemTotalFeature();

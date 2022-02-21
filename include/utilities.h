@@ -98,21 +98,7 @@ public:
     {
         Clean();
     }
-    const char *HoldStringView(std::string_view view)
-    {
-        if (view.size() == 0) {
-            return "";
-        }
-        // for null end
-        char *p = new char[view.size() + 1];
-        if (p == nullptr) {
-            return "";
-        }
-        p[view.size()] = '\0';
-        std::copy(view.data(), view.data() + view.size(), p);
-        holder_.emplace_back(p);
-        return p;
-    };
+    const char *HoldStringView(std::string_view view);
     // only use in UT
     void Clean()
     {
