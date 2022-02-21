@@ -169,6 +169,10 @@ static std::string CovertByteBufferToHexString(const unsigned char *buffer, size
 
 static std::string ElfGetBuildId(const unsigned char *buffer, size_t size)
 {
+    if (buffer == nullptr) {
+        HLOGE("buffer is nullptr");
+        return EMPTY_STRING;
+    }
     const unsigned char *end = buffer + size;
     HLOGV("size:%zu", size);
     static constexpr const int elfNoteSectionLens = sizeof(uint32_t) * 3;

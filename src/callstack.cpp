@@ -308,8 +308,11 @@ int CallStack::AccessReg([[maybe_unused]] unw_addr_space_t as, unw_regnum_t regn
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
     uint64_t val;
-    size_t perfRegIndex = LibunwindRegIdToPerfReg(regnum);
-
+    int perfRegIndex = LibunwindRegIdToPerfReg(regnum);
+    if (perfRegIndex < 0) {
+        HLOGE("can't read reg %d", perfRegIndex);
+        return perfRegIndex;
+    }
     /* Don't support write, I suspect we don't need it. */
     if (writeOperation) {
         HLOGE("access_reg %d", regnum);
@@ -320,14 +323,14 @@ int CallStack::AccessReg([[maybe_unused]] unw_addr_space_t as, unw_regnum_t regn
         return -UNW_EUNSPEC;
     }
 
-    if (!RegisterGetValue(val, unwindInfoPtr->callStack.regs_, perfRegIndex,
+    if (!RegisterGetValue(val, unwindInfoPtr->callStack.regs_, static_cast<size_t>(perfRegIndex),
                           unwindInfoPtr->callStack.regsNum_)) {
-        HLOGE("can't read reg %zu", perfRegIndex);
+        HLOGE("can't read reg %d", perfRegIndex);
         return -UNW_EUNSPEC;
     }
 
     *valuePoint = (unw_word_t)val;
-    HLOGM("reg %d:%s, val 0x%" UNW_WORD_PFLAG "", regnum, RegisterGetName(perfRegIndex).c_str(),
+    HLOGM("reg %d:%s, val 0x%" UNW_WORD_PFLAG "", regnum, RegisterGetName(static_cast<size_t>(perfRegIndex)).c_str(),
           *valuePoint);
     return UNW_ESUCCESS;
 }
@@ -547,7 +550,7 @@ size_t CallStack::DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
 
     // first frame earch, from called - > caller
     // for case 2 it should found B
-    ssize_t distances = expandLimit - 1;
+    size_t distances = expandLimit - 1;
     auto cachedIt = find(cachedCallFrames.begin(), cachedCallFrames.end(), *newIt);
     if (cachedIt == cachedCallFrames.end()) {
         HLOGM("not found in first search");

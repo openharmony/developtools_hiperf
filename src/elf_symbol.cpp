@@ -37,18 +37,18 @@ std::unique_ptr<ElfSymbol> ElfSymbol::MakeUnique(char * const symBuf, const std:
 bool ElfSymbol::ParseElf32Symbol(char * const symBuf)
 {
     uint32_t *u4Buf = reinterpret_cast<uint32_t *>(symBuf);
-    constexpr int nameOffset {0};
+    constexpr uint32_t nameOffset {0};
     nameIndex_ = u4Buf[nameOffset];
-    constexpr int valueOffset {1};
+    constexpr uint32_t valueOffset {1};
     symValue_ = u4Buf[valueOffset];
-    constexpr int sizeOffset {2};
+    constexpr uint32_t sizeOffset {2};
     symSize_ = u4Buf[sizeOffset];
-    constexpr int infoOffset {12};
+    constexpr uint32_t infoOffset {12};
     symInfo_ = symBuf[infoOffset];
-    constexpr int otherInfoOffset {13};
+    constexpr uint32_t otherInfoOffset {13};
     symOtherInfo_ = symBuf[otherInfoOffset];
     uint16_t *u2Buf = reinterpret_cast<uint16_t *>(symBuf);
-    constexpr int secOffset {7};
+    constexpr uint32_t secOffset {7};
     secIndex_ = u2Buf[secOffset];
     return true;
 }
@@ -56,19 +56,19 @@ bool ElfSymbol::ParseElf32Symbol(char * const symBuf)
 bool ElfSymbol::ParseElf64Symbol(char * const symBuf)
 {
     uint32_t *u4Buf = reinterpret_cast<uint32_t *>(symBuf);
-    constexpr int nameOffset {0};
+    constexpr uint32_t nameOffset {0};
     nameIndex_ = u4Buf[nameOffset];
-    constexpr int infoOffset {4};
+    constexpr uint32_t infoOffset {4};
     symInfo_ = symBuf[infoOffset];
-    constexpr int otherInfoOffset {5};
+    constexpr uint32_t otherInfoOffset {5};
     symOtherInfo_ = symBuf[otherInfoOffset];
     uint16_t *u2Buf = reinterpret_cast<uint16_t *>(symBuf);
-    constexpr int secOffset {3};
+    constexpr uint32_t secOffset {3};
     secIndex_ = u2Buf[secOffset];
     uint64_t *u8Buf = reinterpret_cast<uint64_t *>(symBuf);
-    constexpr int valueOffset {1};
+    constexpr uint32_t valueOffset {1};
     symValue_ = u8Buf[valueOffset];
-    constexpr int sizeOffset {2};
+    constexpr uint32_t sizeOffset {2};
     symSize_ = u8Buf[sizeOffset];
     return true;
 }

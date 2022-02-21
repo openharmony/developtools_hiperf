@@ -108,12 +108,12 @@ bool ElfFile::ParseElfHeader()
     }
     HLOG_ASSERT(ret == 0);
     unsigned char ehdrBuf[ehdr64Size] {0};
-    ret = ReadFile(ehdrBuf, ehdr64Size);
-    if (ret < ehdr64Size) {
-        HLOGW("file size not enough, try read %zu, only have %zu", ehdr64Size, ret);
+    size_t readsize = ReadFile(ehdrBuf, ehdr64Size);
+    if (readsize < ehdr64Size) {
+        HLOGW("file size not enough, try read %zu, only have %zu", ehdr64Size, readsize);
     }
-    HLOG_ASSERT(ret > 0);
-    ehdr_ = ElfHeader::MakeUnique(ehdrBuf, ret);
+    HLOG_ASSERT(readsize > 0);
+    ehdr_ = ElfHeader::MakeUnique(ehdrBuf, readsize);
     return !(ehdr_ == nullptr);
 }
 
@@ -184,6 +184,10 @@ bool ElfFile::ParseSecNamesStr()
     ret = lseek(fd_, secOffset, SEEK_SET);
     HLOG_ASSERT(ret == static_cast<int64_t>(secOffset));
     char *secNamesBuf = new (std::nothrow) char[secSize];
+    if (secNamesBuf == nullptr) {
+        HLOGE("new secNamesBuf failed");
+        return false;
+    }
     memset_s(secNamesBuf, secSize, '\0', secSize);
     ret = ReadFile(secNamesBuf, secSize);
     if (ret != static_cast<int64_t>(secSize)) {

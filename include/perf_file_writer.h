@@ -33,7 +33,11 @@ constexpr const int WRITER_BUFFER_SIZE = 4 * 1024 * 1024;
 // tools/perf/Documentation/perf.data-file-format.txt
 class PerfFileWriter {
 public:
-    PerfFileWriter() {};
+    PerfFileWriter()
+    {
+        attrSection_.offset = 0;
+        attrSection_.size = 0;
+    };
     ~PerfFileWriter();
 
     bool Open(const std::string &fileName, bool compressData = false);

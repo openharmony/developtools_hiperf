@@ -22,6 +22,27 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+const char *MemoryHold::HoldStringView(std::string_view view)
+{
+    if (view.size() == 0) {
+        return "";
+    }
+    try {
+        // for null end
+        char *p = new char[view.size() + 1];
+        if (p == nullptr) {
+            return "";
+        }
+        p[view.size()] = '\0';
+        std::copy(view.data(), view.data() + view.size(), p);
+        holder_.emplace_back(p);
+        return p;
+    } catch (...) {
+        return "";
+    }
+    return "";
+}
+
 std::string CanonicalizeSpecPath(const char* src)
 {
     char resolvedPath[PATH_MAX] = { 0 };

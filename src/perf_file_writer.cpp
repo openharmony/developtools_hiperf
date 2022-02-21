@@ -354,7 +354,7 @@ bool PerfFileWriter::WriteFeatureData()
         }
     }
 
-    long contentOffset = featureOffset + featureSections_.size() * sizeof(perf_file_section);
+    unsigned long contentOffset = featureOffset + featureSections_.size() * sizeof(perf_file_section);
     HLOGV("features start at file '0x%lx' content at '0x%lx'", featureOffset, contentOffset);
 
     // reorder
