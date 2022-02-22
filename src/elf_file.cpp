@@ -185,7 +185,7 @@ bool ElfFile::ParseSecNamesStr()
     HLOG_ASSERT(ret == static_cast<int64_t>(secOffset));
     char *secNamesBuf = new (std::nothrow) char[secSize];
     if (secNamesBuf == nullptr) {
-        HLOGE("new secNamesBuf failed");
+        HLOGE("Error in ElfFile::ParseSecNamesStr(): new secNamesBuf failed");
         return false;
     }
     memset_s(secNamesBuf, secSize, '\0', secSize);
