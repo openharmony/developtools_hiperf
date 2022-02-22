@@ -316,8 +316,9 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
 
 bool PerfFileReader::Read(void *buf, size_t len)
 {
-    HLOG_ASSERT(buf != nullptr);
-    if (len == 0) {
+    if (buf == nullptr || len == 0) {
+        HLOG_ASSERT(buf != nullptr);
+        HLOG_ASSERT(len > 0);
         return false;
     }
 
@@ -335,9 +336,11 @@ const perf_file_header &PerfFileReader::GetHeader() const
 
 bool PerfFileReader::Read(char *buf, uint64_t offset, size_t len)
 {
-    HLOG_ASSERT(buf != nullptr);
-    HLOG_ASSERT(len > 0);
-
+    if (buf == nullptr || len == 0) {
+        HLOG_ASSERT(buf != nullptr);
+        HLOG_ASSERT(len > 0);
+        return false;
+    }
     if (fseek(fp_, offset, SEEK_SET) != 0) {
         HLOGE("fseek() failed");
         return false;

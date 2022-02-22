@@ -299,8 +299,8 @@ public:
             if (!showError_) {
                 DebugLogger::GetInstance()->Log(level_, HILOG_TAG, "%s\n", buffer_.str().c_str());
             } else {
-                DebugLogger::GetInstance()->Log(level_, HILOG_TAG, "%s (errno %d:%s)\n",
-                                                buffer_.str().c_str(), errno, strerror(errno));
+                DebugLogger::GetInstance()->Log(level_, HILOG_TAG, "%s (errno %d)\n",
+                                                buffer_.str().c_str(), errno);
             }
         }
     }

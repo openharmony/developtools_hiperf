@@ -228,7 +228,10 @@ void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
 PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
     : PerfEventRecord(p, "sample")
 {
-    HLOG_ASSERT(p);
+    if (p == nullptr) {
+        HLOG_ASSERT(p);
+        return;
+    }
     sampleType_ = attr.sample_type;
 
     p += sizeof(header);
