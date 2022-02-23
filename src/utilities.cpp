@@ -52,9 +52,15 @@ std::string CanonicalizeSpecPath(const char* src)
         return "";
     }
 #else
-    if (realpath(src, resolvedPath) == nullptr) {
-        fprintf(stderr, "Error: _fullpath %s failed", src);
-        return "";
+    if (access(src, F_OK) == 0) {
+        if (realpath(src, resolvedPath) == nullptr) {
+            fprintf(stderr, "Error: _fullpath %s failed", src);
+            return "";
+        }
+    } else {
+        if (sprintf_s(resolvedPath, PATH_MAX, "%s", src) == -1) {
+            return "";
+        }
     }
 #endif
     std::string res(resolvedPath);

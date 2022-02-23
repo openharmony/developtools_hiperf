@@ -37,6 +37,7 @@ public:
     {
         attrSection_.offset = 0;
         attrSection_.size = 0;
+        defaultEventAttr_.branch_sample_type = 0;
     };
     ~PerfFileWriter();
 

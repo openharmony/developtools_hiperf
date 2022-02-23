@@ -26,6 +26,7 @@ ReportProtobufFileWriter::~ReportProtobufFileWriter()
 {
     Close();
 }
+
 void ReportProtobufFileWriter::BeforeClose()
 {
     HiperfRecord record;

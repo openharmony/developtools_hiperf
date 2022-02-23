@@ -519,7 +519,7 @@ private:
     const std::string TEXT_RED = "\x1b[31m";
     const std::string TEXT_GREEN = "\x1b[32m";
     const std::string TEXT_RESET = "\033[0m";
-    const int ConsoleDefaultWidth = 80;
+    const unsigned int ConsoleDefaultWidth = 80;
 
     // sometime caller dont give the option
     ReportOption defaultOption_;
@@ -537,7 +537,7 @@ private:
     void UpdateReportItemsAfterAdjust();
 
     // std out
-    int consoleWidth_ = 0;
+    unsigned int consoleWidth_ = 0;
     void PrepareConsole();
 
     void OutputStdStatistics(ReportEventConfigItem &);
