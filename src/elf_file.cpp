@@ -101,7 +101,7 @@ bool ElfFile::ParseFile()
 
 bool ElfFile::ParseElfHeader()
 {
-    size_t ret = lseek(fd_, 0, SEEK_SET);
+    ssize_t ret = lseek(fd_, 0, SEEK_SET);
     if (ret != 0) {
         HLOGW("lseek ret %zu", ret);
         return false;

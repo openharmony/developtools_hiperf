@@ -1235,8 +1235,10 @@ void SubCommandRecord::AddRecordTimeFeature()
     // create time
     std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     // clang-format off
+    char buf[256] = { 0 };
+    ctime_r(&time, buf);
     fileWriter_->AddStringFeature(FEATURE::HIPERF_RECORD_TIME,
-                                  StringReplace(std::ctime(&time), "\n", ""));
+                                  StringReplace(buf, "\n", ""));
     // clang-format on
     return;
 }
