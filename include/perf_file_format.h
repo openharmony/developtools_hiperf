@@ -131,6 +131,7 @@ public:
     explicit PerfFileSection(const FEATURE featureId) : featureId_(featureId)
     {
         header.size = 0;
+        header.offset = 0;
     }
     static std::string GetFeatureName(FEATURE featureId);
 
