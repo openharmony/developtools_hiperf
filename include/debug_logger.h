@@ -283,45 +283,7 @@ private:
 #endif
 
 #undef assert
-class LogMessage {
-public:
-    LogMessage(DebugLevel level = LEVEL_VERBOSE, bool showError = false)
-        : level_(level), showError_(showError)
-    {
-    }
-    std::ostream &Stream()
-    {
-        return buffer_;
-    }
-    ~LogMessage()
-    {
-        if (!DebugLogger::logDisabled_) {
-            if (!showError_) {
-                DebugLogger::GetInstance()->Log(level_, HILOG_TAG, "%s\n", buffer_.str().c_str());
-            } else {
-                DebugLogger::GetInstance()->Log(level_, HILOG_TAG, "%s (errno %d)\n",
-                                                buffer_.str().c_str(), errno);
-            }
-        }
-    }
-
-private:
-    DebugLevel level_;
-    bool showError_;
-    std::ostringstream buffer_;
-};
-#define HLOGMESSAGE(level, error)                                                                  \
-    LogMessage(level, error).Stream()                                                              \
-        << HILOG_TAG_NAME << "/" << LOG_LEVEL(level) << "<" << gettid() << ">[" << SHORT_FILENAME  \
-        << ":" << __LINE__ << "]" << __FUNCTION__ << ":"
-
-#define HLOGS(level) HLOGMESSAGE(level, false)
-
-#define HLOGSP(level) HLOGMESSAGE(level, true)
 #else
-#define HLOGS(...)  std::ostringstream()
-#define HLOGSP(...) std::ostringstream()
-
 #define HLOGDUMMY(...)                                                                             \
     do {                                                                                           \
     } while (0)
