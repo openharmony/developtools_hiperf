@@ -149,8 +149,8 @@ common_deps = [
   ":support_elf",
   ":support_libunwind",
   ":support_protobuf",
+  "//third_party/bounds_checking_function:libsec_static",
   "//third_party/zlib:libz",
-  "//utils/native/base:utilsecurec",
 ]
 
 if (!hiperf_use_libunwind) {
@@ -158,8 +158,8 @@ if (!hiperf_use_libunwind) {
 }
 
 if (is_ohos) {
-  common_deps += [ "//utils/native/base:utilsecurec_shared" ]
-  common_deps -= [ "//utils/native/base:utilsecurec" ]
+  common_deps += [ "//third_party/bounds_checking_function:libsec_shared" ]
+  common_deps -= [ "//third_party/bounds_checking_function:libsec_static" ]
 }
 
 if (hiperf_target_static) {
@@ -251,7 +251,7 @@ ohos_source_set("support_protobuf") {
   public_configs += [ ":protobuf_config" ]
   public_deps = [
     ":proto_file_cpp",
-    "//utils/native/base:utilsecurec",
+    "//third_party/bounds_checking_function:libsec_static",
   ]
 
   sources = [ "./src/report_protobuf_file.cpp" ]

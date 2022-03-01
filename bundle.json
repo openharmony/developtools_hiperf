@@ -23,7 +23,7 @@
       ],
       "third_party": [
         "libz",
-        "utilsecurec"
+        "libsec_static"
       ]
     },
     "build": {
