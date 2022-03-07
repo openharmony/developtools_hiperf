@@ -45,14 +45,13 @@ public:
                                                      const uint8_t *data, size_t size)
     {
         std::unique_ptr<ElfFileFuzzer> file {new (std::nothrow) ElfFileFuzzer(filename)};
-        file->dataPtr_ = reinterpret_cast<const char *>(data);
-        file->dataSize_ = size;
-        file->FuzzerTime_ = size;
-
         if (file == nullptr) {
             HLOGE("Error in ElfFile::MakeUnique(): ElfFile::ElfFile() failed");
             return nullptr;
         }
+        file->dataPtr_ = reinterpret_cast<const char *>(data);
+        file->dataSize_ = size;
+        file->FuzzerTime_ = size;
         if (!file->IsOpened()) {
             HLOGE("Error in ElfFile::MakeUnique(): elf file not opended");
             return nullptr;
