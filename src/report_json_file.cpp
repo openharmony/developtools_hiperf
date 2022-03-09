@@ -81,7 +81,7 @@ int ReportJsonFile::GetFuncionID(int libId, std::string_view function)
         return it - functionList_.begin();
     } else {
         HLOGW("'%s' not found in function list in lib %d", function.data(), libId);
-        // make a new functin for unknow name
+        // make a new function for unknown name
         addNewFunction(libId, function);
         // retuen the last index
         return functionList_.size() - 1;

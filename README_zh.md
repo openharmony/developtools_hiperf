@@ -141,7 +141,7 @@ hiperf\demo\cpp\hiperf_example_cmd.cpp
 
 ```
  ./hiperf_example_cmd --help
-this is a demo test comand
+this is a demo test command
   Use the following commands to simulate different scenarios
   --help
     this page

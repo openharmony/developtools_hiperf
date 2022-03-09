@@ -62,7 +62,7 @@ std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
         case PERF_RECORD_SWITCH_CPU_WIDE:
             return std::make_unique<PerfRecordSwitchCpuWide>(data);
         default:
-            HLOGE("unknow record type %d\n", type);
+            HLOGE("unknown record type %d\n", type);
             return nullptr;
     }
 }

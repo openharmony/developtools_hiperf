@@ -41,7 +41,7 @@ namespace HiPerf {
 const int MAX_CALL_FRAME_EXPAND_CYCLE = 10;
 const size_t MAX_CALL_FRAME_EXPAND_CACHE_SIZE = 10;
 const size_t MAX_CALL_FRAME_UNWIND_SIZE = 256;
-// if ip is 0 , 1 both not usefule
+// if ip is 0 , 1 both not useful
 const uint64_t BAD_IP_ADDRESS = 2;
 
 #if HAVE_LIBUNWIND

@@ -362,7 +362,7 @@ void WaitStart()
 
 void Help()
 {
-    printf("this is a demo test comand\n");
+    printf("this is a demo test command\n");
     printf("  Use the following commands to simulate different scenarios\n");
     printf("  --help\n");
     printf("    this page\n");
@@ -389,7 +389,7 @@ void Help()
     printf("  --boundcpu <cpu>\n");
     printf("    the process will bound to <cpu>\n");
     printf("  --sleep <milliseconds>\n");
-    printf("    threads will sleep <milliseconds> per second, defaut is 0.\n");
+    printf("    threads will sleep <milliseconds> per second, default is 0.\n");
 }
 
 bool GetIntFromArg(std::vector<std::string> &args, int &value)
@@ -399,7 +399,7 @@ bool GetIntFromArg(std::vector<std::string> &args, int &value)
             value = std::stoi(args[0]);
             args.erase(args.begin());
         } else {
-            printf("unknow format '%s'\n", args[0].c_str());
+            printf("unknown format '%s'\n", args[0].c_str());
             return false;
         }
     }
@@ -472,7 +472,7 @@ USED_FUNCTION int main(int argc, char *argv[])
         } else if (GetBoolFromArg(args, "--nofunc", option.nofunc)) {
             continue;
         } else {
-            printf("unknow format '%s'\n", args[0].c_str());
+            printf("unknown format '%s'\n", args[0].c_str());
             return -1;
         }
     }
@@ -484,7 +484,7 @@ USED_FUNCTION int main(int argc, char *argv[])
         if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) == -1) {
             char errInfo[ERRINFOLEN] = { 0 };
             strerror_r(errno, errInfo, ERRINFOLEN);
-            printf("Set CPU(%d) affinity failue, ERROR:%s\n", option.boundCpu, errInfo);
+            printf("Set CPU(%d) affinity failure, ERROR:%s\n", option.boundCpu, errInfo);
         }
     }
     if (!option.noWait) {

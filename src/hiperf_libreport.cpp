@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -243,7 +243,7 @@ const char *ReportGetBuildId(const char *elfPath)
 
 const char *ReportGetElfArch(const char *elfPath)
 {
-    const char *machineName = "unknow";
+    const char *machineName = "unknown";
     static std::string buildId; // statci for hold the c_str buffer
     std::unique_ptr<ElfFile> elfFile = ElfFile::MakeUnique(elfPath);
     static std::string result; // statci for hold the c_str buffer
@@ -265,7 +265,7 @@ const char *ReportGetElfArch(const char *elfPath)
                 machineName = "x86_64";
                 break;
             default:
-                machineName = "unknow";
+                machineName = "unknown";
                 break;
         }
         HLOGD("elf '%s' mache value is '%x'(%s) \n", elfPath, elfFile->ehdr_->machine_,

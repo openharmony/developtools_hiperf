@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -95,7 +95,7 @@ static bool OnHiLog(const std::vector<std::string> &args)
 #endif
 void RegisterMainCommandDebug()
 {
-    Option::RegisterMainOption("--nodebug", "disbale debug log, usage format: --nodebug [command] [args]",
+    Option::RegisterMainOption("--nodebug", "disable debug log, usage format: --nodebug [command] [args]",
                                OnNoDebug);
     Option::RegisterMainOption("--debug", "show debug log, usage format: --debug [command] [args]",
                                OnDebugLevel);
