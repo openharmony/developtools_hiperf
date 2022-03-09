@@ -12,7 +12,7 @@
 
 ## 简介
 
-hiperf 是 Open Harmony 为开发人员提供的用于调试的命令行工具，用于抓取特定程序或者系统的性能数据,类似内核的 perf  工具，该工具支持在 Windows/Linux/Mac 等操作系统上运行。
+hiperf 是 OpenHarmony 为开发人员提供的用于调试的命令行工具，用于抓取特定程序或者系统的性能数据,类似内核的 perf  工具，该工具支持在 Windows/Linux/Mac 等操作系统上运行。
 
 ### 架构
 
