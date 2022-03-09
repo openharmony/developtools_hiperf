@@ -129,7 +129,10 @@ bool ElfFile::ParsePrgHeaders()
         HLOGE("Error in ELF::ElfFile::ParsePrgHeaders(): new failed");
         return false;
     }
-    memset_s(phdrsBuf, phdrSize * numPhdrs, 0, phdrSize * numPhdrs);
+    if (memset_s(phdrsBuf, phdrSize * numPhdrs, 0, phdrSize * numPhdrs) == nullptr) {
+        HLOGE("memset_s() in ElfFile::ParsePrgHeaders");
+        return false;
+    }
     ret = ReadFile(phdrsBuf, phdrSize * numPhdrs);
     if (ret != static_cast<int64_t>(phdrSize * numPhdrs)) {
         return false;
@@ -164,7 +167,10 @@ bool ElfFile::ParseSecNamesStr()
         HLOGE("Error in ElfFile::ParseSecNamesStr(): new failed");
         return false;
     }
-    memset_s(shdrBuf, shdrSize, 0, shdrSize);
+    if (memset_s(shdrBuf, shdrSize, 0, shdrSize) == nullptr) {
+        HLOGE("Error in ElfFile::ParseSecNamesStr(): memset_s failed");
+        return false;
+    }
     ret = ReadFile(shdrBuf, shdrSize);
     HLOG_ASSERT(ret == static_cast<int64_t>(shdrSize));
     const std::string secName {".shstrtab"};
@@ -188,7 +194,10 @@ bool ElfFile::ParseSecNamesStr()
         HLOGE("Error in ElfFile::ParseSecNamesStr(): new secNamesBuf failed");
         return false;
     }
-    memset_s(secNamesBuf, secSize, '\0', secSize);
+    if (memset_s(secNamesBuf, secSize, '\0', secSize) == nullptr) {
+        HLOGE("Error in ElfFile::ParseSecNamesStr(): memset_s failed");
+        return false;
+    }
     ret = ReadFile(secNamesBuf, secSize);
     if (ret != static_cast<int64_t>(secSize)) {
         delete[] secNamesBuf;
@@ -213,7 +222,10 @@ bool ElfFile::ParseSecHeaders()
         HLOGE("Error in ELF::ElfFile::ParseSecHeaders(): new failed");
         return false;
     }
-    memset_s(shdrsBuf, shdrSize * numShdrs, '\0', shdrSize * numShdrs);
+    if (memset_s(shdrsBuf, shdrSize * numShdrs, '\0', shdrSize * numShdrs) == nullptr) {
+        HLOGE("Error in ELF::ElfFile::ParseSecHeaders(): memset_s failed");
+        return false;
+    }
     ret = ReadFile(shdrsBuf, shdrSize * numShdrs);
     HLOG_ASSERT(ret == static_cast<int64_t>(shdrSize * numShdrs));
     char *shdrBuf = shdrsBuf;
@@ -292,7 +304,10 @@ bool ElfFile::ParseSymNamesStr()
         HLOGE("Error in ElfFile::ParsesymNamesStr(): new failed");
         return false;
     }
-    memset_s(secBuf, secSize, '\0', secSize);
+    if (memset_s(secBuf, secSize, '\0', secSize) == nullptr) {
+        HLOGE("Error in ElfFile::ParsesymNamesStr(): memset_s failed");
+        return false;
+    }
     ret = ReadFile(secBuf, secSize);
     HLOG_ASSERT(ret == static_cast<int64_t>(secSize));
     symNamesStr_ = std::string(secBuf, secSize);

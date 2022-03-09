@@ -117,7 +117,7 @@ bool PerfFileSection::Read(std::string &value)
         return false;
     }
     // if size large than buf size or 0 size ?
-    // dont assert for fuzz test
+    // don't assert for fuzz test
     if (size == 0 or size > maxSize_) {
         return false;
     }
@@ -145,7 +145,10 @@ bool PerfFileSection::Read(char *buf, size_t size)
         return false;
     } else if (offset_ + size > maxSize_) {
         HLOGE("read out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
-        memset_s(buf, size, 0, size); // make sure the content return is 0 when failed
+        if (memset_s(buf, size, 0, size) == nullptr) { // make sure the content return is 0 when failed
+            HLOGE("memset_s failed in PerfFileSection::Read");
+            return false;
+        }
         return false;
     }
     HLOGD("PerfFileSection::Read offset_ %zu size %zu maxSize_ %zu", offset_, size, maxSize_);
@@ -260,9 +263,9 @@ PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(FEATURE id, const char 
             Read(symbolStruct.len_);
             Read(symbolStruct.symbolName_);
         }
-        HLOGV(" %zu SymbolStruct readed.", symbolFileStruct.symbolStructs_.size());
+        HLOGV(" %zu SymbolStruct read.", symbolFileStruct.symbolStructs_.size());
     }
-    HLOGV(" %zu SymbolFileStruct readed.", symbolFileStructs_.size());
+    HLOGV(" %zu SymbolFileStruct read.", symbolFileStructs_.size());
 }
 
 bool PerfFileSectionSymbolsFiles::GetBinary(char *buf, size_t size)

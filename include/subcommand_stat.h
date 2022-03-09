@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,13 +37,13 @@ public:
         "          CAP_SYS_ADMIN capability or a\n"
         "         /proc/sys/kernel/perf_event_paranoid value of less than 1.\n"
         "   -c <cpuid>[<,cpuid>]\n"
-        "         cpuid shoule be 0,1,2...\n"
+        "         cpuid should be 0,1,2...\n"
         "         Limit the CPU that collects data.\n"
         "         0 means cpu0, 1 means cpu1 ...\n"
         "   -d <sec>\n"
         "         stop in <sec> seconds.\n"
         "         floating point number.\n"
-        "         defalut is 10000.0\n"
+        "         default is 10000.0\n"
         "   -i <ms>\n"
         "         print stat info every <ms>.\n"
         "   -e event1[:<u|k>][,event1[:<u|k>]]...\n"

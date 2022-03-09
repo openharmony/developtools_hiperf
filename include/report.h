@@ -521,7 +521,7 @@ private:
     const std::string TEXT_RESET = "\033[0m";
     const unsigned int ConsoleDefaultWidth = 80;
 
-    // sometime caller dont give the option
+    // sometime caller don't give the option
     ReportOption defaultOption_;
 
     std::vector<std::string> displayKeyNames_;

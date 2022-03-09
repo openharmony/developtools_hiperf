@@ -156,7 +156,7 @@ int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, const MemMapItem &mmap,
                                UnwindInfo *unwindInfoPtr, unw_addr_space_t as, unw_word_t ip,
                                unw_proc_info_t *pi, int need_unwind_info, void *arg)
 {
-    HLOGM("try seach debug info at %s", symbolsFile->filePath_.c_str());
+    HLOGM("try search debug info at %s", symbolsFile->filePath_.c_str());
     auto &dynInfoProcessMap = unwindInfoPtr->callStack.unwindDynInfoMap_;
     // all the thread in same process have same mmap and symbols
     if (dynInfoProcessMap.find(unwindInfoPtr->thread.pid_) == dynInfoProcessMap.end()) {
@@ -166,7 +166,10 @@ int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, const MemMapItem &mmap,
     // find use dso name as key
     if (dynFileMap.find(symbolsFile->filePath_) == dynFileMap.end()) {
         unw_dyn_info_t newdi;
-        memset_s(&newdi, sizeof(unw_dyn_info_t), 0, sizeof(unw_dyn_info_t));
+        if (memset_s(&newdi, sizeof(unw_dyn_info_t), 0, sizeof(unw_dyn_info_t)) == nullptr) {
+            HLOGE("memset_s() failed");
+            return -UNW_EUNSPEC;
+        }
 #ifdef target_cpu_arm
         // arm use .ARM.exidx , not use ehframe
         newdi.format = UNW_INFO_FORMAT_ARM_EXIDX;
@@ -194,7 +197,7 @@ int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, const MemMapItem &mmap,
     if (odi.has_value()) {
         unw_dyn_info_t &di = odi.value();
         /*
-            we dont use dwarf_search_unwind_table
+            we don't use dwarf_search_unwind_table
             because in arm it will search two function:
             1 arm_search_unwind_table first
             2 dwarf_search_unwind_table
@@ -548,7 +551,7 @@ size_t CallStack::DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
     HLOGM("try find new call chain bottom %s for limit %zu", newIt->ToString().c_str(),
           expandLimit);
 
-    // first frame earch, from called - > caller
+    // first frame search, from called - > caller
     // for case 2 it should found B
     size_t distances = expandLimit - 1;
     auto cachedIt = find(cachedCallFrames.begin(), cachedCallFrames.end(), *newIt);
@@ -607,7 +610,7 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
     if (callFrames.size() >= 1u) {
         // get top  (Earliest caller)
         HashList<uint64_t, std::vector<CallFrame>> &cachedCallFrames = cachedCallFramesMap_[tid];
-        HLOGV("find call stack frames in cahce size %zu", cachedCallFrames.size());
+        HLOGV("find call stack frames in cache size %zu", cachedCallFrames.size());
         // compare
         using namespace std::rel_ops; // enable complement comparing operators
         for (auto itr = cachedCallFrames.begin(); itr < cachedCallFrames.end(); ++itr) {

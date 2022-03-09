@@ -581,14 +581,14 @@ void *mmap(void *addr, size_t length, int prot, int flags, int fd, size_t offset
     HLOGV("fd is %d", fd);
 
     HANDLE FileMappingHandle = ::CreateFileMappingW(FileHandle, 0, PAGE_READONLY, 0, 0, 0);
-    if (FileMappingHandle == NULL) {
+    if (FileMappingHandle == nullptr) {
         HLOGE("CreateFileMappingW %zu Failed with %ld:%s", length, GetLastError(),
               GetLastErrorString().c_str());
         return MMAP_FAILED;
     }
 
     void *mapAddr = ::MapViewOfFile(FileMappingHandle, FILE_MAP_READ, 0, 0, 0);
-    if (mapAddr == NULL) {
+    if (mapAddr == nullptr) {
         HLOGE("MapViewOfFile %zu Failed with %ld:%s", length, GetLastError(),
               GetLastErrorString().c_str());
         return MMAP_FAILED;
