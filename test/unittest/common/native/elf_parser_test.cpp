@@ -46,7 +46,7 @@ static const std::string GetNextLine(FILE *fp, int *status)
 {
     constexpr int bufSize {128};
     char buf[bufSize];
-    if (memset_s(buf, sizeof(buf), '\0', sizeof(buf)) == nullptr) {
+    if (memset_s(buf, sizeof(buf), '\0', sizeof(buf)) != EOK) {
         HLOGV("memset_s() failed");
         return "";
     }

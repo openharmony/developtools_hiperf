@@ -59,7 +59,7 @@ void RingBufferTest::ReadBufferAndCheck(RingBuffer &buf)
     perf_event_header readData = {0, 0, 0};
     uint8_t *p = nullptr;
     while ((p = buf.GetReadData()) != nullptr) {
-        ASSERT_EQ((void *)memcpy_s(&readData, sizeof(perf_event_header), p, sizeof(perf_event_header)), 0);
+        ASSERT_EQ((void)memcpy_s(&readData, sizeof(perf_event_header), p, sizeof(perf_event_header)), 0);
         ASSERT_EQ(checkSize, readData.size)
             << " read data size " << readData.size << " expect data size " << checkSize;
         p += sizeof(perf_event_header);
@@ -82,7 +82,7 @@ void RingBufferTest::WriteBuffer(RingBuffer &buf)
     perf_event_header writeData = {PERF_RECORD_MMAP, 0, sizeof(perf_event_header)};
     uint8_t *p = nullptr;
     while ((p = buf.AllocForWrite(writeData.size)) != nullptr) {
-        ASSERT_EQ((void *)memcpy_s(p, writeData.size, &writeData, sizeof(perf_event_header)), 0);
+        ASSERT_EQ((void)memcpy_s(p, writeData.size, &writeData, sizeof(perf_event_header)), 0);
         p += sizeof(perf_event_header);
         uint8_t data = static_cast<uint8_t>(writeData.size & U8MASK);
         for (size_t i = 0; i < (writeData.size - sizeof(perf_event_header)); i++) {
@@ -122,7 +122,7 @@ HWTEST_F(RingBufferTest, Wrap, TestSize.Level1)
     size_t half = 0;
     uint8_t *p = nullptr;
     while ((p = rb.AllocForWrite(writeData.size)) != nullptr) {
-        ASSERT_EQ((void *)memcpy_s(p, writeData.size, &writeData, sizeof(perf_event_header)), 0);
+        ASSERT_EQ((void)memcpy_s(p, writeData.size, &writeData, sizeof(perf_event_header)), 0);
         rb.EndWrite();
         half += writeData.size;
         if (half >= (rb.GetFreeSize() / 2)) {

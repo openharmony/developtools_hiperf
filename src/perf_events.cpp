@@ -371,7 +371,7 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
     }
 
     // attr
-    if (memset_s(&eventItem.attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) == nullptr) {
+    if (memset_s(&eventItem.attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
         HLOGE("memset_s failed in PerfEvents::AddEvent");
         return false;
     }
@@ -454,7 +454,7 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
 std::unique_ptr<perf_event_attr> PerfEvents::CreateDefaultAttr(perf_type_id type, __u64 config)
 {
     unique_ptr<perf_event_attr> attr = make_unique<perf_event_attr>();
-    if (memset_s(attr.get(), sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) == nullptr) {
+    if (memset_s(attr.get(), sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
         HLOGE("memset_s failed in PerfEvents::CreateDefaultAttr");
         return nullptr;
     }

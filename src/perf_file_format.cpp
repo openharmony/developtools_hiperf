@@ -145,7 +145,7 @@ bool PerfFileSection::Read(char *buf, size_t size)
         return false;
     } else if (offset_ + size > maxSize_) {
         HLOGE("read out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
-        if (memset_s(buf, size, 0, size) == nullptr) { // make sure the content return is 0 when failed
+        if (memset_s(buf, size, 0, size) != EOK) { // make sure the content return is 0 when failed
             HLOGE("memset_s failed in PerfFileSection::Read");
             return false;
         }

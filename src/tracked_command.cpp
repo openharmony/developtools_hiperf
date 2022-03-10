@@ -45,7 +45,7 @@ TrackedCommand::TrackedCommand(const std::vector<std::string> &args) : command_ 
 {
     // check sa_hanlder of SIGCHLD, set it to SIG_DFL if otherwise
     struct sigaction oldAct;
-    if (memset_s(&oldAct, sizeof(oldAct), 0, sizeof(oldAct)) == nullptr) {
+    if (memset_s(&oldAct, sizeof(oldAct), 0, sizeof(oldAct)) != EOK) {
         HLOGE("memset_s() failed in TrackedCommand::TrackedCommand()");
         return;
     }
@@ -54,7 +54,7 @@ TrackedCommand::TrackedCommand(const std::vector<std::string> &args) : command_ 
     } else {
         if (oldAct.sa_handler != SIG_DFL) {
             struct sigaction newAct;
-            if (memset_s(&newAct, sizeof(newAct), 0, sizeof(newAct)) == nullptr) {
+            if (memset_s(&newAct, sizeof(newAct), 0, sizeof(newAct)) != EOK) {
                 HLOGE("memset_s() failed in TrackedCommand::TrackedCommand()");
                 return;
             }

@@ -348,7 +348,7 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
     LoadFromFile(PATH_RESOURCE_TEST_DWARF_DATA + TEST_DWARF_RECORD, data);
     ASSERT_NE(data.size(), 0u);
     perf_event_attr attr;
-    if (memset_s(&attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) == nullptr) {
+    if (memset_s(&attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
         printf("error: memset_s failed.");
         return;
     }

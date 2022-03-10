@@ -129,7 +129,7 @@ bool ElfFile::ParsePrgHeaders()
         HLOGE("Error in ELF::ElfFile::ParsePrgHeaders(): new failed");
         return false;
     }
-    if (memset_s(phdrsBuf, phdrSize * numPhdrs, 0, phdrSize * numPhdrs) == nullptr) {
+    if (memset_s(phdrsBuf, phdrSize * numPhdrs, 0, phdrSize * numPhdrs) != EOK) {
         HLOGE("memset_s() in ElfFile::ParsePrgHeaders");
         return false;
     }
@@ -167,7 +167,7 @@ bool ElfFile::ParseSecNamesStr()
         HLOGE("Error in ElfFile::ParseSecNamesStr(): new failed");
         return false;
     }
-    if (memset_s(shdrBuf, shdrSize, 0, shdrSize) == nullptr) {
+    if (memset_s(shdrBuf, shdrSize, 0, shdrSize) != EOK) {
         HLOGE("Error in ElfFile::ParseSecNamesStr(): memset_s failed");
         return false;
     }
@@ -194,7 +194,7 @@ bool ElfFile::ParseSecNamesStr()
         HLOGE("Error in ElfFile::ParseSecNamesStr(): new secNamesBuf failed");
         return false;
     }
-    if (memset_s(secNamesBuf, secSize, '\0', secSize) == nullptr) {
+    if (memset_s(secNamesBuf, secSize, '\0', secSize) != EOK) {
         HLOGE("Error in ElfFile::ParseSecNamesStr(): memset_s failed");
         return false;
     }
@@ -222,7 +222,7 @@ bool ElfFile::ParseSecHeaders()
         HLOGE("Error in ELF::ElfFile::ParseSecHeaders(): new failed");
         return false;
     }
-    if (memset_s(shdrsBuf, shdrSize * numShdrs, '\0', shdrSize * numShdrs) == nullptr) {
+    if (memset_s(shdrsBuf, shdrSize * numShdrs, '\0', shdrSize * numShdrs) != EOK) {
         HLOGE("Error in ELF::ElfFile::ParseSecHeaders(): memset_s failed");
         return false;
     }
@@ -304,7 +304,7 @@ bool ElfFile::ParseSymNamesStr()
         HLOGE("Error in ElfFile::ParsesymNamesStr(): new failed");
         return false;
     }
-    if (memset_s(secBuf, secSize, '\0', secSize) == nullptr) {
+    if (memset_s(secBuf, secSize, '\0', secSize) != EOK) {
         HLOGE("Error in ElfFile::ParsesymNamesStr(): memset_s failed");
         return false;
     }
