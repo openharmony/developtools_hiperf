@@ -118,9 +118,6 @@ USED_FUNCTION void LoopIowait()
         const std::string tempBuf = std::to_string(rnd());
         fwrite(tempBuf.c_str(), tempBuf.size(), 1, fd.get());
     }
-    if (fclose(fp) != 0) {
-        printf("fclose failed.");
-    }
 }
 
 USED_FUNCTION void LoopMmap()

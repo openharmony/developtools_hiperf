@@ -159,7 +159,7 @@ bool ElfFile::ParseSecNamesStr()
     // get string table section header
     size_t shdrSize = ehdr_->shdrEntSize_;
     size_t shdrIndex = ehdr_->shdrStrTabIdx_;
-    uint64_t shdrOffset = ehdr_->shdrOffset_ + shdrIndex * shdrSize;
+    uint64_t shdrOffset = ehdr_->shdrOffset_ + ((uint64_t)shdrIndex) * shdrSize;
     int64_t ret = lseek(fd_, shdrOffset, SEEK_SET);
     HLOG_ASSERT(ret == static_cast<int64_t>(shdrOffset));
     char *shdrBuf = new (std::nothrow) char[shdrSize];
