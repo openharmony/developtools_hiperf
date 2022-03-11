@@ -57,10 +57,6 @@ config("hiperf_inner_config") {
       "HIPERF_DEBUG",
       "HIPERF_DEBUG_PRINTF",  # if u want to see printf in the log ?
     ]
-  } else {
-    # some value just for debug, but also can be opt by clang ,don't as error
-    # but maybe we need do some opt
-    cflags += [ "-Wno-unused-variable" ]
   }
 
   if (hiperf_check_time) {
@@ -68,9 +64,6 @@ config("hiperf_inner_config") {
   }
 
   cflags += [ "-std=c++17" ]
-  if (is_linux) {
-    cflags += [ "-g" ]  # we need debug info when it crash.
-  }
   defines += [ "is_mingw=${is_mingw}" ]
   defines += [ "is_linux=${is_linux}" ]
   defines += [ "is_ohos=${is_ohos}" ]
@@ -83,8 +76,6 @@ config("hiperf_inner_config") {
 
   if (is_mingw) {
     cflags += [ "-includeMingW64Fix.h" ]
-    cflags += [ "-Wno-inconsistent-dllimport" ]  # in mingw some sec api will
-                                                 # overwrite by utilsecurec
     defines += [ "WIN32_LEAN_AND_MEAN" ]
 
     include_dirs += [
@@ -239,7 +230,6 @@ ohos_source_set("support_elf") {
 
 config("protobuf_config") {
   defines = [ "HAVE_PROTOBUF=1" ]
-  cflags = [ "-Wno-unused-parameter" ]  # proto buf head build error
   include_dirs = [
     "//third_party/protobuf/src",
     "//third_party/protobuf/src/google",
