@@ -184,6 +184,7 @@ if (is_ohos && hiperf_use_syspara) {
 }
 
 ohos_source_set("hiperf_platform_common") {
+  part_name = "hiperf"
   use_exceptions = true
   public_deps = common_deps
   public_configs = common_configs
@@ -202,6 +203,7 @@ config("platform_linux_config") {
 }
 
 ohos_source_set("hiperf_platform_linux") {
+  part_name = "hiperf"
   use_exceptions = true
   public_deps = common_deps
   public_configs = common_configs
@@ -217,6 +219,7 @@ config("unwind_config") {
 }
 
 ohos_source_set("support_libunwind") {
+  part_name = "hiperf"
   public_configs = common_configs
   public_configs += [ ":unwind_config" ]
   if (hiperf_target_host) {
@@ -229,6 +232,7 @@ ohos_source_set("support_libunwind") {
 config("elf_config") {
 }
 ohos_source_set("support_elf") {
+  part_name = "hiperf"
   public_configs = common_configs
   public_configs += [ ":elf_config" ]
 }
@@ -244,6 +248,7 @@ config("protobuf_config") {
 }
 
 ohos_source_set("support_protobuf") {
+  part_name = "hiperf"
   use_exceptions = true
 
   #protobuf
@@ -320,6 +325,7 @@ config("proto_file_cpp_config") {
 }
 
 ohos_source_set("proto_file_cpp") {
+  part_name = "hiperf"
   cflags = []
 
   deps = [ ":hiperf_host_build_proto" ]
@@ -365,6 +371,7 @@ ohos_executable("hiperf_host") {
 }
 
 ohos_source_set("hiperf_platform_host") {
+  part_name = "hiperf"
   sources = [ "./src/hiperf_libreport.cpp" ]
   public_deps = [ ":hiperf_platform_common" ]
 }
@@ -399,6 +406,7 @@ ohos_copy("hiperf_host_python") {
 }
 
 ohos_source_set("hiperf_code_analyze") {
+  part_name = "hiperf"
   deps = [
     ":hiperf_platform_common",
     ":hiperf_platform_linux",
