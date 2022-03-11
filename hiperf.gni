@@ -30,9 +30,7 @@ declare_args() {
   hiperf_use_syspara = true
 }
 
-code_check_flag = [
-
-]
+code_check_flag = []
 
 code_analyze_flag = [
   "--analyze",
