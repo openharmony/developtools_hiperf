@@ -25,7 +25,7 @@ fi
 BUILD_OUT=$TOP/out/$1
 HOST_OUT=$TOP/out/host/developtools/hiperf
 BUILD_PATH=/developtools/hiperf
-if [ ! -d "$HOST_OUT" ]; then
+if [ -d "$HOST_OUT" ]; then
     echo "remove $HOST_OUT"
     rm -rf $HOST_OUT
 fi
