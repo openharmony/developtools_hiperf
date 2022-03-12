@@ -137,7 +137,6 @@ void OutputJsonMapList(FILE *output, const std::string &key, const std::map<K, V
         }
     }
     if (fprintf(output, "\"%s\":[", key.c_str()) != -1) {
-        fprintf(output, "[");
         auto it = value.begin();
         while (it != value.end()) {
             OutputJsonValue(output, it->second, it == value.begin());
