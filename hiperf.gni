@@ -30,26 +30,7 @@ declare_args() {
   hiperf_use_syspara = true
 }
 
-code_check_flag = [
-  "-Wformat",
-  "-Wall",
-  "-Wextra",
-  "-Werror",
-  "-Wmissing-field-initializers",
-  "-Wuninitialized",
-  "-Wunused-parameter",
-  "-Wunused-variable",
-  "-Wnull-pointer-arithmetic",
-  "-Wunused-lambda-capture",
-  "-Wuser-defined-warnings",
-  "-Wenum-compare-switch",
-  "-Wunneeded-internal-declaration",
-  "-Wundefined-var-template",
-  "-Wnonportable-include-path",
-  "-Wformat-extra-args",
-  "-Wsign-compare",
-  "-Wreturn-stack-address",
-]
+code_check_flag = []
 
 code_analyze_flag = [
   "--analyze",

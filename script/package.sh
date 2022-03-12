@@ -17,10 +17,18 @@ TOP=$(realpath $DIR/../../../)
 echo $DIR
 cd $DIR
 
-BUILD_OUT=$TOP/out/ohos-arm-release
+if [ -z "$1" ]; then
+    echo "no product name"
+    exit -1
+fi
+
+BUILD_OUT=$TOP/out/$1
 HOST_OUT=$TOP/out/host/developtools/hiperf
 BUILD_PATH=/developtools/hiperf
-rm -rf $HOST_OUT
+if [ -d "$HOST_OUT" ]; then
+    echo "remove $HOST_OUT"
+    rm -rf $HOST_OUT
+fi
 mkdir -p $HOST_OUT
 
 # script

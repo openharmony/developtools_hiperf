@@ -33,6 +33,7 @@ namespace {
 #define USED_FUNCTION __attribute__((__used__)) __attribute__((optnone))
 constexpr milliseconds eachStackFunRunTime = 100ms;
 constexpr milliseconds msDuartion = 1000ms;
+const ssize_t ERRINFOLEN = 512;
 
 extern USED_FUNCTION void LoopBranch0(std::default_random_engine &rnd, int level);
 extern USED_FUNCTION void LoopBranch1(std::default_random_engine &rnd, int level);
