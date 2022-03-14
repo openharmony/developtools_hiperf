@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -312,7 +312,7 @@ public:
         lostNonSamples = lostNonSamples_;
     }
 
-    // review: remvoe this funcion.
+    // review: remove this function.
     static const std::string GetStaticConfigName(perf_type_id type_id, __u64 config_id)
     {
         auto typeConfigs = TYPE_CONFIGS.find(type_id);
@@ -474,7 +474,7 @@ private:
     SampleStackType sampleStackType_ = SampleStackType::NONE;
     uint32_t dwarfSampleStackSize_ = MAX_SAMPLE_STACK_SIZE;
 
-    // read records from the ring buffer singlton
+    // read records from the ring buffer singleton
     void ReadRecordFromBuffer();
     void ReadRecordFromBufferThread();
 

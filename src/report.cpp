@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -264,7 +264,7 @@ void Report::MergeCallFrameCount(ReportItem &leftItem, ReportItem &rightItem)
             // all the child in rightFrame has been copy to left.
             break;
         } else {
-            // alread have , add count
+            // already have , add count
             leftFrameIt->eventCount_ += rightFrame.eventCount_;
             leftFrameIt->selfEventCount_ += rightFrame.selfEventCount_;
             // left move to next
@@ -342,7 +342,7 @@ void Report::OutputStdStatistics(ReportEventConfigItem &config)
 bool Report::OutputStdStatistics(ReportEventConfigItem &config, ReportEventConfigItem &otherConfig)
 {
     if (config != otherConfig) {
-        fprintf(output_, "diff config unable comapre\n");
+        fprintf(output_, "diff config unable compare\n");
         return false;
     }
     fprintf(output_, "Event: %s (type %" PRIu32 " id %" PRIu64 ")", config.eventName_.c_str(),
@@ -406,7 +406,7 @@ bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, ui
     HLOGV("frame %f indent %d at %s", heat, indent, funcName.data());
 
     if (heat < option_.callStackHeatLimit_) {
-        // dont print this three anymore
+        // don't print this three anymore
         return false;
     }
 
@@ -477,7 +477,7 @@ void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFram
     if (callFrame.childs.size() == 1u and
         callFrame.childs[0].eventCount_ == callFrame.eventCount_) {
         HLOGV("childCallFream %*c %s", indent, ' ', callFrame.childs[0].func_.data());
-        // dont indent if same count (only one 100% children)
+        // don't indent if same count (only one 100% children)
         OutputStdCallFrames(indent, callFrame.childs[0], callFrame.eventCount_);
     } else {
         // else a lot children

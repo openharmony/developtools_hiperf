@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -261,7 +261,7 @@ public:
         symbolsLoaded_ = true;
         return false;
     };
-    // load debug infor for unwind
+    // load debug info for unwind
     virtual bool LoadDebugInfo([[maybe_unused]] const std::string &symbolFilePath = EMPTY_STRING)
     {
         HLOGV("virtual dummy function called");

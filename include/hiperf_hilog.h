@@ -27,7 +27,7 @@
 #define FILENAME                                                                                   \
     (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define FORMATED(fmt, ...)                                                                         \
+#define FORMATTED(fmt, ...)                                                                         \
     "[%" HILOG_PUBLIC "s:%" HILOG_PUBLIC "d] %" HILOG_PUBLIC "s# " fmt HILOG_NEWLINE, FILENAME,    \
         __LINE__, __FUNCTION__, ##__VA_ARGS__
 
@@ -73,22 +73,22 @@ static constexpr OHOS::HiviewDFX::HiLogLabel HIPERF_HILOG_LABLE[] = {
 // In order to improve performance, do not check the module range
 
 #define HIPERF_HILOGF(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Fatal(HIPERF_HILOG_LABLE[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Fatal(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
 #define HIPERF_HILOGE(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Error(HIPERF_HILOG_LABLE[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Error(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
 #define HIPERF_HILOGW(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Warn(HIPERF_HILOG_LABLE[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Warn(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
 #define HIPERF_HILOGI(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Info(HIPERF_HILOG_LABLE[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Info(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
 #define HIPERF_HILOGD(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Debug(HIPERF_HILOG_LABLE[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Debug(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
 #else
 
-#define HIPERF_HILOGF(module, ...) printf(FORMATED(__VA_ARGS__))
-#define HIPERF_HILOGE(module, ...) printf(FORMATED(__VA_ARGS__))
-#define HIPERF_HILOGW(module, ...) printf(FORMATED(__VA_ARGS__))
-#define HIPERF_HILOGI(module, ...) printf(FORMATED(__VA_ARGS__))
-#define HIPERF_HILOGD(module, ...) printf(FORMATED(__VA_ARGS__))
+#define HIPERF_HILOGF(module, ...) printf(FORMATTED(__VA_ARGS__))
+#define HIPERF_HILOGE(module, ...) printf(FORMATTED(__VA_ARGS__))
+#define HIPERF_HILOGW(module, ...) printf(FORMATTED(__VA_ARGS__))
+#define HIPERF_HILOGI(module, ...) printf(FORMATTED(__VA_ARGS__))
+#define HIPERF_HILOGD(module, ...) printf(FORMATTED(__VA_ARGS__))
 
 #endif // CONFIG_NO_HILOG
 

@@ -75,7 +75,7 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
                     return false;
                 }
             } else {
-                // we dont support this command
+                // we don't support this command
                 printf("unknown args: %s\n", arguments.front().c_str());
                 return false;
             }

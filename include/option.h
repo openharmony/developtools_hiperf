@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -81,7 +81,7 @@ bool GetOptionValue(argsVector &args, std::string optionName, T &value)
                 // if the last one we request is empty , we remove it
                 localValues.pop_back();
                 // nothing more needed
-                // we dont allow empty value
+                // we don't allow empty value
                 break;
             }
         }
@@ -105,9 +105,9 @@ bool GetOptionValue(argsVector &args, std::string optionName, T &value)
             return true; // not found but also not error
         } else {
             it = args.erase(it);
-            // some specail case
+            // some special case
             if constexpr (std::is_same<T, bool>::value) {
-                // for bool we dont need get value.
+                // for bool we don't need get value.
                 // this always return true
                 GetValueFromString(optionName, optionName, value);
                 return true;
@@ -121,7 +121,7 @@ bool GetOptionValue(argsVector &args, std::string optionName, T &value)
                 args.erase(it);
                 return true;
             } else {
-                // have value but conver failed.
+                // have value but convert failed.
                 printf("incorrect option value '%s'. View the usage with the --help option.\n",
                        (*it).c_str());
                 return false;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -129,9 +129,11 @@ bool ElfFile::ParsePrgHeaders()
         HLOGE("Error in ELF::ElfFile::ParsePrgHeaders(): new failed");
         return false;
     }
-    memset_s(phdrsBuf, phdrSize * numPhdrs, 0, phdrSize * numPhdrs);
+    (void)memset_s(phdrsBuf, phdrSize * numPhdrs, 0, phdrSize * numPhdrs);
     ret = ReadFile(phdrsBuf, phdrSize * numPhdrs);
     if (ret != static_cast<int64_t>(phdrSize * numPhdrs)) {
+        delete[] phdrsBuf;
+        phdrsBuf = nullptr;
         return false;
     }
     char *phdrBuf = phdrsBuf;
@@ -156,7 +158,7 @@ bool ElfFile::ParseSecNamesStr()
     // get string table section header
     size_t shdrSize = ehdr_->shdrEntSize_;
     size_t shdrIndex = ehdr_->shdrStrTabIdx_;
-    uint64_t shdrOffset = ehdr_->shdrOffset_ + shdrIndex * shdrSize;
+    uint64_t shdrOffset = ehdr_->shdrOffset_ + ((uint64_t)shdrIndex) * shdrSize;
     int64_t ret = lseek(fd_, shdrOffset, SEEK_SET);
     HLOG_ASSERT(ret == static_cast<int64_t>(shdrOffset));
     char *shdrBuf = new (std::nothrow) char[shdrSize];
@@ -164,7 +166,7 @@ bool ElfFile::ParseSecNamesStr()
         HLOGE("Error in ElfFile::ParseSecNamesStr(): new failed");
         return false;
     }
-    memset_s(shdrBuf, shdrSize, 0, shdrSize);
+    (void)memset_s(shdrBuf, shdrSize, 0, shdrSize);
     ret = ReadFile(shdrBuf, shdrSize);
     HLOG_ASSERT(ret == static_cast<int64_t>(shdrSize));
     const std::string secName {".shstrtab"};
@@ -188,7 +190,7 @@ bool ElfFile::ParseSecNamesStr()
         HLOGE("Error in ElfFile::ParseSecNamesStr(): new secNamesBuf failed");
         return false;
     }
-    memset_s(secNamesBuf, secSize, '\0', secSize);
+    (void)memset_s(secNamesBuf, secSize, '\0', secSize);
     ret = ReadFile(secNamesBuf, secSize);
     if (ret != static_cast<int64_t>(secSize)) {
         delete[] secNamesBuf;
@@ -213,7 +215,7 @@ bool ElfFile::ParseSecHeaders()
         HLOGE("Error in ELF::ElfFile::ParseSecHeaders(): new failed");
         return false;
     }
-    memset_s(shdrsBuf, shdrSize * numShdrs, '\0', shdrSize * numShdrs);
+    (void)memset_s(shdrsBuf, shdrSize * numShdrs, '\0', shdrSize * numShdrs);
     ret = ReadFile(shdrsBuf, shdrSize * numShdrs);
     HLOG_ASSERT(ret == static_cast<int64_t>(shdrSize * numShdrs));
     char *shdrBuf = shdrsBuf;
@@ -292,7 +294,7 @@ bool ElfFile::ParseSymNamesStr()
         HLOGE("Error in ElfFile::ParsesymNamesStr(): new failed");
         return false;
     }
-    memset_s(secBuf, secSize, '\0', secSize);
+    (void)memset_s(secBuf, secSize, '\0', secSize);
     ret = ReadFile(secBuf, secSize);
     HLOG_ASSERT(ret == static_cast<int64_t>(secSize));
     symNamesStr_ = std::string(secBuf, secSize);

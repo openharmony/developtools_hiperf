@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,9 +68,9 @@ public:
         "       default file name is perf.data.\n"
         "   --diff <target file>\n"
         "       show the diff result from -i to -diff .\n"
-        "       exapmle: \"report -i a.data --diff b.data\"\n"
+        "       example: \"report -i a.data --diff b.data\"\n"
         "   --branch\n"
-        "       show the branch from address instead of ip adress\n"
+        "       show the branch from address instead of ip address\n"
         "   --<keys> <keyname1>[,keyname2][,...]\n"
         "       select able keys: comms,pids,tids,dsos,funcs,from_dsos,from_funcs\n"
         "           example: --comms hiperf\n"
@@ -97,7 +97,7 @@ public:
         "   --hide_count\n"
         "           will not show count in report\n"
         "\n"
-        ), recordFile_ {"perf.data", ""} // dafault file path is perf.data
+        ), recordFile_ {"perf.data", ""} // default file path is perf.data
     // clang-format on
     {
     }

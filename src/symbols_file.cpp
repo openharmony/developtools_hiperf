@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -125,7 +125,7 @@ const std::string SymbolsFile::FindSymbolFile(
     }
     symboleFilePath = PlatformPathConvert(symboleFilePath);
     std::string foundPath;
-    // search fisrt if we have path
+    // search first if we have path
     if (symbolsFileSearchPaths.size() != 0) {
         foundPath = SearchReadableFile(symbolsFileSearchPaths, symboleFilePath);
         if (foundPath.empty()) {
@@ -411,7 +411,7 @@ private:
             case STT_OBJECT:
                 return "  object";
             default:
-                return "  unknow";
+                return "  unknown";
         }
     }
 
@@ -587,7 +587,7 @@ private:
                       symbol->symSize_, demangle.c_str());
 
                 if (symbol->symValue_ == 0) {
-                    continue; // we dont need 0 addr symbol
+                    continue; // we don't need 0 addr symbol
                 }
                 symbolsTable.emplace_back(symbol->symValue_, symbol->symSize_, name, demangle,
                                           filePath_);
@@ -720,7 +720,7 @@ private:
         HLOGD("%zu symbols loadded from elf '%s'.", symbols_.size(), elfPath.c_str());
         if (buildId_.empty()) {
             HLOGD("buildId not found from elf '%s'.", elfPath.c_str());
-            // dont failed. some time the lib have not got the build id
+            // don't failed. some time the lib have not got the build id
             // buildId not found from elf '/system/bin/ld-musl-arm.so.1'.
         }
     }
@@ -764,7 +764,7 @@ private:
         } else {
             HLOGW("symbols will not update for '%s' because buildId is not match.",
                   elfPath.c_str());
-            // this mean failed . we dont goon for this.
+            // this mean failed . we don't goon for this.
             return false;
         }
 
@@ -875,7 +875,7 @@ public:
                 }
                 HLOGM(" 0x%016" PRIx64 " %c '%s' '%s'", addr, type, nameRaw, moduleRaw);
             } else {
-                HLOGW("unknow line %d: '%s'", ret, lineBegin);
+                HLOGW("unknown line %d: '%s'", ret, lineBegin);
                 continue;
             }
             std::string name = nameRaw;
@@ -933,7 +933,7 @@ public:
         if (ReadFileToString(KPTR_RESTRICT).front() != '0') {
             printf("/proc/sys/kernel/kptr_restrict is NOT 0, will try set it to 0.\n");
             if (!WriteStringToFile(KPTR_RESTRICT, "0")) {
-                printf("/proc/sys/kernel/kptr_restrict write failed and we cant not change it.\n");
+                printf("/proc/sys/kernel/kptr_restrict write failed and we can't not change it.\n");
             }
         }
 
@@ -1019,7 +1019,7 @@ public:
     {
         symbolsLoaded_ = true;
         if (module_ == filePath_ and onRecording_) {
-            // file name sitll not convert to ko file path
+            // file name still not convert to ko file path
             // this is in record mode
             HLOGV("find ko name %s", module_.c_str());
             for (const std::string &path : kernelModulePaths) {

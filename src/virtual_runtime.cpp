@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -171,7 +171,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
             MemMapItem &map = koMaps.emplace_back(addr, addr + size, 0, std::string(module));
             HLOGV("add ko map %s", map.ToString().c_str());
         } else {
-            HLOGE("unknow line %d: '%s'", ret, line.c_str());
+            HLOGE("unknown line %d: '%s'", ret, line.c_str());
         }
     }
 
@@ -400,7 +400,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
           recordMmap.data_.filename, recordMmap.data_.addr,
           recordMmap.data_.addr + recordMmap.data_.len, recordMmap.data_.pgoff);
     // kernel mmap
-    // dont overwrite the vailed mmap , so we also check the recordMmap.data_.len
+    // don't overwrite the vailed mmap , so we also check the recordMmap.data_.len
     if (recordMmap.inKernel()) {
         UpdatekernelMap(recordMmap.data_.addr, recordMmap.data_.addr + recordMmap.data_.len,
                         recordMmap.data_.pgoff, recordMmap.data_.filename);
@@ -608,16 +608,16 @@ const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
 bool VirtualRuntime::SetSymbolsPaths(const std::vector<std::string> &symbolsPaths)
 {
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
-    // we need check if the path is accessable
-    bool accessable = symbolsFile->setSymbolsFilePath(symbolsPaths);
-    if (accessable) {
+    // we need check if the path is accessible
+    bool accessible = symbolsFile->setSymbolsFilePath(symbolsPaths);
+    if (accessible) {
         symbolsPaths_ = symbolsPaths;
     } else {
         if (!symbolsPaths.empty()) {
             printf("some symbols path unable access\n");
         }
     }
-    return accessable;
+    return accessible;
 }
 
 void VirtualRuntime::UpdateFromPerfData(const std::vector<SymbolFileStruct> &symbolFileStructs)
