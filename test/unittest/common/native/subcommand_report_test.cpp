@@ -418,7 +418,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort4, TestSize.Level1)
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
     }
-    const std::string expectStr = "unknow sort key name 'pids'";
+    const std::string expectStr = "unknown sort key name 'pids'";
     EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
 }
 

@@ -44,7 +44,7 @@ public:
     static std::unique_ptr<ElfFileFuzzer> MakeUnique(const std::string &filename,
                                                      const uint8_t *data, size_t size)
     {
-        std::unique_ptr<ElfFileFuzzer> file {new (std::nothrow) ElfFileFuzzer(filename)};
+        std::unique_ptr<ElfFileFuzzer> file = std::make_unique<ElfFileFuzzer>(filename);
         if (file == nullptr) {
             HLOGE("Error in ElfFile::MakeUnique(): ElfFile::ElfFile() failed");
             return nullptr;
