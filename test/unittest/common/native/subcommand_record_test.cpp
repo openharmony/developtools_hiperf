@@ -118,7 +118,7 @@ HWTEST_F(SubCommandRecordTest, StopSecondsMinErr, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, StopSecondsMax, TestSize.Level1)
 {
     std::string opt = "-d 10000.0 ";
-    opt += " ls "; // beacuse UT don't need wait so long
+    opt += " ls "; // because UT don't need wait so long
     TestRecordCommand(opt, true, false);
 }
 

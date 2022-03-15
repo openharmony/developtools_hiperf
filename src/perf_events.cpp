@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -96,7 +96,7 @@ bool PerfEvents::CheckOhosPermissions()
     perfHarden = OHOS::system::GetParameter(PERF_DISABLE_PARAM, perfHarden);
     HLOGD("%s is %s", PERF_DISABLE_PARAM.c_str(), perfHarden.c_str());
     if (perfHarden == "1") {
-        printf("param '%s' is disbaled, try to enable it\n", PERF_DISABLE_PARAM.c_str());
+        printf("param '%s' is disabled, try to enable it\n", PERF_DISABLE_PARAM.c_str());
         // we will try to set it as 0
         perfHarden = OHOS::system::SetParameter(PERF_DISABLE_PARAM, "0");
         // wait init config the param
@@ -148,7 +148,7 @@ bool PerfEvents::CheckPermissions(PerfEventParanoid request)
     } else if (perfEventParanoid_ == PerfEventParanoid::KERNEL_USER_CPU) {
         printf("allow access to CPU-specific data but not raw tracepoint samples.\n");
     } else if (perfEventParanoid_ <= PerfEventParanoid::NOLIMIT) {
-        printf("unable to read anthing\n");
+        printf("unable to read anything\n");
     }
     printf("request level is %d\n", request);
     return perfEventParanoid_ <= request;
@@ -371,7 +371,10 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
     }
 
     // attr
-    memset_s(&eventItem.attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr));
+    if (memset_s(&eventItem.attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
+        HLOGE("memset_s failed in PerfEvents::AddEvent");
+        return false;
+    }
     eventItem.attr.size = sizeof(perf_event_attr);
     eventItem.attr.type = type;
     eventItem.attr.config = config;
@@ -451,7 +454,10 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
 std::unique_ptr<perf_event_attr> PerfEvents::CreateDefaultAttr(perf_type_id type, __u64 config)
 {
     unique_ptr<perf_event_attr> attr = make_unique<perf_event_attr>();
-    memset_s(attr.get(), sizeof(perf_event_attr), 0, sizeof(perf_event_attr));
+    if (memset_s(attr.get(), sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
+        HLOGE("memset_s failed in PerfEvents::CreateDefaultAttr");
+        return nullptr;
+    }
     attr->size = sizeof(perf_event_attr);
     attr->type = type;
     attr->config = config;
@@ -489,7 +495,7 @@ static void RecoverCaptureSig()
 }
 
 // split to two part
-// beacuse WriteAttrAndId need fd id before start tracking
+// because WriteAttrAndId need fd id before start tracking
 bool PerfEvents::PrepareTracking(void)
 {
     HLOGV("enter");
@@ -1117,7 +1123,7 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
                                readNoGroupValue.time_running, readNoGroupValue.value);
                     }
                 } else {
-                    printf("read faild from event '%s'\n", eventItem.configName.c_str());
+                    printf("read failed from event '%s'\n", eventItem.configName.c_str());
                 }
             }
         }

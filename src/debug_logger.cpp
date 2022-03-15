@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -250,7 +250,7 @@ bool DebugLogger::OpenLog(const std::string &tempLogPath, const std::string &fla
     std::lock_guard<std::recursive_mutex> lock(logMutex_);
 
     if (logDisabled_) {
-        // don't reopen it when we crash or soemthing else.
+        // don't reopen it when we crash or something else.
         return false;
     }
     if (!tempLogPath.empty()) {

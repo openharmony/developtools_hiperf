@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -223,12 +223,12 @@ std::string PlatformPathConvert(const std::string &path);
 
 uint32_t RoundUp(uint32_t x, const int align);
 
-// data convert funcion
+// data convert function
 template<class T>
-std::string ToHex(const T &source, int size = sizeof(T), bool perfix = false)
+std::string ToHex(const T &source, int size = sizeof(T), bool prefix = false)
 {
     std::stringstream ss;
-    if (perfix) {
+    if (prefix) {
         ss << "0x";
     }
     ss << std::hex << std::setw(BYTE_PRINT_WIDTH * size) << std::setfill('0') << (uint64_t)source;

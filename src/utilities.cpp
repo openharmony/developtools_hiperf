@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "utilities.h"
-
 #include <zlib.h>
 #if is_mingw
 #include <io.h>
@@ -45,6 +44,10 @@ const char *MemoryHold::HoldStringView(std::string_view view)
 
 std::string CanonicalizeSpecPath(const char* src)
 {
+    if (src == nullptr || strlen(src) >= PATH_MAX) {
+        fprintf(stderr, "Error: CanonicalizeSpecPath %s failed", src);
+        return "";
+    }
     char resolvedPath[PATH_MAX] = { 0 };
 #if defined(_WIN32)
     if (!_fullpath(resolvedPath, src, PATH_MAX)) {
@@ -54,11 +57,18 @@ std::string CanonicalizeSpecPath(const char* src)
 #else
     if (access(src, F_OK) == 0) {
         if (realpath(src, resolvedPath) == nullptr) {
-            fprintf(stderr, "Error: _fullpath %s failed", src);
+            fprintf(stderr, "Error: realpath %s failed", src);
             return "";
         }
     } else {
-        if (sprintf_s(resolvedPath, PATH_MAX, "%s", src) == -1) {
+        std::string fileName(src);
+        if (fileName.find("..") == std::string::npos) {
+            if (sprintf_s(resolvedPath, PATH_MAX, "%s", src) == -1) {
+                fprintf(stderr, "Error: sprintf_s %s failed", src);
+                return "";
+            }
+        } else {
+            fprintf(stderr, "Error: find .. %s failed", src);
             return "";
         }
     }
@@ -571,14 +581,14 @@ void *mmap(void *addr, size_t length, int prot, int flags, int fd, size_t offset
     HLOGV("fd is %d", fd);
 
     HANDLE FileMappingHandle = ::CreateFileMappingW(FileHandle, 0, PAGE_READONLY, 0, 0, 0);
-    if (FileMappingHandle == NULL) {
+    if (FileMappingHandle == nullptr) {
         HLOGE("CreateFileMappingW %zu Failed with %ld:%s", length, GetLastError(),
               GetLastErrorString().c_str());
         return MMAP_FAILED;
     }
 
     void *mapAddr = ::MapViewOfFile(FileMappingHandle, FILE_MAP_READ, 0, 0, 0);
-    if (mapAddr == NULL) {
+    if (mapAddr == nullptr) {
         HLOGE("MapViewOfFile %zu Failed with %ld:%s", length, GetLastError(),
               GetLastErrorString().c_str());
         return MMAP_FAILED;

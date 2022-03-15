@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,6 @@
 #include <memory>
 #include <poll.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 
@@ -577,7 +576,7 @@ bool SubCommandRecord::ParseControlCmd(const std::string cmd)
         return true;
     }
 
-    printf("Invalid --control %s option, command shoud be: prepare, start, pause, resume, stop.\n",
+    printf("Invalid --control %s option, command should be: prepare, start, pause, resume, stop.\n",
            cmd.c_str());
     return false;
 }
@@ -625,7 +624,7 @@ bool SubCommandRecord::TraceOffCpu()
     const std::string nodeDebug = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
     if (!ReadIntFromProcFile(node.c_str(), enable) and
         !ReadIntFromProcFile(nodeDebug.c_str(), enable)) {
-        printf("Cannot trace off CPU, event sched:sched_switch is not avilable (%s or %s)\n",
+        printf("Cannot trace off CPU, event sched:sched_switch is not available (%s or %s)\n",
             node.c_str(), nodeDebug.c_str());
         return false;
     }
@@ -937,7 +936,7 @@ bool SubCommandRecord::CreateFifoServer()
 
 bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd)
 {
-    // need open for read fisrt, because server maybe send reply before client wait to read
+    // need open for read first, because server maybe send reply before client wait to read
     int fdRead = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
     if (fdRead == -1) {
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_C2S.c_str());

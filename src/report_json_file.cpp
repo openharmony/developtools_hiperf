@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -81,7 +81,7 @@ int ReportJsonFile::GetFuncionID(int libId, std::string_view function)
         return it - functionList_.begin();
     } else {
         HLOGW("'%s' not found in function list in lib %d", function.data(), libId);
-        // make a new functin for unknow name
+        // make a new function for unknown name
         addNewFunction(libId, function);
         // retuen the last index
         return functionList_.size() - 1;

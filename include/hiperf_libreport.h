@@ -91,7 +91,7 @@ DLL_EXPORT const char *CDECL ReportGetBuildId(const char *elfPath);
 // will return the arch in this elf
 // now support "arm","arm64","x86","x86_64"
 // return machine id(const char in ascii) when not support
-// return "unknow" when failed happend
+// return "unknown" when failed happend
 DLL_EXPORT const char *CDECL ReportGetElfArch(const char *elfPath);
 }
 

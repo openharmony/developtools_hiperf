@@ -35,6 +35,10 @@ int main(const int argc, const char *argv[])
         temp = malloc(bufSize);
         printf("malloc %d \n", i);
         sleep(wartTime);
+        if (temp != nullptr) {
+            free(temp);
+            temp = nullptr;
+        }
     }
     printf("demo stop \n");
     if (temp != nullptr) {

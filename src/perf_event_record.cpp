@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,7 +62,7 @@ std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
         case PERF_RECORD_SWITCH_CPU_WIDE:
             return std::make_unique<PerfRecordSwitchCpuWide>(data);
         default:
-            HLOGE("unknow record type %d\n", type);
+            HLOGE("unknown record type %d\n", type);
             return nullptr;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -141,10 +141,10 @@ bool SubCommandReport::VerifyOption()
 {
     for (auto key : reportOption_.sortKeys_) {
         if (key == "count") {
-            printf("unknow sort key name '%s'\n", key.c_str());
+            printf("unknown sort key name '%s'\n", key.c_str());
             return false;
         } else if (GetReport().reportKeyMap_.count(key) == 0) {
-            printf("unknow sort key name '%s'\n", key.c_str());
+            printf("unknown sort key name '%s'\n", key.c_str());
             return false;
         }
     }
@@ -166,7 +166,7 @@ bool SubCommandReport::VerifyOption()
         }
     }
 
-    // defualt report file name
+    // default report file name
     if (reportFile_.empty()) {
         if (protobufFormat_) {
             reportFile_ = "perf.proto";
@@ -358,7 +358,7 @@ void SubCommandReport::LoadEventDesc()
             cpuOffids_ = cpuOffids;
             HLOGV("this is cpu off event");
         } else {
-            // dont' add cpuoff event
+            // don't add cpuoff event
             if (protobufFormat_) {
                 configNames_.emplace_back(fileAttr.name);
             }
@@ -366,7 +366,7 @@ void SubCommandReport::LoadEventDesc()
                 GetReport().configIdIndexMaps_[id] = GetReport().configs_.size(); // setup index
                 HLOGV("add config id map %" PRIu64 " to %zu", id, GetReport().configs_.size());
             }
-            // when cpuOffMode_ , dont use count mode , use time mode.
+            // when cpuOffMode_ , don't use count mode , use time mode.
             auto &config =
                 GetReport().configs_.emplace_back(fileAttr.name, fileAttr.attr.type,
                                                   fileAttr.attr.config, cpuOffMode_ ? false : true);

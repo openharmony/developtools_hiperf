@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -174,7 +174,7 @@ bool SubCommandDump::DumpElfFile()
     printf("dump elf: '%s'\n", elfFileName_.c_str());
     auto elf = SymbolsFile::CreateSymbolsFile(elfFileName_);
     if (!elf->LoadSymbols("")) {
-        printf("load elf faild.\n");
+        printf("load elf failed.\n");
         return false;
     } else {
         printf("load elf succeed.\n");
@@ -187,7 +187,7 @@ bool SubCommandDump::DumpProtoFile()
     printf("dump protobuf file: '%s'\n", protobufDumpFileName_.c_str());
     protobufInputFileReader_ = std::make_unique<ReportProtobufFileReader>();
     if (!protobufInputFileReader_->Dump(protobufDumpFileName_)) {
-        printf("load proto faild.\n");
+        printf("load proto failed.\n");
         return false;
     }
     return true;
