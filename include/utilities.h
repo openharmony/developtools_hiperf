@@ -89,7 +89,7 @@ namespace Developtools {
 namespace HiPerf {
 std::string CanonicalizeSpecPath(const char* src);
 const std::string EMPTY_STRING = "";
-const ssize_t ERRINFOLEN = 512;
+const ssize_t ERRINFOLEN = 128;
 
 // string function
 class MemoryHold {
