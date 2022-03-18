@@ -945,6 +945,7 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd)
     int fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
     if (fdWrite == -1) {
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_C2S.c_str());
+        close(fdRead);
         return false;
     }
     size_t size = write(fdWrite, cmd.c_str(), cmd.size());
