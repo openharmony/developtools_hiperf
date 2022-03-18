@@ -426,7 +426,7 @@ PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 le
     data_.pgoff = pgoff;
     if (strncpy_s(data_.filename, KILO, filename.c_str(), KILO) != 0) {
         HLOGE("strncpy_s failed");
-		return;
+        return;
     }
 
     header.size = sizeof(header) + sizeof(data_) - KILO + filename.size() + 1;
@@ -486,7 +486,7 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 
     data_.flags = flags;
     if (strncpy_s(data_.filename, KILO, filename.c_str(), KILO) != 0) {
         HLOGE("strncpy_s failed");
-		return;
+        return;
     }
 
     header.size = sizeof(header) + sizeof(data_) - KILO + filename.size() + 1;
@@ -508,7 +508,7 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, const MemMapIt
     data_.flags = item.flags;
     if (strncpy_s(data_.filename, KILO, item.name_.c_str(), KILO) != 0) {
         HLOGE("strncpy_s failed");
-		return;
+        return;
     }
 
     header.size = sizeof(header) + sizeof(data_) - KILO + item.name_.size() + 1;
@@ -587,7 +587,7 @@ PerfRecordComm::PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::strin
     data_.tid = tid;
     if (strncpy_s(data_.comm, KILO, comm.c_str(), KILO) != 0) {
         HLOGE("strncpy_s failed !!!");
-		return;
+        return;
     }
 
     header.size = sizeof(header) + sizeof(data_) - KILO + comm.size() + 1;
