@@ -71,8 +71,10 @@ void RecordOption::SetOption(const std::string &name, const std::vector<int> &vI
     auto it = std::find(args_.begin(), args_.end(), name);
     if (vInt.empty()) {
         if (it != args_.end()) {
-            args_.erase(it);
-            args_.erase(it); // remove value
+            it = args_.erase(it); // remove key
+            if (it != args_.end()) {
+                args_.erase(it); // remove value
+            }
         }
         return;
     }
