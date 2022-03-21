@@ -159,6 +159,7 @@ if (hiperf_target_static) {
 
 common_configs = [
   ":hiperf_inner_config",
+  "//third_party/bounds_checking_function:libsec_public_config",
   "//utils/native/base:utils_config",
   "//third_party/googletest:gtest_config",
 ]
