@@ -384,7 +384,7 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id,
 PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, size_t size)
     : PerfFileSection(id)
 {
-    constexpr uint32_t maxIds = 50;
+    constexpr uint32_t maxIds = 500;
     Init(buf, size);
     uint32_t nr = 0;
     if (!Read(nr)) {
