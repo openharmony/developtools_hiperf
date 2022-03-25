@@ -176,4 +176,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_VIRTUAL_RUNTIME_H

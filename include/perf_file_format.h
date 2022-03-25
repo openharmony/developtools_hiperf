@@ -127,7 +127,7 @@ public:
 
     virtual bool GetBinary(char *buf, size_t size) = 0;
     virtual size_t GetSize() = 0;
-    virtual ~PerfFileSection() {};
+    virtual ~PerfFileSection() {}
     explicit PerfFileSection(const FEATURE featureId) : featureId_(featureId)
     {
         header.size = 0;
@@ -180,7 +180,7 @@ struct SymbolStruct {
     uint64_t vaddr_ = 0;
     uint32_t len_ = 0;
     std::string symbolName_ = EMPTY_STRING;
-    SymbolStruct() {};
+    SymbolStruct() {}
     SymbolStruct(uint64_t vaddr, uint32_t len, const std::string &symbolName)
         : vaddr_(vaddr), len_(len), symbolName_(symbolName)
     {
@@ -257,4 +257,4 @@ public:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_PERF_FILE_FORMAT_H

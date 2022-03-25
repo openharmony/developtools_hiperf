@@ -148,6 +148,10 @@ void VirtualThreadTest::MakeMapsFromDlpi(const std::string &dlpiName,
                                          const struct dl_phdr_info *info,
                                          std::vector<MemMapItem> &phdrMaps)
 {
+    if (info == nullptr) {
+        HLOGE("param is null");
+        return;
+    }
     int phdrType;
     HLOGV("Name: \"%s\" (%d segments)", dlpiName.c_str(), info->dlpi_phnum);
     for (int i = 0; i < info->dlpi_phnum; i++) {
@@ -174,6 +178,10 @@ void VirtualThreadTest::MakeMapsFromDlpi(const std::string &dlpiName,
 
 int VirtualThreadTest::PhdrCallBack(struct dl_phdr_info *info, size_t size, void *data)
 {
+    if (info == nullptr || data == nullptr) {
+        HLOGE("param is null");
+        return -1;
+    }
     VirtualThread *thread = static_cast<VirtualThread *>(data);
     std::vector<MemMapItem> phdrMaps {};
     std::vector<const MemMapItem *> memMaps {};

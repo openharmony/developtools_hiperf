@@ -25,7 +25,7 @@ public:
     // little endian, perf_event_header.type is less than 0xff, so set it
     static constexpr uint8_t MARGIN_BYTE = 0xFF;
 
-    RingBuffer(size_t size);
+    explicit RingBuffer(size_t size);
     ~RingBuffer();
     // get size of the writable space
     size_t GetFreeSize() const;
@@ -50,4 +50,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_RING_BUFFER_H

@@ -98,4 +98,4 @@ public:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // MEMMAPITEM_H

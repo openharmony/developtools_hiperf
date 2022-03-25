@@ -105,4 +105,4 @@ static bool OptionAlwaysTrue(const std::vector<std::string> &args)
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_OPTION_TEST_H

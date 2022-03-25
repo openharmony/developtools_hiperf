@@ -82,19 +82,19 @@ struct Symbol {
           len_(len),
           name_(MemoryHold::Get().HoldStringView(name)),
           demangle_(MemoryHold::Get().HoldStringView(demangle)),
-          module_(MemoryHold::Get().HoldStringView(module)) {};
+          module_(MemoryHold::Get().HoldStringView(module)) {}
     Symbol(uint64_t vaddr, uint64_t len, const std::string &name, const std::string &module)
-        : Symbol(vaddr, len, name, name, module) {};
+        : Symbol(vaddr, len, name, name, module) {}
 
     // kernel use this
     Symbol(uint64_t vaddr, const std::string &name, const std::string &module)
-        : Symbol(vaddr, 0, name, name, module) {};
+        : Symbol(vaddr, 0, name, name, module) {}
 
     // Symbolic use this
     Symbol(uint64_t taskVaddr = 0, const std::string &comm = "")
         : taskVaddr_(taskVaddr), comm_(comm)
     {
-    };
+    }
 
     // copy
     Symbol(const Symbol &other) = default;
@@ -353,4 +353,4 @@ protected:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_SYMBOLS_H

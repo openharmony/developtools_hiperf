@@ -188,4 +188,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // SUBCOMMAND_REPORT_H

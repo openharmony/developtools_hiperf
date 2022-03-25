@@ -57,7 +57,7 @@ public:
         return false;
     };
 
-    virtual void DumpOptions() const {};
+    virtual void DumpOptions() const {}
 
     // args should be empty after all the args processed
     virtual bool ParseOption(std::vector<std::string> &args)
@@ -95,4 +95,4 @@ protected:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_SUBCOMMAND_H_

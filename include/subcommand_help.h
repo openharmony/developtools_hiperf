@@ -42,4 +42,4 @@ public:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_SUBCOMMAND_HELP_H_

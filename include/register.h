@@ -190,4 +190,4 @@ void UpdateRegForABI(ArchType arch, u64 registers[]);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_REGISTER_H

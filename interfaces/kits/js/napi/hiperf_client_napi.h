@@ -15,4 +15,4 @@
 #ifndef HIPERF_CLIENT_NAPI_H
 #define HIPERF_CLIENT_NAPI_H
 
-#endif
+#endif // HIPERF_CLIENT_NAPI_H

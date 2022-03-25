@@ -259,7 +259,7 @@ bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readB
         if (!CheckFileMagic()) {
             return false;
         }
-        protpbufInputStream_ =std::make_unique<google::protobuf::io::CopyingInputStreamAdaptor>(this);
+        protpbufInputStream_ = std::make_unique<google::protobuf::io::CopyingInputStreamAdaptor>(this);
         protpbufCodedInputStream_ =
             std::make_unique<google::protobuf::io::CodedInputStream>(protpbufInputStream_.get());
         uint32_t recordLength = 0;

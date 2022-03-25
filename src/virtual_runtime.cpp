@@ -578,7 +578,7 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, pid_t pid, pid_t tid, Symbol &s
 const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                                        const perf_callchain_context &context)
 {
-    HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles ", tid, ip, symbolsFiles_.size());
+    HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles", tid, ip, symbolsFiles_.size());
     Symbol symbol;
     if (threadSymbolCache_.find(tid) == threadSymbolCache_.end()) {
         threadSymbolCache_[tid].reserve(THREAD_SYMBOL_CACHE_LIMIT);
@@ -590,15 +590,15 @@ const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
         // check userspace memmap
         symbol = GetUserSymbol(ip, GetThread(pid, tid));
         threadSymbolCache_[tid][ip] = symbol;
-        HLOGV("cache ip  0x%" PRIx64 " to %s", ip,
+        HLOGV("cache ip 0x%" PRIx64 " to %s", ip,
               threadSymbolCache_[tid][ip].ToDebugString().c_str());
     }
 
     if (context == PERF_CONTEXT_KERNEL or (context == PERF_CONTEXT_MAX and !symbol.isValid())) {
         // check kernelspace
-        HLOGM("try found addr in kernelspace %zu maps ", kernelSpaceMemMaps_.size());
+        HLOGM("try found addr in kernelspace %zu maps", kernelSpaceMemMaps_.size());
         symbol = GetKernelSymbol(ip, kernelSpaceMemMaps_, GetThread(pid, tid));
-        HLOGM("add addr to kernel cache 0x%" PRIx64 " cache size %zu ", ip,
+        HLOGM("add addr to kernel cache 0x%" PRIx64 " cache size %zu", ip,
               kernelSymbolCache_.size());
         kernelSymbolCache_[ip] = symbol;
     }

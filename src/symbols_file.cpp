@@ -222,6 +222,10 @@ public:
 protected:
     std::string CovertByteBufferToHexString(const unsigned char *buffer, size_t size) const
     {
+        if (buffer == nullptr) {
+            HLOGE("param is null");
+            return "";
+        }
         std::string descString;
         size_t i = 0;
         while (i < size) {
@@ -233,6 +237,10 @@ protected:
 
     std::string ElfGetBuildId(const unsigned char *buffer, size_t size) const
     {
+        if (buffer == nullptr) {
+            HLOGE("param is null");
+            return "";
+        }
         const unsigned char *end = buffer + size;
         HLOGV("size:%zu", size);
 
@@ -554,6 +562,10 @@ private:
     bool ReadSymTab(const std::unique_ptr<ElfFile> &elfFile, const ELF::SectionHeader *shdr,
                     std::vector<Symbol> &symbolsTable) const
     {
+        if (shdr == nullptr) {
+            HLOGE("param is null");
+            return false;
+        }
         HLOGV("ParseSymTable");
         if (!elfFile->ParseSymTable(shdr)) {
             return false;
@@ -962,7 +974,7 @@ public:
             return true;
         }
     }
-    virtual bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         HLOGV("KernelSymbols try read '%s' search paths size %zu, inDeviceRecord %d",
@@ -997,7 +1009,7 @@ public:
         // try vmlinux
         return ElfFileSymbols::LoadSymbols(KERNEL_ELF_NAME);
     }
-    virtual uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t) const override
+    uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t) const override
     {
         // ip is vaddr in /proc/kallsyms
         return ip;
@@ -1015,7 +1027,7 @@ public:
     }
     ~KernelModuleSymbols() override {};
 
-    virtual bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         if (module_ == filePath_ and onRecording_) {
@@ -1040,7 +1052,7 @@ public:
         }
         return false;
     }
-    virtual uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t) const override
+    uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t) const override
     {
         return ip - mapStart;
     }
@@ -1069,14 +1081,14 @@ public:
     {
         symbolFileType_ = SYMBOL_KERNEL_FILE;
     }
-    virtual bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         return false;
     }
     ~JavaFileSymbols() override {}
 
-    virtual uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart,
+    uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart,
                                        uint64_t mapPageOffset) const override
     {
         // this is different with elf
@@ -1091,7 +1103,7 @@ public:
     {
         symbolFileType_ = SYMBOL_KERNEL_FILE;
     }
-    virtual bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         return false;
@@ -1105,7 +1117,7 @@ public:
         : SymbolsFile(SYMBOL_UNKNOW_FILE, symbolFilePath)
     {
     }
-    virtual bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         return false;

@@ -48,7 +48,7 @@ public:
           symbolsFiles_(symbolsFiles),
           processMemMaps_(),
           memMaps_(processMemMaps_),
-          parent_(*this) {};
+          parent_(*this) {}
 
     VirtualThread(pid_t pid, pid_t tid, VirtualThread &thread,
                   const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
@@ -110,4 +110,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_VIRTUAL_THREAD_H

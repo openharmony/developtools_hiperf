@@ -23,4 +23,4 @@ private:
     Noncopyable(const Noncopyable &);
     const Noncopyable &operator=(const Noncopyable &);
 };
-#endif
+#endif // NONCOPYABLE_H_

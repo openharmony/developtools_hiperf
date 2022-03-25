@@ -125,7 +125,7 @@ bool PerfFileReader::ReadFileHeader()
                 std::bitset<SIZE_FETURE_COUNT> features(header_.features[i]);
                 for (int j = 0; j < SIZE_FETURE_COUNT; j++) {
                     if (features.test(j)) {
-                        features_.emplace_back((FEATURE)(i * SIZE_FETURE_COUNT + j));
+                        features_.emplace_back((FEATURE)(((uint64_t)i) * SIZE_FETURE_COUNT + j));
                     }
                 }
             }

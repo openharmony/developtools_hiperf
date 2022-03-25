@@ -254,7 +254,7 @@ public:
                 }
             }
         }
-        HLOGE("string not found sh_link %u st_name %d, mmap_ is %p", sh_link, st_name, mmap_);
+        HLOGE("string not found sh_link %u st_name %d", sh_link, st_name);
         return nullptr;
     }
 
@@ -307,4 +307,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // ELF_PARSER_H_

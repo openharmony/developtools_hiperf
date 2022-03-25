@@ -97,4 +97,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_REPORT_PROTOBUF_FILE

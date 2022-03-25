@@ -58,7 +58,7 @@ public:
     }
 
     explicit PerfFileReaderFuzzer(const std::string &fileName, FILE *fp)
-        : PerfFileReader(fileName, fp) {};
+        : PerfFileReader(fileName, fp) {}
 
     static std::unique_ptr<PerfFileReaderFuzzer> Instance(const std::string &fileName,
                                                           const uint8_t *data, size_t size)
@@ -96,12 +96,12 @@ bool FuzzPerfFileReader(const uint8_t *data, size_t size)
     const std::string testData = "/data/test/resource/testdata/report_test.data";
     HLOGV("test data size %zu\n", size);
     if (size == 0) {
-        return 0;
+        return false;
     }
     auto reader = PerfFileReaderFuzzer::Instance(testData, data, size);
     if (reader == nullptr) {
         printf("test open failed %s\n", testData.c_str());
-        return 0;
+        return false;
     }
 
     reader->ReadFeatureSection();
@@ -110,7 +110,7 @@ bool FuzzPerfFileReader(const uint8_t *data, size_t size)
         return true;
     };
     reader->ReadDataSection(recordCallback);
-    return 0;
+    return false;
 }
 } // namespace OHOS
 
