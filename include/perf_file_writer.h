@@ -39,7 +39,7 @@ public:
         attrSection_.size = 0;
         defaultEventAttr_.branch_sample_type = 0;
         defaultEventAttr_.namespaces = 0;
-    };
+    }
     ~PerfFileWriter();
 
     bool Open(const std::string &fileName, bool compressData = false);
@@ -89,4 +89,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_PERF_FILE_WRITER_H

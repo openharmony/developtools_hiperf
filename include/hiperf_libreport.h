@@ -94,5 +94,4 @@ DLL_EXPORT const char *CDECL ReportGetBuildId(const char *elfPath);
 // return "unknown" when failed happend
 DLL_EXPORT const char *CDECL ReportGetElfArch(const char *elfPath);
 }
-
-#endif
+#endif // HIPERF_LIBREPORT_H

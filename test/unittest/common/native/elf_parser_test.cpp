@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1016,6 +1016,10 @@ int64_t PhdrFromReadelf::GetAlign(const std::string &line)
 
 std::unique_ptr<EhdrFromReadelf> EhdrFromReadelf::MakeUnique(FILE *fp)
 {
+    if (fp == nullptr) {
+        HLOGE("param is null");
+        return nullptr;
+    }
     std::unique_ptr<EhdrFromReadelf> ehdr {new (std::nothrow) EhdrFromReadelf()};
     if (ehdr == nullptr) {
         HLOGV("EhdrFromReadelf() failed");
@@ -1031,6 +1035,10 @@ std::unique_ptr<EhdrFromReadelf> EhdrFromReadelf::MakeUnique(FILE *fp)
 
 bool EhdrFromReadelf::Init(FILE *fp)
 {
+    if (fp == nullptr) {
+        HLOGE("param is null");
+        return false;
+    }
     int status {0};
     // drop header line
     GetNextLine(fp, &status);
@@ -1088,6 +1096,10 @@ bool EhdrFromReadelf::Init(FILE *fp)
 
 bool EhdrFromReadelf::GetMagic(FILE * const fp)
 {
+    if (fp == nullptr) {
+        HLOGE("param is null");
+        return false;
+    }
     int status {0};
     std::string magicLine = GetNextLine(fp, &status);
     if (status == -1) {

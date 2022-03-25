@@ -158,6 +158,10 @@ const char *ReportGetSymbolFiles(const char *perfFile)
 
 static std::string CovertByteBufferToHexString(const unsigned char *buffer, size_t size)
 {
+    if (buffer == nullptr) {
+        HLOGE("param is null");
+        return "";
+    }
     std::string descString;
     size_t i = 0;
     while (i < size) {

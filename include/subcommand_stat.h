@@ -118,4 +118,4 @@ bool RegisterSubCommandStat(void);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // SUBCOMMAND_STAT_H_

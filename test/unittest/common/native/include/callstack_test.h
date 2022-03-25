@@ -133,4 +133,4 @@ static void MakeMaps(VirtualThread &thread)
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_CALLSTACK_TEST_H

@@ -33,4 +33,4 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 
-#endif /* PERFFILE_FUZZER_H */
+#endif // ELFPARSER_FUZZER_H

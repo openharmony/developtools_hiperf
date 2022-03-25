@@ -137,4 +137,4 @@ const std::map<std::string, std::unique_ptr<MainOption>> &GetMainOptions();
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_OPTION_H_

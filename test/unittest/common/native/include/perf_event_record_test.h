@@ -21,4 +21,4 @@
 
 #include "perf_event_record.h"
 
-#endif
+#endif // HIPERF_PERF_EVENT_RECORD_TEST_H

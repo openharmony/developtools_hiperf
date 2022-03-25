@@ -357,4 +357,4 @@ struct PerfRecordNamespacesData {
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_PERF_RECORD_FORMAT_H

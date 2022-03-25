@@ -190,4 +190,4 @@ struct eh_frame_hdr {
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // DWARF_ENCODING_H

@@ -51,4 +51,4 @@ void CompareStringTest(T &lowValue, T &midValue, T &highValue,
 } // namespace Developtools
 } // namespace OHOS
 
-#endif
+#endif // REPORT_TEST

@@ -110,7 +110,7 @@ public:
 
     PerfEventRecord(uint8_t *p, const std::string &name);
 
-    virtual ~PerfEventRecord() {};
+    virtual ~PerfEventRecord() {}
 
     virtual size_t GetSize() const
     {
@@ -170,21 +170,21 @@ class PerfRecordMmap : public PerfEventRecord {
 public:
     PerfRecordMmapData data_;
 
-    PerfRecordMmap(uint8_t *p);
+    explicit PerfRecordMmap(uint8_t *p);
 
     PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
                    const std::string &filename);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
-    virtual void DumpLog(const std::string &prefix) const override;
+    void DumpData(int indent) const override;
+    void DumpLog(const std::string &prefix) const override;
 };
 
 class PerfRecordMmap2 : public PerfEventRecord {
 public:
     PerfRecordMmap2Data data_;
 
-    PerfRecordMmap2(uint8_t *p);
+    explicit PerfRecordMmap2(uint8_t *p);
 
     PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff, u32 maj, u32 min,
                     u64 ino, u32 prot, u32 flags, const std::string &filename);
@@ -192,18 +192,18 @@ public:
     PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, const MemMapItem &item);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
-    virtual void DumpLog(const std::string &prefix) const override;
+    void DumpData(int indent) const override;
+    void DumpLog(const std::string &prefix) const override;
 };
 
 class PerfRecordLost : public PerfEventRecord {
 public:
     PerfRecordLostData data_;
 
-    PerfRecordLost(uint8_t *p);
+    explicit PerfRecordLost(uint8_t *p);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 
     // only for UT
     PerfRecordLost(bool inKernel, u64 id, u64 lost)
@@ -219,12 +219,12 @@ class PerfRecordComm : public PerfEventRecord {
 public:
     PerfRecordCommData data_;
 
-    PerfRecordComm(uint8_t *p);
+    explicit PerfRecordComm(uint8_t *p);
 
     PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
     void DumpLog(const std::string &prefix) const override;
 };
 
@@ -242,8 +242,8 @@ public:
     // referenced input(p) in PerfRecordSample, require caller keep input(p) together
     PerfRecordSample(uint8_t *p, const perf_event_attr &attr);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent = 0) const override;
-    virtual void DumpLog(const std::string &prefix) const override;
+    void DumpData(int indent = 0) const override;
+    void DumpLog(const std::string &prefix) const override;
 
     // originalSize is use for expand callstack
     void ReplaceWithCallStack(size_t originalSize = 0);
@@ -266,10 +266,10 @@ class PerfRecordExit : public PerfEventRecord {
 public:
     PerfRecordExitData data_;
 
-    PerfRecordExit(uint8_t *p);
+    explicit PerfRecordExit(uint8_t *p);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 class PerfRecordThrottle : public PerfEventRecord {
@@ -279,27 +279,27 @@ public:
     PerfRecordThrottle(uint8_t *p);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 class PerfRecordUnthrottle : public PerfEventRecord {
 public:
     PerfRecordThrottleData data_;
 
-    PerfRecordUnthrottle(uint8_t *p);
+    explicit PerfRecordUnthrottle(uint8_t *p);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 class PerfRecordFork : public PerfEventRecord {
 public:
     PerfRecordForkData data_;
 
-    PerfRecordFork(uint8_t *p);
+    explicit PerfRecordFork(uint8_t *p);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 /*
@@ -309,9 +309,9 @@ class PerfRecordRead : public PerfEventRecord {
 public:
     PerfRecordReadData data_;
 
-    PerfRecordRead(uint8_t *p);
+    explicit PerfRecordRead(uint8_t *p);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 /*
@@ -337,9 +337,9 @@ class PerfRecordAux : public PerfEventRecord {
 public:
     PerfRecordAuxData data_;
 
-    PerfRecordAux(uint8_t *p);
+    explicit PerfRecordAux(uint8_t *p);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 /*
@@ -357,9 +357,9 @@ class PerfRecordItraceStart : public PerfEventRecord {
 public:
     PerfRecordItraceStartData data_;
 
-    PerfRecordItraceStart(uint8_t *p);
+    explicit PerfRecordItraceStart(uint8_t *p);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 /*
@@ -371,9 +371,9 @@ class PerfRecordLostSamples : public PerfEventRecord {
 public:
     PerfRecordLostSamplesData data_;
 
-    PerfRecordLostSamples(uint8_t *p);
+    explicit PerfRecordLostSamples(uint8_t *p);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 /*
@@ -385,9 +385,9 @@ public:
 class PerfRecordSwitch : public PerfEventRecord {
 public:
     PerfRecordSwitchData data_;
-    PerfRecordSwitch(uint8_t *p);
+    explicit PerfRecordSwitch(uint8_t *p);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData([[maybe_unused]] int indent) const override {};
+    void DumpData([[maybe_unused]] int indent) const override {};
 };
 
 /*
@@ -411,9 +411,9 @@ public:
 class PerfRecordSwitchCpuWide : public PerfEventRecord {
 public:
     PerfRecordSwitchCpuWideData data_;
-    PerfRecordSwitchCpuWide(uint8_t *p);
+    explicit PerfRecordSwitchCpuWide(uint8_t *p);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
-    virtual void DumpData(int indent) const override;
+    void DumpData(int indent) const override;
 };
 
 std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *data,
@@ -433,4 +433,4 @@ void PopFromBinary2(bool condition, uint8_t *&p, T1 &v1, T2 &v2);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_PERF_EVENT_RECORD_H

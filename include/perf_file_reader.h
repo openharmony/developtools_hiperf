@@ -98,4 +98,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_FILE_READER

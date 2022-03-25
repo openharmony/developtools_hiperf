@@ -112,12 +112,12 @@ HashList<Key, Val>::Iterator::Iterator(const LinkNode<Key, Val> *pnode, const Ha
 
 template<typename Key, typename Val>
 HashList<Key, Val>::Iterator::Iterator(const Iterator& itr)
-    : pnode_ {itr.pnode_}, phashList_ {itr.phashList_} 
+    : pnode_ {itr.pnode_}, phashList_ {itr.phashList_}
 {}
 
 template<typename Key, typename Val>
 HashList<Key, Val>::Iterator::Iterator(Iterator&& itr)
-    : pnode_ {itr.pnode_}, phashList_ {itr.phashList_} 
+    : pnode_ {itr.pnode_}, phashList_ {itr.phashList_}
 {
     itr.pnode_ = nullptr;
     itr.phashList_ = nullptr;
@@ -218,7 +218,7 @@ auto HashList<Key, Val>::Iterator::operator--(int) noexcept
         pnode_ = nullptr;
         phashList_ = nullptr;
         return res;
-    } 
+    }
     pnode_ = LinkNode<Key, Val>::GetLinkNode(plink);
     return res;
 }
@@ -312,7 +312,7 @@ HashList<Key, Val>::ReverseIterator::ReverseIterator(const LinkNode<Key, Val> *p
 
 template<typename Key, typename Val>
 HashList<Key, Val>::ReverseIterator::ReverseIterator(const ReverseIterator &itr)
-    : pnode_ {itr.pnode_}, phashList_ {itr.phashList_} 
+    : pnode_ {itr.pnode_}, phashList_ {itr.phashList_}
 {}
 
 template<typename Key, typename Val>
@@ -841,7 +841,7 @@ bool HashList<Key, Val>::MoveNode(const Iterator& pos, LinkNode<Key, Val> *&pnod
     Link* nextLink = pnode->link_.next_;
     if (prevLink and nextLink) {
         prevLink->next_ = nextLink;
-        nextLink->prev_ = prevLink;  
+        nextLink->prev_ = prevLink;
     }
     Link *currLink = &curNode->link_;
     prevLink = currLink->prev_;

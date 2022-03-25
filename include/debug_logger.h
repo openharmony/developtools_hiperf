@@ -329,7 +329,7 @@ private:
 
 class ScopeDebugLevel {
 public:
-    ScopeDebugLevel(DebugLevel level, bool mix = false) {};
+    ScopeDebugLevel(DebugLevel level, bool mix = false) {}
 };
 #endif
 } // namespace HiPerf

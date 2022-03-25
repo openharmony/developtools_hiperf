@@ -27,4 +27,4 @@ void RegisterMainCommandDebug(void);
 }
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_OPTION_DEBUG_H

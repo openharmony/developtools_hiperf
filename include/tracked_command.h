@@ -73,4 +73,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // HIPERF_TRACKED_COMMAND_H_

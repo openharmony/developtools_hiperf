@@ -500,7 +500,7 @@ public:
         }
     };
     std::vector<ReportEventConfigItem> configs_;
-    virtual ~Report() {};
+    virtual ~Report() {}
 
     std::map<uint64_t, size_t> configIdIndexMaps_; // index of configNames_
     std::string GetConfigName(uint64_t id)
@@ -566,4 +566,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // REPORT_H

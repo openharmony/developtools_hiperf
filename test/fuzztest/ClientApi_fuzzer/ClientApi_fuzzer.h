@@ -31,4 +31,4 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 
-#endif /* CLIENTAPI_FUZZER_H */
+#endif // CLIENTAPI_FUZZER_H

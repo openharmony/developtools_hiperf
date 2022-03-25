@@ -320,4 +320,4 @@ int munmap(void *addr, size_t);
 #endif
 #endif
 
-#endif
+#endif // HIPERF_UTILITIES_H_

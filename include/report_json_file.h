@@ -206,7 +206,7 @@ struct ReportFuncItem {
     uint64_t sampleCount_ = 0;
     uint64_t eventCount_ = 0;
     uint64_t subTreeEventCount_ = 0;
-    ReportFuncItem(int functionId) : functionId_(functionId) {}
+    explicit ReportFuncItem(int functionId) : functionId_(functionId) {}
     void OutputJson(FILE *output) const
     {
         if (fprintf(output, "{") < 0) {
@@ -266,7 +266,7 @@ struct ReportCallNodeItem {
         return (a.functionId_ == functionId);
     }
 
-    ReportCallNodeItem(int functionId) : functionId_(functionId) {}
+    explicit ReportCallNodeItem(int functionId) : functionId_(functionId) {}
 };
 
 struct ReportLibItem {
@@ -328,7 +328,7 @@ struct ReportProcessItem {
             return;
         }
     }
-    ReportProcessItem(pid_t pid) : pid_(pid) {}
+    explicit ReportProcessItem(pid_t pid) : pid_(pid) {}
 };
 
 struct ReportConfigItem {
@@ -415,4 +415,4 @@ private:
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif
+#endif // REPORT_JSON_FILE_H
