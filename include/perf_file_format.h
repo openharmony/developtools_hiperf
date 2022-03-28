@@ -212,8 +212,8 @@ public:
 
 private:
     // issue from fuzz test
-    const size_t MAX_SYMBOLS_FILE_NUMBER = 100;
-    const size_t MAX_SYMBOLS_NUMBER = 1000;
+    const size_t MAX_SYMBOLS_FILE_NUMBER = 300;
+    const size_t MAX_SYMBOLS_NUMBER = 3000;
 };
 
 // NRCPUS: A structure defining the number of CPUs.

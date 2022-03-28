@@ -294,7 +294,6 @@ class LocalLibDownload:
             with open(BUILD_ID_FILE, 'rb') as file_bin:
                 for line in file_bin.readlines():
                     line = bytes_to_str(line).strip()
-                    # format is build_id = bin_name
                     items = line.split('=')
                     if len(items) == 2:
                         self.build_id_map_of_device[items[0]] = items[1]

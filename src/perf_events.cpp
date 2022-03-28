@@ -1354,10 +1354,10 @@ size_t PerfEvents::GetStackSizePosInSampleRecord(MmapFd &mmap)
 
 bool PerfEvents::CutStackAndMove(MmapFd &mmap)
 {
+    constexpr uint32_t alignSize = 64;
     if (!(mmap.attr->sample_type & PERF_SAMPLE_STACK_USER)) {
         return false;
     }
-
     size_t stackSizePos = GetStackSizePosInSampleRecord(mmap);
     uint64_t stackSize = 0;
     GetRecordFieldFromMmap(mmap, &stackSize, mmap.mmapPage->data_tail + stackSizePos,
@@ -1368,16 +1368,17 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
     size_t dynSizePos = stackSizePos + sizeof(uint64_t) + stackSize;
     uint64_t dynSize = 0;
     GetRecordFieldFromMmap(mmap, &dynSize, mmap.mmapPage->data_tail + dynSizePos, sizeof(dynSize));
-    if (dynSize >= stackSize) {
+    uint64_t newStackSize = std::min(ALIGN(dynSize, alignSize), stackSize);
+    if (newStackSize >= stackSize) {
         return false;
     }
-
+    HLOGM("stackSize %" PRIx64 " dynSize %" PRIx64 " newStackSize %" PRIx64 "\n", stackSize, dynSize, newStackSize);
     // move and cut stack_data
     // mmap: |<+++copy1+++>|<++++++copy2++++++>|<---------------cut--------------->|<+++copy3+++>|
     //             ^                    ^                        ^                 ^
     //         new_header          stackSizePos         <stackSize-dynSize>     dynSizePos
     uint16_t recordSize = mmap.header.size;
-    mmap.header.size -= stackSize - dynSize;
+    mmap.header.size -= stackSize - newStackSize; // reduce the stack size
     uint8_t *buf = recordBuf_->AllocForWrite(mmap.header.size);
     // copy1: new_header
     if (memcpy_s(buf, sizeof(perf_event_header), &(mmap.header), sizeof(perf_event_header)) != 0) {
@@ -1385,20 +1386,18 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
                sizeof(perf_event_header));
     }
     size_t copyPos = sizeof(perf_event_header);
-    size_t copySize = stackSizePos - sizeof(perf_event_header) + sizeof(stackSize) + dynSize;
-    // copy2
+    size_t copySize = stackSizePos - sizeof(perf_event_header) + sizeof(stackSize) + newStackSize;
+    // copy2: copy stack_size, data[stack_size],
     GetRecordFieldFromMmap(mmap, buf + copyPos, mmap.mmapPage->data_tail + copyPos, copySize);
     copyPos += copySize;
-    // copy3
+    // copy3: copy dyn_size
     GetRecordFieldFromMmap(mmap, buf + copyPos, mmap.mmapPage->data_tail + dynSizePos,
                            recordSize - dynSizePos);
     // update stack_size
-    if (memcpy_s(buf + stackSizePos, sizeof(dynSize), &(dynSize), sizeof(dynSize)) != 0) {
-        HLOGEP("memcpy_s %p to %p failed. size %zd", &(dynSize), buf + stackSizePos,
-               sizeof(dynSize));
+    if (memcpy_s(buf + stackSizePos, sizeof(stackSize), &(newStackSize), sizeof(newStackSize)) != 0) {
+        HLOGEP("memcpy_s %p to %p failed. size %zd", &(newStackSize), buf + stackSizePos, sizeof(newStackSize));
     }
     recordBuf_->EndWrite();
-
     __sync_synchronize();
     mmap.mmapPage->data_tail += recordSize;
     mmap.dataSize -= recordSize;
