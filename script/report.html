@@ -1919,7 +1919,7 @@ input{
             //当前控件点击时 如果时select本身 需要显示 或 隐藏选择栏目，通过this.focused变量控制（默认为false）
             this.onclick = ev => {
                 if (ev.target.tagName === 'LIT-SELECT') {
-                    if (this.focused === false) {
+                    if (!this.focused) {
                         this.inputElement.focus();
                         this.focused = true;
                     } else {
