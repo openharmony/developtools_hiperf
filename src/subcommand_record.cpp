@@ -335,7 +335,7 @@ bool SubCommandRecord::CheckOptions()
         printf("Invalid --clockid value %s\n", clockId_.c_str());
         return false;
     }
-    if (excludeHiperf_ == true && targetSystemWide_ == false) {
+    if (!targetSystemWide_ && excludeHiperf_) {
         printf("--exclude-hiperf must be used with -a\n");
         return false;
     }
