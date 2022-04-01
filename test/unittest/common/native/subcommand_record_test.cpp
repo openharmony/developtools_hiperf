@@ -129,6 +129,18 @@ HWTEST_F(SubCommandRecordTest, StopSecondsMaxErr, TestSize.Level1)
     TestRecordCommand(opt, false);
 }
 
+// system wide
+HWTEST_F(SubCommandRecordTest, SystemWide, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a ", true, false);
+}
+
+// exclude hiperf
+HWTEST_F(SubCommandRecordTest, ExcludePerf, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a --exclude-hiperf ", true, false);
+}
+
 // select cpu
 HWTEST_F(SubCommandRecordTest, SelectCpu, TestSize.Level1)
 {

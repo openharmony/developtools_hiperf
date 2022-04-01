@@ -59,6 +59,10 @@ config("hiperf_inner_config") {
     ]
   }
 
+  if (product_name == "Hi3516DV300") {
+    defines += [ "LITTLE_MEMORY" ]
+  }
+
   if (hiperf_check_time) {
     defines += [ "HIPERF_DEBUG_TIME" ]
   }
