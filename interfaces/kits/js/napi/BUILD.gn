@@ -16,7 +16,7 @@ import("//developtools/hiperf/hiperf.gni")
 
 config("hiperf_client_napi_config") {
   include_dirs = [
-    "//foundation/ace/napi/interfaces/kits",
+    "//foundation/arkui/napi/interfaces/kits",
     "//third_party/node/src",
     "${hiperf_path}/include",
     "${innerkits_path}/include",
@@ -29,13 +29,11 @@ ohos_shared_library("hiperf_client_napi") {
   configs = [ ":hiperf_client_napi_config" ]
   sources = [ "hiperf_client_napi.cpp" ]
   deps = [
-    "//foundation/ace/napi:ace_napi",
     "${innerkits_path}/native:hiperf_client",
+    "//foundation/arkui/napi:ace_napi",
   ]
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   output_name = "hiperf_napi"
   relative_install_dir = "module"
