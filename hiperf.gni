@@ -21,7 +21,7 @@ declare_args() {
   hiperf_target_host = false
   hiperf_target_static = false
   hiperf_test_coverage = false
-  hiperf_test_fuzz = false
+  hiperf_test_fuzz = true
   hiperf_sanitize = false
   hiperf_check_time = false
   hiperf_use_libunwind = true
