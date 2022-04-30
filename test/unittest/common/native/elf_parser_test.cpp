@@ -1402,46 +1402,6 @@ static bool ComparePrgHeaders(const std::unique_ptr<ElfFileFromReadelf> &elfFile
     return true;
 }
 
-static bool CompareSymTable(const std::unique_ptr<ElfFileFromReadelf> &elfFileFromReadelf,
-                            const std::unique_ptr<ElfFile> &elfFile)
-{
-    const auto &symTable1 = elfFile->symTable_;
-    const auto &symTable2 = elfFileFromReadelf->syms_;
-    if (symTable1 == nullptr) {
-        HLOGV("no symbol table in ElfFile");
-        return false;
-    }
-    std::size_t totalSyms1 = symTable1->symbols_.size();
-    std::size_t totalSyms2 = symTable2.size();
-    HLOGV("number of symbols from elf_parser: %zu", totalSyms1);
-    HLOGV("number of symbols from readelf: %zu", totalSyms2);
-    if (totalSyms1 != totalSyms2) {
-        HLOGV("number of symbols don't match");
-        return false;
-    }
-    return true;
-}
-
-static bool CompareDynSymTable(const std::unique_ptr<ElfFileFromReadelf> &elfFileFromReadelf,
-                               const std::unique_ptr<ElfFile> &elfFile)
-{
-    const auto &dynSymTable1 = elfFile->dynSymTable_;
-    const auto &dynSymTable2 = elfFileFromReadelf->dynSyms_;
-    if (dynSymTable1 == nullptr) {
-        HLOGV("no dynsym table in ElfFile");
-        return false;
-    }
-    std::size_t totalDynSyms1 = dynSymTable1->symbols_.size();
-    std::size_t totalDynSyms2 = dynSymTable2.size();
-    HLOGV("number of dynsyms from elf_parser: %zu", totalDynSyms1);
-    HLOGV("number of dynsyms from readelf:%zu", totalDynSyms2);
-    if (totalDynSyms1 != totalDynSyms2) {
-        HLOGV("number of dynsyms don't match");
-        return false;
-    }
-    return true;
-}
-
 class ElfParserTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
