@@ -17,8 +17,8 @@
 #define ELFPARSER_FUZZER_H
 
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
-#include <stdio.h>
 #include <thread>
 #include <vector>
 
