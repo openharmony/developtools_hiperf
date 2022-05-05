@@ -61,11 +61,11 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/report/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/fuzztest/resource/testdata/.*" desc="test resource file, no license header"/>
-                <filteritem type="filepath" name="test/fuzztest/ClientApi_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
-                <filteritem type="filepath" name="test/fuzztest/CommandLine_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
-                <filteritem type="filepath" name="test/fuzztest/ElfParser_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
-                <filteritem type="filepath" name="test/fuzztest/LibReport_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
-                <filteritem type="filepath" name="test/fuzztest/PerfFile_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
+                <filteritem type="filepath" name="test/fuzztest/clientapi_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
+                <filteritem type="filepath" name="test/fuzztest/commandline_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
+                <filteritem type="filepath" name="test/fuzztest/elfparser_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
+                <filteritem type="filepath" name="test/fuzztest/libreport_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
+                <filteritem type="filepath" name="test/fuzztest/perffile_fuzzer/corpus/init" desc="unified format file of fuzzy test architecture, no license header"/>
             </filefilter>
             <filefilter name="copyrightPolicyFilter" desc="Filters for copyright header policies" >
                 <filteritem type="filepath" name="test/unittest/resource/testdata/.*" desc="test resource file, no copyright header"/>
