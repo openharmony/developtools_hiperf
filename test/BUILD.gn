@@ -109,69 +109,69 @@ fuzz_cflags = [
   "-fno-omit-frame-pointer",
 ]
 
-ohos_fuzztest("hiperf_commandline_fuzztest") {
+ohos_fuzztest("CommandLineFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${hiperf_path}/test/fuzztest/CommandLine_fuzzer"
+  fuzz_config_file = "${hiperf_path}/test/fuzztest/commandline_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
   sources = [
     "${hiperf_path}/src/main.cpp",
-    "fuzztest/CommandLine_fuzzer/CommandLine_fuzzer.cpp",
+    "fuzztest/commandline_fuzzer/CommandLine_fuzzer.cpp",
   ]
 }
 
-ohos_fuzztest("hiperf_libreport_fuzztest") {
+ohos_fuzztest("LibReportFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${hiperf_path}/test/fuzztest/LibReport_fuzzer"
+  fuzz_config_file = "${hiperf_path}/test/fuzztest/libreport_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [ "fuzztest/LibReport_fuzzer/LibReport_fuzzer.cpp" ]
+  sources = [ "fuzztest/libreport_fuzzer/LibReport_fuzzer.cpp" ]
 }
 
-ohos_fuzztest("hiperf_client_api_fuzztest") {
+ohos_fuzztest("ClientApiFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${hiperf_path}/test/fuzztest/ClientApi_fuzzer"
+  fuzz_config_file = "${hiperf_path}/test/fuzztest/clientapi_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [ "fuzztest/ClientApi_fuzzer/ClientApi_fuzzer.cpp" ]
+  sources = [ "fuzztest/clientapi_fuzzer/ClientApi_fuzzer.cpp" ]
 }
 
-ohos_fuzztest("hiperf_perf_file_fuzztest") {
+ohos_fuzztest("PerfFileFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${hiperf_path}/test/fuzztest/PerfFile_fuzzer"
+  fuzz_config_file = "${hiperf_path}/test/fuzztest/perffile_fuzzer"
   resource_config_file = "fuzztest/resource/ohos_test.xml"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [ "fuzztest/PerfFile_fuzzer/PerfFile_fuzzer.cpp" ]
+  sources = [ "fuzztest/perffile_fuzzer/PerfFile_fuzzer.cpp" ]
 }
 
-ohos_fuzztest("hiperf_elf_parser_fuzztest") {
+ohos_fuzztest("ElfParserFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${hiperf_path}/test/fuzztest/ElfParser_fuzzer"
+  fuzz_config_file = "${hiperf_path}/test/fuzztest/elfparser_fuzzer"
   resource_config_file = "fuzztest/resource/ohos_test.xml"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
   defines = [ "FUZZER_TEST" ]
-  sources = [ "fuzztest/ElfParser_fuzzer/ElfParser_fuzzer.cpp" ]
+  sources = [ "fuzztest/elfparser_fuzzer/ElfParser_fuzzer.cpp" ]
 }
 
 group("hiperf_fuzztest") {
   testonly = true
   deps = [
-    ":hiperf_client_api_fuzztest",
-    ":hiperf_commandline_fuzztest",
-    ":hiperf_elf_parser_fuzztest",
-    ":hiperf_libreport_fuzztest",
-    ":hiperf_perf_file_fuzztest",
+    ":ClientApiFuzzTest",
+    ":CommandLineFuzzTest",
+    ":ElfParserFuzzTest",
+    ":LibReportFuzzTest",
+    ":PerfFileFuzzTest",
   ]
 }
 
