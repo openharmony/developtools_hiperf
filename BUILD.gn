@@ -81,10 +81,11 @@ config("hiperf_inner_config") {
   if (is_mingw) {
     cflags += [ "-includeMingW64Fix.h" ]
     defines += [ "WIN32_LEAN_AND_MEAN" ]
+    defines += [ "__LITTLE_ENDIAN_BITFIELD" ]
 
     include_dirs += [
       "${hiperf_path}/include/nonlinux/",
-      "//third_party/Linux_Kernel/include/uapi",
+      "//kernel/linux/linux-5.10/include/uapi",
     ]
   }
 
