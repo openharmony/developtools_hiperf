@@ -90,10 +90,11 @@ config("hiperf_inner_config") {
     cflags += [ "-Wno-inconsistent-dllimport" ]  # in mingw some sec api will
                                                  # overwrite by utilsecurec
     defines += [ "WIN32_LEAN_AND_MEAN" ]
+    defines += [ "__LITTLE_ENDIAN_BITFIELD" ]
 
     include_dirs += [
       "${hiperf_path}/include/nonlinux/",
-      "//third_party/Linux_Kernel/include/uapi",
+      "//kernel/linux/linux-5.10/include/uapi",
     ]
   }
 
