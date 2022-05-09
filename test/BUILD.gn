@@ -83,7 +83,7 @@ config("hiperf_test_config") {
     ldflags += [ "--coverage" ]
   }
 
-  defines += [ "DEFAULT_LOG_LEVEL=LEVEL_VERBOSE" ]
+  defines += [ "DEFAULT_LOG_LEVEL=LEVEL_INFO" ]
 
   include_dirs = [
     "${hiperf_path}/test/unittest/common/native/include",
