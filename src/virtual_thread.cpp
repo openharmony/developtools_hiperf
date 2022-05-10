@@ -264,7 +264,7 @@ void VirtualThread::ParseMap()
                 memMapItem.type_ |= PROT_EXEC;
             }
 
-            if ((memMapItem.type_ & PROT_EXEC) or (memMapItem.type_ == PROT_READ)) {
+            if ((memMapItem.type_ & PROT_EXEC) or (memMapItem.type_ | PROT_READ)) {
                 /*
                 we need record the read hen exec map address
                 callstackk need r map to check the ehframe addrssss
@@ -313,7 +313,10 @@ void VirtualThread::ParseMap()
                 // next line
                 continue;
             }
-
+            if ((memMapItem.major_ == 0) || (memMapItem.minor_ == 0)) {
+                HLOGM("map line: exit %s", line.c_str());
+                continue;
+            }
             // system/lib/libdl.so
             if (mapTokens.size() == MMAP_LINE_MAX_TOKEN) {
                 memMapItem.name_ = mapTokens[MMAP_LINE_TOKEN_INDEX_NAME];
