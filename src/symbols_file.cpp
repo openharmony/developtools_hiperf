@@ -630,6 +630,14 @@ private:
                   shdr->secTypeName_.c_str(), shdr->secIndex_, shdr->link_, shdr->secEntrySize_);
 
             shdrMap_.emplace(sh_name, ShdrInfo(shdr->secVaddr_, shdr->secSize_, shdr->fileOffset_));
+#ifndef __arm__
+            if (shdr->secType_ == SHT_PROGBITS) {
+                if (EH_FRAME_HR == sh_name) {
+                    LoadEhFrameHDR(data, shdr->secSize_, shdr->fileOffset_);
+                    break;
+                }
+            } // for shdr
+#endif
         }
         return true;
     }
@@ -685,12 +693,6 @@ private:
                     }
                     break;
                 case SHT_PROGBITS:
-#ifndef __arm__
-                    if (EH_FRAME_HR == sh_name) {
-                        LoadEhFrameHDR(data, shdr->secSize_, shdr->fileOffset_);
-                        break;
-                    }
-#endif
                     if (PLT == sh_name) {
                         // this is a plt section, PLT table will put here
                         // we make it as named PLT function
