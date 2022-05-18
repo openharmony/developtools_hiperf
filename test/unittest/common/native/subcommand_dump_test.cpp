@@ -85,7 +85,7 @@ void SubCommandDumpTest::TestDumpCommand(const std::string &option, bool expect)
     std::string stringOut = stdoutRecord.Stop();
 
     printf("command : %s(run %" PRId64 " ms) return %s(expect %s)\n", cmdString.c_str(),
-           costMs.count(), ret ? "true" : "false", expect ? "true" : "false");
+           (uint64_t)costMs.count(), ret ? "true" : "false", expect ? "true" : "false");
     EXPECT_EQ(expect, ret);
     if (expect) {
         EXPECT_EQ(SubStringCount(stringOut, "HILOG/E"), 0u);
