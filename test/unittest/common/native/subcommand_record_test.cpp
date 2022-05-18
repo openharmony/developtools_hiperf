@@ -88,7 +88,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
         chrono::steady_clock::now() - startTime);
     std::string stringOut = stdoutRecord.Stop();
 
-    printf("run %" PRId64 " ms return %s(expect %s)\n", costMs.count(), ret ? "true" : "false",
+    printf("run %" PRId64 " ms return %s(expect %s)\n", (uint64_t)costMs.count(), ret ? "true" : "false",
            expect ? "true" : "false");
     EXPECT_EQ(expect, ret);
 }
