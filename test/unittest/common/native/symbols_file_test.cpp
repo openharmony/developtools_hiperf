@@ -308,6 +308,8 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
 }
 
+#if defined(_LP64_)
+#else
 /**
  * @tc.name: LoaderElfSymbols
  * @tc.desc:
@@ -348,6 +350,7 @@ HWTEST_F(SymbolsFileTest, LoadElfSymbols, TestSize.Level1)
 
     EXPECT_EQ(TestLoadSymbols(SYMBOL_ELF_FILE, TEST_FILE_ELF_STRIPPED_BROKEN), false);
 }
+#endif
 
 /**
  * @tc.name: GetSymbolWithVaddr
