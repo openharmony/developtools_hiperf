@@ -637,6 +637,9 @@ HWTEST_F(CallStackTest, ExpendCallStackABABAB, TestSize.Level1)
     ASSERT_EQ(callStack.ExpandCallStack(0, stack3), 4u);
     ASSERT_EQ(callStack.ExpandCallStack(0, stack4), 5u);
 }
+
+#if defined(_LP64_)
+#else
 /**
  * @tc.name: UnwindCallStack
  * @tc.desc:
@@ -678,6 +681,7 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
         }
     }
 }
+#endif
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

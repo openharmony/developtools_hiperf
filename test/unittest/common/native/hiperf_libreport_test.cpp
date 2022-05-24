@@ -467,6 +467,8 @@ HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level1
     EXPECT_STREQ(result, "");
 }
 
+#if defined(_LP64_)
+#else
 HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
@@ -480,6 +482,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
     EXPECT_EQ(ReadFileToString(REPORT_JSON_OUTPUT_PATH, content), true);
     UnwindJsonContentCheck(content, true);
 }
+#endif
 
 HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_NoSymbols_Failed, TestSize.Level1)
 {
