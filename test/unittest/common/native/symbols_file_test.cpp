@@ -308,7 +308,7 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
 }
 
-#if defined(_LP64_)
+#if defined(__LP64__)
 #else
 /**
  * @tc.name: LoaderElfSymbols
@@ -717,6 +717,8 @@ struct sectionInfo {
     uint64_t offset;
 };
 
+#if defined(__LP64__)
+#else
 /**
  * @tc.name: GetSectionInfo
  * @tc.desc:
@@ -801,7 +803,10 @@ HWTEST_F(SymbolsFileTest, GetSectionInfo, TestSize.Level1)
         }
     }
 }
+#endif
 
+#if defined(__LP64__)
+#else
 #ifndef __arm__
 /**
  * @tc.name: GetHDRSectionInfo
@@ -838,6 +843,7 @@ HWTEST_F(SymbolsFileTest, GetHDRSectionInfo, TestSize.Level1)
     EXPECT_EQ(ehFrameHdrElfOffset, 0x00003034u);
     EXPECT_EQ(fdeTableSize, 22U * fdeTableItemSize);
 }
+#endif
 
 /**
  * @tc.name: GetHDRSectionInfo
