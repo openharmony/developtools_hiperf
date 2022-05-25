@@ -442,7 +442,6 @@ private:
         }
     }
 
-#ifndef __arm__
     bool GetHDRSectionInfo(uint64_t &ehFrameHdrElfOffset, uint64_t &fdeTableElfOffset,
                            uint64_t &fdeTableSize) const override
     {
@@ -456,7 +455,6 @@ private:
             return false;
         }
     }
-#endif
 
     void DumpEhFrameHDR() const
     {
