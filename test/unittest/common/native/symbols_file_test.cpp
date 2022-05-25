@@ -805,9 +805,9 @@ HWTEST_F(SymbolsFileTest, GetSectionInfo, TestSize.Level1)
 }
 #endif
 
+#ifndef __arm__
 #if defined(__LP64__)
 #else
-#ifndef __arm__
 /**
  * @tc.name: GetHDRSectionInfo
  * @tc.desc:
