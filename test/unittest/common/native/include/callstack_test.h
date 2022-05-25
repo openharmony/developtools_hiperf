@@ -124,12 +124,15 @@ void LoadFromFile(const std::string &fileName, std::vector<T> &data)
     }
 }
 
+#if defined(__LP64__)
+#else
 static void MakeMaps(VirtualThread &thread)
 {
     for (const mmapDumpInfo &mmap : TEST_DWARF_MMAP) {
         thread.CreateMapItem(mmap.fileName, mmap.begin, mmap.len, mmap.pgoff);
     }
 }
+#endif
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

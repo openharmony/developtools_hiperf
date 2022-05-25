@@ -467,7 +467,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level1
     EXPECT_STREQ(result, "");
 }
 
-#if defined(_LP64_)
+#if defined(__LP64__)
 #else
 HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
 {
