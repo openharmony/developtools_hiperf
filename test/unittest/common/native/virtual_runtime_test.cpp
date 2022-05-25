@@ -326,7 +326,7 @@ HWTEST_F(VirtualRuntimeTest, UpdateFromPerfData, TestSize.Level1)
     ASSERT_EQ(runtime_->GetSymbolsFiles().front()->GetSymbols().size(), 2u);
 }
 
-#if defined(_LP64_)
+#if defined(__LP64__)
 #else
 /**
  * @tc.name: UnwindFromRecord

@@ -308,7 +308,7 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
 }
 
-#if defined(_LP64_)
+#if defined(__LP64__)
 #else
 /**
  * @tc.name: LoaderElfSymbols

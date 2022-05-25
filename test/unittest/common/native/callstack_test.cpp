@@ -638,7 +638,7 @@ HWTEST_F(CallStackTest, ExpendCallStackABABAB, TestSize.Level1)
     ASSERT_EQ(callStack.ExpandCallStack(0, stack4), 5u);
 }
 
-#if defined(_LP64_)
+#if defined(__LP64__)
 #else
 /**
  * @tc.name: UnwindCallStack
