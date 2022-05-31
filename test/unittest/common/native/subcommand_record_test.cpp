@@ -253,7 +253,8 @@ HWTEST_F(SubCommandRecordTest, PeriodMax, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, PeriodMaxErr, TestSize.Level1)
 {
     std::string opt = "-d 2 --period ";
-    opt += std::to_string(1l + INT_MAX);
+    uint32_t value = static_cast<uint32_t>(INT_MAX) + 1;
+    opt += std::to_string(value);
     opt += " ";
     TestRecordCommand(opt, false);
 }
