@@ -1056,7 +1056,7 @@ bool PerfEvents::CreateFdEvents(void)
                     }
                     // update group leader
                     if (groupFdCache[icpu][ipid] == -1) {
-                        groupFdCache[icpu][ipid] = fd.Get();
+                        groupFdCache[icpu][ipid] = fdItem.fd.Get();
                     }
                 }
             }

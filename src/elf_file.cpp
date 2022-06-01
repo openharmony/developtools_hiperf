@@ -289,6 +289,7 @@ bool ElfFile::ParseSymNamesStr()
     uint64_t secOffset = shdr->fileOffset_;
     uint64_t secSize = shdr->secSize_;
     int64_t ret = lseek(fd_, secOffset, SEEK_SET);
+    HLOG_ASSERT(ret >= 0);
     char *secBuf = new (std::nothrow) char[secSize];
     if (secBuf == nullptr) {
         HLOGE("Error in ElfFile::ParsesymNamesStr(): new failed");
