@@ -339,7 +339,7 @@ HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level1)
 HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level1)
 {
     HiperfClient::RecordOption opt;
-    opt.SetAppPackage("com.ohos.launcher");
+    opt.SetAppPackage("com.ohos.launcher:extension");
 
     TestCaseOption(opt);
 }
