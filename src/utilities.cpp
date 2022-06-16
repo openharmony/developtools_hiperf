@@ -28,7 +28,7 @@ const char *MemoryHold::HoldStringView(std::string_view view)
     }
     try {
         // for null end
-        char *p = new char[view.size() + 1];
+        char *p = new (std::nothrow) char[view.size() + 1];
         if (p == nullptr) {
             return "";
         }

@@ -319,7 +319,7 @@ void SubCommandDump::DumpPrintEventAttr(const perf_event_attr &attr, int indent)
     PrintIndent(LEVEL1, "inherit_stat %u, enable_on_exec %u, task %u, use_clockid %u\n",
                 attr.inherit_stat, attr.enable_on_exec, attr.task, attr.use_clockid);
 
-    PrintIndent(LEVEL1, "watermark %u, precise_ip %u, mmap_data %u, clockid %u\n", attr.watermark,
+    PrintIndent(LEVEL1, "watermark %u, precise_ip %u, mmap_data %u, clockid %d\n", attr.watermark,
                 attr.precise_ip, attr.mmap_data, attr.clockid);
 
     PrintIndent(LEVEL1, "sample_id_all %u, exclude_host %u, exclude_guest %u\n", attr.sample_id_all,
@@ -443,7 +443,7 @@ void SubCommandDump::DumpDataPortion(int indent)
 void SubCommandDump::PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct)
 {
     PrintIndent(LEVEL2, "filePath:%s\n", symbolFileStruct.filePath_.c_str());
-    PrintIndent(LEVEL2, "symbolType:%d\n", symbolFileStruct.symbolType_);
+    PrintIndent(LEVEL2, "symbolType:%u\n", symbolFileStruct.symbolType_);
     PrintIndent(LEVEL2, "minExecAddr:0x%" PRIx64 "\n", symbolFileStruct.textExecVaddr_);
     PrintIndent(LEVEL2, "minExecAddrFileOffset:0x%08" PRIx64 "\n",
                 symbolFileStruct.textExecVaddrFileOffset_);

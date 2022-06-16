@@ -332,7 +332,7 @@ void PerfRecordSample::DumpData(int indent) const
 
     // dump record according sampleType
     if (sampleType_ & (PERF_SAMPLE_ID | PERF_SAMPLE_IDENTIFIER)) {
-        PrintIndent(indent, "ID %lld\n", data_.sample_id);
+        PrintIndent(indent, "ID %" PRIu64 "\n", static_cast<uint64_t>(data_.sample_id));
     }
     if (sampleType_ & PERF_SAMPLE_IP) {
         PrintIndent(indent, "ip %llx\n", data_.ip);
@@ -347,13 +347,13 @@ void PerfRecordSample::DumpData(int indent) const
         PrintIndent(indent, "addr %p\n", reinterpret_cast<void *>(data_.addr));
     }
     if (sampleType_ & PERF_SAMPLE_STREAM_ID) {
-        PrintIndent(indent, "stream_id %lld\n", data_.stream_id);
+        PrintIndent(indent, "stream_id %" PRIu64 "\n", static_cast<uint64_t>(data_.stream_id));
     }
     if (sampleType_ & PERF_SAMPLE_CPU) {
         PrintIndent(indent, "cpu %u, res %u\n", data_.cpu, data_.res);
     }
     if (sampleType_ & PERF_SAMPLE_PERIOD) {
-        PrintIndent(indent, "period %lld\n", data_.period);
+        PrintIndent(indent, "period %" PRIu64 "\n", static_cast<uint64_t>(data_.period));
     }
     if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
         bool userContext = false;
