@@ -14,12 +14,12 @@
  limitations under the License.
 -->
 <configuration ver="2.0">
-    <target name="hiperf_perf_file_fuzztest">
+    <target name="PerfFileFuzzTest">
         <preparer>
             <option name="push" value="testdata/report_test.data -> /data/test/resource/testdata/" src="res"/>
         </preparer>
     </target>
-    <target name="hiperf_elf_parser_fuzztest">
+    <target name="ElfParserFuzzTest">
         <preparer>
             <option name="push" value="testdata/elf_test -> /data/test/resource/testdata/" src="res"/>
         </preparer>
