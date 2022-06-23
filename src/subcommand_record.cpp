@@ -530,7 +530,7 @@ bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &call
                 return false;
             }
             if (callStackDwarfSize_ > MAX_SAMPLE_STACK_SIZE) {
-                printf("Invalid -s value, dwarf stack size, '%s' is bigger than max value %d.\n",
+                printf("Invalid -s value, dwarf stack size, '%s' is bigger than max value %u.\n",
                        callStackType.at(1).c_str(), MAX_SAMPLE_STACK_SIZE);
                 return false;
             }
