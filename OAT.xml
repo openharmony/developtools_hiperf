@@ -98,6 +98,10 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/user_data.dump" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/hiperf_643_644_sample_record_213_6754913387560.dump" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/user_regs.dump" desc="the binary file for test, the file is self-developed"/>
+                <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/hiperf_example_cmd_64" desc="the binary file for test, the file is self-developed"/>
+                <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/user_data_64.dump" desc="the binary file for test, the file is self-developed"/>
+                <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/hiperf_24925_24926_sample_record_118_539229856336150.dump" desc="the binary file for test, the file is self-developed"/>
+                <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/user_regs_64.dump" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/empytfile" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/phdrs_from_readelf_32" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/vmlinux_stripped_broken" desc="the binary file for test, the file is self-developed"/>

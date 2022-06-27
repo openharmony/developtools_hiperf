@@ -29,14 +29,19 @@ namespace Developtools {
 namespace HiPerf {
 constexpr const char *PERF_DATA_INPUT_PATH =
     "/data/test/resource/testdata/report/perf.data.libreport";
+#ifdef __arm__
 constexpr const char *PERF_DISABLE_UNWIND_DATA_INPUT_PATH =
     "/data/test/resource/testdata/report/perf.disable.unwind.hiperf_example_cmd.data";
+#else
+constexpr const char *PERF_DISABLE_UNWIND_DATA_INPUT_PATH =
+    "/data/test/resource/testdata/report/perf.disable.unwind.hiperf_example_cmd_64.data";
+#endif
 constexpr const char *PERF_DISABLE_UNWIND_SYMBOL_INPUT_PATH = "/data/test/resource/testdata/report";
 constexpr const char *PERF_DATA_ERROR_FORMAT_INPUT_PATH =
     "/data/test/resource/testdata/report/perf.data.error.format.libreport";
-constexpr const char *REPORT_OUTPUT_PATH = "/data/local/tmp/report.txt";
-constexpr const char *REPORT_JSON_OUTPUT_PATH = "/data/local/tmp/perf.json";
-constexpr const char *REPORT_PROTO_OUTPUT_PATH = "/data/local/tmp/perf.proto";
+constexpr const char *REPORT_OUTPUT_PATH = "./report.txt";
+constexpr const char *REPORT_JSON_OUTPUT_PATH = "./perf.json";
+constexpr const char *REPORT_PROTO_OUTPUT_PATH = "./perf.proto";
 constexpr const char *ILLEGAL_PATH = "/proc/illegal";
 
 constexpr const char *TEST_ELF32 = "/data/test/resource/testdata/report/buildid_test_elf_32";
@@ -126,9 +131,13 @@ void HiperfLibReportTest::UnwindJsonContentCheck(const std::string &content, boo
     ASSERT_TRUE(content.size() >= 2);
     ASSERT_EQ(content.front(), '{');
     ASSERT_EQ(content.back(), '}');
-    // CallStack10(int, Option const&) will count nothing in disable unwind
+#ifdef __arm__
     ASSERT_EQ(content.find("{\"symbol\":8,\"counts\":[0,0,797933]}") != std::string::npos,
               haveUnwind);
+#else
+    ASSERT_EQ(content.find("{\"symbol\":16,\"counts\":[24,9065269,16850264]}") != std::string::npos,
+              haveUnwind);
+#endif
 }
 
 void HiperfLibReportTest::DefaultReportContentCheck(const std::string &content) const

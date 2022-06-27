@@ -661,7 +661,8 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
 #endif
         std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles;
         auto &symbolsFile = symbolsFiles.emplace_back(SymbolsFile::CreateSymbolsFile(
-            SYMBOL_ELF_FILE, PATH_RESOURCE_TEST_DWARF_DATA + TEST_DWARF_ELF));
+            SYMBOL_ELF_FILE, TEST_DWARF_ELF));
+        ASSERT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DWARF_DATA), true);
         ASSERT_EQ(symbolsFile->LoadSymbols(), true);
         // fix the name
         symbolsFile->filePath_ = TEST_DWARF_MMAP.front().fileName;

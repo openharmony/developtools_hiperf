@@ -47,7 +47,8 @@ const std::string CONTROL_CMD_STOP = "stop";
 const std::string CONTROL_FIFO_FILE_C2S = "/data/local/tmp/.hiperf_record_control_c2s";
 const std::string CONTROL_FIFO_FILE_S2C = "/data/local/tmp/.hiperf_record_control_s2c";
 
-const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 1000ms;
+// when there are many events, start record will take more time.
+const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2000ms;
 
 constexpr uint64_t MASK_ALIGNED_8 = 7;
 constexpr size_t MAX_DWARF_CALL_CHAIN = 2;
@@ -463,7 +464,7 @@ bool SubCommandRecord::CheckTargetPids()
         for (auto pid : selectPids_) {
             auto tids = GetSubthreadIDs(pid);
             if (!tids.empty()) {
-                selectPids_.insert(selectPids_.end(), tids.begin(), tids.end());
+                selectTids_.insert(selectTids_.end(), tids.begin(), tids.end());
             }
         }
     }

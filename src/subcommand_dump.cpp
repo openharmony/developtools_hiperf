@@ -416,15 +416,16 @@ void SubCommandDump::DumpDataPortion(int indent)
             return false;
         }
 
+        // for UT
+        if (exportSampleIndex_ > 0) {
+            ExprotUserData(record);
+        }
+
         // tell process tree what happend for rebuild symbols
         vr_.UpdateFromRecord(*record);
 
         recordCount++;
         record->Dump(indent);
-
-        if (exportSampleIndex_ > 0) {
-            ExprotUserData(record);
-        }
 
         if (record->GetType() == PERF_RECORD_SAMPLE) {
             std::unique_ptr<PerfRecordSample> sample(

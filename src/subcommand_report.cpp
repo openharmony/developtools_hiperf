@@ -158,6 +158,10 @@ bool SubCommandReport::VerifyOption()
         printf("head limit error. must in (0 <= limit < 100).\n");
         return false;
     }
+    if (recordFile_[FIRST].empty()) {
+        printf("input file name can't be empty\n");
+        return false;
+    }
     if (!recordFile_[SECOND].empty()) {
         if (protobufFormat_ or jsonFormat_ or showCallStack_) {
             printf("diff don't support any export mode(like json , flame or proto)\n");

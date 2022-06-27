@@ -111,6 +111,7 @@ bool ElfFile::ParseElfHeader()
     size_t readsize = ReadFile(ehdrBuf, ehdr64Size);
     if (readsize < ehdr64Size) {
         HLOGW("file size not enough, try read %zu, only have %zu", ehdr64Size, readsize);
+        return false;
     }
     HLOG_ASSERT(readsize > 0);
     ehdr_ = ElfHeader::MakeUnique(ehdrBuf, readsize);
