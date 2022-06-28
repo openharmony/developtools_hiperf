@@ -308,8 +308,6 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
 }
 
-#if defined(__LP64__)
-#else
 /**
  * @tc.name: LoaderElfSymbols
  * @tc.desc:
@@ -350,7 +348,6 @@ HWTEST_F(SymbolsFileTest, LoadElfSymbols, TestSize.Level1)
 
     EXPECT_EQ(TestLoadSymbols(SYMBOL_ELF_FILE, TEST_FILE_ELF_STRIPPED_BROKEN), false);
 }
-#endif
 
 /**
  * @tc.name: GetSymbolWithVaddr
@@ -717,8 +714,6 @@ struct sectionInfo {
     uint64_t offset;
 };
 
-#if defined(__LP64__)
-#else
 /**
  * @tc.name: GetSectionInfo
  * @tc.desc:
@@ -729,6 +724,7 @@ HWTEST_F(SymbolsFileTest, GetSectionInfo, TestSize.Level1)
     std::unique_ptr<SymbolsFile> symbolsFile =
         SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_FILE_ELF_FULL_PATH);
     ASSERT_EQ(symbolsFile->LoadDebugInfo(), true);
+    ASSERT_EQ(symbolsFile->LoadSymbols(), true);
 
     /*
     from readelf -e elf32_test
@@ -803,11 +799,8 @@ HWTEST_F(SymbolsFileTest, GetSectionInfo, TestSize.Level1)
         }
     }
 }
-#endif
 
 #ifndef __arm__
-#if defined(__LP64__)
-#else
 /**
  * @tc.name: GetHDRSectionInfo
  * @tc.desc:
@@ -820,6 +813,7 @@ HWTEST_F(SymbolsFileTest, GetHDRSectionInfo, TestSize.Level1)
     const constexpr unsigned int fdeTableItemSize = 8;
 
     ASSERT_EQ(symbolsFile->LoadSymbols(), true);
+    ASSERT_EQ(symbolsFile->LoadDebugInfo(), true);
 
     uint64_t ehFrameHdrElfOffset;
     uint64_t fdeTableElfOffset;
@@ -843,7 +837,6 @@ HWTEST_F(SymbolsFileTest, GetHDRSectionInfo, TestSize.Level1)
     EXPECT_EQ(ehFrameHdrElfOffset, 0x00003034u);
     EXPECT_EQ(fdeTableSize, 22U * fdeTableItemSize);
 }
-#endif
 
 /**
  * @tc.name: GetHDRSectionInfo

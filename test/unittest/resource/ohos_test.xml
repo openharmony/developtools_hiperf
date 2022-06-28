@@ -57,6 +57,10 @@
             <option name="push" value="testdata/dwarf/user_data.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
             <option name="push" value="testdata/dwarf/hiperf_example_cmd -> /data/test/resource/testdata/dwarf/" src="res"/>
             <option name="push" value="testdata/dwarf/hiperf_643_644_sample_record_213_6754913387560.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
+            <option name="push" value="testdata/dwarf/user_regs_64.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
+            <option name="push" value="testdata/dwarf/user_data_64.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
+            <option name="push" value="testdata/dwarf/hiperf_example_cmd_64 -> /data/test/resource/testdata/dwarf/" src="res"/>
+            <option name="push" value="testdata/dwarf/hiperf_24925_24926_sample_record_118_539229856336150.dump -> /data/test/resource/testdata/dwarf/" src="res"/>
 
             <option name="push" value="testdata/dummpfile -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/empytfile -> /data/test/resource/testdata/" src="res"/>
@@ -68,7 +72,9 @@
             <option name="push" value="testdata/report/perf.data.error.format.libreport -> /data/test/resource/testdata/report/" src="res"/>
             <option name="push" value="testdata/report/perf.data.libreport -> /data/test/resource/testdata/report/" src="res"/>
             <option name="push" value="testdata/report/perf.disable.unwind.hiperf_example_cmd.data -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/perf.disable.unwind.hiperf_example_cmd_64.data -> /data/test/resource/testdata/report/" src="res"/>
             <option name="push" value="testdata/report/hiperf_example_cmd -> /data/test/resource/testdata/report/" src="res"/>
+            <option name="push" value="testdata/report/hiperf_example_cmd_64 -> /data/test/resource/testdata/report/" src="res"/>
             <option name="push" value="testdata/report/perf.dwarf.data -> /data/test/resource/testdata/report/" src="res"/>
 
             <option name="push" value="testdata/perfnew.data -> /data/test/resource/testdata/" src="res"/>

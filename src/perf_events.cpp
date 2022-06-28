@@ -314,7 +314,7 @@ bool PerfEvents::AddEvent(const std::string &eventString, bool followGroup)
     }
 
     if (isTracePointEvent) {
-        if (PERF_TRACEPOINT_CONFIGS.empty()) {
+        if (traceConfigTable.empty()) {
             LoadTracepointEventTypesFromSystem();
         }
     }
@@ -769,7 +769,7 @@ std::map<__u64, std::string> PerfEvents::GetSupportEvents(perf_type_id type)
 
 void PerfEvents::LoadTracepointEventTypesFromSystem()
 {
-    if (PERF_TRACEPOINT_CONFIGS.empty()) {
+    if (traceConfigTable.empty()) {
         std::string basePath {"/sys/kernel/tracing/events"};
         if (access(basePath.c_str(), R_OK) != 0) {
             basePath = "/sys/kernel/debug/tracing/events";
