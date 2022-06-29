@@ -175,9 +175,8 @@ config("hiperf_syspara_config") {
 
 if (is_ohos && hiperf_use_syspara) {
   common_configs += [ ":hiperf_syspara_config" ]
-  common_deps += [
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-  ]
+  common_deps +=
+      [ "//base/startup/init_lite/interfaces/innerkits:libbegetutil" ]
 }
 
 ohos_source_set("hiperf_platform_common") {
