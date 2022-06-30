@@ -313,7 +313,7 @@ void VirtualThread::ParseMap()
                 // next line
                 continue;
             }
-            if ((memMapItem.major_ == 0) || (memMapItem.minor_ == 0)) {
+            if (memMapItem.major_ == 0) {
                 HLOGM("map line: exit %s", line.c_str());
                 continue;
             }
