@@ -65,8 +65,8 @@ static const ConfigTable PERF_HW_CONFIGS = {
     {PERF_COUNT_HW_BRANCH_INSTRUCTIONS, "hw-branch-instructions"},
     {PERF_COUNT_HW_BRANCH_MISSES, "hw-branch-misses"},
     {PERF_COUNT_HW_BUS_CYCLES, "hw-bus-cycles"},
-    {PERF_COUNT_HW_STALLED_CYCLES_FRONTEND, "hw-stalled-cycles-backend"},
-    {PERF_COUNT_HW_STALLED_CYCLES_BACKEND, "hw-stalled-cycles-frontend"},
+    {PERF_COUNT_HW_STALLED_CYCLES_FRONTEND, "hw-stalled-cycles-frontend"},
+    {PERF_COUNT_HW_STALLED_CYCLES_BACKEND, "hw-stalled-cycles-backend"},
     {PERF_COUNT_HW_REF_CPU_CYCLES, "hw-ref-cpu-cycles"},
 };
 static const ConfigTable PERF_HW_CACHE_CONFIGS = {
