@@ -386,10 +386,17 @@ bool Client::Start(const std::vector<std::string> &args)
 
     int clientToServerFd[2];
     int serverToClientFd[2];
-    if (pipe(clientToServerFd) != 0 || pipe(serverToClientFd) != 0) {
+    if (pipe(clientToServerFd) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HIPERF_HILOGD(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", errInfo);
+        return false;
+    } else if (pipe(serverToClientFd) != 0) {
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGD(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", errInfo);
+        close(clientToServerFd[PIPE_READ]);
+        close(clientToServerFd[PIPE_WRITE]);
         return false;
     }
 
@@ -398,6 +405,10 @@ bool Client::Start(const std::vector<std::string> &args)
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HIPERF_HILOGD(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
+        close(clientToServerFd[PIPE_READ]);
+        close(clientToServerFd[PIPE_WRITE]);
+        close(serverToClientFd[PIPE_READ]);
+        close(serverToClientFd[PIPE_WRITE]);
         return false;
     } else if (hperfPid_ == 0) {
         // child process

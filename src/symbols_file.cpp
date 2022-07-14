@@ -1252,6 +1252,7 @@ const Symbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
     if (found != symbols_.begin()) {
         found = std::prev(found);
         if (found->Contain(vaddrInFile)) {
+            found->offsetToVaddr_ = vaddrInFile - found->funcVaddr_;
             if (!found->HasMatched()) {
                 found->SetMatchFlag();
                 matchedSymbols_.push_back(&(*found));
