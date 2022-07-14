@@ -46,7 +46,8 @@ struct CallFrame {
     uint64_t ip_ = 0;
     uint64_t sp_ = 0;
 
-    uint64_t vaddrInFile_ = 0; // in symbol file vaddr
+    uint64_t vaddrInFile_ = 0; // vaddr of symbol in file
+    uint64_t offsetToVaddr_ = 0; // offset of ip to vaddr
     int32_t symbolIndex_ = -1; // symbols index , should update after sort
     std::string_view symbolName_;
     std::string_view filePath_; // lib path , elf path
@@ -72,14 +73,12 @@ struct CallFrame {
     }
     std::string ToSymbolString() const
     {
-        std::string output;
-        if (vaddrInFile_ != 0) {
-            output = StringPrintf("va: 0x%016llx(%llx) ", vaddrInFile_, ip_);
-        } else {
-            output = StringPrintf("ip: 0x%016llx ", ip_);
-        }
-        output.append(": ");
+        std::string output = StringPrintf(" 0x%016llx : ", ip_);
         output.append(symbolName_);
+        if (vaddrInFile_ != 0) {
+            output += StringPrintf("[0x%016llx:0x%016llx][+0x%llx]", ip_ - offsetToVaddr_,
+                vaddrInFile_, offsetToVaddr_);
+        }
 
         output.append("@");
         output.append(filePath_);

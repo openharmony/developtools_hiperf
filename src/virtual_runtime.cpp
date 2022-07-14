@@ -297,6 +297,7 @@ void VirtualRuntime::UpdateFromRecord(PerfEventRecord &record)
 void VirtualRuntime::MakeCallFrame(Symbol &symbol, CallFrame &callFrame)
 {
     callFrame.vaddrInFile_ = symbol.funcVaddr_;
+    callFrame.offsetToVaddr_ = symbol.offsetToVaddr_;
     callFrame.symbolName_ = symbol.Name();
     callFrame.symbolIndex_ = symbol.index_;
     callFrame.filePath_ = symbol.module_.empty() ? symbol.comm_ : symbol.module_;

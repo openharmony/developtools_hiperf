@@ -62,6 +62,7 @@ class FileSymbol {
 
 struct Symbol {
     uint64_t funcVaddr_ = 0;
+    uint64_t offsetToVaddr_ = 0;
     uint64_t fileVaddr_ = 0;
     uint64_t taskVaddr_ = 0;
     uint64_t len_ = 0;
