@@ -19,7 +19,8 @@
     "ram": "2000KB",
     "deps": {
       "components": [
-        "utils_base"
+        "hiviewdfx_hilog_native",
+        "napi"
       ],
       "third_party": [
         "libz",
