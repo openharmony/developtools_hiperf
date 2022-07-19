@@ -326,8 +326,6 @@ HWTEST_F(VirtualRuntimeTest, UpdateFromPerfData, TestSize.Level1)
     ASSERT_EQ(runtime_->GetSymbolsFiles().front()->GetSymbols().size(), 2u);
 }
 
-#if defined(__LP64__)
-#else
 /**
  * @tc.name: UnwindFromRecord
  * @tc.desc:
@@ -370,7 +368,6 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
                      sample.callFrames_[i].symbolName_.data());
     }
 }
-#endif
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
