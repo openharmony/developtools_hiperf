@@ -416,9 +416,11 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
         uint32_t nrIds = 0;
         if (!Read(nrIds)) {
             return;
-        } else if (nrIds == 0 or nrIds > maxIds) {
+        } else if (nrIds == 0) {
             HLOGW("nrIds is not correct ! %u", nrIds);
             return;
+        } else if (nrIds > maxIds) {
+            HLOGW("nrIds is too large ! %u", nrIds);
         }
         if (!Read(eventDesc.name)) {
             return;
