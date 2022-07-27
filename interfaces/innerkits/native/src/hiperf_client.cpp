@@ -14,6 +14,7 @@
  */
 #include "hiperf_client.h"
 #include <algorithm>
+#include <cinttypes>
 #include <csignal>
 #include <cstring>
 #include <thread>
