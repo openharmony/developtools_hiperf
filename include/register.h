@@ -15,8 +15,8 @@
 #ifndef HIPERF_REGISTER_H
 #define HIPERF_REGISTER_H
 
-#include <linux/perf_event.h>
 #include <map>
+#include <linux/perf_event.h>
 #include "utilities.h"
 
 namespace OHOS {
