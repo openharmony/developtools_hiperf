@@ -13,18 +13,12 @@
  * limitations under the License.
  */
 #include "tracked_command.h"
-
-#include <cassert>
 #include <cerrno>
 #include <csignal>
-
-#include <fcntl.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
 #include "debug_logger.h"
-#include "utilities.h"
 
 namespace OHOS {
 namespace Developtools {

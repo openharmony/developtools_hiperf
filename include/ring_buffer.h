@@ -14,8 +14,11 @@
  */
 #ifndef HIPERF_RING_BUFFER_H
 #define HIPERF_RING_BUFFER_H
-
+#include <stddef.h>
+#include <stdint.h>
 #include <memory>
+#include <atomic>
+#include <cstdint>
 
 namespace OHOS {
 namespace Developtools {

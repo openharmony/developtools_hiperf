@@ -16,10 +16,7 @@
 #define HIPERF_REGISTER_H
 
 #include <linux/perf_event.h>
-
-#include <cinttypes>
-#include <string>
-
+#include <map>
 #include "utilities.h"
 
 namespace OHOS {

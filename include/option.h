@@ -20,7 +20,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
 #include "debug_logger.h"
 #include "utilities.h"
 

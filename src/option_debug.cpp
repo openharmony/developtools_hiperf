@@ -14,6 +14,8 @@
  */
 
 #include "option_debug.h"
+#include "debug_logger.h" 
+#include "option.h" 
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {

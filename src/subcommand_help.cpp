@@ -15,8 +15,6 @@
 
 #include "subcommand_help.h"
 #include "debug_logger.h"
-#include "utilities.h"
-
 using namespace std;
 
 namespace OHOS {

@@ -14,8 +14,6 @@
  */
 #ifndef HIPERF_SUBCOMMAND_H_
 #define HIPERF_SUBCOMMAND_H_
-
-#include <cstdlib>
 #include <string>
 #include "utilities.h"
 

@@ -15,7 +15,6 @@
 #define HILOG_TAG "RingBuffer"
 
 #include <linux/perf_event.h>
-
 #include "ring_buffer.h"
 
 namespace OHOS {
