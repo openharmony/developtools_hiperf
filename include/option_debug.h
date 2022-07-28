@@ -15,11 +15,6 @@
 #ifndef HIPERF_OPTION_DEBUG_H
 #define HIPERF_OPTION_DEBUG_H
 
-#include "debug_logger.h"
-#include "utilities.h"
-
-#include "option.h"
-
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {

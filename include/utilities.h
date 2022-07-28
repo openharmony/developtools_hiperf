@@ -17,7 +17,6 @@
 
 // for security function
 #include <securec.h>
-
 #include <algorithm>
 #include <cctype>
 #include <cinttypes>
@@ -41,7 +40,6 @@
 #include <sys/syscall.h>
 #endif
 #include <linux/types.h>
-
 #include "debug_logger.h"
 #include "noncopyable.h"
 

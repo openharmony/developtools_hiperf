@@ -13,21 +13,14 @@
  * limitations under the License.
  */
 #include "hiperf_client.h"
-
 #include <algorithm>
-#include <cerrno>
-#include <chrono>
 #include <cinttypes>
 #include <csignal>
 #include <cstring>
 #include <thread>
-
-#include <fcntl.h>
 #include <poll.h>
 #include <sys/prctl.h>
-#include <sys/syscall.h>
 #include <unistd.h>
-
 #include "hiperf_hilog.h"
 
 using namespace std::chrono;

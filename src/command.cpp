@@ -14,7 +14,6 @@
  */
 
 #include "command.h"
-
 #include "debug_logger.h"
 #include "option.h"
 #include "subcommand.h"

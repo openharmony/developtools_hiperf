@@ -13,13 +13,9 @@
  * limitations under the License.
  */
 #include "hiperf_client_napi.h"
-
 #include <cstdio>
-#include <cstdlib>
 #include <string>
-
 #include "hiperf_hilog.h"
-
 #include "hiperf_client.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"

@@ -17,29 +17,19 @@
 #define ELF_PARSER_H_
 #include <cassert>
 #include <cstring>
-#include <fstream>
 #include <functional>
-#include <iomanip>
-#include <iostream>
-#include <string>
 #include <unordered_map>
-#include <vector>
-
 #if !is_ohos
 // this is not good enough
 #include <../musl/include/elf.h>
 #else
 #include <elf.h>
 #endif
-
 #include <fcntl.h>
 #include <stdint.h>
 #include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#include "debug_logger.h"
-#include "noncopyable.h"
 #include "utilities.h"
 
 #if !is_mingw
