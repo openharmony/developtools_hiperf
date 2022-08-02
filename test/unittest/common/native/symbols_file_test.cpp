@@ -267,13 +267,16 @@ HWTEST_F(SymbolsFileTest, SymbolsFileDefaultVirtual, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
 {
+    if (access("/sys/kernel/notes", F_OK) != 0) {
+        printf("cannot access /sys/kernel/notes\n");
+        return;
+    }
     // read from kernel runtime
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
     ScopeDebugLevel tempLogLevel(LEVEL_VERBOSE);
     ASSERT_EQ(symbolsFile->LoadSymbols(), true);
 
     const std::vector<Symbol> &symbols = symbolsFile->GetSymbols();
-
     if (KptrRestrict()) {
         EXPECT_EQ(symbols.empty(), true);
     } else {
@@ -356,8 +359,12 @@ HWTEST_F(SymbolsFileTest, LoadElfSymbols, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level1)
 {
-    auto symbols = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
+    if (access("/sys/kernel/notes", F_OK) != 0) {
+        printf("cannot access /sys/kernel/notes\n");
+        return;
+    }
 
+    auto symbols = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
     if ((0 == getuid())) {
         HLOGD("in root mode");
         EXPECT_EQ(symbols->LoadSymbols(), true);

@@ -123,7 +123,11 @@ HWTEST_F(VirtualRuntimeTest, UpdateFromRecord, TestSize.Level1)
 HWTEST_F(VirtualRuntimeTest, UpdateKernelSymbols, TestSize.Level1)
 {
     runtime_->UpdateKernelSymbols();
-    EXPECT_EQ(runtime_->symbolsFiles_.size(), 1u);
+    if (access("/sys/kernel/notes", F_OK) == 0) {
+        EXPECT_EQ(runtime_->symbolsFiles_.size(), 1u);
+    } else {
+        printf("cannot access /sys/kernel/notes\n");
+    }
 }
 
 /**
@@ -185,7 +189,11 @@ HWTEST_F(VirtualRuntimeTest, GetSymbolsFiles, TestSize.Level1)
 {
     EXPECT_EQ(runtime_->GetSymbolsFiles().size(), 0u);
     runtime_->UpdateKernelSymbols();
-    EXPECT_EQ(runtime_->GetSymbolsFiles().size(), 1u);
+    if (access("/sys/kernel/notes", F_OK) == 0) {
+        EXPECT_EQ(runtime_->GetSymbolsFiles().size(), 1u);
+    } else {
+        printf("cannot access /sys/kernel/notes\n");
+    }
 }
 
 /**
