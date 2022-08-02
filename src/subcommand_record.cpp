@@ -915,7 +915,9 @@ bool SubCommandRecord::CreateFifoServer()
                   errInfo);
             return false;
         }
-        fclose(stdout); // for XTS, because popen in CmdRun
+        nullFd_ = open("/dev/null", O_WRONLY);
+        (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
+        HLOGD("redirect stdout to %d", nullFd_);
     } else {            // parent process
         isFifoClient_ = true;
         int fd = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
@@ -940,7 +942,7 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd)
     // need open for read first, because server maybe send reply before client wait to read
     int fdRead = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
     if (fdRead == -1) {
-        HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_C2S.c_str());
+        HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_S2C.c_str());
         return false;
     }
     int fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
@@ -1056,6 +1058,9 @@ void SubCommandRecord::CloseClientThread()
         clientExit_ = true;
         close(clientPipeInput_);
         close(clientPipeOutput_);
+        if (nullFd_ != -1) {
+            close(nullFd_);
+        }
         clientCommandHanle_.join();
         if (isFifoServer_) {
             remove(CONTROL_FIFO_FILE_C2S.c_str());
@@ -1066,6 +1071,10 @@ void SubCommandRecord::CloseClientThread()
 
 bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
 {
+    if (record == nullptr) {
+        HLOGE("record is null");
+        return false;
+    }
 #if HIDEBUG_RECORD_NOT_PROCESS
     // some times we want to check performance
     // but we still want to see the record number

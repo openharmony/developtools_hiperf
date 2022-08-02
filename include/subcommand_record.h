@@ -213,6 +213,7 @@ private:
     // for client
     int clientPipeInput_ = -1;
     int clientPipeOutput_ = -1;
+    int nullFd_ = -1;
     std::thread clientCommandHanle_;
     bool clientExit_ = false;
     void ClientCommandHandle();
