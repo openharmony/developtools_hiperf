@@ -61,13 +61,11 @@ enum HiperfModule {
     MODULE_CPP_API,
 };
 
-static constexpr unsigned int BASE_HIPERF_DOMAIN_ID = 0xD000000;
-static constexpr unsigned int BYTRACE_TAG = 0xd03301;
-
+static constexpr unsigned int BASE_HIPERF_DOMAIN_ID = 0xD002D0D;
 static constexpr OHOS::HiviewDFX::HiLogLabel HIPERF_HILOG_LABLE[] = {
-    {LOG_CORE, BYTRACE_TAG, "hiperf"},
-    {LOG_CORE, BYTRACE_TAG, "HiperfJSNAPI"},
-    {LOG_CORE, BYTRACE_TAG, "HiperfCPPAPI"},
+    {LOG_CORE, BASE_HIPERF_DOMAIN_ID, "hiperf"},
+    {LOG_CORE, BASE_HIPERF_DOMAIN_ID, "HiperfJSNAPI"},
+    {LOG_CORE, BASE_HIPERF_DOMAIN_ID, "HiperfCPPAPI"},
 };
 
 // In order to improve performance, do not check the module range

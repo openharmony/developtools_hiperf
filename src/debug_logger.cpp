@@ -72,8 +72,8 @@ int DebugLogger::HiLog(std::string &buffer) const
     if (lastLF != std::string::npos) {
         buffer.erase(lastLF, 1);
     }
-    return OHOS::HiviewDFX::HiLog::Debug(HIPERF_HILOG_LABLE[MODULE_DEFAULT], "%{public}s",
-                                         buffer.c_str());
+    return OHOS::HiviewDFX::HiLog::Info(HIPERF_HILOG_LABLE[MODULE_DEFAULT], "%{public}s",
+                                        buffer.c_str());
 }
 #endif
 #endif
