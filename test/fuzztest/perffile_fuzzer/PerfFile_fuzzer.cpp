@@ -20,44 +20,6 @@ namespace OHOS {
 using namespace OHOS::Developtools::HiPerf;
 class PerfFileReaderFuzzer : public PerfFileReader {
 public:
-    const char *dataPtr_ = nullptr;
-    size_t dataSize_ = 0;
-    size_t FuzzerTime_ = 0; // when we make a fuzzer read
-
-    bool Read(void *buf, size_t len) override
-    {
-        if (FuzzerTime_ != 0 or dataSize_ == 0) {
-            FuzzerTime_--;
-            return PerfFileReader::Read(buf, len);
-        } else {
-            HLOGD("fuzz read %zu/%zu\n", dataSize_, len);
-            if (PerfFileReader::Read(buf, len)) {
-                std::copy(dataPtr_, dataPtr_ + std::min(len, dataSize_),
-                          reinterpret_cast<char *>(buf));
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    bool Read(char *buf, [[maybe_unused]] uint64_t offset, size_t len) override
-    {
-        if (FuzzerTime_ != 0 or dataSize_ == 0) {
-            FuzzerTime_--;
-            return PerfFileReader::Read(buf, offset, len);
-        } else {
-            HLOGD("fuzz read %zu/%zu\n", dataSize_, len);
-            if (PerfFileReader::Read(buf, offset, len)) {
-                std::copy(dataPtr_, dataPtr_ + std::min(len, dataSize_),
-                          reinterpret_cast<char *>(buf));
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
     explicit PerfFileReaderFuzzer(const std::string &fileName, FILE *fp)
         : PerfFileReader(fileName, fp) {}
 
@@ -65,24 +27,30 @@ public:
                                                           const uint8_t *data, size_t size)
     {
         std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
+        FILE *fpApp = fopen(resolvedPath.c_str(), "ab");
+        if (fpApp == nullptr) {
+            printf("fail to append file %s\n", fileName.c_str());
+            return nullptr;
+        } else {
+            (void)fwrite(data, sizeof(uint8_t), size, fpApp);
+            (void)fclose(fpApp);
+            fpApp = nullptr;
+        }
         FILE *fp = fopen(resolvedPath.c_str(), "rb");
         if (fp == nullptr) {
-            HLOGE("fail to open file %s", fileName.c_str());
+            printf("fail to open file %s\n", fileName.c_str());
             return nullptr;
         }
 
         std::unique_ptr<PerfFileReaderFuzzer> reader =
             std::make_unique<PerfFileReaderFuzzer>(resolvedPath, fp);
 
-        reader->dataPtr_ = reinterpret_cast<const char *>(data);
-        reader->dataSize_ = size;
-        reader->FuzzerTime_ = size;
         if (!reader->ReadFileHeader()) {
-            printf("head read error");
+            printf("head read error\n");
             return nullptr;
         }
         if (!reader->ReadAttrSection()) {
-            printf("attr read error");
+            printf("attr read error\n");
             return nullptr;
         }
         return reader;
