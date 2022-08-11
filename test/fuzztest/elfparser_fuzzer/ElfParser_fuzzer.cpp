@@ -53,7 +53,7 @@ public:
         file->dataSize_ = size;
         file->FuzzerTime_ = size;
         if (!file->IsOpened()) {
-            HLOGE("Error in ElfFile::MakeUnique(): elf file not opended");
+            HLOGE("Error in ElfFile::MakeUnique(): elf file not opened");
             return nullptr;
         }
         if (!file->ParseFile()) {
@@ -69,10 +69,19 @@ bool FuzzElfFile(const uint8_t *data, size_t size)
     const std::string testData = "/data/test/resource/testdata/elf_test";
     HLOGV("test data size %zu\n", size);
     if (size == 0) {
-        return 0;
+        return true;
+    }
+
+    FILE *fp = fopen(testData.c_str(), "ab");
+    if (fp == nullptr) {
+        printf("fail to append file %s\n", testData.c_str());
+        return false;
+    } else {
+        (void)fwrite(data, sizeof(uint8_t), size, fp);
+        (void)fclose(fp);
     }
     ElfFileFuzzer::MakeUnique(testData, data, size);
-    return 0;
+    return true;
 }
 } // namespace OHOS
 
