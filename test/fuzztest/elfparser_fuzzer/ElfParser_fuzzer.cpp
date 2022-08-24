@@ -20,25 +20,6 @@ using namespace OHOS::Developtools::HiPerf;
 using namespace OHOS::Developtools::HiPerf::ELF;
 class ElfFileFuzzer : public ElfFile {
 public:
-    const char *dataPtr_ = nullptr;
-    size_t dataSize_ = 0;
-    size_t FuzzerTime_ = 0; // when we make a fuzzer read
-
-    ssize_t ReadFile(void *buf, size_t len) override
-    {
-        if (FuzzerTime_ != 0 or dataSize_ == 0) {
-            FuzzerTime_--;
-            return ElfFile::ReadFile(buf, len);
-        } else {
-            HLOGV("fuzz read %zu/%zu\n", dataSize_, len);
-            if (ElfFile::ReadFile(buf, len) != 0) {
-                std::copy(dataPtr_, dataPtr_ + std::min(len, dataSize_),
-                          reinterpret_cast<char *>(buf));
-            }
-            return len;
-        }
-    }
-
     explicit ElfFileFuzzer(const std::string &filename) : ElfFile(filename) {}
 
     static std::unique_ptr<ElfFileFuzzer> MakeUnique(const std::string &filename,
@@ -49,9 +30,6 @@ public:
             HLOGE("Error in ElfFile::MakeUnique(): ElfFile::ElfFile() failed");
             return nullptr;
         }
-        file->dataPtr_ = reinterpret_cast<const char *>(data);
-        file->dataSize_ = size;
-        file->FuzzerTime_ = size;
         if (!file->IsOpened()) {
             HLOGE("Error in ElfFile::MakeUnique(): elf file not opened");
             return nullptr;
@@ -68,11 +46,9 @@ bool FuzzElfFile(const uint8_t *data, size_t size)
 {
     const std::string testData = "/data/test/resource/testdata/elf_test";
     HLOGV("test data size %zu\n", size);
-    return true;
     if (size == 0) {
         return true;
     }
-
     FILE *fp = fopen(testData.c_str(), "ab");
     if (fp == nullptr) {
         printf("fail to append file %s\n", testData.c_str());
@@ -90,8 +66,8 @@ bool FuzzElfFile(const uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
 #ifdef DEBUG_HIPERF_FUZZ
-    ScopeDebugLevel mix(LEVEL_DEBUG, true);
-    DebugLogger::GetInstance()->Disable(false);
+    OHOS::ScopeDebugLevel mix(OHOS::LEVEL_DEBUG, true);
+    OHOS::DebugLogger::GetInstance()->Disable(false);
 #else
     OHOS::Developtools::HiPerf::StdoutRecord noStdOut("/dev/null", "w");
 #endif

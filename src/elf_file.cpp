@@ -35,7 +35,6 @@ ElfFile::ElfFile(const std::string &filename)
             HLOGE("unable to check the file size");
         } else {
             HLOGD("file stat size %" PRIu64 "", sb.st_size);
-
             mmap_ = mmap(0, sb.st_size, PROT_READ, MAP_PRIVATE, fd_, 0);
             if (mmap_ == MMAP_FAILED) {
                 HLOGE("unable to map the file size %" PRIu64 " ", sb.st_size);
@@ -180,10 +179,13 @@ bool ElfFile::ParseSecNamesStr()
     }
     delete[] shdrBuf;
     shdrBuf = nullptr;
-
     // get content of string section table
     uint64_t secOffset = shdrs_[secName]->fileOffset_;
-    size_t secSize = shdrs_[secName]->secSize_;
+    uint64_t secSize = shdrs_[secName]->secSize_;
+    if (secSize > mmapSize_ || mmapSize_ == 0) {
+        HLOGE("secSize is too large secSize: %" PRIu64 " mmapSize_: %" PRIu64 "", secSize, mmapSize_);
+        return false;
+    }
     ret = lseek(fd_, secOffset, SEEK_SET);
     HLOG_ASSERT(ret == static_cast<int64_t>(secOffset));
     char *secNamesBuf = new (std::nothrow) char[secSize];
@@ -261,6 +263,11 @@ bool ElfFile::ParseSymTable(const SectionHeader *shdr)
     HLOG_ASSERT(ret == static_cast<int64_t>(secOffset));
     uint64_t secSize = shdr->secSize_;
     uint64_t entrySize = shdr->secEntrySize_;
+    if (entrySize > mmapSize_ || secSize > mmapSize_ || mmapSize_ == 0) {
+        HLOGE("entrySize or secSize is too large secSize: %" PRIu64 " entrySize: %" PRIu64 " mmapSize_: %" PRIu64 "",
+            secSize, entrySize, mmapSize_);
+        return false;
+    }
     char *secBuf = new (std::nothrow) char[secSize];
     if (secBuf == nullptr) {
         HLOGE("Error in EFL::ElfFile::ParseSymTable(): new failed");
@@ -289,6 +296,10 @@ bool ElfFile::ParseSymNamesStr()
     const auto &shdr = shdrs_[secName];
     uint64_t secOffset = shdr->fileOffset_;
     uint64_t secSize = shdr->secSize_;
+    if (secSize > mmapSize_ || mmapSize_ == 0) {
+        HLOGE("secSize is too large secSize: %" PRIu64 " mmapSize_: %" PRIu64 "", secSize, mmapSize_);
+        return false;
+    }
     int64_t ret = lseek(fd_, secOffset, SEEK_SET);
     HLOG_ASSERT(ret >= 0);
     char *secBuf = new (std::nothrow) char[secSize];
@@ -323,6 +334,11 @@ bool ElfFile::ParseDynSymTable()
     HLOG_ASSERT(ret == static_cast<int64_t>(secOffset));
     uint64_t secSize = shdr->secSize_;
     uint64_t entrySize = shdr->secEntrySize_;
+    if (entrySize > mmapSize_ || secSize > mmapSize_ || mmapSize_ == 0) {
+        HLOGE("entrySize or secSize is too large secSize: %" PRIu64 " entrySize: %" PRIu64 " mmapSize_: %" PRIu64 "",
+            secSize, entrySize, mmapSize_);
+        return false;
+    }
     char *secBuf = new (std::nothrow) char[secSize];
     if (secBuf == nullptr) {
         HLOGE("Error in EFL::ElfFile::ParseDynSymTable(): new failed");
