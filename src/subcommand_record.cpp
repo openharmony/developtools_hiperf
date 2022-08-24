@@ -439,16 +439,14 @@ bool SubCommandRecord::CheckTargetProcessOptions()
 bool SubCommandRecord::CheckTargetPids()
 {
     for (auto pid : selectPids_) {
-        int rc = kill(pid, 0);
-        if (rc == -1 || rc == ESRCH) {
+        if (!IsDir("/proc/" + std::to_string(pid))) {
             printf("not exist pid %d\n", pid);
             return false;
         }
     }
-    for (auto pid : selectTids_) {
-        int rc = kill(pid, 0);
-        if (rc == -1 || rc == ESRCH) {
-            printf("not exist tid %d\n", pid);
+    for (auto tid : selectTids_) {
+        if (!IsDir("/proc/" + std::to_string(tid))) {
+            printf("not exist tid %d\n", tid);
             return false;
         }
     }
@@ -923,7 +921,7 @@ bool SubCommandRecord::CreateFifoServer()
         int fd = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
         if (fd == -1 or !WaitFifoReply(fd)) {
             close(fd);
-            kill(pid, SIGINT);
+            kill(pid, SIGKILL);
             remove(CONTROL_FIFO_FILE_C2S.c_str());
             remove(CONTROL_FIFO_FILE_S2C.c_str());
             char errInfo[ERRINFOLEN] = { 0 };

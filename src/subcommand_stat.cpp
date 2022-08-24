@@ -298,9 +298,8 @@ bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
     }
 
     for (auto pid : pids) {
-        int rc = kill(pid, 0);
-        if (rc == -1 || rc == ESRCH) {
-            printf("not exit pid = %d\n", pid);
+        if (!IsDir("/proc/" + std::to_string(pid))) {
+            printf("not exit pid %d\n", pid);
             return false;
         }
     }
