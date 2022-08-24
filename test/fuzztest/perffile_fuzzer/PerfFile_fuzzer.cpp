@@ -61,7 +61,6 @@ bool FuzzPerfFileReader(const uint8_t *data, size_t size)
 {
     const std::string testData = "/data/test/resource/testdata/report_test.data";
     HLOGV("test data size %zu\n", size);
-    return true;
     if (size == 0) {
         return false;
     }
@@ -85,8 +84,8 @@ bool FuzzPerfFileReader(const uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
 #ifdef DEBUG_HIPERF_FUZZ
-    ScopeDebugLevel mix(LEVEL_VERBOSE, true);
-    DebugLogger::GetInstance()->Disable(false);
+    OHOS::ScopeDebugLevel mix(OHOS::LEVEL_VERBOSE, true);
+    OHOS::DebugLogger::GetInstance()->Disable(false);
 #else
     OHOS::Developtools::HiPerf::StdoutRecord noStdOut("/dev/null", "w");
 #endif
