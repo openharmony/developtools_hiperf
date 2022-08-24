@@ -181,7 +181,7 @@ bool ElfFile::ParseSecNamesStr()
     shdrBuf = nullptr;
     // get content of string section table
     uint64_t secOffset = shdrs_[secName]->fileOffset_;
-    size_t secSize = shdrs_[secName]->secSize_;
+    uint64_t secSize = shdrs_[secName]->secSize_;
     if (secSize > mmapSize_ || mmapSize_ == 0) {
         HLOGE("secSize is too large secSize: %" PRIu64 " mmapSize_: %" PRIu64 "", secSize, mmapSize_);
         return false;
