@@ -1509,11 +1509,10 @@ bool PerfEvents::HaveTargetsExit(const std::chrono::steady_clock::time_point &st
     }
 
     for (auto it = pids_.begin(); it != pids_.end();) {
-        int rc = kill(*it, 0);
-        if (rc == -1 or rc == ESRCH) {
-            it = pids_.erase(it);
+        if (IsDir("/proc/" + std::to_string(*it))) {
+            it++;
         } else {
-            ++it;
+            it = pids_.erase(it);
         }
     }
     if (pids_.empty()) {

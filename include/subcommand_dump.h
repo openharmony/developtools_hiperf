@@ -55,7 +55,7 @@ public:
 #endif
         "   --export <sample index>\n"
         "       also export the user stack data to some split file,\n"
-        "       use this command to produce ut data."
+        "       use this command to produce ut data.\n"
         "       named with sample index(0 base):\n"
         "           hiperf_<pid>_<tid>_user_regs_<index>.dump\n"
         "           hiperf_<pid>_<tid>_user_data_<index>.dump\n"

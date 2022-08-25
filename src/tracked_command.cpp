@@ -35,30 +35,7 @@ std::unique_ptr<TrackedCommand> TrackedCommand::CreateInstance(const std::vector
     return command;
 }
 
-TrackedCommand::TrackedCommand(const std::vector<std::string> &args) : command_ {args}
-{
-    // check sa_hanlder of SIGCHLD, set it to SIG_DFL if otherwise
-    struct sigaction oldAct;
-    if (memset_s(&oldAct, sizeof(oldAct), 0, sizeof(oldAct)) != EOK) {
-        HLOGE("memset_s() failed in TrackedCommand::TrackedCommand()");
-        return;
-    }
-    if (sigaction(SIGCHLD, nullptr, &oldAct) == -1) {
-        HLOGW("sigaction(SIGCHLD, nullptr, &oldAct) failed");
-    } else {
-        if (oldAct.sa_handler != SIG_DFL) {
-            struct sigaction newAct;
-            if (memset_s(&newAct, sizeof(newAct), 0, sizeof(newAct)) != EOK) {
-                HLOGE("memset_s() failed in TrackedCommand::TrackedCommand()");
-                return;
-            }
-            newAct.sa_handler = SIG_DFL;
-            if (sigaction(SIGCHLD, &newAct, &oldAct) == -1) {
-                HLOGW("sigaction(SIGCHLD, &newAct, &oldAct) failed");
-            }
-        }
-    }
-}
+TrackedCommand::TrackedCommand(const std::vector<std::string> &args) : command_ {args} {}
 
 TrackedCommand::~TrackedCommand()
 {
@@ -157,7 +134,7 @@ void TrackedCommand::ExecuteCommand(const int &startFd, const int &ackFd)
 {
     HLOG_ASSERT(startFd != -1);
     HLOG_ASSERT(ackFd != -1);
-    prctl(PR_SET_PDEATHSIG, SIGHUP, 0, 0, 0);
+    prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0);
     // waiting start signal
     char startSignal {0};
     ssize_t nbyte {0};
@@ -199,12 +176,12 @@ bool TrackedCommand::WaitCommand(int &wstatus)
     if (childPid_ != -1) {
         HLOG_ASSERT(state_ != State::COMMAND_STOPPED);
         pid_t pid = waitpid(childPid_, &wstatus, WNOHANG);
-        if (pid == childPid_) {
+        if (pid == 0) {
+            return false;
+        } else { // pid == childPid_ or pid == -1
             childPid_ = -1;
             state_ = State::COMMAND_STOPPED;
             return true;
-        } else {
-            return false;
         }
     }
     return true;

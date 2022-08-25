@@ -454,8 +454,9 @@ void SubCommandDump::PrintSymbolFile(const int &indent, const SymbolFileStruct &
     PrintIndent(LEVEL2, "symbol number: %zu\n", symbolFileStruct.symbolStructs_.size());
     int symbolid = 0;
     for (auto &symbolStruct : symbolFileStruct.symbolStructs_) {
-        PrintIndent(LEVEL3, "%05d [0x%016" PRIx64 "@0x%08x]  %s\n", symbolid++, symbolStruct.vaddr_,
+        PrintIndent(LEVEL3, "%05d [0x%016" PRIx64 "@0x%08x]  %s\n", symbolid, symbolStruct.vaddr_,
                     symbolStruct.len_, symbolStruct.symbolName_.c_str());
+        symbolid++;
     }
 }
 
@@ -510,7 +511,8 @@ void SubCommandDump::DumpFeaturePortion(int indent)
             int fileid = 0;
             for (auto &symbolFileStruct : sectionSymbolsFiles->symbolFileStructs_) {
                 PrintIndent(LEVEL2, "\n");
-                PrintIndent(LEVEL2, "fileid:%d\n", fileid++);
+                PrintIndent(LEVEL2, "fileid:%d\n", fileid);
+                fileid++;
                 // symbol file info
                 PrintSymbolFile(indent, symbolFileStruct);
             }

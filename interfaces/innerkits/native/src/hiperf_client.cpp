@@ -259,14 +259,6 @@ Client::Client(const std::string &outputDir)
     HIPERF_HILOGD(MODULE_CPP_API, "%" HILOG_PUBLIC "s default init with %" HILOG_PUBLIC "s\n",
                   __FUNCTION__, outputDir.c_str());
     Setup(outputDir);
-
-    // review: maybe change to some nice check , not just ign th pipe broken?
-    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-        HIPERF_HILOGD(MODULE_CPP_API, "signal failed.");
-    }
-    if (signal(SIGCHLD, SIG_IGN) == SIG_ERR) {
-        HIPERF_HILOGD(MODULE_CPP_API, "signal failed.");
-    }
 }
 
 bool Client::Setup(std::string outputDir)
