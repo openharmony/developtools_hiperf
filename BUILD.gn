@@ -63,7 +63,7 @@ config("hiperf_inner_config") {
     ]
   }
 
-  if (product_name == "Hi3516DV300") {
+  if (device_name == "hispark_taurus") {
     defines += [ "LITTLE_MEMORY" ]
   }
 
