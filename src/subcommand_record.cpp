@@ -123,6 +123,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" symbolDir_:\t%s\n", VectorToString(symbolDir_).c_str());
     printf(" outputFilename_:\t%s\n", outputFilename_.c_str());
     printf(" appPackage_:\t%s\n", appPackage_.c_str());
+    printf(" checkMillisecond_:\t%d\n", checkMillisecond_);
     printf(" clockId_:\t%s\n", clockId_.c_str());
     printf(" mmapPages_:\t%d\n", mmapPages_);
     printf(" dataLimit:\t%s\n", strLimit_.c_str());
@@ -181,6 +182,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--app", appPackage_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--chkms", checkMillisecond_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--clockid", clockId_)) {
@@ -326,6 +330,11 @@ bool SubCommandRecord::CheckOptions()
                MIN_CPU_PERCENT, MAX_CPU_PERCENT);
         return false;
     }
+    if (checkMillisecond_ < MIN_CHECK_MILLISECOND || checkMillisecond_ > MAX_CHECK_MILLISECOND) {
+        printf("Invalid --chkms value '%d', the milliseconds should be in %d~%d \n", checkMillisecond_,
+               MIN_CHECK_MILLISECOND, MAX_CHECK_MILLISECOND);
+        return false;
+    }
     if (mmapPages_ < MIN_PERF_MMAP_PAGE || mmapPages_ > MAX_PERF_MMAP_PAGE ||
         !PowerOfTwo(mmapPages_)) {
         printf("Invalid -m value '%d', value should be in %d~%d and must be a power of two \n",
@@ -392,7 +401,7 @@ pid_t SubCommandRecord::GetAppPackagePid(const std::string &appPackage)
                 }
             }
         }
-        static constexpr uint64_t waitAppSleepMs = 100;
+        static constexpr uint64_t waitAppSleepMs = checkMillisecond_;
         std::this_thread::sleep_for(milliseconds(waitAppSleepMs));
     } while (steady_clock::now() < endTime);
 
@@ -450,7 +459,7 @@ bool SubCommandRecord::CheckTargetPids()
             return false;
         }
     }
-    if (appPackage_ != "") {
+    if (!appPackage_.empty()) {
         pid_t appPid = GetAppPackagePid(appPackage_);
         if (appPid <= 0) {
             printf("app %s not running\n", appPackage_.c_str());
