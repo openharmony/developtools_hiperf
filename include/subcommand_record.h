@@ -190,7 +190,7 @@ private:
     std::vector<std::string> symbolDir_ = {};
     std::string outputFilename_ = "/data/local/tmp/perf.data";
     std::string appPackage_ = {};
-    int checkMillisecond_ = DEFAULT_CHECK_MILLISECOND
+    int checkMillisecond_ = DEFAULT_CHECK_MILLISECOND;
     std::string clockId_ = {};
     std::string strLimit_ = {};
     std::vector<pid_t> selectCpus_ = {};

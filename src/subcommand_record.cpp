@@ -401,8 +401,7 @@ pid_t SubCommandRecord::GetAppPackagePid(const std::string &appPackage)
                 }
             }
         }
-        static constexpr uint64_t waitAppSleepMs = checkMillisecond_;
-        std::this_thread::sleep_for(milliseconds(waitAppSleepMs));
+        std::this_thread::sleep_for(milliseconds(checkMillisecond_));
     } while (steady_clock::now() < endTime);
 
     return res;
