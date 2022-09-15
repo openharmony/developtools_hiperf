@@ -117,7 +117,7 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMin, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckAPPMsMinErr
+ * @tc.name: CheckAppMsMinErr
  * @tc.desc: Test chkms less than minimum value
  * @tc.type: FUNC
  * @tc.require: issueI5R305
@@ -128,7 +128,7 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMinErr, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckAPPMsMax
+ * @tc.name: CheckAppMsMax
  * @tc.desc: Test chkms maximum value
  * @tc.type: FUNC
  * @tc.require: issueI5R305
@@ -139,7 +139,7 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMax, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckAPPMsMaxErr
+ * @tc.name: CheckAppMsMaxErr
  * @tc.desc: Test chkms more than maximum value
  * @tc.type: FUNC
  * @tc.require: issueI5R305
@@ -150,8 +150,8 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMaxErr, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckAPPMsInputErr
- * @tc.desc: Test erro type of chkms 
+ * @tc.name: CheckAppMsInputErr
+ * @tc.desc: Test erro type of chkms
  * @tc.type: FUNC
  * @tc.require: issueI5R305
  */
