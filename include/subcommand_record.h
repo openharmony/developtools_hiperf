@@ -48,6 +48,9 @@ public:
     static constexpr int DEFAULT_MMAP_PAGES = 256;
     static constexpr int MIN_PERF_MMAP_PAGE = 2;
     static constexpr int MAX_PERF_MMAP_PAGE = 1024;
+    static constexpr int DEFAULT_CHECK_APP_MS = 10;
+    static constexpr int MIN_CHECK_APP_MS = 1;
+    static constexpr int MAX_CHECK_APP_MS = 200;
     static constexpr float MIN_STOP_SECONDS = 0.100;
     static constexpr float MAX_STOP_SECONDS = 10000.0;
 
@@ -137,6 +140,9 @@ public:
         "   --app <package_name>\n"
         "         Collect profile info for an OHOS app, the app must be debuggable.\n"
         "         Record will exit if the process is not started within 10 seconds.\n"
+        "   --chkms <millisec>\n"
+        "         Set the interval of querying the <package_name>.\n"
+        "         <millisec> is in range [1-200], default is 10.\n"
         "   --data-limit <SIZE[K|M|G]>\n"
         "         Stop recording after SIZE bytes of records. Default is unlimited.\n"
         "   -o <output_file_name>\n"
@@ -184,6 +190,7 @@ private:
     std::vector<std::string> symbolDir_ = {};
     std::string outputFilename_ = "/data/local/tmp/perf.data";
     std::string appPackage_ = {};
+    int checkAppMs_ = DEFAULT_CHECK_APP_MS;
     std::string clockId_ = {};
     std::string strLimit_ = {};
     std::vector<pid_t> selectCpus_ = {};

@@ -104,6 +104,61 @@ HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level1)
     TestRecordCommand("-d 2  --app package_name ", false, false);
 }
 
+// check app milliseconds
+/**
+ * @tc.name: CheckAppMsMin
+ * @tc.desc: Test chkms minimum value
+ * @tc.type: FUNC
+ * @tc.require: issueI5R305
+ */
+HWTEST_F(SubCommandRecordTest, CheckAppMsMin, TestSize.Level1)
+{
+    TestRecordCommand("-d 0.5 --chkms 1 ");
+}
+
+/**
+ * @tc.name: CheckAppMsMinErr
+ * @tc.desc: Test chkms less than minimum value
+ * @tc.type: FUNC
+ * @tc.require: issueI5R305
+ */
+HWTEST_F(SubCommandRecordTest, CheckAppMsMinErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 0.5 --chkms 0 ", false);
+}
+
+/**
+ * @tc.name: CheckAppMsMax
+ * @tc.desc: Test chkms maximum value
+ * @tc.type: FUNC
+ * @tc.require: issueI5R305
+ */
+HWTEST_F(SubCommandRecordTest, CheckAppMsMax, TestSize.Level1)
+{
+    TestRecordCommand("-d 0.5 --chkms 200 ");
+}
+
+/**
+ * @tc.name: CheckAppMsMaxErr
+ * @tc.desc: Test chkms more than maximum value
+ * @tc.type: FUNC
+ * @tc.require: issueI5R305
+ */
+HWTEST_F(SubCommandRecordTest, CheckAppMsMaxErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 0.5 --chkms 201 ", false);
+}
+
+/**
+ * @tc.name: CheckAppMsInputErr
+ * @tc.desc: Test erro type of chkms
+ * @tc.type: FUNC
+ * @tc.require: issueI5R305
+ */
+HWTEST_F(SubCommandRecordTest, CheckAppMsInputErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 0.5 --chkms abc ", false);
+}
 // stop seconds
 HWTEST_F(SubCommandRecordTest, StopSecondsMin, TestSize.Level1)
 {
