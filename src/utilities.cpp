@@ -56,7 +56,9 @@ std::string CanonicalizeSpecPath(const char* src)
     }
 #else
     if (access(src, F_OK) == 0) {
-        if (realpath(src, resolvedPath) == nullptr) {
+        if (strstr(src, "/proc/") == src && strstr(src, "/data/storage") != nullptr) { // for sandbox
+            (void)strncpy_s(resolvedPath, sizeof(resolvedPath), src, strlen(src));
+        } else if (realpath(src, resolvedPath) == nullptr) {
             fprintf(stderr, "Error: realpath %s failed", src);
             return "";
         }
