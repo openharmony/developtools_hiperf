@@ -346,6 +346,7 @@ class LocalLibDownload:
         else:
             elf_struct.path = path
 
+    @classmethod
     def __get_need_architectures(self, device_arch):
         if device_arch == 'x86_64':
             return ['x86', 'x86_64']

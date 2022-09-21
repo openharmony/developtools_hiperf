@@ -169,10 +169,10 @@ class GetLibFiles(object):
         if (self.hdc.run_hdc_cmd(['shell', 'cp', device_path,
                                   '/data/local/tmp']) and
                 self.hdc.run_hdc_cmd(['file recv',
-                                      '/data/local/tmp/' + filename,
+                                      os.path.join('/data/local/tmp/', filename),
                                       host_path])):
             self.hdc.run_hdc_cmd(['shell', 'rm',
-                                  '/data/local/tmp/' + filename])
+                                  os.path.join('/data/local/tmp/', filename)])
             return True
         print('failed to pull %s from device' % device_path)
         return False

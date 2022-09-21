@@ -25,9 +25,6 @@ from hiperf_utils import executable_file_available
 from hiperf_utils import find_tool_path
 
 
-SO = 'libhiperf_report.z.so'
-
-
 class TestUtils(unittest.TestCase):
 
     def setUp(self):
@@ -42,7 +39,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_is_elf_file(self):
-        result = is_elf_file(SO)
+        result = is_elf_file('libhiperf_report.z.so')
         self.assertEqual(result, True)
 
     def test_remove(self):
