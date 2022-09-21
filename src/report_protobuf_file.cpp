@@ -126,7 +126,7 @@ bool ReportProtobufFileWriter::ProcessSampleRecord(
     for (const CallFrame &frame : recordSample.callFrames_) {
         auto callframe = sample->add_callstackframe();
         callframe->set_symbols_vaddr(frame.vaddrInFile_);
-
+        callframe->set_loaded_vaddr(frame.ip_ - frame.offsetToVaddr_);
         for (auto fileIt = symbolsFiles.begin(); fileIt != symbolsFiles.end(); fileIt++) {
             if (fileIt->get()->filePath_ == frame.filePath_) {
                 callframe->set_symbols_file_id(fileIt - symbolsFiles.begin());
