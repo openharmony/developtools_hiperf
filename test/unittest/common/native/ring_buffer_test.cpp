@@ -60,7 +60,7 @@ void RingBufferTest::ReadBufferAndCheck(RingBuffer &buf)
     uint8_t *p = nullptr;
     while ((p = buf.GetReadData()) != nullptr) {
         ASSERT_EQ(memcpy_s(&readData, sizeof(perf_event_header), p, sizeof(perf_event_header)), 0);
-        ASSERT_EQ(checkSize, readData.size)
+        ASSERT_EQ(checkSize, readData.size) \
             << " read data size " << readData.size << " expect data size " << checkSize;
         p += sizeof(perf_event_header);
         uint8_t data = static_cast<uint8_t>(checkSize & U8MASK);
