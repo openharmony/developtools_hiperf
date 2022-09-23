@@ -1499,47 +1499,6 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestOnSubCommand_verbose1
- * @tc.desc: -p -t
- * @tc.type: FUNC
- */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level1)
-{
-    int tid1 = 0;
-    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
-
-    printf("wait child thread run.\n");
-    while (tid1 == 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
-
-    std::string tidString = " -t ";
-    tidString += std::to_string(tid1);
-
-    std::string cmdString = "stat";
-    cmdString += tidString;
-    cmdString += " -c 0 -d 3";
-
-    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
-    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
-    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
-    std::string stringOut = stdoutRecord.Stop();
-    if (HasFailure()) {
-        printf("output:\n%s", stringOut.c_str());
-    }
-
-    std::string expectStr = "time_enabled:";
-    EXPECT_EQ(FindExpectStr(stringOut, expectStr), false);
-    t1.join();
-}
-
-/**
  * @tc.name: TestOnSubCommand_cmd
  * @tc.desc: hiperf stat <cmd>
  * @tc.type: FUNC
