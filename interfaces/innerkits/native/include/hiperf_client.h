@@ -25,7 +25,7 @@ namespace HiPerf {
 namespace HiperfClient {
 static const std::string HiperfCommandName = "hiperf";
 static const std::string SystemBinPath = "/system/bin/";
-static const std::string TempBinPath = "/data/log/hiperf/";
+static const std::string TempBinPath = "/data/local/tmp/";
 static const std::string CurrentPath = "./";
 static const std::string PerfDataName = "perf.data";
 

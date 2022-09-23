@@ -61,7 +61,7 @@ HWTEST_F(HiperfClientTest, NoPara, TestSize.Level1)
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
 
-    HiperfClient::Client myHiperf;
+    HiperfClient::Client myHiperf("/data/log/hiperf/");
     myHiperf.SetDebugMode();
     ASSERT_TRUE(myHiperf.Start());
 
@@ -81,7 +81,7 @@ HWTEST_F(HiperfClientTest, OutDir, TestSize.Level1)
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
 
-    HiperfClient::Client myHiperf("/data/local/tmp/");
+    HiperfClient::Client myHiperf("/data/log/hiperf/");
     myHiperf.SetDebugMode();
     ASSERT_TRUE(myHiperf.Start());
 
@@ -100,7 +100,7 @@ void HiperfClientTest::TestCaseOption(const HiperfClient::RecordOption &opt)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    HiperfClient::Client myHiperf;
+    HiperfClient::Client myHiperf("/data/log/hiperf/");
     myHiperf.SetDebugMode();
 
     ASSERT_TRUE(myHiperf.IsReady());
