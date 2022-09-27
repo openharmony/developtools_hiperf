@@ -30,8 +30,7 @@
     "build": {
       "sub_component": [
           "//developtools/hiperf:hiperf_target",
-          "//developtools/hiperf:hiperf_target_all",
-          "//developtools/hiperf:hiperf.cfg"
+          "//developtools/hiperf:hiperf_target_all"
       ],
       "inner_kits": [
           {
