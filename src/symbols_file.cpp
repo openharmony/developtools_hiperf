@@ -846,7 +846,7 @@ public:
         const auto eachFileStartTime = steady_clock::now();
 #endif
         std::string kallsym;
-        if (!ReadFileToString("/proc/kallsyms", kallsym, KSYM_DEFAULT_SIZE)) {
+        if (!ReadFileToString("/proc/kallsyms", kallsym, KSYM_DEFAULT_SIZE) || kallsym.empty()) {
             HLOGW("/proc/kallsyms load failed.");
             return false;
         }
