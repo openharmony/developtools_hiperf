@@ -858,6 +858,10 @@ public:
         symbols_.reserve(KSYM_DEFAULT_LINE);
 
         char *lineBegin = kallsym.data();
+        if (lineBegin == nullptr) {
+            HLOGW("lineBegin is null.");
+            return false;
+        }
         char *dataEnd = lineBegin + kallsym.size();
         while (lineBegin < dataEnd) {
             char *lineEnd = strchr(lineBegin, '\n');
