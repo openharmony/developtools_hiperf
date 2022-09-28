@@ -71,6 +71,7 @@ constexpr const int THOUSANDS = 1000;
 constexpr const int HUNDREDS = 100;
 constexpr const int DEFAULT_STRING_BUF_SIZE = 4096;
 constexpr const int FIVE_THOUSANDS = 5000;
+constexpr const int DATA_MAX_SIZE = 1001;
 #if !is_mingw
 #ifndef O_BINARY
 #define O_BINARY 0
