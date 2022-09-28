@@ -23,7 +23,7 @@ const static size_t MAX_TEST_ARGS_LEN = 4096;
 bool FuzzCommandLine(const char *subcommand, const uint8_t *data, size_t size)
 {
     char buf[DATA_MAX_SIZE] = { 0 };
-    if (memcpy_s(buf, size, data, size) != 0) {
+    if (memcpy_s(buf, sizeof(buf), data, size) != 0) {
         return false;
     }
     const char *argptr = reinterpret_cast<const char *>(buf);
