@@ -96,7 +96,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 // app package name
 HWTEST_F(SubCommandRecordTest, PackageName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2  --app com.ohos.callui ", true, false);
+    TestRecordCommand("-d 2  --app com.ohos.mms ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level1)
