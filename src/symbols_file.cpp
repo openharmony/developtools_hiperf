@@ -863,6 +863,8 @@ public:
             char *lineEnd = strchr(lineBegin, '\n');
             if (lineEnd != nullptr) {
                 *lineEnd = '\0';
+            } else {
+                break;
             }
             size_t lineSize = (lineEnd != nullptr) ? (lineEnd - lineBegin) : (dataEnd - lineBegin);
 
