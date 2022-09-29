@@ -64,7 +64,7 @@ int main()
     printf("demo start\n");
     HiperfClient::RecordOption opt;
     const int timeout = 30;
-    opt.SetAppPackage("com.ohos.callui");
+    opt.SetAppPackage("com.ohos.mms");
     opt.SetTimeStopSec(timeout);
     if (myHiperf.Start(opt)) {
         printf("demo start successfully\n");
