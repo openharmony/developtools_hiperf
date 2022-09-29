@@ -863,6 +863,8 @@ public:
             char *lineEnd = strchr(lineBegin, '\n');
             if (lineEnd != nullptr) {
                 *lineEnd = '\0';
+            } else {
+                lineEnd = dataEnd;
             }
             size_t lineSize = (lineEnd != nullptr) ? (lineEnd - lineBegin) : (dataEnd - lineBegin);
 
@@ -878,7 +880,6 @@ public:
             int ret = sscanf_s(lineBegin, "%" PRIx64 " %c %s%s", &addr, &type, sizeof(type),
                                nameRaw, sizeof(nameRaw), moduleRaw, sizeof(moduleRaw));
 
-            lineBegin = lineEnd + 1;
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
             // any way we finish the line scan
             sscanfTime += duration_cast<milliseconds>(steady_clock::now() - eachLineStartTime);
@@ -890,8 +891,10 @@ public:
                 HLOGM(" 0x%016" PRIx64 " %c '%s' '%s'", addr, type, nameRaw, moduleRaw);
             } else {
                 HLOGW("unknown line %d: '%s'", ret, lineBegin);
+                lineBegin = lineEnd + 1;
                 continue;
             }
+            lineBegin = lineEnd + 1;
             std::string name = nameRaw;
             std::string module = moduleRaw;
 

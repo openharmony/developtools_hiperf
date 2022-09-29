@@ -86,9 +86,8 @@ std::unique_ptr<SymbolTable> SymbolTable::MakeUnique(const std::string &symNames
         HLOGE("Error in SymbleTable::MakeUnique(): SymbleTable::SymbolTable() failed");
         return nullptr;
     }
-    char *symBuf = const_cast<char *>(secBuf);
     for (uint64_t curPos = 0; curPos < secSize; curPos += entrySize) {
-        symBuf = const_cast<char *>(secBuf + curPos);
+        char *symBuf = const_cast<char *>(secBuf + curPos);
         /*
             not >= , change to >
             Section Headers:

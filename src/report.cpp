@@ -383,7 +383,7 @@ void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
     for (auto &keyName : displayKeyNames_) {
         auto &key = reportKeyMap_.at(keyName);
         remainingWidth -= key.maxLen_;
-        if (remainingWidth <= 0) {
+        if (remainingWidth == 0) {
             key.maxLen_ = 0;
         }
         if (fprintf(output_, "%-*s ", (remainingWidth > 0) ? static_cast<int>(key.maxLen_) : 0,

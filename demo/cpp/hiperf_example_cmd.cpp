@@ -353,7 +353,7 @@ void WaitStart()
         if (startArg.compare("start") == 0) {
             break;
         } else {
-            break;
+            continue;
         }
     }
 }
