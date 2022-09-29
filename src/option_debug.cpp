@@ -21,7 +21,7 @@ namespace Developtools {
 namespace HiPerf {
 static bool OnVerboseLevel(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() <= 0) {
+    if (debugLevel.size() == 0) {
         return false;
     }
     DebugLogger::GetInstance()->SetLogLevel(LEVEL_VERBOSE);
@@ -31,7 +31,7 @@ static bool OnVerboseLevel(const std::vector<std::string> &debugLevel)
 
 static bool OnMuchLevel(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() <= 0) {
+    if (debugLevel.size() == 0) {
         return false;
     }
     DebugLogger::GetInstance()->SetLogLevel(LEVEL_MUCH);
@@ -41,7 +41,7 @@ static bool OnMuchLevel(const std::vector<std::string> &debugLevel)
 
 static bool OnDebugLevel(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() <= 0) {
+    if (debugLevel.size() == 0) {
         return false;
     }
     DebugLogger::GetInstance()->SetLogLevel(LEVEL_DEBUG);
@@ -51,7 +51,7 @@ static bool OnDebugLevel(const std::vector<std::string> &debugLevel)
 
 static bool OnNoDebug(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() <= 0) {
+    if (debugLevel.size() == 0) {
         return false;
     }
     DebugLogger::GetInstance()->Disable();
@@ -60,7 +60,7 @@ static bool OnNoDebug(const std::vector<std::string> &debugLevel)
 
 static bool OnMixLogOutput(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() <= 0) {
+    if (debugLevel.size() == 0) {
         return false;
     }
     DebugLogger::GetInstance()->SetMixLogOutput(true);
