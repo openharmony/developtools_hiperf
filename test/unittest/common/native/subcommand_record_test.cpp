@@ -75,7 +75,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 
     std::string cmdString = "record ";
     if (fixPid) {
-        cmdString += "--app com.ohos.callui ";
+        cmdString += "--app com.ohos.mms ";
     }
     cmdString += " " + option;
     printf("command : %s\n", cmdString.c_str());
