@@ -864,7 +864,7 @@ public:
             if (lineEnd != nullptr) {
                 *lineEnd = '\0';
             } else {
-                break;
+                lineEnd = lineBegin + strlen(lineBegin) + 1; // 1: end symbol '\0'
             }
             size_t lineSize = (lineEnd != nullptr) ? (lineEnd - lineBegin) : (dataEnd - lineBegin);
 
