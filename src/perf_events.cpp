@@ -313,14 +313,11 @@ bool PerfEvents::AddEvent(const std::string &eventString, bool followGroup)
         eventSpaceType_ |= EventSpaceType::USER_KERNEL;
     }
 
+    // find if
     if (isTracePointEvent) {
         if (traceConfigTable.empty()) {
             LoadTracepointEventTypesFromSystem();
         }
-    }
-
-    // find if
-    if (isTracePointEvent) {
         for (auto traceType : traceConfigTable) {
             if (traceType.second == eventName) {
                 return AddEvent(PERF_TYPE_TRACEPOINT, traceType.first, excludeUser, excludeKernel,
