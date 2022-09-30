@@ -58,7 +58,7 @@ uint64_t GetSupportedRegMask(ArchType arch)
 
 #if HAVE_LIBUNWIND
 const std::map<int, int> LibUnwindRegMap = {
-#if defined(target_cpu_x64)
+#if defined(target_cpu_x86_64)
     {UNW_X86_64_RAX, PERF_REG_X86_AX},  {UNW_X86_64_RDX, PERF_REG_X86_DX},
     {UNW_X86_64_RCX, PERF_REG_X86_CX},  {UNW_X86_64_RBX, PERF_REG_X86_BX},
     {UNW_X86_64_RSI, PERF_REG_X86_SI},  {UNW_X86_64_RDI, PERF_REG_X86_DI},

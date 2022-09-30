@@ -89,7 +89,7 @@ HWTEST_F(RegisterTest, GetSupportedRegMask, TestSize.Level1)
  */
 HWTEST_F(RegisterTest, RegisterGetIP, TestSize.Level1)
 {
-#if defined(target_cpu_x64)
+#if defined(target_cpu_x86_64)
     EXPECT_EQ(RegisterGetIP(ArchType::X86_64), PERF_REG_X86_IP);
 #elif defined(target_cpu_arm)
     EXPECT_EQ(RegisterGetIP(ArchType::ARM), PERF_REG_ARM_PC);
@@ -105,7 +105,7 @@ HWTEST_F(RegisterTest, RegisterGetIP, TestSize.Level1)
  */
 HWTEST_F(RegisterTest, RegisterGetSP, TestSize.Level1)
 {
-#if defined(target_cpu_x64)
+#if defined(target_cpu_x86_64)
     EXPECT_EQ(RegisterGetSP(ArchType::X86_64), PERF_REG_X86_IP);
 #elif defined(target_cpu_arm)
     EXPECT_EQ(RegisterGetSP(ArchType::ARM), PERF_REG_ARM_SP);
@@ -194,7 +194,7 @@ HWTEST_F(RegisterTest, RegisterGetName, TestSize.Level1)
  */
 HWTEST_F(RegisterTest, LibunwindRegIdToPerfReg, TestSize.Level1)
 {
-#if defined(target_cpu_x64)
+#if defined(target_cpu_x86_64)
     unsigned max = PERF_REG_X86_64_MAX;
 #elif defined(target_cpu_arm)
     unsigned max = PERF_REG_ARM_MAX;
