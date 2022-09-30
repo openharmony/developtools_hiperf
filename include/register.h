@@ -119,7 +119,7 @@ enum ArchType {
 
 // order is IP , SP for ut
 static const std::map<size_t, const std::string> PERF_REG_NAME_MAP = {
-#if defined(target_cpu_x64)
+#if defined(target_cpu_x86_64)
     {PERF_REG_X86_IP, "PERF_REG_X86_IP"},
     {PERF_REG_X86_SP, "PERF_REG_X86_SP"},
 #elif defined(target_cpu_arm)
@@ -142,7 +142,7 @@ static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
     {PERF_CONTEXT_MAX, "PERF_CONTEXT_MAX"},
 };
 
-#if defined(target_cpu_x64)
+#if defined(target_cpu_x86_64)
 constexpr ArchType buildArchType = ArchType::X86_64;
 #elif defined(target_cpu_arm64)
 constexpr ArchType buildArchType = ArchType::ARM64;

@@ -19,7 +19,7 @@ namespace OHOS {
 bool FuzzLibReport(const uint8_t *data, size_t size)
 {
     char buf[DATA_MAX_SIZE] = { 0 };
-    if (memcpy_s(buf, sizeof(buf), data, size) != 0) {
+    if (memcpy_s(buf, sizeof(buf) - 1, data, size) != 0) { // 1 ：  make sure end of '\0'
         return false;
     }
     const char *dataPtr = reinterpret_cast<const char *>(buf);
