@@ -45,7 +45,7 @@ enum perf_event_hiperf_ext_type {
 struct CallFrame {
     uint64_t ip_ = 0;
     uint64_t sp_ = 0;
-
+    int32_t symbolFileIndex_ = -1; // symbols file index, used to report protobuf file
     uint64_t vaddrInFile_ = 0; // vaddr of symbol in file
     uint64_t offsetToVaddr_ = 0; // offset of ip to vaddr
     int32_t symbolIndex_ = -1; // symbols index , should update after sort
