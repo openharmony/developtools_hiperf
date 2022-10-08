@@ -53,7 +53,7 @@ def main():
                         data.""")
     parser.add_argument('-r', '--report_html', default='hiperf_report.html',
                         help="""the path of the report.""")
-    parser.add_argument('-l', '--local_lib_dir', type=dir_check,
+    parser.add_argument('-l', '--local_lib_dir', type=dir_check, default='./binary_cache',
                         help="""Path to find symbol dir use to
                          do offline unwind stack""")
     args = parser.parse_args()
