@@ -75,7 +75,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 
     std::string cmdString = "record ";
     if (fixPid) {
-        cmdString += "--app com.ohos.mms ";
+        cmdString += "--app com.ohos.callui ";
     }
     cmdString += " " + option;
     printf("command : %s\n", cmdString.c_str());
@@ -96,7 +96,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 // app package name
 HWTEST_F(SubCommandRecordTest, PackageName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2  --app com.ohos.mms ", true, false);
+    TestRecordCommand("-d 2  --app com.ohos.callui ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level1)
