@@ -123,11 +123,9 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(const MemMapItem &inMap) const
 {
     for (auto &symbolsFile : symbolsFiles_) {
         if (symbolsFile->filePath_ == inMap.name_) {
-            if (symbolsFile->LoadDebugInfo()) {
-                HLOGM("found symbol for map '%s'", inMap.name_.c_str());
-                return symbolsFile.get();
-            }
-            break;
+            HLOGM("found symbol for map '%s'", inMap.name_.c_str());
+            symbolsFile->LoadDebugInfo();
+            return symbolsFile.get();
         }
     }
 #ifdef DEBUG_MISS_SYMBOL
