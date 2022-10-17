@@ -13,7 +13,7 @@
 @echo off
 set DIR="%cd%"
 echo DIR=%DIR%
-hdc_std shell "hiperf_example_cmd --nowait &"
+hdc_std shell "killall -9 hiperf_example_cmd;hiperf_example_cmd --nowait &"
 hdc_std shell mkdir -p /data/test/resource/testdata/
 for /R %DIR% %%f in (testdata\*) do ( 
 hdc_std file send %%f /data/test/resource/testdata/
