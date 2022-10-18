@@ -427,7 +427,7 @@ group("hiperf_target") {
   } else {
     deps = [
       ":hiperf",
-      "demo/cpp:hiperf_example_cmd"
+      "demo/cpp:hiperf_example_cmd",
       ]
   }
 }
