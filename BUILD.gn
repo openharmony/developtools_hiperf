@@ -89,7 +89,7 @@ config("hiperf_inner_config") {
 
     include_dirs += [
       "${hiperf_path}/include/nonlinux/",
-      "//out/rk3568/obj/third_party/musl/usr/include/aarch64-linux-ohos/",
+      hiperf_feature_mingw_uapi_dir,
     ]
   }
 
