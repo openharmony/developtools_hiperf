@@ -64,6 +64,7 @@ int main()
     printf("demo start\n");
     HiperfClient::RecordOption opt;
     const int timeout = 30;
+    system("killall -9 hiperf_example_cmd;hiperf_example_cmd --nowait &");
     opt.SetAppPackage("hiperf_example_cmd");
     opt.SetTimeStopSec(timeout);
     if (myHiperf.Start(opt)) {
