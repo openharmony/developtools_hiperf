@@ -339,8 +339,7 @@ HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level1)
 HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level1)
 {
     HiperfClient::RecordOption opt;
-    system("killall -9 hiperf_example_cmd;hiperf_example_cmd --nowait &");
-    opt.SetAppPackage("hiperf_example_cmd");
+    opt.SetAppPackage("init");
 
     TestCaseOption(opt);
 }

@@ -420,15 +420,9 @@ ohos_source_set("hiperf_code_analyze") {
 
 group("hiperf_target") {
   if (hiperf_target_host) {
-    deps = [
-      ":hiperf(${host_toolchain})",
-      "demo/cpp:hiperf_example_cmd(${host_toolchain})",
-    ]
+    deps = [ ":hiperf(${host_toolchain})" ]
   } else {
-    deps = [
-      ":hiperf",
-      "demo/cpp:hiperf_example_cmd",
-    ]
+    deps = [ ":hiperf" ]
   }
 }
 

@@ -22,7 +22,6 @@ ohos_executable("hiperf_demo") {
 }
 
 ohos_executable("hiperf_example_cmd") {
-  install_enable = true
   cflags = [ "-O0" ]
   sources = [ "hiperf_example_cmd.cpp" ]
   subsystem_name = "developtools"

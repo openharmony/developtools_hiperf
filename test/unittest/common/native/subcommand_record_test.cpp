@@ -75,8 +75,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 
     std::string cmdString = "record ";
     if (fixPid) {
-        system("killall -9 hiperf_example_cmd;hiperf_example_cmd --nowait &");
-        cmdString += "--app hiperf_example_cmd ";
+        cmdString += "--app init ";
     }
     cmdString += " " + option;
     printf("command : %s\n", cmdString.c_str());
@@ -97,8 +96,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 // app package name
 HWTEST_F(SubCommandRecordTest, PackageName, TestSize.Level1)
 {
-    system("killall -9 hiperf_example_cmd;hiperf_example_cmd --nowait &");
-    TestRecordCommand("-d 2  --app hiperf_example_cmd ", true, false);
+    TestRecordCommand("-d 2  --app init ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level1)
