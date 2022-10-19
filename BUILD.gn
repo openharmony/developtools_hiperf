@@ -368,13 +368,6 @@ ohos_executable("hiperf_host") {
   part_name = "hiperf"
 }
 
-ohos_prebuilt_etc("hiperf.cfg") {
-  source = "./config/hiperf.cfg"
-  relative_install_dir = "init"
-  subsystem_name = "developtools"
-  part_name = "hiperf"
-}
-
 ohos_source_set("hiperf_platform_host") {
   part_name = "hiperf"
   sources = [ "./src/hiperf_libreport.cpp" ]
