@@ -403,13 +403,13 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
         AttrWithId eventDesc;
         // compatible with the different version of 'perf_event_attr'
         if (attrSize > sizeof(perf_event_attr)) {
-            if (!Read((char *)&(eventDesc.attr), sizeof(perf_event_attr))) {
+            if (!Read(static_cast<char *>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
                 return;
             }
             // skip tail bytes
             HLOGW("skip %zu byte for diff attr size", attrSize - sizeof(perf_event_attr));
             Skip(attrSize - sizeof(perf_event_attr));
-        } else if (!Read((char *)&(eventDesc.attr), attrSize)) {
+        } else if (!Read(static_cast<char *>(&(eventDesc.attr)), attrSize)) {
             return;
         }
 
@@ -441,17 +441,17 @@ bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
     }
     Init(buf, size);
 
-    if (!Write(static_cast<uint32_t>(eventDesces_.size())) {
+    if (!Write(static_cast<uint32_t>(eventDesces_.size()))))))) {
         return false;
     }
-    if (!Write(static_cast<uint32_t>(sizeof(perf_event_attr))) {
+    if (!Write(static_cast<uint32_t>(sizeof(perf_event_attr)))) {
         return false;
     }
     for (auto &eventDesc : eventDesces_) {
         if (!Write(static_cast<char *>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
             return false;
         }
-        if (!Write((uint32_t)eventDesc.ids.size())) {
+        if (!Write(static_cast<uint32_t>(eventDesc.ids.size()))) {
             return false;
         }
         if (!Write(eventDesc.name)) {
