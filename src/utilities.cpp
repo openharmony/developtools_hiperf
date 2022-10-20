@@ -162,7 +162,7 @@ bool StdoutRecord::Start()
     }
     if (recordFile_ == nullptr) {
         // try second way
-        std::string fileName = "temp.stdout";
+        std::string fileName = "/data/local/tmp/temp.stdout";
         std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
         recordFile_ = fopen(resolvedPath.c_str(), "w+");
         if (recordFile_ == nullptr) {
