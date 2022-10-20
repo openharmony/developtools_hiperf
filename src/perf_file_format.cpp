@@ -441,7 +441,7 @@ bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
     }
     Init(buf, size);
 
-    if (!Write(static_cast<uint32_t>(eventDesces_.size()))))))) {
+    if (!Write(static_cast<uint32_t>(eventDesces_.size()))) {
         return false;
     }
     if (!Write(static_cast<uint32_t>(sizeof(perf_event_attr)))) {
