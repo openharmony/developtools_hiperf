@@ -130,7 +130,7 @@ void Report::FilterDisplayRecords()
     for (auto &config : configs_) {
         size_t filterOuts = 0;
         size_t totalReportCount = config.reportItems_.size();
-        for (auto &reportKeyPair : reportKeyMap_) {
+        for (const auto &reportKeyPair : reportKeyMap_) {
             auto reportKey = reportKeyPair.second;
             if (reportKey.displayFilter_.size() != 0) {
                 auto itemIt = config.reportItems_.begin();
@@ -603,7 +603,6 @@ void Report::OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfig
         OutputStdItemHeating(0, it2->heat);
         OutputStdContentItem(*it2);
         it2++;
-        continue; // next it2
     }
 }
 
