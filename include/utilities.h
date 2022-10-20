@@ -151,7 +151,7 @@ void HexDump(const void *buf, size_t size, size_t max_size = 0);
 
 std::string &StringTrim(std::string &s);
 
-std::vector<std::string> StringSplit(std::string source, std::string split = ",");
+std::vector<std::string> StringSplit(std::string source, const std::string split = ",");
 
 size_t SubStringCount(const std::string &source, const std::string &sub);
 

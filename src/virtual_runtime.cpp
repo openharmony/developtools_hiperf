@@ -445,7 +445,7 @@ void VirtualRuntime::UpdateSymbols(std::string fileName)
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
-    for (auto &symbolsFile : symbolsFiles_) {
+    for (const auto &symbolsFile : symbolsFiles_) {
         if (symbolsFile->filePath_ == fileName) {
             HLOGV("already have '%s'", fileName.c_str());
             return;
