@@ -403,13 +403,13 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
         AttrWithId eventDesc;
         // compatible with the different version of 'perf_event_attr'
         if (attrSize > sizeof(perf_event_attr)) {
-            if (!Read(static_cast<char *>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
+            if (!Read(reinterpret_cast<char *>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
                 return;
             }
             // skip tail bytes
             HLOGW("skip %zu byte for diff attr size", attrSize - sizeof(perf_event_attr));
             Skip(attrSize - sizeof(perf_event_attr));
-        } else if (!Read(static_cast<char *>(&(eventDesc.attr)), attrSize)) {
+        } else if (!Read(reinterpret_cast<char *>(&(eventDesc.attr)), attrSize)) {
             return;
         }
 
@@ -426,7 +426,7 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
             return;
         }
         eventDesc.ids.resize(nrIds, 0);
-        if (!Read(static_cast<char *>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds)) {
+        if (!Read(reinterpret_cast<char *>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds)) {
             return;
         }
         eventDesces_.emplace_back(std::move(eventDesc));
@@ -448,7 +448,7 @@ bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
         return false;
     }
     for (auto &eventDesc : eventDesces_) {
-        if (!Write(static_cast<char *>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
+        if (!Write(reinterpret_cast<char *>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
             return false;
         }
         if (!Write(static_cast<uint32_t>(eventDesc.ids.size()))) {
@@ -458,7 +458,7 @@ bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
             return false;
         }
         // clang-format off
-        if (!Write(static_cast<char *>(eventDesc.ids.data()),
+        if (!Write(reinterpret_cast<char *>(eventDesc.ids.data()),
                    sizeof(uint64_t) * eventDesc.ids.size())) {
             // clang-format on
             return false;
