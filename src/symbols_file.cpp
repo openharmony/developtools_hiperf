@@ -344,7 +344,7 @@ protected:
         } else {
             HLOGD("loaded elf %s", elfPath.c_str());
         }
-        for (auto &phdr : elfFile->phdrs_) {
+        for (const auto &phdr : elfFile->phdrs_) {
             if ((phdr->type_ == PT_LOAD) && (phdr->flags_ & PF_X)) {
                 // find the min addr
                 if (textExecVaddr_ != std::min(textExecVaddr_, phdr->vaddr_)) {
@@ -468,7 +468,7 @@ private:
 
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
-        eh_frame_hdr *ehFrameHdr = (eh_frame_hdr *)buffer;
+        eh_frame_hdr *ehFrameHdr = static_cast<eh_frame_hdr *>buffer;
         const uint8_t *dataPtr = ehFrameHdr->encode_data;
         DwarfEncoding dwEhFramePtr(ehFrameHdr->eh_frame_ptr_enc, dataPtr);
         DwarfEncoding dwFdeCount(ehFrameHdr->fde_count_enc, dataPtr);
@@ -756,7 +756,7 @@ private:
         // or both drop if build id is not same
         std::vector<Symbol> symbolsTable;
         std::string buildIdFound;
-        for (auto &phdr : elfFile->phdrs_) {
+        for (const auto &phdr : elfFile->phdrs_) {
             if ((phdr->type_ == PT_LOAD) && (phdr->flags_ & PF_X)) {
                 // find the min addr
                 if (textExecVaddr_ != std::min(textExecVaddr_, phdr->vaddr_)) {
@@ -994,7 +994,7 @@ public:
                 return false;
             } else {
                 HLOGD("kernel notes size: %zu", notes.size());
-                buildId_ = ElfGetBuildId((const unsigned char *)notes.data(), notes.size());
+                buildId_ = ElfGetBuildId(static_cast<const unsigned char *>notes.data(), notes.size());
             }
 
             const auto startTime = std::chrono::steady_clock::now();
@@ -1068,7 +1068,7 @@ private:
         std::string sysFile = "/sys/module/" + module_ + "/notes/.note.gnu.build-id";
         std::string buildIdRaw = ReadFileToString(sysFile);
         if (!buildIdRaw.empty()) {
-            buildId_ = ElfGetBuildId((const unsigned char *)buildIdRaw.data(), buildIdRaw.size());
+            buildId_ = ElfGetBuildId(static_cast<const unsigned char *>buildIdRaw.data(), buildIdRaw.size());
             HLOGD("kerne module %s(%s) build id %s", module_.c_str(), filePath_.c_str(),
                   buildId_.c_str());
             return buildId_.empty() ? false : true;

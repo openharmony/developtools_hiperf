@@ -40,7 +40,7 @@ const std::map<std::string, std::unique_ptr<MainOption>> &GetMainOptions()
     return g_MainOptions;
 }
 
-const MainOption *FindMainOption(std::string argName)
+const MainOption *FindMainOption(const std::string argName)
 {
     HLOGV("%s", argName.c_str());
     auto found = g_MainOptions.find(argName);
