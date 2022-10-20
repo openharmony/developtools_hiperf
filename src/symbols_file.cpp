@@ -468,7 +468,7 @@ private:
 
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
-        eh_frame_hdr *ehFrameHdr = static_cast<eh_frame_hdr *>buffer;
+        eh_frame_hdr *ehFrameHdr = static_cast<eh_frame_hdr *>(buffer);
         const uint8_t *dataPtr = ehFrameHdr->encode_data;
         DwarfEncoding dwEhFramePtr(ehFrameHdr->eh_frame_ptr_enc, dataPtr);
         DwarfEncoding dwFdeCount(ehFrameHdr->fde_count_enc, dataPtr);
@@ -994,7 +994,7 @@ public:
                 return false;
             } else {
                 HLOGD("kernel notes size: %zu", notes.size());
-                buildId_ = ElfGetBuildId(static_cast<const unsigned char *>notes.data(), notes.size());
+                buildId_ = ElfGetBuildId(static_cast<const unsigned char *>(notes.data()), notes.size());
             }
 
             const auto startTime = std::chrono::steady_clock::now();
@@ -1068,7 +1068,7 @@ private:
         std::string sysFile = "/sys/module/" + module_ + "/notes/.note.gnu.build-id";
         std::string buildIdRaw = ReadFileToString(sysFile);
         if (!buildIdRaw.empty()) {
-            buildId_ = ElfGetBuildId(static_cast<const unsigned char *>buildIdRaw.data(), buildIdRaw.size());
+            buildId_ = ElfGetBuildId(static_cast<const unsigned char *>(buildIdRaw.data()), buildIdRaw.size());
             HLOGD("kerne module %s(%s) build id %s", module_.c_str(), filePath_.c_str(),
                   buildId_.c_str());
             return buildId_.empty() ? false : true;
