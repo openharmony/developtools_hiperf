@@ -1206,7 +1206,7 @@ size_t PerfEvents::CalcBufferSize()
 inline bool PerfEvents::IsRecordInMmap()
 {
     if (pollFds_.size() > 0) {
-        if (poll(static_cast<struct pollfd *>pollFds_.data(), pollFds_.size(), pollTimeOut_) <= 0) {
+        if (poll(static_cast<struct pollfd *>(pollFds_.data()), pollFds_.size(), pollTimeOut_) <= 0) {
             // time out try again
             return false;
         }

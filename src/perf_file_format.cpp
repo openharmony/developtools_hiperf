@@ -426,7 +426,7 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
             return;
         }
         eventDesc.ids.resize(nrIds, 0);
-        if (!Read(static_cast<char *>eventDesc.ids.data(), sizeof(uint64_t) * nrIds)) {
+        if (!Read(static_cast<char *>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds)) {
             return;
         }
         eventDesces_.emplace_back(std::move(eventDesc));
@@ -441,14 +441,14 @@ bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
     }
     Init(buf, size);
 
-    if (!Write(static_cast<uint32_t>eventDesces_.size())) {
+    if (!Write(static_cast<uint32_t>(eventDesces_.size())) {
         return false;
     }
-    if (!Write(static_cast<uint32_t>sizeof(perf_event_attr))) {
+    if (!Write(static_cast<uint32_t>(sizeof(perf_event_attr))) {
         return false;
     }
     for (auto &eventDesc : eventDesces_) {
-        if (!Write(static_cast<char *>&(eventDesc.attr), sizeof(perf_event_attr))) {
+        if (!Write(static_cast<char *>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
             return false;
         }
         if (!Write((uint32_t)eventDesc.ids.size())) {
@@ -458,7 +458,7 @@ bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
             return false;
         }
         // clang-format off
-        if (!Write(static_cast<char *>eventDesc.ids.data(),
+        if (!Write(static_cast<char *>(eventDesc.ids.data()),
                    sizeof(uint64_t) * eventDesc.ids.size())) {
             // clang-format on
             return false;
