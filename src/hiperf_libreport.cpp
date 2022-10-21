@@ -248,7 +248,6 @@ const char *ReportGetBuildId(const char *elfPath)
 const char *ReportGetElfArch(const char *elfPath)
 {
     const char *machineName = "unknown";
-    static std::string buildId; // statci for hold the c_str buffer
     std::unique_ptr<ElfFile> elfFile = ElfFile::MakeUnique(elfPath);
     static std::string result; // statci for hold the c_str buffer
     result.clear();

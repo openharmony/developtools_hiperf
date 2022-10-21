@@ -129,7 +129,7 @@ bool GetOptionValue(argsVector &args, std::string optionName, T &value)
     }
 }
 
-const MainOption *FindMainOption(std::string);
+const MainOption *FindMainOption(const std::string);
 
 const std::map<std::string, std::unique_ptr<MainOption>> &GetMainOptions();
 } // namespace Option

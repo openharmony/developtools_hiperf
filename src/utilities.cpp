@@ -116,7 +116,7 @@ size_t SubStringCount(const std::string &source, const std::string &sub)
     return count;
 }
 
-std::vector<std::string> StringSplit(std::string source, std::string split)
+std::vector<std::string> StringSplit(std::string source, const std::string split)
 {
     std::vector<std::string> result;
 

@@ -445,7 +445,7 @@ void VirtualRuntime::UpdateSymbols(std::string fileName)
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
-    for (auto &symbolsFile : symbolsFiles_) {
+    for (const auto &symbolsFile : symbolsFiles_) {
         if (symbolsFile->filePath_ == fileName) {
             HLOGV("already have '%s'", fileName.c_str());
             return;
@@ -646,7 +646,7 @@ void VirtualRuntime::UpdateFromPerfData(const std::vector<SymbolFileStruct> &sym
             // use give us path ,we must reload it.
             symbolsFile->LoadSymbols();
         }
-        symbolsFile->id_ = symbolsFiles_.size();
+        symbolsFile->id_ = static_cast<int32_t>(symbolsFiles_.size());
         symbolsFiles_.emplace_back(std::move(symbolsFile));
     }
 }

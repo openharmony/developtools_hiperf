@@ -133,7 +133,7 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(const MemMapItem &inMap) const
         missedSymbolFile_.end()) {
         missedSymbolFile_.emplace_back(inMap.name_);
         HLOGW("NOT found symbol for map '%s'", inMap.name_.c_str());
-        for (auto &file : symbolsFiles_) {
+        for (const auto &file : symbolsFiles_) {
             HLOGW(" we have '%s'", file->filePath_.c_str());
         }
     }

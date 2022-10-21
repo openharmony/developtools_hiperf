@@ -1206,7 +1206,7 @@ size_t PerfEvents::CalcBufferSize()
 inline bool PerfEvents::IsRecordInMmap()
 {
     if (pollFds_.size() > 0) {
-        if (poll((struct pollfd *)pollFds_.data(), pollFds_.size(), pollTimeOut_) <= 0) {
+        if (poll(static_cast<struct pollfd *>(pollFds_.data()), pollFds_.size(), pollTimeOut_) <= 0) {
             // time out try again
             return false;
         }
@@ -1239,7 +1239,7 @@ void PerfEvents::ReadRecordsFromMmaps()
     }
 
     if (MmapRecordHeap_.size() > 1) {
-        for (auto &it : MmapRecordHeap_) {
+        for (const auto &it : MmapRecordHeap_) {
             GetRecordFromMmap(*it);
         }
         std::make_heap(MmapRecordHeap_.begin(), MmapRecordHeap_.end(), CompareRecordTime);
