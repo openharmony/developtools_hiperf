@@ -262,7 +262,7 @@ bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, unw_word_t ad
         }
     }
 
-    if (unwindInfoPtr.thread.ReadRoMemory(addr, reinterpret_cast<uint8_t *>(data), sizeof(unw_word_t))) {
+    if (unwindInfoPtr.thread.ReadRoMemory(addr, reinterpret_cast<uint8_t*>(data), sizeof(unw_word_t))) {
         unwindInfoPtr.callStack.porcessMemoryMap_[unwindInfoPtr.thread.pid_][addr] = *data;
         return true;
     } else {
