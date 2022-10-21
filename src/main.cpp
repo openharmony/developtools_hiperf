@@ -42,6 +42,12 @@ int main(const int argc, const char *argv[])
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
+#if is_ohos
+    if (setgid(2000) != 0) { // 2000 is shell group
+        printf("setgid failed errno: %d.\n", errno);
+    }
+#endif
+
     // pass the argv to next
     vector<string> args;
     for (int i = 1; i < argc; i++) {
