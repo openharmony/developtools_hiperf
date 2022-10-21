@@ -646,7 +646,7 @@ void VirtualRuntime::UpdateFromPerfData(const std::vector<SymbolFileStruct> &sym
             // use give us path ,we must reload it.
             symbolsFile->LoadSymbols();
         }
-        symbolsFile->id_ = symbolsFiles_.size();
+        symbolsFile->id_ = static_cast<int32_t>(symbolsFiles_.size());
         symbolsFiles_.emplace_back(std::move(symbolsFile));
     }
 }
