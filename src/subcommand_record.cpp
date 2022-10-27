@@ -208,6 +208,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-s", callStackType_)) {
         return false;
     }
+    if (!Option::GetOptionValue(args, "--exclude-thread", excludeThreadNames_)) {
+        return false;
+    }
     std::vector<std::string> callStackType = {};
     if (!Option::GetOptionValue(args, "--call-stack", callStackType)) {
         return false;
@@ -383,6 +386,27 @@ bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
     return CheckOptions();
 }
 
+void SubCommandRecord::ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
+                                                    std::vector<pid_t> &selectTids)
+{
+    for (auto excludeName : excludeThreadNames) {
+        bool hasExclude = false;
+        auto pos = selectTids.begin();
+        while (pos != selectTids.end()) {
+            std::string threadName = virtualRuntime_.ReadThreadName(*pos);
+            if (excludeName == threadName) {
+                pos = selectTids.erase(pos);
+                hasExclude = true;
+            } else {
+                ++pos;
+            }
+        }
+        if (!hasExclude) {
+            printf("No thread named %s was found to exclude.\n", excludeName.c_str());
+        }
+    }
+}
+
 pid_t SubCommandRecord::GetAppPackagePid(const std::string &appPackage)
 {
     pid_t res {-1};
@@ -473,6 +497,13 @@ bool SubCommandRecord::CheckTargetPids()
                 selectTids_.insert(selectTids_.end(), tids.begin(), tids.end());
             }
         }
+    }
+    if (!excludeThreadNames_.empty()) {
+        if (selectTids_.empty()) {
+            printf("No thread is Monitored, while attempt to exclude some threads.\n");
+            return false;
+        }
+        ExcludeThreadsFromSelectTids(excludeThreadNames_, selectTids_);
     }
     selectPids_.insert(selectPids_.end(), selectTids_.begin(), selectTids_.end());
 
