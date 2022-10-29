@@ -100,6 +100,7 @@ public:
     // report use
     void UpdateFromPerfData(const std::vector<SymbolFileStruct> &);
     void UnwindFromRecord(PerfRecordSample &recordSample);
+    std::string ReadThreadName(pid_t tid);
 
     // debug time
 #ifdef HIPERF_DEBUG_TIME
@@ -146,7 +147,6 @@ private:
 
     // threads
     VirtualThread &UpdateThread(pid_t pid, pid_t tid, const std::string name = "");
-    std::string ReadThreadName(pid_t tid);
     VirtualThread &CreateThread(pid_t pid, pid_t tid);
 
     // maps
