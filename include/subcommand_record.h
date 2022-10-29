@@ -97,6 +97,8 @@ public:
         "         Limit the process id of the collection target. Conflicts with the -a option.\n"
         "   -t <tid1>[,tid2]...\n"
         "         Limit the thread id of the collection target. Conflicts with the -a option.\n"
+        "   --exclude-thread <tname1>[,tname2]...\n"
+        "         Exclude threads of the collection target by thread names. Conflicts with the -a option.\n"
         "   --offcpu\n"
         "         Trace when threads are scheduled off cpu.\n"
         "   -j <branch_filter1>[,branch_filter2]...\n"
@@ -194,6 +196,7 @@ private:
     std::vector<std::string> callStackType_ = {};
     std::vector<std::string> vecBranchFilters_ = {};
     std::vector<std::string> trackedCommand_ = {};
+    std::vector<std::string> excludeThreadNames_ = {};
 
     bool GetOptions(std::vector<std::string> &args);
     bool CheckOptions();
@@ -272,6 +275,8 @@ private:
     bool CheckTargetProcessOptions();
     bool CheckTargetPids();
 
+    void ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
+        std::vector<pid_t> &selectTids);
     pid_t GetAppPackagePid(const std::string &appPackge);
 
     VirtualRuntime virtualRuntime_;
