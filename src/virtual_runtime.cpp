@@ -298,6 +298,7 @@ void VirtualRuntime::MakeCallFrame(Symbol &symbol, CallFrame &callFrame)
 {
     callFrame.vaddrInFile_ = symbol.funcVaddr_;
     callFrame.offsetToVaddr_ = symbol.offsetToVaddr_;
+    callFrame.symbolFileIndex_ = symbol.symbolFileIndex_;
     callFrame.symbolName_ = symbol.Name();
     callFrame.symbolIndex_ = symbol.index_;
     callFrame.filePath_ = symbol.module_.empty() ? symbol.comm_ : symbol.module_;
@@ -486,6 +487,7 @@ const Symbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<MemM
             // found symbols by file name
             for (auto &symbolsFile : symbolsFiles_) {
                 if (symbolsFile->filePath_ == map.name_) {
+                    vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
                     vaddrSymbol.fileVaddr_ =
                         symbolsFile->GetVaddrInSymbols(ip, map.begin_, map.pageoffset_);
                     HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64
@@ -520,6 +522,7 @@ const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thr
     Symbol vaddrSymbol(ip, thread.name_);
     const MemMapItem *mmap = thread.FindMapByAddr(ip);
     if (mmap != nullptr) {
+        vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
         SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(*mmap);
         if (symbolsFile != nullptr) {
             vaddrSymbol.fileVaddr_ =
@@ -643,6 +646,7 @@ void VirtualRuntime::UpdateFromPerfData(const std::vector<SymbolFileStruct> &sym
             // use give us path ,we must reload it.
             symbolsFile->LoadSymbols();
         }
+        symbolsFile->id_ = symbolsFiles_.size();
         symbolsFiles_.emplace_back(std::move(symbolsFile));
     }
 }
