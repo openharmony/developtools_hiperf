@@ -328,6 +328,7 @@ public:
 protected:
     bool symbolsLoaded_ = false;
     bool debugInfoLoaded_ = false;
+    bool debugInfoLoadResult_ = false;
     const std::string FindSymbolFile(const std::vector<std::string> &,
                                      std::string symboleFilePath = EMPTY_STRING) const;
 
