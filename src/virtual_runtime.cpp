@@ -522,9 +522,9 @@ const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thr
     Symbol vaddrSymbol(ip, thread.name_);
     const MemMapItem *mmap = thread.FindMapByAddr(ip);
     if (mmap != nullptr) {
-        vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
         SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(*mmap);
         if (symbolsFile != nullptr) {
+            vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
             vaddrSymbol.fileVaddr_ =
                 symbolsFile->GetVaddrInSymbols(ip, mmap->begin_, mmap->pageoffset_);
             vaddrSymbol.module_ = mmap->nameHold_;
