@@ -123,6 +123,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" symbolDir_:\t%s\n", VectorToString(symbolDir_).c_str());
     printf(" outputFilename_:\t%s\n", outputFilename_.c_str());
     printf(" appPackage_:\t%s\n", appPackage_.c_str());
+    printf(" checkAppMs_:\t%d\n", checkAppMs_);
     printf(" clockId_:\t%s\n", clockId_.c_str());
     printf(" mmapPages_:\t%d\n", mmapPages_);
     printf(" dataLimit:\t%s\n", strLimit_.c_str());
@@ -181,6 +182,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--app", appPackage_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--clockid", clockId_)) {
@@ -329,6 +333,11 @@ bool SubCommandRecord::CheckOptions()
                MIN_CPU_PERCENT, MAX_CPU_PERCENT);
         return false;
     }
+    if (checkAppMs_ < MIN_CHECK_APP_MS || checkAppMs_ > MAX_CHECK_APP_MS) {
+        printf("Invalid --chkms value '%d', the milliseconds should be in %d~%d \n", checkAppMs_,
+               MIN_CHECK_APP_MS, MAX_CHECK_APP_MS);
+        return false;
+    }
     if (mmapPages_ < MIN_PERF_MMAP_PAGE || mmapPages_ > MAX_PERF_MMAP_PAGE ||
         !PowerOfTwo(mmapPages_)) {
         printf("Invalid -m value '%d', value should be in %d~%d and must be a power of two \n",
@@ -416,8 +425,7 @@ pid_t SubCommandRecord::GetAppPackagePid(const std::string &appPackage)
                 }
             }
         }
-        static constexpr uint64_t waitAppSleepMs = 100;
-        std::this_thread::sleep_for(milliseconds(waitAppSleepMs));
+        std::this_thread::sleep_for(milliseconds(checkAppMs_));
     } while (steady_clock::now() < endTime);
 
     return res;
@@ -445,7 +453,7 @@ bool SubCommandRecord::CheckTargetProcessOptions()
         }
         hasTarget = true;
     }
-    if (appPackage_ != "") {
+    if (!appPackage_.empty()) {
         if (hasTarget) {
             printf("--app %s options conflict, please check usage\n", appPackage_.c_str());
             return false;
