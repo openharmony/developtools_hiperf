@@ -392,9 +392,13 @@ HWTEST_F(VirtualThreadTest, FindMapByFileInfo, TestSize.Level1)
 HWTEST_F(VirtualThreadTest, FindSymbolsFileByMap, TestSize.Level1)
 {
     std::vector<std::unique_ptr<SymbolsFile>> files;
-    files.emplace_back(std::make_unique<SymbolsFile>(SYMBOL_UNKNOW_FILE, "1.elf"));
-    files.emplace_back(std::make_unique<SymbolsFile>(SYMBOL_UNKNOW_FILE, "2.elf"));
-    files.emplace_back(std::make_unique<SymbolsFile>(SYMBOL_UNKNOW_FILE, "3.elf"));
+    SymbolFileStruct symbolFileStruct;
+    symbolFileStruct.filePath_ = "1.elf";
+    files.emplace_back(SymbolsFile::LoadSymbolsFromSaved(symbolFileStruct));
+    symbolFileStruct.filePath_ = "2.elf";
+    files.emplace_back(SymbolsFile::LoadSymbolsFromSaved(symbolFileStruct));
+    symbolFileStruct.filePath_ = "3.elf";
+    files.emplace_back(SymbolsFile::LoadSymbolsFromSaved(symbolFileStruct));
     VirtualThread thread(getpid(), files);
 
     MemMapItem inMap;

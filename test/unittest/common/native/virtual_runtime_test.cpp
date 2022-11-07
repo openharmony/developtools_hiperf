@@ -257,6 +257,7 @@ void VirtualRuntimeTest::PrepareUserSymbol()
     user->symbols_.emplace_back(testUserVaddr + 1u, 1u, "second_user_func", user->filePath_);
     user->textExecVaddrFileOffset_ = testUserVaddr;
     user->textExecVaddr_ = testUserVaddr;
+    user->debugInfoLoadResult_ = true;
     runtime_->symbolsFiles_.emplace_back(std::move(user));
 
     VirtualThread &thread = runtime_->GetThread(testTid, testTid);
