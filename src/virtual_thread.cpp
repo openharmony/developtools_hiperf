@@ -129,6 +129,7 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(const MemMapItem &inMap) const
                 HLOGM("found symbol for map '%s'", inMap.name_.c_str());
                 return symbolsFile.get();
             }
+            break;
         }
     }
 #ifdef DEBUG_MISS_SYMBOL
