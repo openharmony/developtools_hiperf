@@ -327,8 +327,10 @@ protected:
 
     bool LoadDebugInfo(const std::string &symbolFilePath) override
     {
-        if (debugInfoLoaded_) {
-            return true;
+        if (debugInfoLoadResult_) {
+            return true; // it must have been loaded
+        } else if (debugInfoLoaded_) {
+            return debugInfoLoadResult_; // return the result of loaded
         } else {
             debugInfoLoaded_ = true;
         }
@@ -363,6 +365,7 @@ protected:
 
         // mmap it for later use
         LoadFileToMemory(elfPath);
+        debugInfoLoadResult_ = true;
         return true;
     }
 
@@ -1317,6 +1320,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
                                            symbolStruct.symbolName_, symbolFileStruct.filePath_);
     }
     symbolsFile->AdjustSymbols(); // reorder
+    symbolsFile->debugInfoLoadResult_ = true;
     HLOGV("load %zu symbol from SymbolFileStruct for file '%s'", symbolsFile->symbols_.size(),
           symbolsFile->filePath_.c_str());
     return symbolsFile;
