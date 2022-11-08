@@ -296,7 +296,9 @@ HWTEST_F(ReportProtobufFileTest, ProcessSampleRecord, TestSize.Level1)
     sample.callFrames_.emplace_back(0x1, 0x1234, "first_user_func", "user_symbol");
     sample.callFrames_.emplace_back(0x2, 0x1234, "first_user2_func", "user_symbol2");
     sample.callFrames_.emplace_back(0x3, 0x1234, "second_user2_func", "user_symbol2");
-
+    sample.callFrames_.at(0).symbolFileIndex_ = 0;
+    sample.callFrames_.at(1).symbolFileIndex_ = 1;
+    sample.callFrames_.at(2).symbolFileIndex_ = 1;
     sample.callFrames_.at(0).symbolIndex_ = 0;
     sample.callFrames_.at(1).symbolIndex_ = 0;
     sample.callFrames_.at(2).symbolIndex_ = 1;

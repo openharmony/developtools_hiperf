@@ -66,6 +66,7 @@ struct Symbol {
     uint64_t fileVaddr_ = 0;
     uint64_t taskVaddr_ = 0;
     uint64_t len_ = 0;
+    int32_t symbolFileIndex_ = -1; // symbols file index, used to report protobuf file
     int32_t index_ = -1;
     std::string_view name_ = "";
     std::string_view demangle_ = ""; // demangle string
@@ -228,6 +229,7 @@ class SymbolsFile {
 public:
     SymbolsFileType symbolFileType_;
     std::string filePath_ = "";
+    int32_t id_ = -1; // used to report protobuf file
 
     // [14] .text             PROGBITS         00000000002c5000  000c5000
     // min exec addr , general it point to .text

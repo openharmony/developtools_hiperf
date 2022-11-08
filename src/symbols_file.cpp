@@ -1267,7 +1267,7 @@ const Symbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
               filePath_.c_str(), symbols_.size());
     }
     symbol.fileVaddr_ = vaddrInFile;
-
+    symbol.symbolFileIndex_ = id_;
 #ifdef HIPERF_DEBUG_TIME
     auto usedTime = duration_cast<milliseconds>(steady_clock::now() - startTime);
     if (usedTime > 1ms) {
