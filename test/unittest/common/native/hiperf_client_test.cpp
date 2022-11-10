@@ -82,6 +82,7 @@ HWTEST_F(HiperfClientTest, OutDir, TestSize.Level1)
     stdoutRecord.Start();
 
     HiperfClient::Client myHiperf("/data/local/tmp/");
+    ASSERT_EQ(myHiperf.GetOutputDir(), "/data/local/tmp/");
     myHiperf.SetDebugMode();
     ASSERT_TRUE(myHiperf.Start());
 
