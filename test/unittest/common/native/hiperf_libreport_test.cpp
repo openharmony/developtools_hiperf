@@ -135,8 +135,7 @@ void HiperfLibReportTest::UnwindJsonContentCheck(const std::string &content, boo
     ASSERT_EQ(content.find("{\"symbol\":8,\"counts\":[0,0,1006548]}") != std::string::npos,
               haveUnwind);
 #else
-    ASSERT_EQ(content.find("{\"symbol\":16,\"counts\":[24,9065269,112324565]}") != std::string::npos ||
-              content.find("{\"symbol\":16,\"counts\":[24,9065269,81272852]}") != std::string::npos,
+    ASSERT_EQ(content.find("{\"symbol\":16,\"counts\":[24,9065269,81271852]}") != std::string::npos,
               haveUnwind);
 #endif
 }
