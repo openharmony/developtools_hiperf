@@ -82,6 +82,7 @@ HWTEST_F(HiperfClientTest, OutDir, TestSize.Level1)
     stdoutRecord.Start();
 
     HiperfClient::Client myHiperf("/data/local/tmp/");
+    ASSERT_EQ(myHiperf.GetOutputDir(), "/data/local/tmp/");
     myHiperf.SetDebugMode();
     ASSERT_TRUE(myHiperf.Start());
 
@@ -92,6 +93,58 @@ HWTEST_F(HiperfClientTest, OutDir, TestSize.Level1)
     this_thread::sleep_for(1s);
 
     ASSERT_TRUE(myHiperf.Stop());
+
+    stdoutRecord.Stop();
+}
+
+HWTEST_F(HiperfClientTest, DebugMuchMode, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    HiperfClient::Client myHiperf;
+    myHiperf.SetDebugMuchMode();
+    ASSERT_TRUE(myHiperf.Start());
+
+    ASSERT_TRUE(myHiperf.Pause());
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.Resume());
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.Stop());
+
+    stdoutRecord.Stop();
+}
+
+HWTEST_F(HiperfClientTest, EnableHilog, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    HiperfClient::Client myHiperf;
+    myHiperf.SetDebugMode();
+    myHiperf.EnableHilog();
+    ASSERT_TRUE(myHiperf.Start());
+
+    ASSERT_TRUE(myHiperf.Pause());
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.Resume());
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.Stop());
+
+    stdoutRecord.Stop();
+}
+
+HWTEST_F(HiperfClientTest, GetCommandPath, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    HiperfClient::Client myHiperf("/data/local/tmp/");
+    ASSERT_EQ(myHiperf.GetCommandPath().empty(), false);
 
     stdoutRecord.Stop();
 }
@@ -362,6 +415,35 @@ HWTEST_F(HiperfClientTest, SetMmapPages, TestSize.Level1)
     opt.SetMmapPages(64);
 
     TestCaseOption(opt);
+}
+
+HWTEST_F(HiperfClientTest, SetVecBranchSampleTypes, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    HiperfClient::RecordOption opt;
+    vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    std::vector<std::string> vecBranchSampleTypes = {"any", "any_call", "any_ret", "ind_call", "u", "k"};
+    opt.SetVecBranchSampleTypes(vecBranchSampleTypes);
+    HiperfClient::Client myHiperf;
+    myHiperf.SetDebugMode();
+
+    ASSERT_TRUE(myHiperf.IsReady());
+#ifdef is_ohos
+    ASSERT_EQ(myHiperf.Start(opt), false);
+#else
+    ASSERT_TRUE(myHiperf.Start(opt));
+    ASSERT_TRUE(myHiperf.Pause());
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.Resume());
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.Stop());
+#endif
+    stdoutRecord.Stop();
 }
 } // namespace HiPerf
 } // namespace Developtools
