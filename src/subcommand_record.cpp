@@ -293,7 +293,7 @@ bool SubCommandRecord::CheckDataLimitOption()
 bool SubCommandRecord::CheckSelectCpuPidOption()
 {
     if (!selectCpus_.empty()) {
-        int maxCpuid = sysconf(_SC_NPROCESSORS_CONF) - 1;
+        int maxCpuid = GetProcessorNum() - 1;
         for (auto cpu : selectCpus_) {
             if (cpu < 0 || cpu > maxCpuid) {
                 printf("Invalid -c value '%d', the CPU ID should be in 0~%d \n", cpu, maxCpuid);
