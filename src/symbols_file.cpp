@@ -989,17 +989,6 @@ public:
               symbolFilePath.c_str(), symbolsFileSearchPaths_.size(), onRecording_);
 
         if (onRecording_) {
-            // try read
-            HLOGD("try read /sys/kernel/notes");
-            std::string notes = ReadFileToString("/sys/kernel/notes");
-            if (notes.empty()) {
-                printf("notes cannot be opened, unable get buildid\n");
-                return false;
-            } else {
-                HLOGD("kernel notes size: %zu", notes.size());
-                buildId_ = ElfGetBuildId(reinterpret_cast<const unsigned char*>(notes.data()), notes.size());
-            }
-
             const auto startTime = std::chrono::steady_clock::now();
             if (!LoadKernelSyms()) {
                 printf("parse kalsyms failed.\n");
@@ -1011,6 +1000,17 @@ public:
                 HLOGV("Load kernel symbols (total %" PRId64 " ms)\n", (int64_t)usedTimeMsTick.count());
                 // load complete
                 return true;
+            }
+
+            // try read
+            HLOGD("try read /sys/kernel/notes");
+            std::string notes = ReadFileToString("/sys/kernel/notes");
+            if (notes.empty()) {
+                printf("notes cannot be opened, unable get buildid\n");
+                return false;
+            } else {
+                HLOGD("kernel notes size: %zu", notes.size());
+                buildId_ = ElfGetBuildId(reinterpret_cast<const unsigned char*>(notes.data()), notes.size());
             }
         } // no search path
 
