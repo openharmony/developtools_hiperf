@@ -869,8 +869,8 @@ void PerfEvents::SetRecordCallBack(RecordCallBack recordCallBack)
 
 inline void PerfEvents::PutAllCpus()
 {
-    int cpuConfigs = sysconf(_SC_NPROCESSORS_CONF);
-    for (int i = 0; i < cpuConfigs; i++) {
+    int processorNum = GetProcessorNum();
+    for (int i = 0; i < processorNum; i++) {
         cpus_.push_back(i); // put all cpu
     }
 }
@@ -936,10 +936,9 @@ bool PerfEvents::PrepareFdEvents(void)
               (pids_[0] == 0) ? std::to_string(gettid()).c_str() : VectorToString(pids_).c_str());
     }
     if (cpus_.size() == 1 && cpus_[0] == -1) {
-        HLOGI("target cpus: %ld \n", sysconf(_SC_NPROCESSORS_CONF));
+        HLOGI("target cpus: %d \n", GetProcessorNum());
     } else {
-        HLOGI("target cpus: %zu / %ld (%s)\n", cpus_.size(), sysconf(_SC_NPROCESSORS_CONF),
-              VectorToString(cpus_).c_str());
+        HLOGI("target cpus: %zu / %d (%s)\n", cpus_.size(), GetProcessorNum(), VectorToString(cpus_).c_str());
     }
 
     return true;

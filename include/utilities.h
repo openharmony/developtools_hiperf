@@ -303,6 +303,8 @@ bool PowerOfTwo(uint64_t n);
 #ifndef MAP_FAILED
 #define MAP_FAILED MMAP_FAILED
 #endif
+
+int GetProcessorNum();  // get number of processors
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
