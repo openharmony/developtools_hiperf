@@ -4608,8 +4608,9 @@ input{
          *
          * @param process
          */
-        clickProcess(process){
-            if(process && process.threads){
+        clickProcess(process)
+        {
+            if (process && process.threads) {
                 this.backBt.style.display = 'flex';
                 this.currentLevel = 'Thread in Process'
                 this.clickProcessData = process;
@@ -4618,12 +4619,10 @@ input{
                 let count = 0;
                 let filter = process.threads.filter(item => item.eventCount / process.eventCount > 0.001);
                 let total = 0;
-                filter.forEach(item=>{ total += item.eventCount});
-                if(filter.length > this.chartMaxCount){
-                    total = process.eventCount;
-                }
-                for(let item of filter){
-                    if(count < this.chartMaxCount){
+                filter.forEach(item=>{ total += item.eventCount });
+                total = process.eventCount;
+                for (let item of filter) {
+                    if (count < this.chartMaxCount) {
                         chartSource.push({
                             id:item.tid,
                             name: this.getThreadName(item.tid),
@@ -4634,12 +4633,22 @@ input{
                         chartTotal += item.eventCount;
                         count ++;
                     }
-                    if(count >= this.chartMaxCount){
+                    if (count >= this.chartMaxCount) {
                         break;
                     }
                 }
-                this.addOtherItem(count,total,chartTotal,chartSource)
-                    chartSource.sort((a, b) => { return b.time - a.time })
+                if (count < this.chartMaxCount && chartTotal < process.eventCount) {
+                    chartSource.push({
+                        id : -1,
+                        name: 'Other',
+                        value: ((process.eventCount - chartTotal) / process.eventCount).toFixed(6),
+                        color: '#888888',
+                        time: this.getSampleWeight(process.eventCount - chartTotal)
+                    });
+                } else {
+                    this.addOtherItem(count, total, chartTotal, chartSource)
+                }
+                chartSource.sort((a, b) => { return b.time - a.time })
                 this.threadDs = chartSource;
                 this.chart.dataSource = chartSource;
             }
@@ -4649,8 +4658,9 @@ input{
          * chart click thread
          * @param thread
          */
-        clickThread(thread){
-            if(thread && thread.libs){
+        clickThread(thread)
+        {
+            if (thread && thread.libs) {
                 this.currentLevel = 'Library in Thread'
                 let chartSource = [];
                 let chartTotal = 0;
@@ -4658,12 +4668,10 @@ input{
                 this.clickThreadData = thread;
                 let filter = thread.libs.filter(item => item.eventCount / thread.eventCount > 0.001);
                 let total = 0;
-                filter.forEach(item=>{ total += item.eventCount});
-                if(filter.length > this.chartMaxCount){
-                    total = thread.eventCount;
-                }
-                for(let item of filter){
-                    if(count < this.chartMaxCount){
+                filter.forEach(item=>{ total += item.eventCount });
+                total = thread.eventCount;
+                for (let item of filter) {
+                    if (count < this.chartMaxCount) {
                         chartSource.push({
                             id:item.fileId,
                             name: this.getLibName(item.fileId),
@@ -4674,12 +4682,22 @@ input{
                         chartTotal += item.eventCount;
                         count ++;
                     }
-                    if(count >= this.chartMaxCount){
+                    if (count >= this.chartMaxCount) {
                         break;
                     }
                 }
-                this.addOtherItem(count,total,chartTotal,chartSource)
-                    chartSource.sort((a, b) => { return b.time - a.time })
+                if (count < this.chartMaxCount && chartTotal < thread.eventCount) {
+                    chartSource.push({
+                        id : -1,
+                        name: 'Other',
+                        value: ((thread.eventCount - chartTotal) / thread.eventCount).toFixed(6),
+                        color: '#888888',
+                        time: this.getSampleWeight(thread.eventCount - chartTotal)
+                    });
+                } else {
+                    this.addOtherItem(count, total, chartTotal, chartSource)
+                }
+                chartSource.sort((a, b) => { return b.time - a.time })
                 this.libDs = chartSource;
                 this.chart.dataSource = chartSource;
             }
