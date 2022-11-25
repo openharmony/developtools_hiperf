@@ -14,7 +14,7 @@
  */
 #include "utilities.h"
 #include <zlib.h>
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 #include <io.h>
 #else
 #include <cstdio>
@@ -278,7 +278,7 @@ bool IsPath(const std::string &fileName)
 
 std::string PlatformPathConvert(const std::string &path)
 {
-#if is_mingw
+#if defined(is_mingw) && is_mingw
     return StringReplace(path, "/", "\\");
 #else
     return path;
@@ -562,7 +562,7 @@ std::string BufferToHexString(const unsigned char buf[], size_t size)
     return ss.str();
 }
 
-#if !is_mingw
+#if defined(is_mingw) && !is_mingw
 // parse a str like: 0, 2-4, 6
 static int GetProcessorNumFromString(char *str)
 {
@@ -591,7 +591,7 @@ static int GetProcessorNumFromString(char *str)
 
 int GetProcessorNum()
 {
-#if is_mingw
+#if defined(is_mingw) && is_mingw
     return 0;
 #else
     FILE *fp = fopen("/sys/devices/system/cpu/online", "r");
@@ -621,7 +621,7 @@ int GetProcessorNum()
 } // namespace OHOS
 
 // this will also used for libunwind head (out of namespace)
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 using namespace OHOS::Developtools::HiPerf;
 std::string GetLastErrorString()
 {
