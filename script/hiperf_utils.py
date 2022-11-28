@@ -24,14 +24,14 @@ from ctypes import c_char_p
 from ctypes import cdll
 
 IS_DEBUG = False
-HDC_NAME = "hdc_std"
+HDC_NAME = "hdc"
 SYMBOL_FILES_DIR = '/data/local/tmp/local_libs/'
 BUILD_ID_FILE = "build_id_list"
 EXPECTED_TOOLS = {
     HDC_NAME: {
         'is_binutils': False,
         'test_option': 'version',
-        'path_in_tool': '../platform-tools/hdc_std',
+        'path_in_tool': '../platform-tools/hdc',
     }
 }
 
