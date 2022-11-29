@@ -391,14 +391,8 @@ class PerformanceProfile:
 
     def download(self):
         """Prepare recording. """
-        self.download_hiperf()
         if self.args.local_lib_dir:
             self.download_libs()
-
-    def download_hiperf(self):
-        hiperf_binary = get_hiperf_binary_path(self.device_arch, 'hiperf')
-        self.hdc.check_run(['file send', hiperf_binary, '/data/local/tmp'])
-        self.hdc.check_run(['shell', 'chmod', 'a+x', '/data/local/tmp/hiperf'])
 
     def download_libs(self):
         executor = LocalLibDownload(self.device_arch, self.hdc)
@@ -472,11 +466,11 @@ class PerformanceProfile:
         record_options = self.args.record_options.split(' ')
         record_options = [cmd.replace("'", "") for cmd in record_options]
         if self.is_control:
-            args = ['/data/local/tmp/hiperf', 'record',
+            args = ['hiperf', 'record',
                     '--control', self.control_mode, '-o',
                     '/data/local/tmp/perf.data'] + record_options
         else:
-            args = ['/data/local/tmp/hiperf', 'record', '-o',
+            args = ['hiperf', 'record', '-o',
                     '/data/local/tmp/perf.data'] + record_options
         if self.args.local_lib_dir and self.hdc.run_hdc_cmd(
                 ['shell', 'ls', SYMBOL_FILES_DIR]):
@@ -529,7 +523,7 @@ class PerformanceProfile:
 
     def exec_control(self):
         hdc_args = [self.hdc.hdc_path, 'shell',
-                    '/data/local/tmp/hiperf', 'record',
+                    'hiperf', 'record',
                     '--control', self.control_mode]
         print('run hdc cmd: %s' % hdc_args)
         self.record_subproc = subprocess.Popen(hdc_args)
