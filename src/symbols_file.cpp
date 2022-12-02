@@ -1170,7 +1170,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &s
 
 void SymbolsFile::AdjustSymbols()
 {
-    if (symbols_.size() <= 1u) {
+    if (symbols_.size() <= 0) {
         return;
     }
 
