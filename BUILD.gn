@@ -444,7 +444,7 @@ group("hiperf_target_all") {
         deps += [ "interfaces/kits/js/napi:hiperf_client_napi" ]  # js api
       }
     }
-  }  
+  }
 }
 
 group("hiperf_demo") {
