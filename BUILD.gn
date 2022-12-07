@@ -435,8 +435,7 @@ group("hiperf_target_all") {
         ":hiperf_host(//build/toolchain/mingw:mingw_x86_64)",  # host mingw
         ":hiperf_host_lib(//build/toolchain/linux:clang_x64)",  # host linux
         ":hiperf_host_lib(//build/toolchain/mingw:mingw_x86_64)",  # host mingw
-        ":hiperf_host_lib_demo(//build/toolchain/linux:clang_x64)",  # host
-                                                                     # linux
+        ":hiperf_host_lib_demo(//build/toolchain/linux:clang_x64)",  # host_linux
         ":hiperf_host_python",
         ":hiperf_target",
         "interfaces/innerkits/native:hiperf_client",  # c++ api
