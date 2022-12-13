@@ -16,7 +16,7 @@ import("//developtools/hiperf/hiperf.gni")
 
 declare_args() {
   hiperf_feature_mingw_uapi_dir =
-      "//kernel/linux/patches/linux-5.10/prebuilts/usr/include"
+      "//third_party/libbpf/include/uapi/linux"
 }
 
 function_disable_define = []
