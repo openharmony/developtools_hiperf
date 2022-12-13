@@ -15,8 +15,7 @@ import("//build/ohos.gni")
 import("//developtools/hiperf/hiperf.gni")
 
 declare_args() {
-  hiperf_feature_mingw_uapi_dir =
-      "//third_party/libbpf/include/uapi/linux"
+  hiperf_feature_mingw_uapi_dir = "//third_party/libbpf/include/uapi"
 }
 
 function_disable_define = []
