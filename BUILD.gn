@@ -378,7 +378,7 @@ ohos_executable("hiperf_host") {
   deps = [ ":hiperf_platform_common" ]
 
   if (is_mingw) {
-    deps += [ ":copy_uapi"]
+    deps += [ ":copy_uapi" ]
   }
 
   if (use_musl) {
