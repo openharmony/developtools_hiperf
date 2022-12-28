@@ -15,8 +15,24 @@ import("//build/ohos.gni")
 import("//developtools/hiperf/hiperf.gni")
 
 declare_args() {
-  hiperf_feature_mingw_uapi_dir =
-      "//kernel/linux/patches/linux-5.10/prebuilts/usr/include"
+  hiperf_feature_mingw_uapi_dir = "${target_out_dir}/uapi"
+}
+
+action("copy_uapi") {
+  deps = [ "//third_party/musl:copy_uapi" ]
+  outputs = [ "${target_out_dir}/uapi/linux" ]
+  script = "script/copy_uapi.sh"
+
+  if (target_cpu == "arm64") {
+    target_linux_path = "aarch64-linux-ohos"
+  } else {
+    target_linux_path = "arm-linux-ohos"
+  }
+
+  uapi_source_path = "${target_out_dir}/../../../../obj/third_party/musl/usr/include/${target_linux_path}"
+  args = [ "-i" ] + [ rebase_path("${uapi_source_path}") ]
+  args += [ "-o" ] + [ rebase_path("${target_out_dir}/uapi") ]
+  args += [ "-t" ] + [ rebase_path("${hiperf_path}") ]
 }
 
 function_disable_define = []
@@ -360,6 +376,10 @@ ohos_executable("hiperf") {
 ohos_executable("hiperf_host") {
   sources = [ "./src/main.cpp" ]
   deps = [ ":hiperf_platform_common" ]
+
+  if (is_mingw) {
+    deps += [ ":copy_uapi"]
+  }
 
   if (use_musl) {
     static_link = true
