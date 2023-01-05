@@ -387,6 +387,7 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
     if (recordCallBack_) {
         if (samplePeriod_ > 0) {
             eventItem.attr.freq = 0;
+            eventItem.attr.sample_freq = 0;
             eventItem.attr.sample_period = samplePeriod_;
         } else if (sampleFreq_ > 0) {
             eventItem.attr.freq = 1;
