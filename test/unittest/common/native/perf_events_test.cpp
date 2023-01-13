@@ -208,8 +208,6 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     event.SetInherit(false);
     std::vector<std::string> trackedCommand_ {};
     event.SetTrackedCommand(trackedCommand_);
-    const unsigned int period = 1;
-    event.SetSamplePeriod(period);
     event.AddDefaultEvent(PERF_TYPE_SOFTWARE);
     event.AddDefaultEvent(PERF_TYPE_HARDWARE);
 
