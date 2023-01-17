@@ -14,6 +14,7 @@
  */
 
 #include "symbols_file_test.h"
+#include "utilities.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -274,14 +275,11 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     // read from kernel runtime
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
     ScopeDebugLevel tempLogLevel(LEVEL_VERBOSE);
+    std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
     ASSERT_EQ(symbolsFile->LoadSymbols(), true);
 
     const std::vector<Symbol> &symbols = symbolsFile->GetSymbols();
-    if (KptrRestrict()) {
-        EXPECT_EQ(symbols.empty(), true);
-    } else {
-        EXPECT_EQ(symbols.empty(), false);
-    }
+    EXPECT_EQ(symbols.empty(), false);
 
     std::string modulesMap = ReadFileToString("/proc/modules");
     int lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
@@ -309,6 +307,11 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_NOBUILDID), true);
     // will be load from runtime, still return true
     EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
+    if (ReadFileToString(KPTR_RESTRICT) !=  oldKptrRestrict) {
+        if (!WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict)) {
+            printf("/proc/sys/kernel/kptr_restrict write failed and we can't not change it.\n");
+        }
+    }
 }
 
 /**
@@ -371,6 +374,7 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level1)
         CheckSymbols(symbols);
     } else {
         EXPECT_EQ(symbols->LoadSymbols(), true);
+        std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
         if (!KptrRestrict()) {
             HLOGD("NOT KptrRestrict");
             if (!symbols->GetSymbols().empty()) {
@@ -381,6 +385,11 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level1)
         } else {
             HLOGD("KptrRestrict");
             ASSERT_EQ(symbols->GetSymbols().empty(), true);
+        }
+        if (ReadFileToString(KPTR_RESTRICT) !=  oldKptrRestrict) {
+            if (!WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict)) {
+                printf("/proc/sys/kernel/kptr_restrict write failed and we can't not change it.\n");
+            }
         }
     }
 }

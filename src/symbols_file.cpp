@@ -949,10 +949,12 @@ public:
             printf("No vmlinux path is given, and kallsyms cannot be opened\n");
             return false;
         }
-
-        if (ReadFileToString(KPTR_RESTRICT).front() != '0') {
+        bool ret = false;
+        std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
+        if (oldKptrRestrict.front() != '0') {
             printf("/proc/sys/kernel/kptr_restrict is NOT 0, will try set it to 0.\n");
-            if (!WriteStringToFile(KPTR_RESTRICT, "0")) {
+            ret = WriteStringToFile(KPTR_RESTRICT, "0");
+            if (!ret) {
                 printf("/proc/sys/kernel/kptr_restrict write failed and we can't not change it.\n");
             }
         }
@@ -960,6 +962,13 @@ public:
         // getline end
         if (!ParseKallsymsLine()) {
             return false;
+        }
+
+        if (ret) {
+            ret = WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict);
+            if (!ret) {
+                printf("/proc/sys/kernel/kptr_restrict write failed and we can't not change it.\n");
+            }
         }
 
         if (symbols_.empty()) {
