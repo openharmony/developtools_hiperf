@@ -965,8 +965,7 @@ public:
         }
 
         if (hasChangeKptr) {
-            hasChangeKptr = WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict);
-            if (!hasChangeKptr) {
+            if (!WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict)) {
                 printf("recover /proc/sys/kernel/kptr_restrict fail.\n");
             }
         }
