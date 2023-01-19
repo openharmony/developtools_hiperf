@@ -277,11 +277,7 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     ASSERT_EQ(symbolsFile->LoadSymbols(), true);
 
     const std::vector<Symbol> &symbols = symbolsFile->GetSymbols();
-    if (KptrRestrict()) {
-        EXPECT_EQ(symbols.empty(), true);
-    } else {
-        EXPECT_EQ(symbols.empty(), false);
-    }
+    EXPECT_EQ(symbols.empty(), false);
 
     std::string modulesMap = ReadFileToString("/proc/modules");
     int lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
