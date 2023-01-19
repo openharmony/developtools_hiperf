@@ -950,9 +950,12 @@ public:
             return false;
         }
 
-        if (ReadFileToString(KPTR_RESTRICT).front() != '0') {
+        bool hasChangeKptr = false;
+        std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
+        if (oldKptrRestrict.front() != '0') {
             printf("/proc/sys/kernel/kptr_restrict is NOT 0, will try set it to 0.\n");
-            if (!WriteStringToFile(KPTR_RESTRICT, "0")) {
+            hasChangeKptr = WriteStringToFile(KPTR_RESTRICT, "0");
+            if (!hasChangeKptr) {
                 printf("/proc/sys/kernel/kptr_restrict write failed and we can't not change it.\n");
             }
         }
@@ -960,6 +963,12 @@ public:
         // getline end
         if (!ParseKallsymsLine()) {
             return false;
+        }
+
+        if (hasChangeKptr) {
+            if (!WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict)) {
+                printf("recover /proc/sys/kernel/kptr_restrict fail.\n");
+            }
         }
 
         if (symbols_.empty()) {
