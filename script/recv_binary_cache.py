@@ -193,12 +193,12 @@ class GetLibFiles(object):
         if os.path.isfile(file_path):
             os.remove(file_path)
         if self.hdc.switch_root():
-            text = os.popen('hdc shell cat /proc/sys/kernel/kptr_restrict').read()
+            oldKptrRestrict = os.popen('hdc shell cat /proc/sys/kernel/kptr_restrict').read()
             self.hdc.run_hdc_cmd(['shell',
                                   '"echo 0 >/proc/sys/kernel/kptr_restrict"'])
             self.hdc.run_hdc_cmd(['file recv', '/proc/kallsyms', file_path])
             self.hdc.run_hdc_cmd(['shell',
-                                  '"echo ' + text[0] + ' >/proc/sys/kernel/kptr_restrict"'])
+                                  '"echo ' + oldKptrRestrict[0] + ' >/proc/sys/kernel/kptr_restrict"'])
 
 
 def main():
