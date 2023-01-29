@@ -340,6 +340,7 @@ ohos_executable("hiperf") {
   install_enable = true
   sources = [ "./src/main.cpp" ]
   deps = [
+    ":hiperf_etc",
     ":hiperf_platform_common",
     ":hiperf_platform_linux",
   ]
@@ -367,6 +368,43 @@ ohos_executable("hiperf_host") {
 
   subsystem_name = "developtools"
   part_name = "hiperf"
+}
+
+ohos_prebuilt_etc("hiperf.para") {
+  source = "etc/hiperf.para"
+  install_images = [
+    "system",
+    "updater",
+  ]
+  module_install_dir = "etc/param"
+  part_name = "hiperf"
+  subsystem_name = "developtools"
+}
+
+ohos_prebuilt_etc("hiperf.para.dac") {
+  source = "etc/hiperf.para.dac"
+  install_images = [
+    "system",
+    "updater",
+  ]
+  module_install_dir = "etc/param"
+  part_name = "hiperf"
+  subsystem_name = "developtools"
+}
+
+ohos_prebuilt_etc("hiperf.cfg") {
+  source = "etc/hiperf.cfg"
+  relative_install_dir = "init"
+  subsystem_name = "developtools"
+  part_name = "hiperf"
+}
+
+group("hiperf_etc") {
+  deps = [
+    ":hiperf.cfg",
+    ":hiperf.para",
+    ":hiperf.para.dac",
+  ]
 }
 
 ohos_source_set("hiperf_platform_host") {

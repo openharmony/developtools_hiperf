@@ -45,17 +45,13 @@ static std::atomic_bool g_trackRunning = false;
 OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, pid_t pid, int cpu, int group_fd,
                                 unsigned long flags)
 {
-    if (perfEventParanoid_ >= PerfEventParanoid::USER) {
-        attr.exclude_kernel = true; // kernel restrict
-    }
     OHOS::UniqueFd fd = UniqueFd(syscall(__NR_perf_event_open, &attr, pid, cpu, group_fd, flags));
     if (fd < 0) {
         HLOGEP("syscall perf_event_open failed. ");
         // dump when open failed.
         SubCommandDump::DumpPrintEventAttr(attr, std::numeric_limits<int>::min());
     }
-    HLOGV("perf_event_open: got fd %d for pid %d cpu %d group %d flags %lu perfEventParanoid %d",
-          fd.Get(), pid, cpu, group_fd, flags, perfEventParanoid_);
+    HLOGV("perf_event_open: got fd %d for pid %d cpu %d group %d flags %lu", fd.Get(), pid, cpu, group_fd, flags);
     return fd;
 }
 
@@ -85,73 +81,6 @@ PerfEvents::~PerfEvents()
     }
 
     ExitReadRecordBufThread();
-}
-
-PerfEventParanoid PerfEvents::perfEventParanoid_ = PerfEventParanoid::UNKNOW;
-
-bool PerfEvents::CheckOhosPermissions()
-{
-#if defined(CONFIG_HAS_SYSPARA)
-    std::string perfHarden = "0";
-    perfHarden = OHOS::system::GetParameter(PERF_DISABLE_PARAM, perfHarden);
-    HLOGD("%s is %s", PERF_DISABLE_PARAM.c_str(), perfHarden.c_str());
-    if (perfHarden == "1") {
-        printf("param '%s' is disabled, try to enable it\n", PERF_DISABLE_PARAM.c_str());
-        // we will try to set it as 0
-        perfHarden = OHOS::system::SetParameter(PERF_DISABLE_PARAM, "0");
-        // wait init config the param
-        std::this_thread::sleep_for(1s);
-        if (OHOS::system::GetParameter(PERF_DISABLE_PARAM, perfHarden) == "1") {
-            printf("setparam failed. pls try setparam %s 0\n", PERF_DISABLE_PARAM.c_str());
-        }
-    }
-    return perfHarden == "0";
-#else
-    return true; // not ohos
-#endif
-}
-
-bool PerfEvents::CheckPermissions(PerfEventParanoid request)
-{
-    // check the ohos param "security.perf_harden"
-
-    if (getuid() == 0) {
-        // we are root perfEventParanoid as -1
-        perfEventParanoid_ = PerfEventParanoid::NOLIMIT;
-        printf("this is root mode, perfEventParanoid assume as -1\n");
-        return true;
-    }
-
-    std::string perfEventParanoid = ReadFileToString(PERF_EVENT_PARANOID);
-    if (perfEventParanoid.empty()) {
-        printf("unable to read %s, assume as 2\n", PERF_EVENT_PARANOID.c_str());
-        perfEventParanoid_ = PerfEventParanoid::USER;
-    } else {
-        perfEventParanoid_ = static_cast<PerfEventParanoid>(stoi(perfEventParanoid));
-    }
-
-#if is_ohos
-    // not root and in ohos
-    if (!CheckOhosPermissions()) {
-        return false;
-    }
-#endif
-
-    if (perfEventParanoid_ == PerfEventParanoid::NOLIMIT) {
-        return true;
-    }
-    printf("%s is %d\n", PERF_EVENT_PARANOID.c_str(), perfEventParanoid_);
-    if (perfEventParanoid_ >= PerfEventParanoid::USER) {
-        printf("allow only user-space measurements (default since Linux 4.6).\n");
-    } else if (perfEventParanoid_ == PerfEventParanoid::KERNEL_USER) {
-        printf("allow both kernel and user measurements (default before Linux 4.6).\n");
-    } else if (perfEventParanoid_ == PerfEventParanoid::KERNEL_USER_CPU) {
-        printf("allow access to CPU-specific data but not raw tracepoint samples.\n");
-    } else if (perfEventParanoid_ <= PerfEventParanoid::NOLIMIT) {
-        printf("unable to read anything\n");
-    }
-    printf("request level is %d\n", request);
-    return perfEventParanoid_ <= request;
 }
 
 bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
@@ -302,10 +231,6 @@ bool PerfEvents::AddEvent(const std::string &eventString, bool followGroup)
         return false;
     }
     if (excludeUser) {
-        if (requestPermission_ > PerfEventParanoid::KERNEL_USER) {
-            requestPermission_ = PerfEventParanoid::KERNEL_USER;
-        }
-
         eventSpaceType_ |= EventSpaceType::KERNEL;
     } else if (excludeKernel) {
         eventSpaceType_ |= EventSpaceType::USER;
@@ -497,11 +422,6 @@ static void RecoverCaptureSig()
 bool PerfEvents::PrepareTracking(void)
 {
     HLOGV("enter");
-
-    if (!CheckPermissions(requestPermission_)) {
-        return false;
-    }
-
     // 1. prepare cpu pid
     if (!PrepareFdEvents()) {
         HLOGE("PrepareFdEvents() failed");
@@ -514,6 +434,7 @@ bool PerfEvents::PrepareTracking(void)
         return false;
     }
 
+    HLOGV("success");
     prepared_ = true;
     return true;
 }
@@ -581,7 +502,9 @@ void PerfEvents::WaitRecordThread()
 
 bool PerfEvents::StartTracking(bool immediately)
 {
+    HLOGV("enter");
     if (!prepared_) {
+        HLOGD("do not prepared_");
         return false;
     }
 
@@ -713,12 +636,6 @@ void PerfEvents::SetSystemTarget(bool systemTarget)
 void PerfEvents::SetCpu(std::vector<pid_t> cpus)
 {
     cpus_ = cpus;
-
-    if (!cpus_.empty()) {
-        if (requestPermission_ > PerfEventParanoid::KERNEL_USER_CPU) {
-            requestPermission_ = PerfEventParanoid::KERNEL_USER_CPU;
-        }
-    }
 }
 
 void PerfEvents::SetPid(std::vector<pid_t> pids)
@@ -907,10 +824,6 @@ bool PerfEvents::PrepareFdEvents(void)
     if (systemTarget_) {
         pids_.clear();
         pids_.push_back(-1);
-
-        if (cpus_.empty()) {
-            PutAllCpus();
-        }
     } else {
         if (trackedCommand_) {
             pids_.push_back(trackedCommand_->GetChildPid());
@@ -918,15 +831,10 @@ bool PerfEvents::PrepareFdEvents(void)
         if (pids_.empty()) {
             pids_.push_back(0); // no pid means use 0 as self pid
         }
-        if (cpus_.empty()) {
-            // new review . if perfEventParanoid_ < CPU, how should be CreateMmap work?
-            if (perfEventParanoid_ <= PerfEventParanoid::KERNEL_USER_CPU) {
-                // PERF_EVENT_IOC_SET_OUTPUT doesn't support using -1 as all cpu
-                PutAllCpus();
-            } else {
-                cpus_.push_back(-1); // no cpu as all cpu
-            }
-        }
+    }
+
+    if (cpus_.empty()) {
+        PutAllCpus();
     }
 
     // print info tell user which cpu and process we will select.
@@ -1138,6 +1046,9 @@ bool PerfEvents::CreateMmap(const FdItem &item, const perf_event_attr &attr)
         void *rbuf = mmap(nullptr, (1 + mmapPages_) * pageSize_, PROT_READ | PROT_WRITE, MAP_SHARED,
                           item.fd.Get(), 0);
         if (rbuf == MMAP_FAILED) {
+            char errInfo[ERRINFOLEN] = {0};
+            strerror_r(errno, errInfo, ERRINFOLEN);
+            perror("errno:%d, errstr:%s", errno, errInfo);
             perror("Fail to call mmap \n");
             return false;
         }
