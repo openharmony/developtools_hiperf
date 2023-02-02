@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
 #include "report_protobuf_file.h"
 #endif
 #include "subcommand.h"
@@ -49,7 +49,7 @@ public:
         "       use symbols path to find symbols.\n"
         "   --elf <elf file name>\n"
         "       dump elf not perf data.\n"
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
         "   --proto <protobuf file name>\n"
         "       dump perf data from protobuf file.\n"
 #endif
@@ -83,7 +83,7 @@ private:
     std::string elfFileName_;
     std::string protobufDumpFileName_;
     int indent_ = 0;
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     std::unique_ptr<ReportProtobufFileReader> protobufInputFileReader_ = nullptr;
 #endif
 
@@ -98,7 +98,7 @@ private:
 
     bool CheckInputFile();
     bool DumpElfFile();
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     bool DumpProtoFile();
 #endif
     void DumpPrintFileHeader(int indent = 0);
