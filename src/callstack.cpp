@@ -74,7 +74,9 @@ bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemM
     di.start_ip = mmap.begin_;
     di.end_ip = mmap.end_;
 #ifndef target_cpu_arm
-    uint64_t fdeTableElfOffset, fdeTableSize, ehFrameHdrElfOffset;
+    uint64_t fdeTableElfOffset;
+    uint64_t fdeTableSize;
+    uint64_t ehFrameHdrElfOffset;
     if ((UNW_INFO_FORMAT_REMOTE_TABLE == di.format) &&
         symbolsFile.GetHDRSectionInfo(ehFrameHdrElfOffset, fdeTableElfOffset, fdeTableSize)) {
         /*
@@ -121,7 +123,9 @@ bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemM
         HLOGD("SymbolsFile::GetHDRSectionInfo() failed");
     }
 #else
-    uint64_t SectionVaddr, SectionSize, SectionFileOffset;
+    uint64_t SectionVaddr;
+    uint64_t SectionSize;
+    uint64_t SectionFileOffset;
     if ((UNW_INFO_FORMAT_ARM_EXIDX == di.format) &&
         symbolsFile.GetSectionInfo(ARM_EXIDX, SectionVaddr, SectionSize, SectionFileOffset)) {
         const MemMapItem *targetMmap = thread.FindMapByFileInfo(mmap.name_, SectionFileOffset);
@@ -375,7 +379,8 @@ void CallStack::UnwindStep(unw_cursor_t &c, std::vector<CallFrame> &callStack, s
     while (callStack.size() < maxStackLevel) {
         int ret = unw_step(&c);
         if (ret > 0) {
-            unw_word_t ip, sp;
+            unw_word_t ip;
+            unw_word_t sp;
             unw_get_reg(&c, UNW_REG_IP, &ip);
             unw_get_reg(&c, UNW_REG_SP, &sp);
 
@@ -483,7 +488,8 @@ bool CallStack::UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *re
     }
 
 #if HAVE_LIBUNWIND
-    uint64_t ip, sp;
+    uint64_t ip;
+    uint64_t sp;
     if (!GetIpSP(ip, sp, regs_, regsNum_)) {
         HLOGW("unable get sp or sp , unable unwind");
         return false;
