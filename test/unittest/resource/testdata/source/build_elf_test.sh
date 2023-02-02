@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -e
 
 gcc ./elf_test_source_code.cpp -std=c++17 -lstdc++ -o ../elf_test -Wl,--gc-sections
 strip ../elf_test -o ../elf_test_stripped

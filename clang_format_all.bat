@@ -12,7 +12,7 @@
 @rem limitations under the License.
 
 @echo off
-:: clang-format.exe -style="file" -fallback-style="LLVM" "include\subcommand_list.h"
+@rem clang-format.exe -style="file" -fallback-style="LLVM" "include\subcommand_list.h"
 for /r %%i in (*.h *.cpp) do (
 clang-format.exe -style="file" -fallback-style="LLVM" -i --verbose %%i
 )
