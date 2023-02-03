@@ -42,12 +42,10 @@ int main(const int argc, const char *argv[])
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-#ifdef is_ohos
-#if is_ohos
-    if (setgid(2000) != 0) { // 2000 is shell group
+#if defined(is_ohos) && is_ohos
+    if (IsRoot() && setgid(2000) != 0) { // 2000 is shell group
         printf("setgid failed errno: %d.\n", errno);
     }
-#endif
 #endif
 
     // pass the argv to next
