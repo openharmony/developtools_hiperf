@@ -25,6 +25,7 @@
 #define HIDEBUG_SKIP_SAVE_SYMBOLS        0
 #define USE_COLLECT_SYMBOLIC             1
 
+#include <functional>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
@@ -274,7 +275,8 @@ private:
 
     bool CollectionSymbol(std::unique_ptr<PerfEventRecord> record);
 
-    bool SetPerfLimit(const std::string& file, const std::string& param, int value);
+    bool SetPerfLimit(const std::string& file, int value, std::function<bool (int, int)> const& cmd,
+        const std::string& param);
     bool SetPerfCpuMaxPercent();
     bool SetPerfMaxSampleRate();
     bool SetPerfEventMlock();
