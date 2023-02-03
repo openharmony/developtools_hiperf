@@ -91,6 +91,9 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option -p failed");
         return false;
     }
+    if (!IsExistDebugByPid(selectPids_)) {
+        return false;
+    }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
         HLOGD("get option -t failed");
         return false;

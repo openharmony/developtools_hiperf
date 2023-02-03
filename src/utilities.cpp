@@ -625,6 +625,27 @@ int GetProcessorNum()
 #endif
 }
 
+bool IsExistDebugByPid(const std::vector<pid_t> pids)
+{
+    if (pids.empty()) {
+        HLOGE("IsExistDebugByPid: pids is empty.");
+        return true;
+    }
+    for (auto pid : pids) {
+        if (pid <= 0) {
+            printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
+            return false;
+        }
+        std::string bundleName = GetProcessName(pid);
+        if (!IsRoot() && !IsDebugableApp(bundleName)){
+            HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
+            printf("-p option only support debug aplication\n");
+            return false;
+        }
+    }
+    return true;
+}
+
 std::string GetProcessName(int pid)
 {
 #if defined(is_ohos) && is_ohos

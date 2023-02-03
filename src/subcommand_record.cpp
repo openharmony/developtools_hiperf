@@ -196,6 +196,11 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--app", appPackage_)) {
         return false;
     }
+    if (!IsRoot() && !appPackage_.empty() && !IsDebugableApp(appPackage_)) {
+        HLOGE("-app option only support debug aplication.");
+        printf("-app option only support debug aplication\n");
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
         return false;
     }
@@ -206,6 +211,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
+        return false;
+    }
+    if (!IsExistDebugByPid(selectPids_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
