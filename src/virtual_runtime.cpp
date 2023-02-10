@@ -40,7 +40,7 @@ VirtualRuntime::VirtualRuntime(bool onDevice)
 
 std::string VirtualRuntime::ReadThreadName(pid_t tid)
 {
-    std::string comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid)).c_str();
+    std::string comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid)).c_str();
     comm.erase(std::remove(comm.begin(), comm.end(), '\r'), comm.end());
     comm.erase(std::remove(comm.begin(), comm.end(), '\n'), comm.end());
     return comm;
