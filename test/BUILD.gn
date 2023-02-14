@@ -19,6 +19,7 @@ module_output_path = "developtools/hiperf"
 sources_base = [
   "unittest/common/native/hiperf_client_test.cpp",
   "unittest/common/native/command_test.cpp",
+  "unittest/common/native/cpu_usage_test.cpp",
   "unittest/common/native/perf_events_test.cpp",
   "unittest/common/native/perf_event_record_test.cpp",
   "unittest/common/native/perf_file_format_test.cpp",
