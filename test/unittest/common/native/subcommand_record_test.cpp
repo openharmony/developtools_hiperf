@@ -28,6 +28,7 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "utilities.h"
+#include <sys/stat.h>
 
 using namespace std::literals::chrono_literals;
 using namespace testing::ext;
@@ -36,6 +37,8 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+static const std::string TEST_FILE = "/data/local/tmp/perf.data";
+
 class SubCommandRecordTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -47,6 +50,34 @@ public:
 
     static void TestRecordCommand(const std::string &option, bool expect = true,
                                   bool fixPid = true);
+
+    size_t GetFileSize(const char* fileName);
+
+    static constexpr size_t TEST_SIZE_F100_DWARF_SYSTEM = 1.4E4 * 1024;
+    static constexpr size_t TEST_SIZE_F500_DWARF_SYSTEM = 3.6E4 * 1024;
+    static constexpr size_t TEST_SIZE_F1000_DWARF_SYSTEM = 5.9E4 * 1024;
+    static constexpr size_t TEST_SIZE_F2000_DWARF_SYSTEM = 8.3E4 * 1024;
+    static constexpr size_t TEST_SIZE_F4000_DWARF_SYSTEM = 1.7E5 * 1024;
+    static constexpr size_t TEST_SIZE_F8000_DWARF_SYSTEM = 3.5E5 * 1024;
+    static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 8E3 * 1024;
+    static constexpr size_t TEST_SIZE_F500_FP_SYSTEM = 2E4 * 1024;
+    static constexpr size_t TEST_SIZE_F1000_FP_SYSTEM = 3E4 * 1024;
+    static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 4E4 * 1024;
+    static constexpr size_t TEST_SIZE_F4000_FP_SYSTEM = 8E4 * 1024;
+    static constexpr size_t TEST_SIZE_F8000_FP_SYSTEM = 1.6E5 * 1024;
+
+    static constexpr size_t TEST_SIZE_F100_DWARF_PROCESS = 5.6E3 * 1024;
+    static constexpr size_t TEST_SIZE_F500_DWARF_PROCESS = 1.6E4 * 1024;
+    static constexpr size_t TEST_SIZE_F1000_DWARF_PROCESS = 2.9E4 * 1024;
+    static constexpr size_t TEST_SIZE_F2000_DWARF_PROCESS = 6.1E4 * 1024;
+    static constexpr size_t TEST_SIZE_F4000_DWARF_PROCESS = 5.8E4 * 1024;
+    static constexpr size_t TEST_SIZE_F8000_DWARF_PROCESS = 1.2E5 * 1024;
+    static constexpr size_t TEST_SIZE_F100_FP_PROCESS = 3.6E3 * 1024;
+    static constexpr size_t TEST_SIZE_F500_FP_PROCESS = 8.8E3 * 1024;
+    static constexpr size_t TEST_SIZE_F1000_FP_PROCESS = 1.5E4 * 1024;
+    static constexpr size_t TEST_SIZE_F2000_FP_PROCESS = 3.1E4 * 1024;
+    static constexpr size_t TEST_SIZE_F4000_FP_PROCESS = 6.2E4 * 1024;
+    static constexpr size_t TEST_SIZE_F8000_FP_PROCESS = 1.3E5 * 1024;
 };
 
 void SubCommandRecordTest::SetUpTestCase() {}
@@ -91,6 +122,17 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
     printf("run %" PRId64 " ms return %s(expect %s)\n", (uint64_t)costMs.count(), ret ? "true" : "false",
            expect ? "true" : "false");
     EXPECT_EQ(expect, ret);
+}
+
+size_t SubCommandRecordTest::GetFileSize(const char* fileName)
+{
+    if (fileName == nullptr) {
+        return 0;
+    }
+    struct stat statbuf;
+    stat(fileName, &statbuf);
+    size_t fileSize = statbuf.st_size;
+    return fileSize;
 }
 
 // app package name
@@ -750,6 +792,329 @@ HWTEST_F(SubCommandRecordTest, DumpOptions, TestSize.Level1)
     cmd.DumpOptions();
     stdoutRecord.Stop();
 }
+
+/**
+ * @tc.name: FileSizeOnFrequency100_DWARF_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 100 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 100 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency500_DWARF_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 500 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 500 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency1000_DWARF_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 1000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 1000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency2000_DWARF_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 2000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 2000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency4000_DWARF_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 4000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 4000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency8000_DWARF_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 8000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 8000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency100_FP_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 100 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 100 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F100_FP_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency500_FP_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 500 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 500 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F500_FP_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency1000_FP_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 1000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 1000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency2000_FP_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 2000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 2000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency4000_FP_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 4000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 4000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency8000_FP_SYSTEM
+ * @tc.desc: Test size of file generated under system wide frequency 8000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_SYSTEM, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 -a -f 8000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_SYSTEM);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency100_DWARF_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 100 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 100 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency500_DWARF_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 500 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 500 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency1000_DWARF_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 1000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 1000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency2000_DWARF_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 2000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 2000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency4000_DWARF_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 4000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 4000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency8000_DWARF_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 8000 and dwarf unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 8000 -s dwarf", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency100_FP_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 100 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 100 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F100_FP_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency500_FP_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 500 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 500 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F500_FP_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency1000_FP_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 1000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 1000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency2000_FP_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 2000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 2000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency4000_FP_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 4000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 4000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_PROCESS);
+}
+
+/**
+ * @tc.name: FileSizeOnFrequency8000_FP_PROCESS
+ * @tc.desc: Test size of file generated under one process frequency 8000 and fp unwind
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Level1)
+{
+    TestRecordCommand("-d 10 --app com.ohos.systemui -f 8000 -s fp", true, false);
+    std::string fileName = TEST_FILE;
+    size_t fileSize = GetFileSize(fileName.c_str());
+    EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_PROCESS);
+}
+
+/**
+ * @tc.name: ExcludeThreadName
+ * @tc.desc: Test --exclude-thread option
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ExcludeThreadName, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a --exclude-thread com.ohos.systemui ", true, false);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
