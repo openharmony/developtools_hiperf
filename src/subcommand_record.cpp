@@ -639,24 +639,30 @@ bool SubCommandRecord::ParseControlCmd(const std::string cmd)
     return false;
 }
 
-bool SubCommandRecord::SetPerfLimit(const std::string& file, const std::string& param, int value)
+bool SubCommandRecord::SetPerfLimit(const std::string& file, int value, std::function<bool (int, int)> const& cmp,
+    const std::string& param)
 {
-    int originValue = 0;
-    if (!ReadIntFromProcFile(file, originValue)) {
-        printf("read %s fail.", file.c_str());
+    int oldValue = 0;
+    if (!ReadIntFromProcFile(file, oldValue)) {
+        printf("read %s fail.\n", file.c_str());
         return false;
     }
 
-    if (originValue == value) {
+    if (cmp(oldValue, value)) {
+        HLOGI("cmp return true.");
         return true;
     }
 
     if (IsRoot()) {
-        return WriteIntToProcFile(file, value);
+        bool ret = WriteIntToProcFile(file, value);
+        if (!ret) {
+            printf("Fail to set %s to %d, please set it firstly.\n", file.c_str(), value);
+        }
+        return ret;
     }
 
     if (!OHOS::system::SetParameter(param, std::to_string(value))) {
-        printf("set parameter %s fail.", param.c_str());
+        printf("set parameter %s fail.\n", param.c_str());
         return false;
     }
     isNeedSetPerfHarden_ = true;
@@ -665,19 +671,22 @@ bool SubCommandRecord::SetPerfLimit(const std::string& file, const std::string& 
 
 bool SubCommandRecord::SetPerfCpuMaxPercent()
 {
-    return SetPerfLimit(PERF_CPU_TIME_MAX_PERCENT, "hiviewdfx.hiperf.perf_cpu_time_max_percent", cpuPercent_);
+    auto cmp = [](int oldValue, int newValue) { return oldValue == newValue; };
+    return SetPerfLimit(PERF_CPU_TIME_MAX_PERCENT, cpuPercent_, cmp, "hiviewdfx.hiperf.perf_cpu_time_max_percent");
 }
 
 bool SubCommandRecord::SetPerfMaxSampleRate()
 {
+    auto cmp = [](int oldValue, int newValue) { return oldValue >= newValue; };
     int frequency = frequency_ != 0 ? frequency_ : PerfEvents::DEFAULT_SAMPLE_FREQUNCY;
-    return SetPerfLimit(PERF_EVENT_MAX_SAMPLE_RATE, "hiviewdfx.hiperf.perf_event_max_sample_rate", frequency);
+    return SetPerfLimit(PERF_EVENT_MAX_SAMPLE_RATE, frequency, cmp, "hiviewdfx.hiperf.perf_event_max_sample_rate");
 }
 
 bool SubCommandRecord::SetPerfEventMlock()
 {
+    auto cmp = [](int oldValue, int newValue) { return oldValue == newValue; };
     int mlock_kb = GetProcessorNum() * (mmapPages_ + 1) * 4;
-    return SetPerfLimit(PERF_EVENT_MLOCK_KB, "hiviewdfx.hiperf.perf_event_mlock_kb", mlock_kb);
+    return SetPerfLimit(PERF_EVENT_MLOCK_KB, mlock_kb, cmp, "hiviewdfx.hiperf.perf_event_mlock_kb");
 }
 
 bool SubCommandRecord::SetPerfHarden()
