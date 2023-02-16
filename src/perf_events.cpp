@@ -652,7 +652,7 @@ void PerfEvents::SetTimeOut(float timeOut)
 
 void PerfEvents::SetTimeReport(int timeReport)
 {
-    static constexpr int minMsReportInterval = 100;
+    static constexpr int minMsReportInterval = 10;
     if (timeReport < minMsReportInterval && timeReport != 0) {
         timeReport = minMsReportInterval;
         printf("time report min value is %d.\n", timeReport);
