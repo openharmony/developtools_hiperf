@@ -146,6 +146,11 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-a", targetSystemWide_)) {
         return false;
     }
+    if (targetSystemWide_ && !IsRoot()) {
+        HLOGD("-a option needs root privilege for system wide profiling.");
+        printf("-a option needs root privilege for system wide profiling.\n");
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--exclude-hiperf", excludeHiperf_)) {
         return false;
     }
