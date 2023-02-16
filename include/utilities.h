@@ -305,6 +305,8 @@ bool PowerOfTwo(uint64_t n);
 #endif
 
 int GetProcessorNum();  // get number of processors
+std::string GetProcessName(int pid);
+bool IsDebugableApp(const std::string& bundleName);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

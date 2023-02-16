@@ -20,6 +20,14 @@
 #include <cstdio>
 #include <unistd.h>
 #endif
+#if defined(is_ohos) && is_ohos
+#include "application_info.h"
+#include "bundle_mgr_proxy.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+using namespace OHOS;
+using namespace OHOS::AppExecFwk;
+#endif
 
 namespace OHOS {
 namespace Developtools {
@@ -616,6 +624,54 @@ int GetProcessorNum()
     return processorNum;
 #endif
 }
+
+std::string GetProcessName(int pid)
+{
+#if defined(is_ohos) && is_ohos
+    std::string filePath = "/proc/" + std::to_string(pid) + "/cmdline";
+    std::string bundleName = ReadFileToString(filePath);
+    return bundleName.substr(0, strlen(bundleName.c_str()));
+#else
+    return "";
+#endif
+}
+
+bool IsDebugableApp(const std::string& bundleName)
+{
+#if defined(is_ohos) && is_ohos
+    if (bundleName.empty()) {
+        printf("bundleName is empty!\n");
+        return false;
+    }
+    sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sam == nullptr) {
+        printf("GetSystemAbilityManager failed!\n");
+        return false;
+    }
+    sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        printf("Get BundleMgr SA failed!\n");
+        return false;
+    }
+    sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
+    if (proxy == nullptr) {
+        printf("iface_cast failed!\n");
+        return false;
+    }
+
+    ApplicationInfo appInfo;
+    bool ret = proxy->GetApplicationInfo(bundleName, GET_APPLICATION_INFO_WITH_DISABLE, Constants::ANY_USERID, appInfo);
+    if (!ret) {
+        printf("Get application info failed!\n");
+        HLOGE("Get application info failed, bundleName:%s", bundleName.c_str());
+        return false;
+    }
+    return appInfo.debug;
+#else
+    return false;
+#endif
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

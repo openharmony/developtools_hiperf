@@ -191,7 +191,14 @@ ohos_source_set("hiperf_platform_common") {
   defines = []
 
   if (is_ohos) {
-    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+    external_deps = [
+      "bundle_framework:appexecfwk_base",
+      "bundle_framework:appexecfwk_core",
+      "c_utils:utils",
+      "hiviewdfx_hilog_native:libhilog",
+      "ipc:ipc_core",
+      "samgr:samgr_proxy",
+    ]
   } else {
     defines += [ "CONFIG_NO_HILOG" ]
   }
