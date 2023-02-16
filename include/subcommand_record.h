@@ -245,6 +245,9 @@ private:
 
     size_t recordSamples_ = 0;
     size_t recordNoSamples_ = 0;
+
+    bool isNeedSetPerfHarden_ = false;
+
     // callback to process record
     bool ProcessRecord(std::unique_ptr<PerfEventRecord>);
     bool SaveRecord(std::unique_ptr<PerfEventRecord>);
@@ -271,8 +274,11 @@ private:
 
     bool CollectionSymbol(std::unique_ptr<PerfEventRecord> record);
 
+    bool SetPerfLimit(const std::string& file, const std::string& param, int value);
     bool SetPerfCpuMaxPercent();
     bool SetPerfMaxSampleRate();
+    bool SetPerfEventMlock();
+    bool SetPerfHarden();
 
     bool TraceOffCpu();
     bool ParseCallStackOption(const std::vector<std::string> &callStackType);

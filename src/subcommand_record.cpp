@@ -23,6 +23,9 @@
 #include <ctime>
 #include <memory>
 #include <poll.h>
+#if defined(CONFIG_HAS_SYSPARA)
+#include <parameters.h>
+#endif
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -46,6 +49,10 @@ const std::string CONTROL_CMD_RESUME = "resume";
 const std::string CONTROL_CMD_STOP = "stop";
 const std::string CONTROL_FIFO_FILE_C2S = "/data/local/tmp/.hiperf_record_control_c2s";
 const std::string CONTROL_FIFO_FILE_S2C = "/data/local/tmp/.hiperf_record_control_s2c";
+
+const std::string PERF_CPU_TIME_MAX_PERCENT = "/proc/sys/kernel/perf_cpu_time_max_percent";
+const std::string PERF_EVENT_MAX_SAMPLE_RATE = "/proc/sys/kernel/perf_event_max_sample_rate";
+const std::string PERF_EVENT_MLOCK_KB = "/proc/sys/kernel/perf_event_mlock_kb";
 
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2000ms;
@@ -619,39 +626,66 @@ bool SubCommandRecord::ParseControlCmd(const std::string cmd)
     return false;
 }
 
+bool SubCommandRecord::SetPerfLimit(const std::string& file, const std::string& param, int value)
+{
+    int originValue = 0;
+    if (!ReadIntFromProcFile(file, originValue)) {
+        printf("read %s fail.", file.c_str());
+        return false;
+    }
+
+    if (originValue == value) {
+        return true;
+    }
+
+    if (IsRoot()) {
+        return WriteIntToProcFile(file, value);
+    }
+
+    if (!OHOS::system::SetParameter(param, std::to_string(value))) {
+        printf("set parameter %s fail.", param.c_str());
+        return false;
+    }
+    isNeedSetPerfHarden_ = true;
+    return true;
+}
+
 bool SubCommandRecord::SetPerfCpuMaxPercent()
 {
-    int percent = 0;
-    if (ReadIntFromProcFile("/proc/sys/kernel/perf_cpu_time_max_percent", percent)) {
-        if (percent == cpuPercent_) {
-            return true;
-        }
-        if (!IsRoot()) {
-            printf("root privillege is needed to change perf_cpu_time_max_percent\n");
-            return false;
-        }
-        return WriteIntToProcFile("/proc/sys/kernel/perf_cpu_time_max_percent", cpuPercent_);
-    }
-    return false;
+    return SetPerfLimit(PERF_CPU_TIME_MAX_PERCENT, "hiviewdfx.hiperf.perf_cpu_time_max_percent", cpuPercent_);
 }
 
 bool SubCommandRecord::SetPerfMaxSampleRate()
 {
-    int rate = 0;
-    if (ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", rate)) {
-        int frequency = frequency_ != 0 ? frequency_ : PerfEvents::DEFAULT_SAMPLE_FREQUNCY;
-        if (rate >= frequency) {
-            return true;
-        }
-        return WriteIntToProcFile("/proc/sys/kernel/perf_event_max_sample_rate", frequency);
-    } else {
-        if (!IsRoot()) {
-            printf("root privillege is needed to change perf_event_max_sample_rate\n");
-        } else {
-            printf("please check if CONFIG_PERF_EVENTS enabed.\n");
+    int frequency = frequency_ != 0 ? frequency_ : PerfEvents::DEFAULT_SAMPLE_FREQUNCY;
+    return SetPerfLimit(PERF_EVENT_MAX_SAMPLE_RATE, "hiviewdfx.hiperf.perf_event_max_sample_rate", frequency);
+}
+
+bool SubCommandRecord::SetPerfEventMlock()
+{
+    int mlock_kb = GetProcessorNum() * (mmapPages_ + 1) * 4;
+    return SetPerfLimit(PERF_EVENT_MLOCK_KB, "hiviewdfx.hiperf.perf_event_mlock_kb", mlock_kb);
+}
+
+bool SubCommandRecord::SetPerfHarden()
+{
+    if (!isNeedSetPerfHarden_) {
+        return true;
+    }
+
+    std::string perfHarden = OHOS::system::GetParameter(PERF_DISABLE_PARAM, "1");
+    if (perfHarden == "1") {
+        if (!OHOS::system::SetParameter("security.perf_harden", "0")) {
+            printf("set parameter security.perf_harden to 0 fail.");
+            return false;
         }
     }
-    return false;
+
+    if (!OHOS::system::SetParameter("security.perf_harden", "1")) {
+        printf("set parameter security.perf_harden to 1 fail.");
+        return false;
+    }
+    return true;
 }
 
 bool SubCommandRecord::TraceOffCpu()
@@ -749,6 +783,17 @@ bool SubCommandRecord::PrepareSysKernel()
         HLOGE("Fail to set perf event cpu limit to %d\n", cpuPercent_);
         return false;
     }
+
+    if (!SetPerfEventMlock()) {
+        HLOGE("Fail to set perf event mlock limit\n");
+        return false;
+    }
+
+    if (!SetPerfHarden()) {
+        HLOGE("Fail to set perf event harden\n");
+        return false;
+    }
+
     if (offCPU_ && !TraceOffCpu()) {
         HLOGE("Fail to TraceOffCpu");
         return false;
