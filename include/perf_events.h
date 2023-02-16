@@ -205,23 +205,6 @@ struct read_format_no_group {
     __u64 id;           /* if PERF_FORMAT_ID */
 };
 
-/*
-2   allow only user-space measurements (default since
-    Linux 4.6).
-1   allow both kernel and user measurements (default
-    before Linux 4.6).
-0   allow access to CPU-specific data but not raw
-    tracepoint samples.
--1  no restrictions.
-*/
-enum PerfEventParanoid {
-    NOLIMIT = -1,
-    KERNEL_USER_CPU = 0,
-    KERNEL_USER = 1,
-    USER = 2,
-    UNKNOW = 99,
-};
-
 class PerfEvents {
 public:
     static constexpr uint64_t DEFAULT_SAMPLE_FREQUNCY = 4000;
@@ -410,12 +393,6 @@ private:
         USER_KERNEL = 3,
     };
     uint8_t eventSpaceType_ = EventSpaceType::UNKNOW;
-
-    PerfEventParanoid requestPermission_ = PerfEventParanoid::USER;
-    bool CheckPermissions(PerfEventParanoid request = KERNEL_USER_CPU);
-    bool CheckOhosPermissions();
-
-    static PerfEventParanoid perfEventParanoid_;
 
     bool inherit_ = false;
     std::vector<pid_t> pids_;
