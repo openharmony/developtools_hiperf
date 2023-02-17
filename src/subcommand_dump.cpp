@@ -60,8 +60,6 @@ bool SubCommandDump::CheckInputFile()
 
 bool SubCommandDump::ParseOption(std::vector<std::string> &args)
 {
-    HLOGV("enter");
-
     if (!Option::GetOptionValue(args, "--head", dumpHeader_)) {
         HLOGD("get option --head failed");
         return false;
@@ -116,8 +114,6 @@ SubCommandDump::~SubCommandDump()
 
 bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
 {
-    HLOGV("enter");
-
     if (!elfFileName_.empty()) {
         return DumpElfFile();
     }
@@ -525,7 +521,7 @@ void SubCommandDump::DumpFeaturePortion(int indent)
 
 bool SubCommandDump::RegisterSubCommandDump()
 {
-    HLOGV("enter");
+
     return SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
 }
 } // namespace HiPerf

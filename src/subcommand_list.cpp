@@ -21,7 +21,7 @@ namespace Developtools {
 namespace HiPerf {
 bool SubCommandList::OnSubCommand(vector<string> &args)
 {
-    HLOGV("enter");
+    
     vector<perf_type_id> requestEventTypes;
 
     if (args.empty()) {
@@ -62,7 +62,6 @@ bool SubCommandList::ShowSupportEventsTypes(vector<perf_type_id> requestEventTyp
 
 void SubCommandList::RegisterSubCommandList()
 {
-    HLOGV("enter");
     SubCommand::RegisterSubCommand("list", make_unique<SubCommandList>());
 }
 } // namespace HiPerf

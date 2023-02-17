@@ -89,7 +89,6 @@ void SubCommand::ClearSubCommands()
 
 const std::map<std::string, std::unique_ptr<SubCommand>> &SubCommand::GetSubCommands()
 {
-    HLOGV("enter");
     return g_SubCommandsMap;
 }
 

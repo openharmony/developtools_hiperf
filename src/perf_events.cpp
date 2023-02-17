@@ -85,7 +85,6 @@ PerfEvents::~PerfEvents()
 
 bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
 {
-    HLOGV("enter");
     unique_ptr<perf_event_attr> attr = PerfEvents::CreateDefaultAttr(type, config);
     UniqueFd fd = Open(*attr.get());
     if (fd < 0) {
@@ -97,7 +96,6 @@ bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
 }
 bool PerfEvents::IsEventAttrSupport(perf_event_attr &attr)
 {
-    HLOGV("enter");
     UniqueFd fd = Open(attr);
     if (fd < 0) {
         return false;
@@ -124,7 +122,6 @@ bool PerfEvents::SetBranchSampleType(uint64_t value)
 
 bool PerfEvents::AddDefaultEvent(perf_type_id type)
 {
-    HLOGV("enter");
     auto it = DEFAULT_TYPE_CONFIGS.find(type);
     if (it != DEFAULT_TYPE_CONFIGS.end()) {
         for (auto config : it->second) {
@@ -421,7 +418,6 @@ static void RecoverCaptureSig()
 // because WriteAttrAndId need fd id before start tracking
 bool PerfEvents::PrepareTracking(void)
 {
-    HLOGV("enter");
     // 1. prepare cpu pid
     if (!PrepareFdEvents()) {
         HLOGE("PrepareFdEvents() failed");
@@ -502,7 +498,6 @@ void PerfEvents::WaitRecordThread()
 
 bool PerfEvents::StartTracking(bool immediately)
 {
-    HLOGV("enter");
     if (!prepared_) {
         HLOGD("do not prepared_");
         return false;
@@ -795,7 +790,6 @@ inline void PerfEvents::PutAllCpus()
 
 bool PerfEvents::PrepareFdEvents(void)
 {
-    HLOGV("enter");
     /*
     https://man7.org/linux/man-pages/man2/perf_event_open.2.html
     pid == 0 and cpu == -1
@@ -855,8 +849,6 @@ bool PerfEvents::PrepareFdEvents(void)
 
 bool PerfEvents::CreateFdEvents(void)
 {
-    HLOGV("enter");
-
     // must be some events , or will failed
     if (eventGroupItem_.empty()) {
         printf("no event select.\n");
@@ -1351,8 +1343,6 @@ RETURN:
 
 void PerfEvents::ReadRecordFromBuf()
 {
-    HLOGV("enter");
-
     const perf_event_attr *attr = GetDefaultAttr();
     uint8_t *p = nullptr;
 
@@ -1433,8 +1423,6 @@ bool PerfEvents::HaveTargetsExit(const std::chrono::steady_clock::time_point &st
 
 void PerfEvents::RecordLoop()
 {
-    HLOGV("enter");
-
     // calc the time
     const auto startTime = steady_clock::now();
     const auto endTime = startTime + timeOut_;
@@ -1472,8 +1460,6 @@ void PerfEvents::RecordLoop()
 
 void PerfEvents::StatLoop()
 {
-    HLOGV("enter");
-
     // calc the time
     const auto startTime = steady_clock::now();
     const auto endTime = startTime + timeOut_;
