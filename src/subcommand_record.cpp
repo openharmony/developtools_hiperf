@@ -1008,6 +1008,8 @@ bool SubCommandRecord::CreateFifoServer()
         HLOGE("fork failed. %d:%s", errno, errInfo);
         return false;
     } else if (pid == 0) { // child process
+        close(STDIN_FILENO);
+        close(STDERR_FILENO);
         isFifoServer_ = true;
         clientPipeOutput_ = open(CONTROL_FIFO_FILE_S2C.c_str(), O_WRONLY);
         if (clientPipeOutput_ == -1) {
