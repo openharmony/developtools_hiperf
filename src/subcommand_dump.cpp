@@ -521,7 +521,6 @@ void SubCommandDump::DumpFeaturePortion(int indent)
 
 bool SubCommandDump::RegisterSubCommandDump()
 {
-
     return SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
 }
 } // namespace HiPerf

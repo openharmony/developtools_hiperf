@@ -21,7 +21,6 @@ namespace Developtools {
 namespace HiPerf {
 bool SubCommandList::OnSubCommand(vector<string> &args)
 {
-    
     vector<perf_type_id> requestEventTypes;
 
     if (args.empty()) {
