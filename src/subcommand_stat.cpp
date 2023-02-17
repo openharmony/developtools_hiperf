@@ -31,7 +31,6 @@ namespace Developtools {
 namespace HiPerf {
 void SubCommandStat::DumpOptions() const
 {
-    HLOGV("enter");
     printf("DumpOptions:\n");
     printf(" targetSystemWide:\t%s\n", targetSystemWide_ ? "true" : "false");
     printf(" selectCpus:\t%s\n", VectorToString(selectCpus_).c_str());
@@ -47,7 +46,6 @@ void SubCommandStat::DumpOptions() const
 
 bool SubCommandStat::ParseOption(std::vector<std::string> &args)
 {
-    HLOGV("enter");
     if (args.size() == 1 and args[0] == "-h") {
         args.clear();
         helpOption_ = true;
@@ -316,8 +314,6 @@ bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
 
 bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 {
-    HLOGV("enter");
-
     if (HelpOption()) {
         return true;
     }
@@ -372,7 +368,6 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 
 bool RegisterSubCommandStat()
 {
-    HLOGV("enter");
     return SubCommand::RegisterSubCommand("stat", std::make_unique<SubCommandStat>());
 }
 

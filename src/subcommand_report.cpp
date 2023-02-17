@@ -438,7 +438,6 @@ void SubCommandReport::FlushCacheRecord()
 
 bool SubCommandReport::LoadPerfData()
 {
-    HLOGV("enter");
     // check if file exist
     if (access(recordFile_[index_].c_str(), F_OK) != 0) {
         // file not exists
@@ -516,7 +515,6 @@ bool SubCommandReport::OutputStd()
 
 bool SubCommandReport::OutputReport()
 {
-    HLOGV("enter");
     if (output_ == nullptr) {
         HLOGD("nothing need output");
         return true; //
@@ -530,7 +528,6 @@ bool SubCommandReport::OutputReport()
 
 bool SubCommandReport::PrepareOutput()
 {
-    HLOGV("enter");
     if (protobufFormat_) {
 #if HAVE_PROTOBUF
         printf("save to protobuf file: '%s'\n", reportFile_.c_str());
@@ -558,7 +555,6 @@ bool SubCommandReport::PrepareOutput()
 
 SubCommandReport::~SubCommandReport()
 {
-    HLOGV("enter");
 #if HAVE_PROTOBUF
     if (protobufOutputFileWriter_ != nullptr) {
         protobufOutputFileWriter_->Close();
@@ -573,8 +569,6 @@ SubCommandReport::~SubCommandReport()
 
 bool SubCommandReport::OnSubCommand(std::vector<std::string> &args)
 {
-    HLOGV("enter");
-
     if (!PrepareOutput()) {
         return false;
     }
@@ -613,7 +607,6 @@ bool SubCommandReport::OnSubCommand(std::vector<std::string> &args)
 
 bool SubCommandReport::RegisterSubCommandReport()
 {
-    HLOGV("enter");
     std::unique_ptr<SubCommand> cmd = std::make_unique<SubCommandReport>();
     return SubCommand::RegisterSubCommand("report", std::move(cmd));
 }

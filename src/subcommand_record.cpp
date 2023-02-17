@@ -105,7 +105,6 @@ SubCommandRecord::~SubCommandRecord()
 
 void SubCommandRecord::DumpOptions() const
 {
-    HLOGV("enter");
     printf("DumpOptions:\n");
     printf(" targetSystemWide:\t%s\n", targetSystemWide_ ? "true" : "false");
     printf(" selectCpus:\t%s\n", VectorToString(selectCpus_).c_str());
@@ -395,7 +394,6 @@ bool SubCommandRecord::CheckOptions()
 
 bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
 {
-    HLOGV("enter");
     if (!GetOptions(args)) {
         return false;
     }
@@ -1658,7 +1656,6 @@ bool SubCommandRecord::RecordCompleted()
 
 bool SubCommandRecord::RegisterSubCommandRecord(void)
 {
-    HLOGV("enter");
     return SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
 }
 } // namespace HiPerf

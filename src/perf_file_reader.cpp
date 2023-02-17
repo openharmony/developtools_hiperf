@@ -385,7 +385,6 @@ const std::string PerfFileReader::GetFeatureString(const FEATURE feature) const
 
 const PerfFileSection *PerfFileReader::GetFeatureSection(FEATURE feature) const
 {
-    HLOGV("enter");
     for (auto const &it : perfFileSections_) {
         HLOGV("perfFileSections %p", it.get());
         if (it->featureId_ == feature) {
