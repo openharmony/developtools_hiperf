@@ -25,7 +25,6 @@
             <option name="push" value="testdata/vmlinux_stripped_broken -> /data/test/resource/testdata/" src="res"/>
 
             <option name="push" value="testdata/perf.data -> /data/test/resource/testdata/" src="res"/>
-            <option name="push" value="testdata/perf_compressed.data -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/proto_test -> /data/test/resource/testdata/" src="res"/>
 
             <option name="push" value="testdata/elf_test -> /data/test/resource/testdata/" src="res"/>
