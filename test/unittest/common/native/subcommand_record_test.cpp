@@ -1107,14 +1107,53 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Leve
 
 /**
  * @tc.name: ExcludeThreadName
- * @tc.desc: Test --exclude-thread option
+ * @tc.desc: Test --exclude-thread option sucess
  * @tc.type: FUNC
  */
 HWTEST_F(SubCommandRecordTest, ExcludeThreadName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -a --exclude-thread com.ohos.systemui ", true, false);
+    TestRecordCommand("-d 2 --exclude-thread DfxWatchdog ", true);
 }
 
+/**
+ * @tc.name: ExcludeThreadNames
+ * @tc.desc: Test --exclude-thread option multi threads
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ExcludeThreadNames, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 --exclude-thread DfxWatchdog,GC_WorkerThread ", true);
+}
+
+/**
+ * @tc.name: ExcludeErrorThreadName
+ * @tc.desc: Test --exclude-thread option error thread name
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadName, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 --exclude-thread test ", true);
+}
+
+/**
+ * @tc.name: ExcludeErrorThreadNames
+ * @tc.desc: Test --exclude-thread option multi error thread names
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadNames, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 --exclude-thread test1,test2 ", true);
+}
+
+/**
+ * @tc.name: ExcludeMixedThreadName
+ * @tc.desc: Test --exclude-thread option mixed correct name and error name
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ExcludeMixedThreadName, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 --exclude-thread DfxWatchdog,test ", true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
