@@ -49,7 +49,7 @@ public:
         "       use symbols path to find symbols.\n"
         "   --elf <elf file name>\n"
         "       dump elf not perf data.\n"
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF 
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
         "   --proto <protobuf file name>\n"
         "       dump perf data from protobuf file.\n"
 #endif

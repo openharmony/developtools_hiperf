@@ -1015,13 +1015,11 @@ bool SubCommandRecord::CreateFifoServer()
         if (clientPipeOutput_ == -1) {
             char errInfo[ERRINFOLEN] = { 0 };
             strerror_r(errno, errInfo, ERRINFOLEN);
-            HLOGE("open fifo file(%s) failed. %d:%s", CONTROL_FIFO_FILE_S2C.c_str(), errno,
-                  errInfo);
+            HLOGE("open fifo file(%s) failed. %d:%s", CONTROL_FIFO_FILE_S2C.c_str(), errno, errInfo);
             return false;
         }
         nullFd_ = open("/dev/null", O_WRONLY);
         (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
-        HLOGD("redirect stdout to %d", nullFd_);
     } else {            // parent process
         isFifoClient_ = true;
         int fd = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
