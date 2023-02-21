@@ -654,9 +654,8 @@ bool SubCommandRecord::SetPerfLimit(const std::string& file, int value, std::fun
     if (IsRoot()) {
         bool ret = WriteIntToProcFile(file, value);
         if (!ret) {
-            printf("Fail to set %s to %d, please set it firstly.\n", file.c_str(), value);
+            printf("please set %s to %d manually if perf limit is wanted.\n", file.c_str(), value);
         }
-        return ret;
     }
 
     if (!OHOS::system::SetParameter(param, std::to_string(value))) {
