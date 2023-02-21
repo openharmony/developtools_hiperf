@@ -254,22 +254,23 @@ int CallStack::FindProcInfo(unw_addr_space_t as, unw_word_t ip, unw_proc_info_t 
     return -UNW_EUNSPEC;
 }
 
-bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, unw_word_t addr,
+bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, unw_word_t vaddr,
                                         unw_word_t *data)
 {
-    auto process = unwindInfoPtr.callStack.porcessMemoryMap_.find(unwindInfoPtr.thread.pid_);
-    if (process != unwindInfoPtr.callStack.porcessMemoryMap_.end()) {
-        auto memory = process->second.find(addr);
-        if (memory != process->second.end()) {
-            *data = memory->second;
-            return true;
-        }
+    if (__builtin_expect(unwindInfoPtr.thread.pid_ == unwindInfoPtr.callStack.lastPid_ && 
+        vaddr == unwindInfoPtr.callStack.lastAddr_, true)) {
+        *data = unwindInfoPtr.callStack.lastData_;
+        return true;
     }
 
-    if (unwindInfoPtr.thread.ReadRoMemory(addr, reinterpret_cast<uint8_t*>(data), sizeof(unw_word_t))) {
-        unwindInfoPtr.callStack.porcessMemoryMap_[unwindInfoPtr.thread.pid_][addr] = *data;
+    if (unwindInfoPtr.thread.ReadRoMemory(vaddr, reinterpret_cast<uint8_t*>(data), sizeof(unw_word_t))) {
+        unwindInfoPtr.callStack.lastPid_ = unwindInfoPtr.thread.pid_;
+        unwindInfoPtr.callStack.lastAddr_ = vaddr;
+        unwindInfoPtr.callStack.lastData_ = *data;
         return true;
     } else {
+        unwindInfoPtr.callStack.lastPid_ = -1;
+        unwindInfoPtr.callStack.lastAddr_ = 0;
         return false;
     }
 }
@@ -279,8 +280,6 @@ int CallStack::AccessMem([[maybe_unused]] unw_addr_space_t as, unw_word_t addr,
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
     *valuePoint = 0;
-    HLOGDUMMY("try access addr 0x%" UNW_WORD_PFLAG " ", addr);
-    HLOG_ASSERT(writeOperation == 0);
 
     /* Check overflow. */
     if (addr + sizeof(unw_word_t) < addr) {
@@ -294,8 +293,8 @@ int CallStack::AccessMem([[maybe_unused]] unw_addr_space_t as, unw_word_t addr,
             HLOGM("access_mem addr %p get val 0x%" UNW_WORD_PFLAG ", from mmap",
                   reinterpret_cast<void *>(addr), *valuePoint);
         } else {
-            HLOGW("access_mem addr %p failed, from mmap, ", reinterpret_cast<void *>(addr));
-            HLOGW("stack range 0x%" PRIx64 " -  0x%" PRIx64 "(0x%" PRIx64 ")",
+            HLOGW("access_mem addr %p failed, from mmap, STACK RANGE 0x%" PRIx64 "- 0x%" PRIx64 "(0x%" PRIx64 ")",
+                  reinterpret_cast<void *>(addr),
                   unwindInfoPtr->callStack.stackPoint_, unwindInfoPtr->callStack.stackEnd_,
                   unwindInfoPtr->callStack.stackEnd_ - unwindInfoPtr->callStack.stackPoint_);
             return -UNW_EUNSPEC;

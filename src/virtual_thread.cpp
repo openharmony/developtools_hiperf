@@ -30,13 +30,14 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 #ifdef DEBUG_TIME
+
 bool VirtualThread::IsSorted() const
 {
     for (std::size_t index = 1; index < memMaps_.size(); ++index) {
-        if (memMaps_[index - 1].end_ > memMaps_[index].begin_) {
+        if (memMaps_[memMapsIndexs_[index - 1]].end_ > memMaps_[memMapsIndexs_[index]].begin_) {
             std::cout << "memMaps_ order error:\n"
-                      << "    " << memMaps_[index - 1].begin_ << "-" << memMaps_[index - 1].end_
-                      << "    " << memMaps_[index].begin_ << "-" << memMaps_[index].end_;
+                      << "    " << memMaps_[memMapsIndexs_[index - 1]].begin_ << "-" << memMaps_[memMapsIndexs_[index - 1]].end_
+                      << "    " << memMaps_[memMapsIndexs_[index]].begin_ << "-" << memMaps_[memMapsIndexs_[index]].end_;
             return false;
         }
     }
@@ -67,36 +68,70 @@ const MemMapItem *VirtualThread::FindMapByAddr2(uint64_t addr) const
     return nullptr;
 }
 
+uint64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
+{
+    HLOGM("try found vaddr 0x%" PRIx64 "in maps %zu", addr, memMaps_.size());
+    if (memMaps_.size() == 0) {
+        return -1;
+    }
+    if (memMaps_[memMapsIndexs_[0]].begin_ > addr) {
+        return -1;
+    }
+    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() -  1]].end_ <= addr) {
+        return -1;
+    }
+    constexpr int divisorNum {2};
+    std::size_t left {0};
+    std::size_t right {memMapsIndexs_.size()};
+    std::size_t mid = (right - left) / divisorNum + left;
+    while (left < right) {
+        if (addr < memMaps_[memMapsIndexs_[mid]].end_) {
+            right = mid;
+            mid = (right - left) / divisorNum + left;
+            continue;
+        }
+        if (addr >= memMaps_[memMapsIndexs_[mid]].end_) {
+            left = mid + 1;
+            mid = (right - left) / divisorNum + left;
+            continue;
+        }
+    }
+    if (addr >= memMaps_[memMapsIndexs_[left]].begin_ && addr < memMaps_[memMapsIndexs_[left]].end_) {
+        return static_cast<uint64_t>(memMapsIndexs_[left]);
+    }
+    return -1;
+}
+
 const MemMapItem *VirtualThread::FindMapByAddr(uint64_t addr) const
 {
-    HLOGM("try found vaddr 0x%" PRIx64 " in maps %zu ", addr, memMaps_.size());
-    if (memMaps_.size() == 0) {
+    HLOGM("try found vaddr 0x%" PRIx64 "in maps %zu", addr, memMaps_.size());
+        if (memMaps_.size() == 0) {
         return nullptr;
     }
-    if (memMaps_.front().begin_ > addr) {
+    if (memMaps_[memMapsIndexs_[0]].begin_ > addr) {
         return nullptr;
     }
-    if (memMaps_.back().end_ <= addr) {
+    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() -  1]].end_ <= addr) {
         return nullptr;
     }
-    constexpr int two {2};
+    constexpr int divisorNum {2};
     std::size_t left {0};
-    std::size_t right {memMaps_.size()};
-    std::size_t mid = (right - left) / two + left;
+    std::size_t right {memMapsIndexs_.size()};
+    std::size_t mid = (right - left) / divisorNum + left;
     while (left < right) {
-        if (addr < memMaps_[mid].end_) {
+        if (addr < memMaps_[memMapsIndexs_[mid]].end_) {
             right = mid;
-            mid = (right - left) / two + left;
+            mid = (right - left) / divisorNum + left;
             continue;
         }
-        if (addr >= memMaps_[mid].end_) {
+        if (addr >= memMaps_[memMapsIndexs_[mid]].end_) {
             left = mid + 1;
-            mid = (right - left) / two + left;
+            mid = (right - left) / divisorNum + left;
             continue;
         }
     }
-    if (addr >= memMaps_[left].begin_ and addr < memMaps_[left].end_) {
-        return &memMaps_[left];
+    if (addr >= memMaps_[memMapsIndexs_[left]].begin_ && addr < memMaps_[memMapsIndexs_[left]].end_) {
+        return &memMaps_[memMapsIndexs_[left]];
     }
     return nullptr;
 }
@@ -124,13 +159,11 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(const MemMapItem &inMap) const
     for (auto &symbolsFile : symbolsFiles_) {
         if (symbolsFile->filePath_ == inMap.name_) {
             HLOGM("found symbol for map '%s'", inMap.name_.c_str());
-            if (symbolsFile->LoadDebugInfo()) {
-                HLOGM("found symbol for map '%s'", inMap.name_.c_str());
-                return symbolsFile.get();
-            }
-            break;
+            symbolsFile->LoadDebugInfo();
+            return symbolsFile.get();
         }
     }
+
 #ifdef DEBUG_MISS_SYMBOL
     if (find(missedSymbolFile_.begin(), missedSymbolFile_.end(), inMap.name_) ==
         missedSymbolFile_.end()) {
@@ -160,21 +193,36 @@ void VirtualThread::ReportVaddrMapMiss(uint64_t vaddr) const
 
 bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) const
 {
-    const MemMapItem *map = FindMapByAddr(vaddr);
-    if (map != nullptr) {
-        // found symbols by file name
-        SymbolsFile *symbolsFile = FindSymbolsFileByMap(*map);
-        if (symbolsFile != nullptr) {
-            HLOGM("read vaddr from addr is 0x%" PRIx64 " at '%s'", vaddr - map->begin_,
-                  map->name_.c_str());
-            if (size == symbolsFile->ReadRoMemory(map->FileOffsetFromAddr(vaddr), data, size)) {
+    uint64_t pageIndex = vaddr >> 12;
+    uint64_t memMapIndex = -1;
+    const uint64_t illegal = -1;
+    auto pageFile = vaddr4kPageCache_.find(pageIndex);
+    if (pageFile != vaddr4kPageCache_.end()) {
+        memMapIndex = pageFile->second;
+    } else {
+        memMapIndex = FindMapIndexByAddr(vaddr);
+        // add to 4k page cache table
+        if (memMapIndex != illegal && memMapIndex < memMaps_.size()) {
+            const_cast<VirtualThread *>(this)->vaddr4kPageCache_[pageIndex] = memMapIndex;
+        }
+    }
+    if (memMapIndex != illegal) {
+        MemMapItem &map = memMaps_[memMapIndex];
+        if (map.symfile == nullptr) {
+            // find symbols by file name
+            map.symfile = FindSymbolsFileByMap(map);
+        } 
+        if (map.symfile != nullptr) {
+            uint64_t foff = map.FileOffsetFromAddr(vaddr);
+            SymbolsFile *symFile = map.symfile;
+            if (size == symFile->ReadRoMemory(foff, data, size)) {
                 return true;
             } else {
                 return false;
             }
         } else {
-            HLOGW("found addr %" PRIx64 " in map but not loaded symbole %s", vaddr,
-                  map->name_.c_str());
+            HLOGW("find addr %" PRIx64 "in map but not loaded symbole %s", vaddr, 
+                  map.name_.c_str());
         }
     } else {
 #ifdef HIPERF_DEBUG
@@ -332,6 +380,7 @@ void VirtualThread::ParseMap()
             }
             HLOGD("%d %d memMap add '%s'", pid_, tid_, memMapItem.name_.c_str());
             memMaps_.emplace_back(std::move(memMapItem));
+            memMapsIndexs_.emplace_back(memMaps_.size() - 1);
         }
     }
     SortMemMaps();
@@ -342,15 +391,15 @@ void VirtualThread::SortMemMaps()
 {
     for (int currPos = 1; currPos < static_cast<int>(memMaps_.size()); ++currPos) {
         int targetPos = currPos - 1;
-        while (targetPos >= 0 and memMaps_[currPos].end_ < memMaps_[targetPos].end_) {
+        while (targetPos >= 0 and memMaps_[memMapsIndexs_[currPos]].end_ < memMaps_[memMapsIndexs_[targetPos]].end_) {
             --targetPos;
         }
         if (targetPos < currPos - 1) {
-            auto target = memMaps_[currPos];
+            auto target = memMapsIndexs_[currPos];
             for (int k = currPos - 1; k > targetPos; --k) {
-                memMaps_[k + 1] = memMaps_[k];
+                memMapsIndexs_[k + 1] = memMapsIndexs_[k];
             }
-            memMaps_[targetPos + 1] = target;
+            memMapsIndexs_[targetPos + 1] = target;
         }
     }
     return;
@@ -363,6 +412,7 @@ void VirtualThread::CreateMapItem(const std::string filename, uint64_t begin, ui
         return; // skip some memmap
     }
     MemMapItem &map = memMaps_.emplace_back(begin, begin + len, offset, filename);
+    memMapsIndexs_.emplace_back(memMaps_.size() - 1);
     HLOGD(" %u:%u create a new map(total %zu) at '%s' (0x%" PRIx64 "-0x%" PRIx64 ")@0x%" PRIx64 " ",
           pid_, tid_, memMaps_.size(), map.name_.c_str(), map.begin_, map.end_, map.pageoffset_);
     SortMemMaps();

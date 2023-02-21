@@ -58,6 +58,9 @@ public:
     size_t ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames, size_t expandLimit = 1u);
 
 private:
+    pid_t lastPid_ = -1;
+    unw_word_t lastAddr_ = 0;
+    unw_word_t lastData_ = 0;
     uint64_t stackPoint_ = 0;
     uint64_t stackEnd_ = 0;
     u64 *regs_ = nullptr; // not const , be cause we will fix it for arm64 cpu in UpdateRegForABI
@@ -104,7 +107,7 @@ private:
 
     using unwMemoryCache = std::unordered_map<unw_word_t, unw_word_t>;
     std::unordered_map<pid_t, unwMemoryCache> porcessMemoryMap_;
-
+    
     unw_accessors_t accessors_ = {
         .find_proc_info = FindProcInfo,
         .put_unwind_info = PutUnwindInfo,
