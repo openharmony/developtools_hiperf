@@ -17,7 +17,6 @@
 
 #include "subcommand_record.h"
 
-#include <chrono>
 #include <csignal>
 #include <cstdlib>
 #include <ctime>
@@ -56,6 +55,7 @@ const std::string PERF_EVENT_MLOCK_KB = "/proc/sys/kernel/perf_event_mlock_kb";
 
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2000ms;
+const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT_CHECK = 100ms;
 
 constexpr uint64_t MASK_ALIGNED_8 = 7;
 constexpr size_t MAX_DWARF_CALL_CHAIN = 2;
@@ -958,17 +958,18 @@ bool SubCommandRecord::ProcessControl()
     isFifoClient_ = true;
     bool ret = false;
     if (controlCmd_ == CONTROL_CMD_START) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStart);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyStart, CONTROL_WAITREPY_TOMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_RESUME) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyResume);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyResume, CONTROL_WAITREPY_TOMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_PAUSE) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyPause);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyPause, CONTROL_WAITREPY_TOMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_STOP) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStop);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
         if (ret) {
             // wait sampling process exit really
-            while (SendFifoAndWaitReply(HiperfClient::ReplyCheck)) {
-                std::this_thread::sleep_for(1s);
+            static constexpr uint64_t waitCheckSleepMs = 100;
+            while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TOMEOUT_CHECK)) {
+                std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
             }
         }
         remove(CONTROL_FIFO_FILE_C2S.c_str());
@@ -1022,7 +1023,7 @@ bool SubCommandRecord::CreateFifoServer()
     } else {            // parent process
         isFifoClient_ = true;
         int fd = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
-        if (fd == -1 or !WaitFifoReply(fd)) {
+        if (fd == -1 or !WaitFifoReply(fd, CONTROL_WAITREPY_TOMEOUT)) {
             close(fd);
             kill(pid, SIGKILL);
             remove(CONTROL_FIFO_FILE_C2S.c_str());
@@ -1038,7 +1039,7 @@ bool SubCommandRecord::CreateFifoServer()
     return true;
 }
 
-bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd)
+bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut)
 {
     // need open for read first, because server maybe send reply before client wait to read
     int fdRead = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
@@ -1062,17 +1063,17 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd)
     }
     close(fdWrite);
 
-    bool ret = WaitFifoReply(fdRead);
+    bool ret = WaitFifoReply(fdRead, timeOut);
     close(fdRead);
     return ret;
 }
 
-bool SubCommandRecord::WaitFifoReply(int fd)
+bool SubCommandRecord::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut)
 {
     struct pollfd pollFd {
         fd, POLLIN, 0
     };
-    int polled = poll(&pollFd, 1, CONTROL_WAITREPY_TOMEOUT.count());
+    int polled = poll(&pollFd, 1, timeOut.count());
     std::string reply;
     if (polled > 0) {
         while (true) {
