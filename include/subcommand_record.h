@@ -29,7 +29,7 @@
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
-
+#include <chrono>
 #include "perf_event_record.h"
 #include "perf_events.h"
 #include "perf_file_writer.h"
@@ -236,8 +236,8 @@ private:
     bool isFifoClient_ = false;
     bool ProcessControl();
     bool CreateFifoServer();
-    bool SendFifoAndWaitReply(const std::string &cmd);
-    bool WaitFifoReply(int fd);
+    bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
+    bool WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut);
     void CloseClientThread();
 
     bool PreparePerfEvent();
