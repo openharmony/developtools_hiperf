@@ -68,17 +68,18 @@ const MemMapItem *VirtualThread::FindMapByAddr2(uint64_t addr) const
     return nullptr;
 }
 
-uint64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
+int64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
 {
     HLOGM("try found vaddr 0x%" PRIx64 "in maps %zu", addr, memMaps_.size());
+    const int64_t illegal = -1;
     if (memMaps_.size() == 0) {
-        return -1;
+        return illegal;
     }
     if (memMaps_[memMapsIndexs_[0]].begin_ > addr) {
-        return -1;
+        return illegal;
     }
     if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() -  1]].end_ <= addr) {
-        return -1;
+        return illegal;
     }
     constexpr int divisorNum {2};
     std::size_t left {0};
@@ -97,9 +98,9 @@ uint64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
         }
     }
     if (addr >= memMaps_[memMapsIndexs_[left]].begin_ && addr < memMaps_[memMapsIndexs_[left]].end_) {
-        return static_cast<uint64_t>(memMapsIndexs_[left]);
+        return static_cast<int64_t>(memMapsIndexs_[left]);
     }
-    return -1;
+    return illegal;
 }
 
 const MemMapItem *VirtualThread::FindMapByAddr(uint64_t addr) const
@@ -198,14 +199,16 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
 {
     uint64_t pageIndex = vaddr >> 12;
     uint64_t memMapIndex = -1;
+    const int64_t exceptRet = -1;
     const uint64_t illegal = -1;
     auto pageFile = vaddr4kPageCache_.find(pageIndex);
     if (pageFile != vaddr4kPageCache_.end()) {
         memMapIndex = pageFile->second;
     } else {
-        memMapIndex = FindMapIndexByAddr(vaddr);
+        int64_t retIndex = FindMapIndexByAddr(vaddr);
+        memMapIndex = static_cast<uint64_t>(retIndex);
         // add to 4k page cache table
-        if (memMapIndex != illegal && memMapIndex < memMaps_.size()) {
+        if (retIndex != exceptRet && memMapIndex < memMaps_.size()) {
             const_cast<VirtualThread *>(this)->vaddr4kPageCache_[pageIndex] = memMapIndex;
         }
     }

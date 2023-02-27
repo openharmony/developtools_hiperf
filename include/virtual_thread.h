@@ -82,7 +82,7 @@ public:
     const MemMapItem *FindMapByAddr(uint64_t addr) const;
     const MemMapItem *FindMapByAddr2(uint64_t addr) const;
     const MemMapItem *FindMapByFileInfo(const std::string name, uint64_t offset) const;
-    uint64_t FindMapIndexByAddr(uint64_t addr) const;
+    int64_t FindMapIndexByAddr(uint64_t addr) const;
     SymbolsFile *FindSymbolsFileByMap(const MemMapItem &inMap) const;
     bool ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) const;
 #ifdef HIPERF_DEBUG
