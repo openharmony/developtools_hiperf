@@ -1427,6 +1427,7 @@ void PerfEvents::RecordLoop()
     const auto startTime = steady_clock::now();
     const auto endTime = startTime + timeOut_;
     milliseconds usedTimeMsTick {};
+    int count = 1;
 
     while (g_trackRunning) {
         // time check point
@@ -1436,8 +1437,11 @@ void PerfEvents::RecordLoop()
             ReadRecordsFromMmaps();
         }
 
-        if (HaveTargetsExit(startTime)) {
-            break;
+        if ((uint64_t)std::chrono::duration_cast<milliseconds>(thisTime - startTime).count() > count * THOUSANDS) {
+            if (HaveTargetsExit(startTime)) {
+                break;
+            }
+            ++count;
         }
 
         if (thisTime >= endTime) {

@@ -18,6 +18,7 @@
 #include <cinttypes>
 #include <functional>
 #include <unordered_set>
+#include <unordered_map>
 
 #include "debug_logger.h"
 #include "mem_map_item.h"
@@ -48,6 +49,8 @@ public:
           symbolsFiles_(symbolsFiles),
           processMemMaps_(),
           memMaps_(processMemMaps_),
+          vaddr4kPageCache_(vaddr4kPageCacheOfProc_),
+          memMapsIndexs_(processMemMapsIndexs_),
           parent_(*this) {}
 
     VirtualThread(pid_t pid, pid_t tid, VirtualThread &thread,
@@ -57,6 +60,8 @@ public:
           symbolsFiles_(symbolsFiles),
           processMemMaps_(),
           memMaps_(thread.processMemMaps_),
+          vaddr4kPageCache_(thread.vaddr4kPageCacheOfProc_),
+          memMapsIndexs_(thread.processMemMapsIndexs_),
           parent_(thread)
     {
         HLOG_ASSERT(pid != tid);
@@ -77,6 +82,7 @@ public:
     const MemMapItem *FindMapByAddr(uint64_t addr) const;
     const MemMapItem *FindMapByAddr2(uint64_t addr) const;
     const MemMapItem *FindMapByFileInfo(const std::string name, uint64_t offset) const;
+    int64_t FindMapIndexByAddr(uint64_t addr) const;
     SymbolsFile *FindSymbolsFileByMap(const MemMapItem &inMap) const;
     bool ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) const;
 #ifdef HIPERF_DEBUG
@@ -96,8 +102,12 @@ private:
     // use to put the parent thread's map
     // only process have memmap
     std::vector<MemMapItem> processMemMaps_;
+    std::unordered_map<uint64_t, uint64_t> vaddr4kPageCacheOfProc_;
     // thread must use ref from process
     std::vector<MemMapItem> &memMaps_;
+    std::unordered_map<uint64_t, uint64_t> &vaddr4kPageCache_;
+    std::vector<int> processMemMapsIndexs_;
+    std::vector<int> &memMapsIndexs_;
     VirtualThread &parent_;
 #ifdef HIPERF_DEBUG
     mutable std::unordered_set<uint64_t> missedRuntimeVaddr_;

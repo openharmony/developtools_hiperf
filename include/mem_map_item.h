@@ -24,6 +24,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+class SymbolsFile;
 class MemMapItem {
 public:
     uint64_t begin_ = 0;
@@ -34,6 +35,7 @@ public:
     uint64_t major_ = 0;
     uint64_t minor_ = 0;
     ino_t inode = 0;
+    SymbolsFile *symfile = nullptr;
     std::string name_;
     std::string_view nameHold_;
 
