@@ -191,14 +191,14 @@ public:
     {
         size_t readSize = 0;
         const int wideBytes = 8;
-        const int wideLastAddr = 7;
+        const int wideMaskPosi = 7;
         const int shortBytes = 4;
-        const int shortLastAddr = 3;
+        const int shortMaskPosi = 3;
         if (mmap_ != MMAP_FAILED) {
             if ((addr + size) <= mmapSize_) {
-                if (size == wideBytes && (addr & wideLastAddr) == 0) {
+                if (size == wideBytes && (addr & wideMaskPosi) == 0) {
                     *(uint64_t * const)data = *(uint64_t *) (static_cast<uint8_t *>(mmap_) + addr);
-                } else if (size == shortBytes && (addr & shortLastAddr) == 0) {
+                } else if (size == shortBytes && (addr & shortMaskPosi) == 0) {
                     *(uint32_t * const)data = *(uint32_t *) (static_cast<uint8_t *>(mmap_) + addr);
                 } else {
                     std::copy_n(static_cast<uint8_t *>(mmap_) + addr, size, data);
