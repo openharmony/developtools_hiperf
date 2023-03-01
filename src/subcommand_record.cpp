@@ -55,7 +55,7 @@ const std::string PERF_EVENT_MLOCK_KB = "/proc/sys/kernel/perf_event_mlock_kb";
 
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2000ms;
-const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT_CHECK = 100ms;
+const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT_CHECK = 1000ms;
 
 constexpr uint64_t MASK_ALIGNED_8 = 7;
 constexpr size_t MAX_DWARF_CALL_CHAIN = 2;
@@ -967,10 +967,11 @@ bool SubCommandRecord::ProcessControl()
         ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
         if (ret) {
             // wait sampling process exit really
-            static constexpr uint64_t waitCheckSleepMs = 100;
+            static constexpr uint64_t waitCheckSleepMs = 500;
             while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TOMEOUT_CHECK)) {
                 std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
             }
+            HLOGI("wait reply check end.");
         }
         remove(CONTROL_FIFO_FILE_C2S.c_str());
         remove(CONTROL_FIFO_FILE_S2C.c_str());
@@ -1047,7 +1048,15 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd, const std::c
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_S2C.c_str());
         return false;
     }
-    int fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
+    int fdWrite = -1;
+    constexpr int retryCount = 5;
+    for (int idx = 0; (idx < retryCount) && (fdWrite == -1); idx++) {
+        fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
+        if (fdWrite == -1) {
+            HLOGE("can not open fifo file(%s), time:%d, errno:%d", CONTROL_FIFO_FILE_C2S.c_str(), idx, errno);
+            std::this_thread::sleep_for(milliseconds(100));
+        }
+    }
     if (fdWrite == -1) {
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_C2S.c_str());
         close(fdRead);
@@ -1160,6 +1169,7 @@ void SubCommandRecord::CloseClientThread()
         clientExit_ = true;
         close(clientPipeInput_);
         close(clientPipeOutput_);
+        HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
             close(nullFd_);
         }
