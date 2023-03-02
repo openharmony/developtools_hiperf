@@ -36,8 +36,10 @@ bool VirtualThread::IsSorted() const
     for (std::size_t index = 1; index < memMaps_.size(); ++index) {
         if (memMaps_[memMapsIndexs_[index - 1]].end_ > memMaps_[memMapsIndexs_[index]].begin_) {
             std::cout << "memMaps_ order error:\n"
-                      << "    " << memMaps_[memMapsIndexs_[index - 1]].begin_ << "-" << memMaps_[memMapsIndexs_[index - 1]].end_
-                      << "    " << memMaps_[memMapsIndexs_[index]].begin_ << "-" << memMaps_[memMapsIndexs_[index]].end_;
+                      << "    " << memMaps_[memMapsIndexs_[index - 1]].begin_ << "-"
+                      << memMaps_[memMapsIndexs_[index - 1]].end_
+                      << "    " << memMaps_[memMapsIndexs_[index]].begin_ << "-"
+                      << memMaps_[memMapsIndexs_[index]].end_;
             return false;
         }
     }
@@ -217,7 +219,7 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
         if (map.symfile == nullptr) {
             // find symbols by file name
             map.symfile = FindSymbolsFileByMap(map);
-        } 
+        }
         if (map.symfile != nullptr) {
             uint64_t foff = map.FileOffsetFromAddr(vaddr);
             SymbolsFile *symFile = map.symfile;
@@ -227,7 +229,7 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
                 return false;
             }
         } else {
-            HLOGW("find addr %" PRIx64 "in map but not loaded symbole %s", vaddr, 
+            HLOGW("find addr %" PRIx64 "in map but not loaded symbole %s", vaddr,
                   map.name_.c_str());
         }
     } else {
