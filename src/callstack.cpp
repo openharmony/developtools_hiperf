@@ -257,7 +257,7 @@ int CallStack::FindProcInfo(unw_addr_space_t as, unw_word_t ip, unw_proc_info_t 
 bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, unw_word_t vaddr,
                                         unw_word_t *data)
 {
-    if (__builtin_expect(unwindInfoPtr.thread.pid_ == unwindInfoPtr.callStack.lastPid_ && 
+    if (__builtin_expect(unwindInfoPtr.thread.pid_ == unwindInfoPtr.callStack.lastPid_ &&
         vaddr == unwindInfoPtr.callStack.lastAddr_, true)) {
         *data = unwindInfoPtr.callStack.lastData_;
         return true;
