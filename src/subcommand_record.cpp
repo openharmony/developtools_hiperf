@@ -312,7 +312,7 @@ bool SubCommandRecord::CheckDataLimitOption()
 bool SubCommandRecord::CheckSelectCpuPidOption()
 {
     if (!selectCpus_.empty()) {
-        int maxCpuid = GetProcessorNum() - 1;
+        int maxCpuid = sysconf(_SC_NPROCESSORS_CONF) - 1;
         for (auto cpu : selectCpus_) {
             if (cpu < 0 || cpu > maxCpuid) {
                 printf("Invalid -c value '%d', the CPU ID should be in 0~%d \n", cpu, maxCpuid);
@@ -682,7 +682,7 @@ bool SubCommandRecord::SetPerfMaxSampleRate()
 bool SubCommandRecord::SetPerfEventMlock()
 {
     auto cmp = [](int oldValue, int newValue) { return oldValue == newValue; };
-    int mlock_kb = GetProcessorNum() * (mmapPages_ + 1) * 4;
+    int mlock_kb = sysconf(_SC_NPROCESSORS_CONF) * (mmapPages_ + 1) * 4;
     return SetPerfLimit(PERF_EVENT_MLOCK_KB, mlock_kb, cmp, "hiviewdfx.hiperf.perf_event_mlock_kb");
 }
 

@@ -246,7 +246,7 @@ HWTEST_F(SubCommandRecordTest, SelectCpu, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, SelectCpuMulti, TestSize.Level1)
 {
-    int maxCpuid = GetProcessorNum();
+    int maxCpuid = sysconf(_SC_NPROCESSORS_CONF);
     std::string opt = "-d 2 -e sw-task-clock -c ";
     for (int i = 0; i < maxCpuid; i++) {
         opt += std::to_string(i);
@@ -264,7 +264,7 @@ HWTEST_F(SubCommandRecordTest, SelectCpuMinErr, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, SelectCpuMaxErr, TestSize.Level1)
 {
-    int maxCpuid = GetProcessorNum();
+    int maxCpuid = sysconf(_SC_NPROCESSORS_CONF);
     std::string opt = "-d 2 -c ";
     opt += std::to_string(maxCpuid);
     opt += " ";
