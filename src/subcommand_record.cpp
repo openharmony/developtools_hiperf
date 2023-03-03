@@ -931,7 +931,7 @@ void SubCommandRecord::ClientCommandHandle()
         if (command == ReplyStart) {
             ClientCommandResponse(perfEvents_.EnableTracking());
         } else if (command == ReplyCheck) {
-            ClientCommandResponse(true);
+            ClientCommandResponse(!clientExit_);
         } else if (command == ReplyStop) {
             ClientCommandResponse(perfEvents_.StopTracking());
         } else if (command == ReplyPause) {
@@ -967,7 +967,8 @@ bool SubCommandRecord::ProcessControl()
         ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
         if (ret) {
             // wait sampling process exit really
-            static constexpr uint64_t waitCheckSleepMs = 500;
+            static constexpr uint64_t waitCheckSleepMs = 200;
+            std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
             while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TOMEOUT_CHECK)) {
                 std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
             }
@@ -1048,15 +1049,7 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd, const std::c
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_S2C.c_str());
         return false;
     }
-    int fdWrite = -1;
-    constexpr int retryCount = 5;
-    for (int idx = 0; (idx < retryCount) && (fdWrite == -1); idx++) {
-        fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
-        if (fdWrite == -1) {
-            HLOGE("can not open fifo file(%s), time:%d, errno:%d", CONTROL_FIFO_FILE_C2S.c_str(), idx, errno);
-            std::this_thread::sleep_for(milliseconds(100));
-        }
-    }
+    int fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
     if (fdWrite == -1) {
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_C2S.c_str());
         close(fdRead);
@@ -1167,13 +1160,13 @@ void SubCommandRecord::CloseClientThread()
 {
     if (clientCommandHanle_.joinable()) {
         clientExit_ = true;
-        close(clientPipeInput_);
-        close(clientPipeOutput_);
         HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
             close(nullFd_);
         }
         clientCommandHanle_.join();
+        close(clientPipeInput_);
+        close(clientPipeOutput_);
         if (isFifoServer_) {
             remove(CONTROL_FIFO_FILE_C2S.c_str());
             remove(CONTROL_FIFO_FILE_S2C.c_str());
