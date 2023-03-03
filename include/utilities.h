@@ -304,7 +304,6 @@ bool PowerOfTwo(uint64_t n);
 #define MAP_FAILED MMAP_FAILED
 #endif
 
-int GetProcessorNum();  // get number of processors
 bool IsExistDebugByPid(const std::vector<pid_t> pids);
 std::string GetProcessName(int pid);
 bool IsDebugableApp(const std::string& bundleName);

@@ -110,8 +110,7 @@ void PerfEventsTest::TestCodeThread()
 
 void PerfEventsTest::RunTestThreads(std::vector<std::thread> &threads)
 {
-    long processorNum = GetProcessorNum();
-    for (long i = 0; i < processorNum; i++) {
+    for (long i = 0; i < sysconf(_SC_NPROCESSORS_CONF); i++) {
         threads.emplace_back(std::thread(&TestCodeThread));
     }
 }

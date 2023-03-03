@@ -398,7 +398,7 @@ bool SubCommandStat::CheckSelectCpuPidOption()
     if (!selectCpus_.empty()) {
         // the only value is not -1
         if (!(selectCpus_.size() == 1 && selectCpus_.front() == -1)) {
-            int maxCpuid = GetProcessorNum() - 1;
+            int maxCpuid = sysconf(_SC_NPROCESSORS_CONF) - 1;
             for (auto cpu : selectCpus_) {
                 if (cpu < 0 || cpu > maxCpuid) {
                     printf("Invalid -c value '%d', the CPU ID should be in 0~%d \n", cpu, maxCpuid);
