@@ -223,9 +223,6 @@ ohos_source_set("hiperf_platform_linux") {
 
 config("unwind_config") {
   defines = [ "HAVE_LIBUNWIND=1" ]
-  if (!hiperf_target_host) {
-    defines += [ "ONLY_RECOVER_GENERAL_REGS=1" ]
-  }
 }
 
 ohos_source_set("support_libunwind") {
@@ -235,7 +232,11 @@ ohos_source_set("support_libunwind") {
   if (hiperf_target_host) {
     public_deps = [ "//third_party/libunwind:unwind_source_${host_cpu}" ]
   } else {
-    public_deps = [ "//third_party/libunwind:unwind_source_${target_cpu}" ]
+    if (target_cpu == "arm64") {
+      public_deps = [ "//third_party/libunwind:unwind_source_arm64_opt" ]
+    } else {
+      public_deps = [ "//third_party/libunwind:unwind_source_${target_cpu}" ]
+    }
   }
 }
 
