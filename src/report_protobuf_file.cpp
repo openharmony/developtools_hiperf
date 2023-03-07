@@ -47,7 +47,6 @@ void ReportProtobufFileWriter::Close()
         protpbufCodedOutputStream_.reset(nullptr);
         protpbufOutputStream_.reset(nullptr);
         protobufFileStream_->close();
-        printf("%" PRIu64 " sample record export to protobuf\n", recordCount_);
     }
 }
 
