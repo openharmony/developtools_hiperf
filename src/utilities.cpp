@@ -622,14 +622,12 @@ bool IsDebugableApp(const std::string& bundleName)
         return false;
     }
 
-    ApplicationInfo appInfo;
-    bool ret = proxy->GetApplicationInfo(bundleName, GET_APPLICATION_INFO_WITH_DISABLE, Constants::ANY_USERID, appInfo);
-    if (!ret) {
-        printf("Get application info failed!\n");
-        HLOGE("Get application info failed, bundleName:%s", bundleName.c_str());
+    int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
+    if (uid < 0) {
+        HLOGE("Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
         return false;
     }
-    return appInfo.debug;
+    return true;
 #else
     return false;
 #endif
