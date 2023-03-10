@@ -957,7 +957,7 @@ public:
                 HLOGD("user mode do not load kernel syms");
                 printf("Hiperf is not running as root mode. Do not need load kernel syms\n");
                 return false;
-             }
+            }
             printf("/proc/sys/kernel/kptr_restrict is NOT 0, will try set it to 0.\n");
             hasChangeKptr = WriteStringToFile(KPTR_RESTRICT, "0");
             if (!hasChangeKptr) {
@@ -1005,8 +1005,8 @@ public:
         if (onRecording_) {
             const auto startTime = std::chrono::steady_clock::now();
             if (!LoadKernelSyms()) {
-                if (IsRoot()) { 
-                    printf("parse kalsyms failed.\n");   
+                if (IsRoot()) {
+                    printf("parse kalsyms failed.\n");
                 }
                 return false;
             } else {

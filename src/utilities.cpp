@@ -637,7 +637,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids)
             return false;
         }
         std::string bundleName = GetProcessName(pid);
-        if (!IsRoot() && !IsDebugableApp(bundleName)){
+        if (!IsRoot() && !IsDebugableApp(bundleName)) {
             HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
             printf("-p option only support debug aplication\n");
             return false;
