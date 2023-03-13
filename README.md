@@ -14,12 +14,12 @@ hiperf is a command-line debugging tool provided by OpenHarmony for developers. 
 ```
 /developtools/hiperf
 ├── demo			# Demo program
-│   ├── cpp			# C++ demo program, which demonstrates how to invoke APIs to simulate sampling scenarios.
-│   └── js			# JS demo program, which demonstrates how to invoke APIs.
+│   ├── cpp			# C++ demo program, which demonstrates how to call APIs to simulate sampling scenarios.
+│   └── js			# JS demo program, which demonstrates how to call APIs.
 ├── include			# Project header files.
 │   └── nonlinux	# Header file for cross compilation (non-Linux platform)
 ├── interfaces		# APIs
-│   ├── innerkits	# C APIs.
+│   ├── innerkits	# C++ APIs.
 │   └── kits		# JS APIs
 ├── proto		    # Definition of the data structure exported to proto by the report command
 ├── script			# Host scripts, including HTML
@@ -81,7 +81,7 @@ host/
     │   │   ├── linux						   # Linux platform
     │   │   │   └── x86_64
     │   │   │       ├── hiperf_host				# Executable program run by the PC. The Report and Dump commands are supported.
-    │   │   │       └── libhiperf_report.so		# Lib file run by the PC. It is used by the python script.
+    │   │   │       └── libhiperf_report.so		# Lib file run by the PC. It is used by the Python script.
     │   │   ├── ohos
     │   │   │   └── arm						   # Arm platform
     │   │   │       └── hiperf				    # Executable program run by the board
@@ -189,7 +189,7 @@ Both formats are supported.
 | --logtag <tagA [,tagB] [,tagC]> | Enables the debug logs of the MUCH level for the specified module.|
 | --hilog                         | Prints logs to Hilog.               |
 | --logpath                       | Specifies the log path.              |
-| --nodebug                       | Stop printing any logs.                |
+| --nodebug                       | Stops printing any logs.                |
 
 ### list
 
