@@ -23,18 +23,18 @@ using namespace HiperfMallocDemo;
 
 int main(const int argc, const char *argv[])
 {
-    static const int wartTime = 100;
-    static const int countTry = 1000;
+    static const int WART_TIME = 100;
+    static const int COUNT_TRY = 1000;
     const int bufSize = 1048576;
 
     printf("demo start\n");
-    sleep(wartTime);
+    sleep(WART_TIME);
     void *temp = nullptr;
     // try for each thread times
-    for (int i = 0; i < countTry; i++) {
+    for (int i = 0; i < COUNT_TRY; i++) {
         temp = malloc(bufSize);
         printf("malloc %d \n", i);
-        sleep(wartTime);
+        sleep(WART_TIME);
         if (temp != nullptr) {
             free(temp);
             temp = nullptr;
