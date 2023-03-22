@@ -443,7 +443,7 @@ private:
 #if !is_mingw
     std::vector<struct pollfd> pollFds_;
 #endif
-    const int pollTimeOut_ = 100; // ms
+    const int pollTimeOut_ = 500; // ms
     size_t pageSize_ = 4096;
     bool systemTarget_ = false;
     bool excludeHiperf_ = false;
