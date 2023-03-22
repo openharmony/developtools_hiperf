@@ -98,6 +98,9 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
             for (auto &memMapItem : thread.GetMaps()) {
                 auto mmapRecord =
                     std::make_unique<PerfRecordMmap2>(false, thread.pid_, thread.tid_, memMapItem);
+                if (mmapRecord->data_.pgoff == 0 || (mmapRecord->data_.prot & PROT_EXEC) == 0) {
+                    continue;
+                }
                 HLOGD("make PerfRecordMmap2 %d:%d:%s:%s(0x%" PRIx64 "-0x%" PRIx64 ")@%" PRIx64 " ",
                       thread.pid_, thread.tid_, thread.name_.c_str(), memMapItem.name_.c_str(),
                       memMapItem.begin_, memMapItem.end_, memMapItem.pageoffset_);
