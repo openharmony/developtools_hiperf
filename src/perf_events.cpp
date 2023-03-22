@@ -953,7 +953,8 @@ bool PerfEvents::CreateFdEvents(void)
                         CreateMmap(fdItem, eventItem.attr);
                     }
                     // update group leader
-                    if (groupFdCache[icpu][ipid] == -1) {
+                    int groupFdCacheNum = groupFdCache[icpu][ipid];
+                    if (groupFdCacheNum == -1) {
                         groupFdCache[icpu][ipid] = fdItem.fd.Get();
                     }
                 }
@@ -1203,8 +1204,7 @@ void PerfEvents::GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, si
     if (copySize < size) {
         size -= copySize;
         if (memcpy_s(static_cast<uint8_t *>(dest) + copySize, size, mmap.buf, size) != 0) {
-            HLOGEP("memcpy_s %p to %p failed. size %zd", mmap.buf,
-                   static_cast<uint8_t *>(dest) + copySize, size);
+            HLOGEP("GetRecordFieldFromMmap: memcpy_s mmap.buf to dest failed. size %zd", size);
         }
     }
 }
@@ -1296,7 +1296,7 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
                            recordSize - dynSizePos);
     // update stack_size
     if (memcpy_s(buf + stackSizePos, sizeof(stackSize), &(newStackSize), sizeof(newStackSize)) != 0) {
-        HLOGEP("memcpy_s %p to %p failed. size %zd", &(newStackSize), buf + stackSizePos, sizeof(newStackSize));
+        HLOGEP("CutStackAndMove: memcpy_s newStack to buf stackSizePos failed. size %zd", sizeof(newStackSize));
     }
     recordBuf_->EndWrite();
     __sync_synchronize();
