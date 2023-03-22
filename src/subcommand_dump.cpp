@@ -129,7 +129,7 @@ bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
         return false;
     }
     // only one file should created
-    HLOG_ASSERT_MESSAGE(reader_ == nullptr, " reader_ %p\n", reader_.get());
+    HLOG_ASSERT_MESSAGE(reader_ == nullptr, " perf file reader for %s\n", dumpFileName_.c_str());
     reader_ = PerfFileReader::Instance(dumpFileName_);
     if (reader_ == nullptr) {
         HLOGE("HiperfFileReader::Instance(%s) return null", dumpFileName_.c_str());

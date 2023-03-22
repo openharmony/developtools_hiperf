@@ -165,7 +165,7 @@ public:
     {
         if (mmap_ != MMAP_FAILED) {
             if (munmap(mmap_, mmapSize_) != 0) {
-                HLOGE("munmap failed with %p", munmap);
+                HLOGE("munmap failed");
             }
         }
     }
@@ -674,7 +674,7 @@ private:
             const unsigned char *data = elfFile->GetSectionData(shdr->secIndex_);
 
             if (sh_name == nullptr || data == nullptr) {
-                HLOGE("name %p or data %p get failed.", sh_name, data);
+                HLOGE("name or data get failed.");
                 return false;
             }
 
