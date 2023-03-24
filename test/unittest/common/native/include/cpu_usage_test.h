@@ -15,6 +15,7 @@
 
 #ifndef HIPERF_CPU_USAGE_TEST_H
 #define HIPERF_CPU_USAGE_TEST_H
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <thread>
