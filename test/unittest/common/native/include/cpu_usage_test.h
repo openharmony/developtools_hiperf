@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifndef HIPERF_CPU_USAGE_TEST_H
+#define HIPERF_CPU_USAGE_TEST_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -58,3 +60,5 @@
 #define F2000_DWARF_CPU_LIMIT_PROCESS 70
 #define F4000_DWARF_CPU_LIMIT_PROCESS 80
 #define F8000_DWARF_CPU_LIMIT_PROCESS 90
+
+#endif // HIPERF_CPU_USAGE_TEST_H
