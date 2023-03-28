@@ -447,9 +447,12 @@ void PerfEvents::ExitReadRecordBufThread()
         }
     }
     if (readRecordBufThread_.joinable()) {
-        readRecordThreadRunning_ = false;
-        __sync_synchronize();
-        cvRecordBuf_.notify_one();
+        {
+            std::lock_guard<std::mutex> lk(mtxRrecordBuf_);
+            readRecordThreadRunning_ = false;
+            __sync_synchronize();
+            cvRecordBuf_.notify_one();
+        }
         readRecordBufThread_.join();
     }
 }
@@ -1359,7 +1362,7 @@ void PerfEvents::ReadRecordFromBuf()
     while (readRecordThreadRunning_) {
         {
             std::unique_lock<std::mutex> lk(mtxRrecordBuf_);
-            cvRecordBuf_.wait(lk);
+            cvRecordBuf_.wait(lk, [this] { return !readRecordThreadRunning_; });
         }
         while ((p = recordBuf_->GetReadData()) != nullptr) {
             uint32_t *type = reinterpret_cast<uint32_t *>(p);
