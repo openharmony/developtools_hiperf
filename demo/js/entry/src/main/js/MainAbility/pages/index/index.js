@@ -38,7 +38,7 @@ export default {
     const PERIOD_NUM = 100;
     const STOP_TIME = 2;
     const FREQ_NUM = 500;
-    CPU_PERCENT = 25;
+    const CPU_PERCENT = 25;
     this.clickTimes++;
     console.info('optionOnclick' + this.clickTimes);
     let result;
@@ -109,7 +109,7 @@ export default {
   },
 
   recordOnclick: function () {
-    SLEEP_TIME = 1000;
+    const SLEEP_TIME = 1000;
     this.clickTimes++;
     console.info('onclick recordOnclick' + this.clickTimes);
     this.output = ('recordOnclick\n' + this.clickTimes + '\n');
@@ -153,14 +153,14 @@ export default {
     if(!result) {
       return;
     }
-    this.sleep(1000);
+    this.sleep(SLEEP_TIME);
 
     result = hiperf.resume();
     this.output += ('Resume: ' + result + '\n');
     if(!result) {
       return;
     }
-    this.sleep(1000);
+    this.sleep(SLEEP_TIME);
 
     result = hiperf.stop();
     this.output += ('Stop: ' + result + '\n');
