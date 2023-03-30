@@ -1006,8 +1006,8 @@ bool SubCommandRecord::CreateFifoServer()
     }
 
     pid_t pid = fork();
+    char errInfo[ERRINFOLEN] = { 0 };
     if (pid == -1) {
-        char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("fork failed. %d:%s", errno, errInfo);
         return false;
@@ -1017,7 +1017,6 @@ bool SubCommandRecord::CreateFifoServer()
         isFifoServer_ = true;
         clientPipeOutput_ = open(CONTROL_FIFO_FILE_S2C.c_str(), O_WRONLY);
         if (clientPipeOutput_ == -1) {
-            char errInfo[ERRINFOLEN] = { 0 };
             strerror_r(errno, errInfo, ERRINFOLEN);
             HLOGE("open fifo file(%s) failed. %d:%s", CONTROL_FIFO_FILE_S2C.c_str(), errno,
                   errInfo);
@@ -1034,7 +1033,6 @@ bool SubCommandRecord::CreateFifoServer()
             kill(pid, SIGKILL);
             remove(CONTROL_FIFO_FILE_C2S.c_str());
             remove(CONTROL_FIFO_FILE_S2C.c_str());
-            char errInfo[ERRINFOLEN] = { 0 };
             strerror_r(errno, errInfo, ERRINFOLEN);
             printf("create control hiperf sampling failed. %d:%s\n", errno, errInfo);
             return false;
