@@ -493,6 +493,10 @@ const Symbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<MemM
                     vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
                     vaddrSymbol.fileVaddr_ =
                         symbolsFile->GetVaddrInSymbols(ip, map.begin_, map.pageoffset_);
+                    perf_callchain_context context = PERF_CONTEXT_KERNEL;
+                    if (GetSymbolCache(ip, vaddrSymbol, context)) {
+                        return vaddrSymbol;
+                    }
                     HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64
                           " at '%s'",
                           vaddrSymbol.fileVaddr_, ip, map.name_.c_str());
@@ -523,13 +527,19 @@ const Symbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<MemM
 const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thread)
 {
     Symbol vaddrSymbol(ip, thread.name_);
-    const MemMapItem *mmap = thread.FindMapByAddr(ip);
-    if (mmap != nullptr) {
+    int64_t retIndex = thread.FindMapIndexByAddr(ip);
+    uint64_t memMapIndex = static_cast<uint64_t>(retIndex);
+    if (memMapIndex != -1) {
+        const MemMapItem *mmap = &(thread.GetMaps()[memMapIndex]);
         SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(*mmap);
         if (symbolsFile != nullptr) {
             vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
             vaddrSymbol.fileVaddr_ =
                 symbolsFile->GetVaddrInSymbols(ip, mmap->begin_, mmap->pageoffset_);
+            perf_callchain_context context = PERF_CONTEXT_USER;
+            if (GetSymbolCache(ip, vaddrSymbol, context)) {
+                return vaddrSymbol;
+            }
             vaddrSymbol.module_ = mmap->nameHold_;
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
                   vaddrSymbol.fileVaddr_, ip, mmap->name_.c_str());
@@ -557,27 +567,25 @@ const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thr
     return vaddrSymbol;
 }
 
-bool VirtualRuntime::GetSymbolCache(uint64_t ip, pid_t pid, pid_t tid, Symbol &symbol,
+bool VirtualRuntime::GetSymbolCache(uint64_t ip, Symbol &symbol,
                                     const perf_callchain_context &context)
 {
     if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(ip)) {
-        if (kernelSymbolCache_.find(ip) == kernelSymbolCache_.end()) {
+        if (kernelSymbolCache_.find(symbol.fileVaddr_) == kernelSymbolCache_.end()) {
             return false;
         }
-        Symbol &foundSymbol = kernelSymbolCache_[ip];
-        foundSymbol.hit_++;
-        HLOGV("hit kernel cache 0x%" PRIx64 " %d", ip, foundSymbol.hit_);
-        symbol = foundSymbol;
+        symbol = kernelSymbolCache_[symbol.fileVaddr_];
+        symbol.hit_++;
+        HLOGV("hit kernel cache 0x%" PRIx64 " %d", ip, symbol.hit_);
         return true;
-    } else if (threadSymbolCache_[tid].count(ip) != 0) {
-        Symbol &foundSymbol = threadSymbolCache_[tid][ip];
-        foundSymbol.hit_++;
-        HLOGV("hit user cache 0x%" PRIx64 " %d %s", ip, foundSymbol.hit_,
-              foundSymbol.ToDebugString().c_str());
-        symbol = foundSymbol;
+    } else if (userSymbolCache_.count(symbol.fileVaddr_) != 0) {
+        symbol = userSymbolCache_[symbol.fileVaddr_];
+        symbol.hit_++;
+        HLOGV("hit user cache 0x%" PRIx64 " %d %s", ip, symbol.hit_,
+              symbol.ToDebugString().c_str());
         return true;
     } else {
-        HLOGM("cache miss k %zu u %zu", kernelSymbolCache_.size(), threadSymbolCache_[tid].size());
+        HLOGM("cache miss k %zu u %zu", kernelSymbolCache_.size(), userSymbolCache_.size());
     }
     return false;
 }
@@ -587,18 +595,16 @@ const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
 {
     HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles", tid, ip, symbolsFiles_.size());
     Symbol symbol;
-    if (threadSymbolCache_.find(tid) == threadSymbolCache_.end()) {
-        threadSymbolCache_[tid].reserve(THREAD_SYMBOL_CACHE_LIMIT);
-    }
-    if (GetSymbolCache(ip, pid, tid, symbol, context)) {
-        return symbol;
-    }
+
     if (context == PERF_CONTEXT_USER or (context == PERF_CONTEXT_MAX and !symbol.isValid())) {
         // check userspace memmap
         symbol = GetUserSymbol(ip, GetThread(pid, tid));
-        threadSymbolCache_[tid][ip] = symbol;
+        if (userSymbolCache_.find(symbol.fileVaddr_) == userSymbolCache_.end()) {
+            userSymbolCache_.reserve(USER_SYMBOL_CACHE_LIMIT);
+        }
+        userSymbolCache_[symbol.fileVaddr_] = symbol;
         HLOGV("cache ip 0x%" PRIx64 " to %s", ip,
-              threadSymbolCache_[tid][ip].ToDebugString().c_str());
+              userSymbolCache_[symbol.funcVaddr_].ToDebugString().c_str());
     }
 
     if (context == PERF_CONTEXT_KERNEL or (context == PERF_CONTEXT_MAX and !symbol.isValid())) {
@@ -607,7 +613,7 @@ const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
         symbol = GetKernelSymbol(ip, kernelSpaceMemMaps_, GetThread(pid, tid));
         HLOGM("add addr to kernel cache 0x%" PRIx64 " cache size %zu", ip,
               kernelSymbolCache_.size());
-        kernelSymbolCache_[ip] = symbol;
+        kernelSymbolCache_[symbol.fileVaddr_] = symbol;
     }
     return symbol;
 }
