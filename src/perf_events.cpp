@@ -1176,8 +1176,11 @@ void PerfEvents::ReadRecordsFromMmaps()
         MoveRecordToBuf(*MmapRecordHeap_.front());
     }
     MmapRecordHeap_.clear();
+    {
+        std::lock_guard<std::mutex> lk(mtxRrecordBuf_);
+        recordBufReady_ = true;
+    }
     cvRecordBuf_.notify_one();
-
 #ifdef HIPERF_DEBUG_TIME
     recordKernelReadTime_ += duration_cast<milliseconds>(steady_clock::now() - readKenelStartTime);
 #endif
@@ -1362,7 +1365,13 @@ void PerfEvents::ReadRecordFromBuf()
     while (readRecordThreadRunning_) {
         {
             std::unique_lock<std::mutex> lk(mtxRrecordBuf_);
-            cvRecordBuf_.wait(lk, [this] { return !readRecordThreadRunning_; });
+            cvRecordBuf_.wait(lk, [this] {
+                if (recordBufReady_) {
+                    recordBufReady_ = false;
+                    return true;
+                }
+                return !readRecordThreadRunning_;
+            });
         }
         while ((p = recordBuf_->GetReadData()) != nullptr) {
             uint32_t *type = reinterpret_cast<uint32_t *>(p);

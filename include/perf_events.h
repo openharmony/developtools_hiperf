@@ -363,6 +363,7 @@ private:
     size_t lostNonSamples_ = 0;
 
     std::unique_ptr<RingBuffer> recordBuf_ {nullptr};
+    bool recordBufReady_ = false;
     std::mutex mtxRrecordBuf_;
     std::condition_variable cvRecordBuf_;
     std::thread readRecordBufThread_;
