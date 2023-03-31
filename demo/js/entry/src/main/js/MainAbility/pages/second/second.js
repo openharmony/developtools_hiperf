@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-import router from '@system.router'
+import router from '@system.router';
 
 export default {
-    data: {
-        title: 'World'
-    },
-    onclick: function () {
-        router.replace({
-            uri: "pages/index/index"
-        })
-    }
-}
+  data: {
+    title: 'World'
+  },
+  onclick: function () {
+    router.replace({
+      uri: 'pages/index/index'
+    });
+  }
+};
