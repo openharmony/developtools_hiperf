@@ -130,11 +130,11 @@ private:
     std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles_;
     enum SymbolCacheLimit : std::size_t {
         KERNEL_SYMBOL_CACHE_LIMIT = 4000,
-        THREAD_SYMBOL_CACHE_LIMIT = 2000,
+        USER_SYMBOL_CACHE_LIMIT = 4000,
     };
-    std::unordered_map<pid_t, HashList<uint64_t, Symbol>> threadSymbolCache_;
+    HashList<uint64_t, Symbol> userSymbolCache_;
     HashList<uint64_t, Symbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
-    bool GetSymbolCache(uint64_t ip, pid_t pid, pid_t tid, Symbol &symbol,
+    bool GetSymbolCache(uint64_t ip, Symbol &symbol,
                         const perf_callchain_context &context);
     // find synbols function name
     void MakeCallFrame(Symbol &symbol, CallFrame &callFrame);
