@@ -124,14 +124,14 @@ export default {
 
     result = hiperf.setup('/data/accounts/account_0/appdata/com.example.hiperfdemo/files');
     this.output += ('Setup: ' + result + '\n');
-    if(!result) {
+    if (!result) {
       return;
     }
 
     result = hiperf.isReady();
     this.output += ('IsReady: ' + result + '\n');
 
-    if(!result) {
+    if (!result) {
       return;
     }
 
@@ -143,21 +143,21 @@ export default {
 
     result = hiperf.start();
     this.output += ('Start: ' + result + '\n');
-    if(!result) {
+    if (!result) {
       return;
     }
     this.sleep(SLEEP_TIME);
 
     result = hiperf.pause();
     this.output += ('Pause: ' + result + '\n');
-    if(!result) {
+    if (!result) {
       return;
     }
     this.sleep(SLEEP_TIME);
 
     result = hiperf.resume();
     this.output += ('Resume: ' + result + '\n');
-    if(!result) {
+    if (!result) {
       return;
     }
     this.sleep(SLEEP_TIME);
