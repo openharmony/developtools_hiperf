@@ -16,6 +16,7 @@ import("//developtools/hiperf/hiperf.gni")
 
 config("hiperf_client_config") {
   visibility = [ ":*" ]
+  visibility += [ "//developtools/hiperf/:*" ]
   include_dirs = [
     "include",
     "${hiperf_path}/include",
