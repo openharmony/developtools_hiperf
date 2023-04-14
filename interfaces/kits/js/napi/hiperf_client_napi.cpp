@@ -273,6 +273,18 @@ static napi_value SetSelectPids(napi_env env, napi_callback_info info)
     HIPERF_HILOGD(MODULE_JS_NAPI, "%{public}d", result);
     return napiValue;
 };
+static napi_value SetCallStackSamplingConfigs(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    bool result = true;
+    uint32_t option = GetUintFromOption(env, info);
+    g_hiperfRecordOption->SetCallStackSamplingConfigs(option);
+
+    NAPI_CALL(env, napi_create_int32(env, result, &napiValue));
+    HIPERF_HILOGD(MODULE_JS_NAPI, "%{public}d", result);
+    return napiValue;
+}
+
 static napi_value SetSelectTids(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
@@ -638,6 +650,7 @@ static napi_value HiperfClientInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setSelectGroups", SetSelectGroups),
         DECLARE_NAPI_FUNCTION("setNoInherit", SetNoInherit),
         DECLARE_NAPI_FUNCTION("setSelectPids", SetSelectPids),
+        DECLARE_NAPI_FUNCTION("SetCallStackSamplingConfigs", SetCallStackSamplingConfigs),
         DECLARE_NAPI_FUNCTION("setSelectTids", SetSelectTids),
         DECLARE_NAPI_FUNCTION("setExcludePerf", SetExcludePerf),
         DECLARE_NAPI_FUNCTION("setCpuPercent", SetCpuPercent),

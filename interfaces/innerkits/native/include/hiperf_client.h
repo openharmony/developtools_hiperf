@@ -70,6 +70,9 @@ static const std::string ArgClockId = "--clockid";
 static const std::string ArgVecBranchSampleTypes = "-j";
 static const std::string ArgMmapPages = "-m";
 
+static const int DEFAULT_DURATION_TIME = 10;
+static const int DEFAULT_FREQUENCY_TIME = 100;
+
 class RecordOption {
 public:
     /**
@@ -85,6 +88,14 @@ public:
     const std::string GetOutputFileName() const
     {
         return outputFileName_;
+    }
+
+    /**
+     * Get the default events for select.
+     */
+    const std::vector<std::string> &GetSelectEvents() const
+    {
+        return selectEvents_;
     }
 
     /**
@@ -132,6 +143,11 @@ public:
      * Conflicts with the SetTargetSystemWide(true).
      */
     void SetSelectPids(const std::vector<pid_t> &selectPids);
+    /**
+     * Set default sampling parameters with specifying the select duration. 
+     * default is 10 seconds.
+     */
+    void SetCallStackSamplingConfigs(int duration);
     /**
      * Set the limit thread id of the collection target.
      * Conflicts with the SetTargetSystemWide(true).
@@ -218,6 +234,7 @@ public:
 
 private:
     std::vector<std::string> args_ = {};
+    std::vector<std::string> selectEvents_ = {"hw-cpu-cycles:u"};
     std::string outputFileName_ = "";
 
     void SetOption(const std::string &name, bool enable);
