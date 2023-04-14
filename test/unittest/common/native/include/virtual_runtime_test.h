@@ -101,7 +101,7 @@ constexpr const pid_t TEST_DWARF_RECORD_TID = 24926;
 */
 static const std::vector<std::pair<uint64_t, std::string>> TEST_RECORD_CALLSTACK_IP_FUNC = {
     {0x0000000000003558, "(anonymous namespace)::LoopFunction(std::__h::chrono::duration<long long,"
-                         " std::__h::ratio<1l, 1000l> >, (anonymous namespace)::Option const&)"},
+                         " std::__h::ratio<1l, 1000l>>, (anonymous namespace)::Option const&)"},
     {0x0000000000003884, "(anonymous namespace)::CallStack10(int, (anonymous namespace)::Option const&)"},
     {0x0000000000003924, "(anonymous namespace)::CallStack9(int, (anonymous namespace)::Option const&)"},
     {0x00000000000039e4, "(anonymous namespace)::CallStack8(int, (anonymous namespace)::Option const&)"},
