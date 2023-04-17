@@ -238,6 +238,11 @@ HWTEST_F(SubCommandRecordTest, ExcludePerf, TestSize.Level1)
     TestRecordCommand("-d 2 -a --exclude-hiperf ", true, false);
 }
 
+HWTEST_F(SubCommandRecordTest, ExcludePerfErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 --exclude-hiperf ", flase, true);
+}
+
 // select cpu
 HWTEST_F(SubCommandRecordTest, SelectCpu, TestSize.Level1)
 {
@@ -274,6 +279,12 @@ HWTEST_F(SubCommandRecordTest, SelectCpuMaxErr, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, SelectCpuInputErr, TestSize.Level1)
 {
     TestRecordCommand("-d 2 -c abc ", false);
+}
+
+//--control
+HWTEST_F(SubCommandRecordTest, CheckControlErr, TestSize.Level1)
+{
+    TestRecordCommand("-a --control st", false, false);
 }
 
 // cpu percent
@@ -479,6 +490,11 @@ HWTEST_F(SubCommandRecordTest, SelectPidInputErr, TestSize.Level1)
     TestRecordCommand("-d 2 -p abc ", false, false);
 }
 
+HWTEST_F(SubCommandRecordTest, SelectPidInputConfict, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -p 1 ", false, false);
+}
+
 // select tid
 HWTEST_F(SubCommandRecordTest, SelectTid, TestSize.Level1)
 {
@@ -654,6 +670,11 @@ HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeInputMoreErr, TestSize.Level1)
     TestRecordCommand("-d 2 -s dwarf,16,32 ", false);
 }
 
+HWTEST_F(SubCommandRecordTest, CallStackUsageErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -s abc --call-stack bcd", false);
+}
+
 // unwind
 HWTEST_F(SubCommandRecordTest, DlayUnwind, TestSize.Level1)
 {
@@ -764,6 +785,11 @@ HWTEST_F(SubCommandRecordTest, DataLimit, TestSize.Level1)
     TearDown();
     SetUp();
     TestRecordCommand("-d 2 --data-limit 1G ");
+}
+
+HWTEST_F(SubCommandRecordTest, DataLimit1, TestSize.Level1)
+{
+    TestRecordCommand("-a --data-limit 1K ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, DataLimitErr, TestSize.Level1)
