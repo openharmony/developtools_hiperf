@@ -240,7 +240,7 @@ HWTEST_F(SubCommandRecordTest, ExcludePerf, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, ExcludePerfErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --exclude-hiperf ", flase, true);
+    TestRecordCommand("-d 2 --exclude-hiperf ", false, true);
 }
 
 // select cpu
