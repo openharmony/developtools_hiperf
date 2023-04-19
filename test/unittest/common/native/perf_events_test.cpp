@@ -127,7 +127,7 @@ void PerfEventsTest::SetAllConfig(PerfEvents &event)
     event.SetInherit(false);
     std::vector<std::string> trackedCommand_ {};
     event.SetTrackedCommand(trackedCommand_);
-    const unsigned int frequency = 4000;
+    const unsigned int frequency = 1000;
     event.SetSampleFrequency(frequency);
     const uint32_t dwarfSampleStackSize = 64;
     event.SetDwarfSampleStackSize(dwarfSampleStackSize);
@@ -202,6 +202,8 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     event.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
     event.SetPid(pids);
+    const unsigned int frequency = 1000;
+    event.SetSampleFrequency(frequency);
     event.SetSystemTarget(true);
     event.SetTimeOut(DEFAULT_TRACKING_TIME);
     event.SetInherit(false);
