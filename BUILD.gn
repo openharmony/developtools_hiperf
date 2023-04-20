@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -125,8 +125,6 @@ sources_platform_common = [
   "./src/subcommand_report.cpp",
   "./src/report.cpp",
   "./src/report_json_file.cpp",
-  "./src/register.cpp",
-  "./src/callstack.cpp",
 ]
 
 if (hiperf_debug) {
@@ -148,15 +146,11 @@ sources_platform_linux = [
 
 common_deps = [
   ":support_elf",
-  ":support_libunwind",
   ":support_protobuf",
+  "../../base/hiviewdfx/faultloggerd/interfaces/innerkits/callstack:callstack_perf",
   "//third_party/bounds_checking_function:libsec_static",
   "//third_party/zlib:libz",
 ]
-
-if (!hiperf_use_libunwind) {
-  common_deps -= [ ":support_libunwind" ]
-}
 
 if (is_ohos) {
   common_deps += [ "//third_party/bounds_checking_function:libsec_shared" ]
@@ -219,25 +213,6 @@ ohos_source_set("hiperf_platform_linux") {
   configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
 
   sources = sources_platform_linux
-}
-
-config("unwind_config") {
-  defines = [ "HAVE_LIBUNWIND=1" ]
-}
-
-ohos_source_set("support_libunwind") {
-  part_name = "hiperf"
-  public_configs = common_configs
-  public_configs += [ ":unwind_config" ]
-  if (hiperf_target_host) {
-    public_deps = [ "//third_party/libunwind:unwind_source_${host_cpu}" ]
-  } else {
-    if (target_cpu == "arm64") {
-      public_deps = [ "//third_party/libunwind:unwind_source_arm64_opt" ]
-    } else {
-      public_deps = [ "//third_party/libunwind:unwind_source_${target_cpu}" ]
-    }
-  }
 }
 
 config("elf_config") {

@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,7 +24,6 @@ declare_args() {
   hiperf_test_fuzz = true
   hiperf_sanitize = false
   hiperf_check_time = false
-  hiperf_use_libunwind = true
   hiperf_debug = true
   hiperf_code_analyze = false
   hiperf_use_syspara = true

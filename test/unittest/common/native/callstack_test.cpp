@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -658,8 +658,7 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
         ASSERT_EQ(regs.size(), 16u);
 #endif
         std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles;
-        auto &symbolsFile = symbolsFiles.emplace_back(SymbolsFile::CreateSymbolsFile(
-            SYMBOL_ELF_FILE, TEST_DWARF_ELF));
+        auto &symbolsFile = symbolsFiles.emplace_back(SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_DWARF_ELF));
         ASSERT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DWARF_DATA), true);
         ASSERT_EQ(symbolsFile->LoadSymbols(), true);
         // fix the name
@@ -670,8 +669,7 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
         std::vector<CallFrame> callFrames;
         CallStack callStack;
 
-        callStack.UnwindCallStack(thread, false, regs.data(), regs.size(), data.data(), data.size(),
-                                  callFrames);
+        callStack.UnwindCallStack(thread, regs.data(), regs.size(), data.data(), data.size(), callFrames);
         ASSERT_LE(TEST_DWARF_FRAMES.size(), callFrames.size());
 
         for (size_t i = 0; i < TEST_DWARF_FRAMES.size(); i++) {

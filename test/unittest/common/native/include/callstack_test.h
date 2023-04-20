@@ -24,9 +24,12 @@
 
 #include <hilog/log.h>
 
+#define private public
 #include "callstack.h"
+#undef private
 #include "debug_logger.h"
 #include "utilities.h"
+#include "virtual_thread.h"
 
 namespace OHOS {
 namespace Developtools {
