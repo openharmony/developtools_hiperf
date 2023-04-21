@@ -14,6 +14,9 @@
  */
 #include "utilities.h"
 #include <zlib.h>
+#if defined(CONFIG_HAS_SYSPARA) && defined(is_ohos) && is_ohos
+#include <parameters.h>
+#endif
 #if defined(is_mingw) && is_mingw
 #include <io.h>
 #endif
@@ -29,6 +32,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+
 const char *MemoryHold::HoldStringView(std::string_view view)
 {
     if (view.size() == 0) {
@@ -579,13 +583,63 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids)
             return false;
         }
         std::string bundleName = GetProcessName(pid);
-        if (!IsRoot() && !IsDebugableApp(bundleName)) {
+        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
             HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
             printf("-p option only support debug aplication\n");
             return false;
         }
     }
     return true;
+}
+
+bool IsSupportNonDebuggableApp()
+{
+    // root first
+    if (IsRoot()) {
+        return true;
+    }
+    // user mode
+    if (!IsBeta()) {
+        return false;
+    }
+    // restricted aplication for beta
+    if (!IsAllowProfilingUid()) {
+        return false;
+    }
+    return true;
+}
+
+const std::string GetUserType()
+{
+#if defined(is_ohos) && is_ohos
+    std::string userType = OHOS::system::GetParameter(USER_TYPE_PARAM, USER_TYPE_PARAM_GET);
+    HLOGD("GetUserType: userType is %s", userType.c_str());
+    return userType;
+#else
+    return "";
+#endif
+}
+
+
+
+// only for domestic beta
+bool IsBeta()
+{
+    return (GetUserType() == USER_DOMESTIC_BETA);
+}
+
+bool IsAllowProfilingUid()
+{
+#if is_linux || is_ohos
+    static int curUid = getuid();
+    HLOGD("curUid is %d\n", curUid);
+    if (ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end()) {
+        return true;
+    }
+    return false;
+#else
+    return false;
+#endif
 }
 
 std::string GetProcessName(int pid)

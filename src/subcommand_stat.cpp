@@ -56,7 +56,7 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option -a failed");
         return false;
     }
-    if (targetSystemWide_ && !IsRoot()) {
+    if (targetSystemWide_ && !IsSupportNonDebuggableApp()) {
         HLOGD("-a option needs root privilege for system wide profiling.");
         printf("-a option needs root privilege for system wide profiling.\n");
         return false;

@@ -27,6 +27,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <set>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -89,6 +90,11 @@ namespace HiPerf {
 std::string CanonicalizeSpecPath(const char* src);
 const std::string EMPTY_STRING = "";
 const ssize_t ERRINFOLEN = 512;
+const std::string USER_DOMESTIC_BETA = "beta";
+const std::set<int> ALLOW_UIDS = {1201};
+
+static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
+static const std::string USER_TYPE_PARAM_GET = "1";
 
 // string function
 class MemoryHold {
@@ -285,6 +291,8 @@ float Percentage(const T &a, const T &b)
 }
 
 bool IsRoot();
+bool IsBeta();
+bool IsAllowProfilingUid();
 bool PowerOfTwo(uint64_t n);
 
 #define INDENT_ONE_LEVEL (indent + 1)
@@ -305,6 +313,8 @@ bool PowerOfTwo(uint64_t n);
 #endif
 
 bool IsExistDebugByPid(const std::vector<pid_t> pids);
+bool IsSupportNonDebuggableApp();
+const std::string GetUserType();
 std::string GetProcessName(int pid);
 bool IsDebugableApp(const std::string& bundleName);
 } // namespace HiPerf

@@ -961,7 +961,7 @@ public:
         bool hasChangeKptr = false;
         std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
         if (oldKptrRestrict.front() != '0') {
-            if (!IsRoot()) {
+            if (!IsSupportNonDebuggableApp()) {
                 HLOGD("user mode do not load kernel syms");
                 printf("Hiperf is not running as root mode. Do not need load kernel syms\n");
                 return false;

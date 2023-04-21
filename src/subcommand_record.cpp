@@ -145,7 +145,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-a", targetSystemWide_)) {
         return false;
     }
-    if (targetSystemWide_ && !IsRoot()) {
+    if (targetSystemWide_ && !IsSupportNonDebuggableApp()) {
         HLOGD("-a option needs root privilege for system wide profiling.");
         printf("-a option needs root privilege for system wide profiling.\n");
         return false;
@@ -195,9 +195,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--app", appPackage_)) {
         return false;
     }
-    if (!IsRoot() && !appPackage_.empty() && !IsDebugableApp(appPackage_)) {
-        HLOGE("-app option only support debug aplication.");
-        printf("-app option only support debug aplication\n");
+    if (!IsSupportNonDebuggableApp() && !appPackage_.empty() && !IsDebugableApp(appPackage_)) {
+        HLOGE("--app option only support debug aplication.");
+        printf("--app option only support debug aplication\n");
         return false;
     }
     if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {

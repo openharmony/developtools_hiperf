@@ -34,7 +34,6 @@ ohos_shared_library("hiperf_client") {
     external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   }
 
-  install_enable = false
   subsystem_name = "developtools"
   part_name = "hiperf"
 }

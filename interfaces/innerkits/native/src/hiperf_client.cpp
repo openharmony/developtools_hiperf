@@ -184,6 +184,18 @@ void RecordOption::SetSelectPids(const std::vector<pid_t> &selectPids)
     SetOption(ArgSelectPids, selectPids);
 }
 
+void RecordOption::SetCallStackSamplingConfigs(int duration)
+{
+    if (duration <= 0) {
+        duration = DEFAULT_DURATION_TIME;
+    }
+    RecordOption opt;
+    SetSelectEvents(opt.GetSelectEvents());
+    SetTimeStopSec(duration);
+    SetFrequency(DEFAULT_FREQUENCY_TIME);
+    SetCallGraph("fp");
+}
+
 void RecordOption::SetSelectTids(const std::vector<pid_t> &selectTids)
 {
     SetOption(ArgSelectTids, selectTids);
