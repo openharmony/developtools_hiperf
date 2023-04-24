@@ -311,7 +311,9 @@ bool PowerOfTwo(uint64_t n);
 #ifndef MAP_FAILED
 #define MAP_FAILED MMAP_FAILED
 #endif
-
+pid_t GetAppPackagePid(const std::string &appPackge);
+bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
+bool IsExistDebugByApp(const std::string& bundleName);
 bool IsExistDebugByPid(const std::vector<pid_t> pids);
 bool IsSupportNonDebuggableApp();
 const std::string GetUserType();

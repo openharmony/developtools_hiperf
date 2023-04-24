@@ -24,6 +24,9 @@ namespace Developtools {
 namespace HiPerf {
 class SubCommandStat : public SubCommand {
 public:
+    static constexpr int DEFAULT_CHECK_APP_MS = 10;
+    static constexpr int MIN_CHECK_APP_MS = 1;
+    static constexpr int MAX_CHECK_APP_MS = 200;
     SubCommandStat()
         : SubCommand("stat", "Collect performance counter information",
                      // clang-format off
@@ -62,6 +65,12 @@ public:
         "         Limit the process id of the collection target. Conflicts with the -a option.\n"
         "   -t <tid1>[,tid2]...\n"
         "         Limit the thread id of the collection target. Conflicts with the -a option.\n"
+        "   --app <package_name>\n"
+        "         Collect profile info for an OHOS app, the app must be debuggable.\n"
+        "         Record will exit if the process is not started within 10 seconds.\n"
+        "   --chkms <millisec>\n"
+        "         Set the interval of querying the <package_name>.\n"
+        "         <millisec> is in range [1-200], default is 10.\n"
         "   --verbose\n"
         "         Show more detailed reports.\n"
                      // clang-format on
@@ -83,11 +92,14 @@ private:
     std::vector<std::vector<std::string>> selectEvents_;
     std::vector<std::vector<std::string>> selectGroups_;
     bool noCreateNew_ {false};
+    std::string appPackage_ = {};
+    int checkAppMs_ = DEFAULT_CHECK_APP_MS;
     std::vector<pid_t> selectPids_;
     std::vector<pid_t> selectTids_;
     bool verboseReport_ {false};
     std::vector<std::string> trackedCommand_ {};
     bool helpOption_ {false};
+    bool CheckOptionPidAndApp(std::vector<pid_t> pids);
     bool CheckOptionPid(std::vector<pid_t> pids);
     static bool FindEventCount(
         const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,

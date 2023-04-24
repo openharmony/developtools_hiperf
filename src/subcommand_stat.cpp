@@ -39,6 +39,8 @@ void SubCommandStat::DumpOptions() const
     printf(" selectEvents:\t%s\n", VectorToString(selectEvents_).c_str());
     printf(" selectGroups:\t%s\n", VectorToString(selectGroups_).c_str());
     printf(" noCreateNew:\t%s\n", noCreateNew_ ? "true" : "false");
+    printf(" appPackage:\t%s\n", appPackage_.c_str());
+    printf(" checkAppMs_:\t%d\n", checkAppMs_);
     printf(" selectPids:\t%s\n", VectorToString(selectPids_).c_str());
     printf(" selectTids:\t%s\n", VectorToString(selectTids_).c_str());
     printf(" verbose:\t%s\n", verboseReport_ ? "true" : "false");
@@ -83,6 +85,16 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
     }
     if (!Option::GetOptionValue(args, "--no-inherit", noCreateNew_)) {
         HLOGD("get option --no-inherit failed");
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--app", appPackage_)) {
+        HLOGD("get option --app failed");
+        return false;
+    }
+    if (!IsExistDebugByApp(appPackage_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
@@ -297,6 +309,21 @@ bool SubCommandStat::FindRunningTime(
     return false;
 }
 
+bool SubCommandStat::CheckOptionPidAndApp(std::vector<pid_t> pids)
+{
+    if (!CheckOptionPid(pids)) {
+        printf("Problems finding threads of monitor\n\n");
+        printf("Usage: perf stat [<options>] [<command>]\n\n");
+        printf("-p <pid>        stat events on existing process id\n");
+        printf("-t <tid>        stat events on existing thread id\n");
+        return false;
+    }
+    if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
+        return false;
+    }
+    return true;
+}
+
 bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
 {
     if (pids.empty()) {
@@ -337,11 +364,8 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         HLOGV("CheckOptions() failed");
         return false;
     }
-    if (!CheckOptionPid(pids)) {
-        printf("Problems finding threads of monitor\n\n");
-        printf("Usage: perf stat [<options>] [<command>]\n\n");
-        printf("-p <pid>        stat events on existing process id\n");
-        printf("-t <tid>        stat events on existing thread id\n");
+    if (!CheckOptionPidAndApp(pids)) {
+        HLOGV("CheckOptionPidAndApp() failed");
         return false;
     }
     perfEvents_.SetSystemTarget(targetSystemWide_);
@@ -434,20 +458,41 @@ bool SubCommandStat::CheckSelectCpuPidOption()
 
 bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
 {
-    if (targetSystemWide_ && !pids.empty()) {
-        printf("You cannot specify -a and -t/-p at the same time\n");
+    if (targetSystemWide_) {
+        if (!pids.empty()) {
+            printf("You cannot specify -a and -t/-p at the same time\n");
+            return false;
+        }
+        if (!appPackage_.empty()) {
+            printf("You cannot specify -a and --app at the same time\n");
+            return false;
+        }
+    }
+    if (!appPackage_.empty() && !pids.empty()) {
+        printf("You cannot specify --app and -t/-p at the same time\n");
         return false;
     }
-    if (!targetSystemWide_ && trackedCommand_.empty() && pids.empty()) {
-        printf("You need to set the -p option.\n");
+    if (!targetSystemWide_ && trackedCommand_.empty() && pids.empty() && appPackage_.empty()) {
+        printf("You need to set the -p option or --app option.\n");
         return false;
     }
     if (targetSystemWide_ && !trackedCommand_.empty()) {
         printf("You cannot specify -a and a cmd at the same time\n");
         return false;
     }
-    if (!trackedCommand_.empty() && !pids.empty()) {
-        printf("You cannot specify a cmd and -t/-p at the same time\n");
+    if (!trackedCommand_.empty()) {
+        if (!pids.empty()) {
+            printf("You cannot specify a cmd and -t/-p at the same time\n");
+            return false;
+        }
+        if (!appPackage_.empty()) {
+            printf("You cannot specify a cmd and --app at the same time\n");
+            return false;
+        }
+    }
+    if (checkAppMs_ < MIN_CHECK_APP_MS || checkAppMs_ > MAX_CHECK_APP_MS) {
+        printf("Invalid --chkms value '%d', the milliseconds should be in %d~%d \n", checkAppMs_,
+               MIN_CHECK_APP_MS, MAX_CHECK_APP_MS);
         return false;
     }
     if (timeStopSec_ < 0) {

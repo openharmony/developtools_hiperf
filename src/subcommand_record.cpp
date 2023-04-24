@@ -195,9 +195,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--app", appPackage_)) {
         return false;
     }
-    if (!IsSupportNonDebuggableApp() && !appPackage_.empty() && !IsDebugableApp(appPackage_)) {
-        HLOGE("--app option only support debug aplication.");
-        printf("--app option only support debug aplication\n");
+    if (!IsExistDebugByApp(appPackage_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
@@ -425,30 +423,6 @@ void SubCommandRecord::ExcludeThreadsFromSelectTids(const std::vector<std::strin
     }
 }
 
-pid_t SubCommandRecord::GetAppPackagePid(const std::string &appPackage)
-{
-    pid_t res {-1};
-    const std::string basePath {"/proc/"};
-    const auto startTime = steady_clock::now();
-    static constexpr uint64_t waitAppTimeOut = 10;
-    const auto endTime = startTime + std::chrono::seconds(waitAppTimeOut);
-    do {
-        std::vector<std::string> subDirs = GetSubDirs(basePath);
-        for (const auto &subDir : subDirs) {
-            if (IsDigits(subDir)) {
-                std::string fileName {basePath + subDir};
-                fileName += "/cmdline";
-                if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
-                    return (std::stoul(subDir, nullptr));
-                }
-            }
-        }
-        std::this_thread::sleep_for(milliseconds(checkAppMs_));
-    } while (steady_clock::now() < endTime);
-
-    return res;
-}
-
 bool SubCommandRecord::CheckTargetProcessOptions()
 {
     bool hasTarget = false;
@@ -500,13 +474,8 @@ bool SubCommandRecord::CheckTargetPids()
             return false;
         }
     }
-    if (!appPackage_.empty()) {
-        pid_t appPid = GetAppPackagePid(appPackage_);
-        if (appPid <= 0) {
-            printf("app %s not running\n", appPackage_.c_str());
-            return false;
-        }
-        selectPids_.push_back(appPid);
+    if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
+        return false;
     }
     if (!selectPids_.empty()) {
         for (auto pid : selectPids_) {
