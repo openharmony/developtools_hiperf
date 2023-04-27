@@ -155,7 +155,7 @@ declare namespace hiperf {
    * default is 10 seconds.
    * @param default is 10
    */
-  function SetCallStackSamplingConfigs(duration: number): boolean;
+  function setCallStackSamplingConfigs(duration: number): boolean;
 
   /**
    * Set the limit thread id of the collection target.

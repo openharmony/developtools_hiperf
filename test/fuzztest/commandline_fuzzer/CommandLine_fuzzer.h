@@ -25,6 +25,9 @@
 #include <unistd.h>
 
 #include "utilities.h"
+#ifdef FUZZER_TEST
+#define main hiperf_fuzzer_main
+#endif
 
 #define FUZZ_PROJECT_NAME "CommandLine_fuzzer"
 

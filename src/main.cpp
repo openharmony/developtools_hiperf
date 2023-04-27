@@ -33,10 +33,6 @@
 using namespace std;
 using namespace OHOS::Developtools::HiPerf;
 
-#ifdef FUZZER_TEST
-#define main hiperf_fuzzer_main
-#endif
-
 int main(const int argc, const char *argv[])
 {
     std::ios::sync_with_stdio(false);

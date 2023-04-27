@@ -15,7 +15,6 @@
 
 #include "CommandLine_fuzzer.h"
 
-extern int hiperf_fuzzer_main(const int argc, const char *argv[]);
 namespace OHOS {
 const static int32_t MAX_TEST_ARGS_NUMBER = 20;
 const static size_t MAX_TEST_ARGS_LEN = 4096;

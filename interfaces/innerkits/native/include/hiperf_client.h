@@ -144,7 +144,7 @@ public:
      */
     void SetSelectPids(const std::vector<pid_t> &selectPids);
     /**
-     * Set default sampling parameters with specifying the select duration. 
+     * Set default sampling parameters with specifying the select duration.
      * default is 10 seconds.
      */
     void SetCallStackSamplingConfigs(int duration);

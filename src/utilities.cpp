@@ -620,8 +620,6 @@ const std::string GetUserType()
 #endif
 }
 
-
-
 // only for domestic beta
 bool IsBeta()
 {
@@ -630,7 +628,7 @@ bool IsBeta()
 
 bool IsAllowProfilingUid()
 {
-#if is_linux || is_ohos
+#if defined(is_linux) && is_linux || is_ohos
     static int curUid = getuid();
     HLOGD("curUid is %d\n", curUid);
     if (ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end()) {
