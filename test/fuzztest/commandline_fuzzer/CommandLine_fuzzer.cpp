@@ -15,7 +15,6 @@
 
 #include "CommandLine_fuzzer.h"
 
-extern int hiperf_fuzzer_main(const int argc, const char *argv[]);
 namespace OHOS {
 const static int32_t MAX_TEST_ARGS_NUMBER = 20;
 const static size_t MAX_TEST_ARGS_LEN = 4096;
@@ -54,7 +53,7 @@ bool FuzzCommandLine(const char *subcommand, const uint8_t *data, size_t size)
 #ifdef DEBUG_HIPERF_FUZZ
     std::cout << " size " << argv.size() << std::endl;
 #endif
-    hiperf_fuzzer_main(static_cast<int>(argv.size()), argv.data());
+    HiperfFuzzerMain(static_cast<int>(argv.size()), argv.data());
 
     return 0;
 }

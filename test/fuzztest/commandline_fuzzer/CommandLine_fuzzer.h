@@ -28,6 +28,7 @@
 
 #define FUZZ_PROJECT_NAME "CommandLine_fuzzer"
 
+extern int HiperfFuzzerMain(const int argc, const char *argv[]);
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 
 #endif // COMMANDLINE_FUZZER_H
