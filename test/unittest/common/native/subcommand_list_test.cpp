@@ -16,6 +16,7 @@
 #include "subcommand_list_test.h"
 
 #include "subcommand_list.h"
+#include "subcommand.h"
 
 using namespace testing::ext;
 using namespace std;
