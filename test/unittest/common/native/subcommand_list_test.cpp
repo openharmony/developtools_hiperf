@@ -163,7 +163,7 @@ HWTEST_F(SubCommandListTest, TestRegisterSubCommandList, TestSize.Level1)
 {
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommandRecord::RegisterSubCommandRecord();
+    subCommandList.RegisterSubCommandList();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
 }
 } // namespace HiPerf
