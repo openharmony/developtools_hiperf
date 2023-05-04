@@ -16,6 +16,7 @@
 #include "subcommand_list_test.h"
 
 #include "subcommand_list.h"
+#include "subcommand.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -160,8 +161,10 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandEmpty, TestSize.Level1)
  */
 HWTEST_F(SubCommandListTest, TestRegisterSubCommandList, TestSize.Level1)
 {
+    SubCommand::ClearSubCommands();
+    ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
     subCommandList.RegisterSubCommandList();
-    EXPECT_EQ(1, 1);
+    ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
 }
 } // namespace HiPerf
 } // namespace Developtools

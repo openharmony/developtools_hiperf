@@ -184,42 +184,35 @@ HWTEST_F(OptionTest, GetOptionInt, TestSize.Level1)
     // one arg
     EXPECT_EQ(Option::GetOptionValue(args = ONE_ARGS_WITH_VALUE, OPTION_NAME, intValue), true);
     EXPECT_EQ(intValue, OPTION_INT_VALUE);
-    intValue = 0;
 
     EXPECT_EQ(Option::GetOptionValue(args = ONE_ARGS_WITH_VALUE, OPTION_ERROR_NAME, intValue),
               true);
-    EXPECT_EQ(intValue, 0);
-    intValue = 0;
+    EXPECT_EQ(intValue, OPTION_INT_VALUE);
 
     // two arg
     EXPECT_EQ(Option::GetOptionValue(args = TWO_ARGS_WITH_VALUE, OPTION_NAME, intValue), true);
     EXPECT_EQ(intValue, OPTION_INT_VALUE);
-    intValue = 0;
 
     EXPECT_EQ(Option::GetOptionValue(args = TWO_ARGS_WITH_VALUE, OPTION_ERROR_NAME, intValue),
               true);
-    EXPECT_EQ(intValue, 0);
-    intValue = 0;
+    EXPECT_EQ(intValue, OPTION_INT_VALUE);
 
     EXPECT_EQ(Option::GetOptionValue(args = TWO_ARGS_WITH_VALUE, OPTION_ILLEGAL_NAME, intValue),
               false);
-    EXPECT_EQ(intValue, 0);
-    intValue = 0;
+    EXPECT_EQ(intValue, OPTION_INT_VALUE);
 
     // two error arg
     EXPECT_EQ(Option::GetOptionValue(args = TWO_ERROR_WITH_VALUE, OPTION_NAME, intValue), true);
-    EXPECT_EQ(intValue, 0);
-    intValue = 0;
+    EXPECT_EQ(intValue, OPTION_INT_VALUE);
 
     EXPECT_EQ(Option::GetOptionValue(args = TWO_ERROR_WITH_VALUE, OPTION_ERROR_NAME, intValue),
               true);
     EXPECT_EQ(intValue, OPTION_INT_VALUE);
-    intValue = 0;
+
 
     EXPECT_EQ(Option::GetOptionValue(args = TWO_ERROR_WITH_VALUE, OPTION_ILLEGAL_NAME, intValue),
               false);
-    EXPECT_EQ(intValue, 0);
-    intValue = 0;
+    EXPECT_EQ(intValue, OPTION_INT_VALUE);
 }
 /**
  * @tc.name: TestGetOptionInt
@@ -234,31 +227,25 @@ HWTEST_F(OptionTest, GetOptionInt2, TestSize.Level1)
     // mix arg
     EXPECT_EQ(Option::GetOptionValue(args = MIX_ARGS_1_WITH_VALUE, OPTION_NAME, intValue), true);
     EXPECT_EQ(intValue, OPTION_INT_VALUE);
-    intValue = 0;
 
     EXPECT_EQ(Option::GetOptionValue(args = MIX_ARGS_1_WITH_VALUE, OPTION_ERROR_NAME, intValue),
               true);
     EXPECT_EQ(intValue, OPTION_INT_VALUE);
-    intValue = 0;
 
     EXPECT_EQ(Option::GetOptionValue(args = MIX_ARGS_2_WITH_VALUE, OPTION_NAME, intValue), true);
     EXPECT_EQ(intValue, OPTION_INT_VALUE);
-    intValue = 0;
 
     EXPECT_EQ(Option::GetOptionValue(args = MIX_ARGS_2_WITH_VALUE, OPTION_ERROR_NAME, intValue),
               true);
     EXPECT_EQ(intValue, OPTION_INT_VALUE);
-    intValue = 0;
 
     EXPECT_EQ(Option::GetOptionValue(args = MIX_ARGS_2_WITH_VALUE, OPTION_ILLEGAL_NAME, intValue),
               false);
-    EXPECT_EQ(intValue, 0);
-    intValue = 0;
+    EXPECT_EQ(intValue, OPTION_INT_VALUE);
 
     EXPECT_EQ(Option::GetOptionValue(args = MIX_ARGS_2_WITH_ILLEGAL_VALUE, OPTION_NAME, intValue),
               false);
-    EXPECT_EQ(intValue, 0);
-    intValue = 0;
+    EXPECT_EQ(intValue, OPTION_INT_VALUE);
 }
 
 /**
