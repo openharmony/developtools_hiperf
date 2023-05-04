@@ -14,6 +14,7 @@
  */
 #include "utilities.h"
 #include <zlib.h>
+#include <thread>
 #if defined(CONFIG_HAS_SYSPARA) && defined(is_ohos) && is_ohos
 #include <parameters.h>
 #endif
@@ -29,6 +30,7 @@ using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 #endif
 
+using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -96,7 +98,7 @@ std::string CanonicalizeSpecPath(const char* src)
 
 uint32_t RoundUp(uint32_t x, const int align)
 {
-    return (((x) + (align)-1) / (align)) * (align);
+    return (((x) + (align) - 1) / (align)) * (align);
 }
 
 std::string StringReplace(std::string source, const std::string &from, const std::string &to)
@@ -569,6 +571,54 @@ std::string BufferToHexString(const unsigned char buf[], size_t size)
            << (unsigned short)buf[i];
     }
     return ss.str();
+}
+
+pid_t GetAppPackagePid(const std::string &appPackage, int checkAppMs)
+{
+    pid_t res {-1};
+    const std::string basePath {"/proc/"};
+    const auto startTime = steady_clock::now();
+    static constexpr uint64_t waitAppTimeOut = 10;
+    const auto endTime = startTime + std::chrono::seconds(waitAppTimeOut);
+    do {
+        std::vector<std::string> subDirs = GetSubDirs(basePath);
+        for (const auto &subDir : subDirs) {
+            if (!IsDigits(subDir)) {
+                continue;
+            }
+            std::string fileName {basePath + subDir};
+            fileName += "/cmdline";
+            if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+                return (std::stoul(subDir, nullptr));
+            }
+        }
+        std::this_thread::sleep_for(milliseconds(checkAppMs));
+    } while (steady_clock::now() < endTime);
+
+    return res;
+}
+
+bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
+{
+    if (!appPackage.empty()) {
+        pid_t appPid = GetAppPackagePid(appPackage, checkAppMs);
+        if (appPid <= 0) {
+            printf("app %s not running\n", appPackage.c_str());
+            return false;
+        }
+        selectPids.push_back(appPid);
+    }
+    return true;
+}
+
+bool IsExistDebugByApp(const std::string& bundleName)
+{
+    if (!IsSupportNonDebuggableApp() && !bundleName.empty() && !IsDebugableApp(bundleName)) {
+        HLOGE("--app option only support debug aplication.");
+        printf("--app option only support debug aplication\n");
+        return false;
+    }
+    return true;
 }
 
 bool IsExistDebugByPid(const std::vector<pid_t> pids)

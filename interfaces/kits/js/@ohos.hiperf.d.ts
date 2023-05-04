@@ -151,7 +151,7 @@ declare namespace hiperf {
   function setSelectPids(selectPids: number[]): boolean;
 
   /**
-   * Set default sampling parameters with specifying the select duration. 
+   * Set default sampling parameters with specifying the select duration.
    * default is 10 seconds.
    * @param default is 10
    */

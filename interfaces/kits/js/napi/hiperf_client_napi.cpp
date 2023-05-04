@@ -650,7 +650,7 @@ static napi_value HiperfClientInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setSelectGroups", SetSelectGroups),
         DECLARE_NAPI_FUNCTION("setNoInherit", SetNoInherit),
         DECLARE_NAPI_FUNCTION("setSelectPids", SetSelectPids),
-        DECLARE_NAPI_FUNCTION("SetCallStackSamplingConfigs", SetCallStackSamplingConfigs),
+        DECLARE_NAPI_FUNCTION("setCallStackSamplingConfigs", SetCallStackSamplingConfigs),
         DECLARE_NAPI_FUNCTION("setSelectTids", SetSelectTids),
         DECLARE_NAPI_FUNCTION("setExcludePerf", SetExcludePerf),
         DECLARE_NAPI_FUNCTION("setCpuPercent", SetCpuPercent),

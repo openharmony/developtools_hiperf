@@ -292,7 +292,6 @@ private:
 
     void ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
         std::vector<pid_t> &selectTids);
-    pid_t GetAppPackagePid(const std::string &appPackge);
 
     VirtualRuntime virtualRuntime_;
 #if USE_COLLECT_SYMBOLIC
