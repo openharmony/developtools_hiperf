@@ -1451,7 +1451,7 @@ void PerfEvents::RecordLoop()
         }
 
         if ((uint64_t)std::chrono::duration_cast<milliseconds>(thisTime - startTime).count() >
-        (uint64_t)(count * THOUSANDS)) {
+            (uint64_t)(count * THOUSANDS)) {
             if (HaveTargetsExit(startTime)) {
                 break;
             }
