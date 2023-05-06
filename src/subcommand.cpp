@@ -18,6 +18,7 @@
 #include "option.h"
 
 #include <mutex>
+#include <shared_mutex>
 
 using namespace std;
 namespace OHOS {
