@@ -673,7 +673,16 @@ const std::string GetUserType()
 // only for domestic beta
 bool IsBeta()
 {
-    return (GetUserType() == USER_DOMESTIC_BETA);
+    std::string userTypeRsp = GetUserType();
+    if (userTypeRsp == USER_DOMESTIC_BETA) {
+        return true;
+    }
+    // default release when usertype param is invalid
+    if (userTypeRsp.empty()) {
+        HLOGE("GetUserType is empty [%s]", userTypeRsp.c_str());
+        return true;
+    }
+    return false;
 }
 
 bool IsAllowProfilingUid()

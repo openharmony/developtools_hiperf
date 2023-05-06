@@ -94,7 +94,7 @@ const std::string USER_DOMESTIC_BETA = "beta";
 const std::set<int> ALLOW_UIDS = {1201};
 
 static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
-static const std::string USER_TYPE_PARAM_GET = "1";
+static const std::string USER_TYPE_PARAM_GET = "";
 
 // string function
 class MemoryHold {
