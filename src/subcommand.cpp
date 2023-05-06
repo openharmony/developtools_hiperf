@@ -24,7 +24,8 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 static std::map<std::string, std::unique_ptr<SubCommand>> g_SubCommandsMap;
-std:mutex subCommandMutex;
+std:mutex g_subCommandMutex;
+
 // parse option first
 bool SubCommand::OnSubCommandOptions(std::vector<std::string> args)
 {
@@ -76,7 +77,7 @@ bool SubCommand::RegisterSubCommand(std::string cmdName, std::unique_ptr<SubComm
     }
 
     if (g_SubCommandsMap.count(cmdName) == 0) {
-        std::unique_lock<std::shared_timed_mutex> lock(subCommandMutex);
+        std::unique_lock<std::shared_timed_mutex> lock(g_subCommandMutex);
         g_SubCommandsMap.insert(std::make_pair(cmdName, std::move(subCommand)));
         return true;
     } else {
