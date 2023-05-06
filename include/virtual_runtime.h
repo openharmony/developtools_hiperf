@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -121,7 +121,7 @@ public:
 private:
     bool disableUnwind_ = true;
     size_t callstackMergeLevel_ = 1;
-    CallStack callstack_;
+    OHOS::HiviewDFX::CallStack callstack_;
     // pid map with user space thread
     std::map<pid_t, VirtualThread> userSpaceThreadMap_;
     // not pid , just memmap
@@ -132,8 +132,8 @@ private:
         KERNEL_SYMBOL_CACHE_LIMIT = 4000,
         USER_SYMBOL_CACHE_LIMIT = 4000,
     };
-    HashList<uint64_t, Symbol> userSymbolCache_;
-    HashList<uint64_t, Symbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
+    OHOS::HiviewDFX::HashList<uint64_t, Symbol> userSymbolCache_;
+    OHOS::HiviewDFX::HashList<uint64_t, Symbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
     bool GetSymbolCache(uint64_t ip, Symbol &symbol,
                         const perf_callchain_context &context);
     // find synbols function name
