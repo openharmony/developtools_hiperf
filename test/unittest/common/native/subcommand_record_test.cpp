@@ -281,7 +281,7 @@ HWTEST_F(SubCommandRecordTest, SelectCpuInputErr, TestSize.Level1)
     TestRecordCommand("-d 2 -c abc ", false);
 }
 
-//--control
+// --control
 HWTEST_F(SubCommandRecordTest, CheckControlErr, TestSize.Level1)
 {
     TestRecordCommand("-a --control st", false, false);

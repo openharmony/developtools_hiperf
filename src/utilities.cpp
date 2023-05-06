@@ -687,8 +687,8 @@ bool IsBeta()
 
 bool IsAllowProfilingUid()
 {
-#if defined(is_linux) && is_linux || is_ohos
-    static int curUid = getuid();
+#if (defined(is_linux) && is_linux) || (defined(is_ohos) && is_ohos)
+    static unsigned int curUid = getuid();
     HLOGD("curUid is %d\n", curUid);
     if (ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end()) {
         return true;

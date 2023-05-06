@@ -193,7 +193,7 @@ public:
         const int wideBytes = 8;
         const int wideMaskPosi = 7;
         const int shortBytes = 4;
-        const int shortMaskPosi = 3;
+        const unsigned int shortMaskPosi = 3;
         if (mmap_ != MMAP_FAILED) {
             if ((addr + size) <= mmapSize_) {
                 if (size == wideBytes && (addr & wideMaskPosi) == 0) {
