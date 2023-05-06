@@ -23,8 +23,7 @@ using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static std::map<std::string, std::unique_ptr<SubCommand>> 
-g_SubCommandsMap;
+static std::map<std::string, std::unique_ptr<SubCommand>> g_SubCommandsMap;
 std:mutex subCommandMutex;
 // parse option first
 bool SubCommand::OnSubCommandOptions(std::vector<std::string> args)
