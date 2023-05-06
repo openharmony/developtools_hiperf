@@ -18,7 +18,6 @@
 #include "option.h"
 
 #include <mutex>
-#include <shared_mutex>
 
 using namespace std;
 namespace OHOS {
@@ -78,7 +77,7 @@ bool SubCommand::RegisterSubCommand(std::string cmdName, std::unique_ptr<SubComm
     }
 
     if (g_SubCommandsMap.count(cmdName) == 0) {
-        std::unique_lock<std::shared_timed_mutex> lock(g_subCommandMutex);
+        std::lock_guard<std::mutex> lock(g_subCommandMutex);
         g_SubCommandsMap.insert(std::make_pair(cmdName, std::move(subCommand)));
         return true;
     } else {
