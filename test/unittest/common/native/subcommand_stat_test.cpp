@@ -1642,8 +1642,8 @@ HWTEST_F(SubCommandStatTest, TestDumpOptions, TestSize.Level1)
     stdoutRecord.Start();
     SubCommandStat cmdStat;
     cmdStat.DumpOptions();
-    std::string stringout = stdoutRecord.Stop();
-    EXPECT_TRUE(stringout.find("10000.000000 sec") != std::string::npos);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_TRUE(stringOut.find("10000.000000 sec") != std::string::npos);
 }
 
 /**
@@ -1657,8 +1657,8 @@ HWTEST_F(SubCommandStatTest, TestPrintUsage, TestSize.Level1)
     stdoutRecord.Start();
     SubCommandStat cmdStat;
     cmdStat.PrintUsage();
-    std::string stringout = stdoutRecord.Stop();
-    EXPECT_TRUE(stringout.find("Usage: hiperf stat [options] [command [command-args]]") !=
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_TRUE(stringOut.find("Usage: hiperf stat [options] [command [command-args]]") !=
                 std::string::npos);
 }
 
@@ -1704,9 +1704,9 @@ HWTEST_F(SubCommandStatTest, TestReport, TestSize.Level1)
     std::string test = "test";
     countEvents[test] = std::move(testEvent);
     cmdStat.Report(countEvents);
-    std::string stringout = stdoutRecord.Stop();
-    EXPECT_TRUE(stringout.find("test") != std::string::npos);
-    EXPECT_TRUE(stringout.find("count  name") != std::string::npos);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_TRUE(stringOut.find("test") != std::string::npos);
+    EXPECT_TRUE(stringOut.find("count  name") != std::string::npos);
 }
 
 /**
