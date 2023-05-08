@@ -178,18 +178,6 @@ HWTEST_F(HiPerfSubcommandTest, TestClearSubCommands, TestSize.Level1)
     SubCommand::ClearSubCommands();
     EXPECT_EQ(SubCommand::GetSubCommands().size(), 0u);
 }
-
-/**
- * @tc.name: TestDumpOptions
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(HiPerfSubcommandTest, TestDumpOptions, TestSize.Level1)
-{
-    SubcommandObj subcomm;
-    subcomm.DumpOptions();
-    EXPECT_EQ(1, 1);
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

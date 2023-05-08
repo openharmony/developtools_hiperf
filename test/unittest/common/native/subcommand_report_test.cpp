@@ -170,9 +170,12 @@ HWTEST_F(SubCommandReportTest, TestParseOption, TestSize.Level1)
  */
 HWTEST_F(SubCommandReportTest, TestDumpOptions, TestSize.Level1)
 {
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
     SubCommandReport mSubCommandReport;
     mSubCommandReport.DumpOptions();
-    EXPECT_EQ(1, 1);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_TRUE(stringOut.find("comm,pid,tid,dso,func") != std::string::npos);
 }
 
 /**

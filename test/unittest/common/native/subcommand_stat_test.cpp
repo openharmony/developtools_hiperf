@@ -1638,9 +1638,12 @@ HWTEST_F(SubCommandStatTest, TestParseOption, TestSize.Level1)
  */
 HWTEST_F(SubCommandStatTest, TestDumpOptions, TestSize.Level1)
 {
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
     SubCommandStat cmdStat;
     cmdStat.DumpOptions();
-    EXPECT_EQ(1, 1);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_TRUE(stringOut.find("10000.000000 sec") != std::string::npos);
 }
 
 /**
@@ -1650,9 +1653,13 @@ HWTEST_F(SubCommandStatTest, TestDumpOptions, TestSize.Level1)
  */
 HWTEST_F(SubCommandStatTest, TestPrintUsage, TestSize.Level1)
 {
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
     SubCommandStat cmdStat;
     cmdStat.PrintUsage();
-    EXPECT_EQ(1, 1);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_TRUE(stringOut.find("Usage: hiperf stat [options] [command [command-args]]") !=
+                std::string::npos);
 }
 
 /**
@@ -1689,13 +1696,17 @@ HWTEST_F(SubCommandStatTest, TestCheckOptions, TestSize.Level1)
  */
 HWTEST_F(SubCommandStatTest, TestReport, TestSize.Level1)
 {
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
     SubCommandStat cmdStat;
     std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> countEvents;
     std::unique_ptr<PerfEvents::CountEvent> testEvent(std::make_unique<PerfEvents::CountEvent>());
     std::string test = "test";
     countEvents[test] = std::move(testEvent);
     cmdStat.Report(countEvents);
-    EXPECT_EQ(1, 1);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_TRUE(stringOut.find("test") != std::string::npos);
+    EXPECT_TRUE(stringOut.find("count  name") != std::string::npos);
 }
 
 /**
