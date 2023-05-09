@@ -379,7 +379,7 @@ Development Toolchain Subsystem
 
 [developtools\developtools_profiler](https://gitee.com/openharmony/developtools_profiler)
 
-[developtools\developtools_bytrace_standard](https://gitee.com/openharmony/developtools_bytrace_standard/)
+[developtools\developtools_bytrace](https://gitee.com/openharmony/developtools_bytrace)
 
 [third_party\libunwind](https://gitee.com/openharmony/third_party_libunwind)
 

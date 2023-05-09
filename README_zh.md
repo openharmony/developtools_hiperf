@@ -394,7 +394,7 @@ Z:\OHOS_STD_2.0\developtools\hdc_standard\prebuilt\windows\hdc_std.exe
 
 [developtools\developtools_profiler](https://gitee.com/openharmony/developtools_profiler)
 
-[developtools\developtools_bytrace_standard](https://gitee.com/openharmony/developtools_bytrace_standard/)
+[developtools\developtools_bytrace](https://gitee.com/openharmony/developtools_bytrace)
 
 [third_party\libunwind](https://gitee.com/openharmony/third_party_libunwind)
 
