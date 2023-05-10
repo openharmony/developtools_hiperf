@@ -14,10 +14,9 @@
  */
 
 #include "subcommand.h"
+#include <mutex>
 #include "debug_logger.h"
 #include "option.h"
-
-#include <mutex>
 
 using namespace std;
 namespace OHOS {
@@ -88,6 +87,7 @@ bool SubCommand::RegisterSubCommand(std::string cmdName, std::unique_ptr<SubComm
 
 void SubCommand::ClearSubCommands()
 {
+    std::lock_guard<std::mutex> lock(g_subCommandMutex);
     g_SubCommandsMap.clear();
 }
 
@@ -99,6 +99,7 @@ const std::map<std::string, std::unique_ptr<SubCommand>> &SubCommand::GetSubComm
 SubCommand *SubCommand::FindSubCommand(std::string cmdName)
 {
     HLOGV("%s", cmdName.c_str());
+    std::lock_guard<std::mutex> lock(g_subCommandMutex);
     auto found = g_SubCommandsMap.find(cmdName);
     if (found != g_SubCommandsMap.end()) {
         // remove the subcmd itself
