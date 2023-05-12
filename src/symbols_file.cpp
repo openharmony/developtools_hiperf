@@ -191,7 +191,7 @@ public:
     {
         size_t readSize = 0;
         const int wideBytes = 8;
-        const int wideMaskPosi = 7;
+        const unsigned int wideMaskPosi = 7;
         const int shortBytes = 4;
         const unsigned int shortMaskPosi = 3;
         if (mmap_ != MMAP_FAILED) {
