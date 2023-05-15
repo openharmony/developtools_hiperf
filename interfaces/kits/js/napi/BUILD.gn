@@ -33,7 +33,7 @@ ohos_shared_library("hiperf_client_napi") {
 
   external_deps = [ 
     "hiviewdfx_hilog_native:libhilog",
-    "napi:ace_napi"
+    "napi:ace_napi",
    ]
 
   output_name = "hiperf_napi"
