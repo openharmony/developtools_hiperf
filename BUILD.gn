@@ -12,11 +12,11 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//developtools/hiperf/hiperf.gni")
+import("./hiperf.gni")
 
 declare_args() {
   hiperf_feature_mingw_uapi_dir =
-      "//kernel/linux/patches/linux-5.10/prebuilts/usr/include"
+      "../../kernel/linux/patches/linux-5.10/prebuilts/usr/include"
 }
 
 function_disable_define = []
@@ -64,7 +64,11 @@ config("hiperf_inner_config") {
     ]
   }
 
-  if (device_name == "hispark_taurus") {
+  declare_args() {
+    hispark_taurus_little = true
+  }
+
+  if (hispark_taurus_little) {
     defines += [ "LITTLE_MEMORY" ]
   }
 
@@ -164,7 +168,7 @@ if (hiperf_target_static) {
 common_configs = [
   ":hiperf_inner_config",
   "//third_party/bounds_checking_function:libsec_public_config",
-  "//commonlibrary/c_utils/base:utils_config",
+  "../../commonlibrary/c_utils/base:utils_config",
   "//third_party/googletest:gtest_config",
 ]
 
@@ -174,11 +178,12 @@ config("hiperf_syspara_config") {
 
 if (is_ohos && hiperf_use_syspara) {
   common_configs += [ ":hiperf_syspara_config" ]
-  common_deps += [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+  common_deps += [ "../../base/startup/init/interfaces/innerkits:libbegetutil" ]
 }
 
 ohos_source_set("hiperf_platform_common") {
   part_name = "hiperf"
+  subsystem_name = "developtools"
   use_exceptions = true
   public_deps = common_deps
   public_configs = common_configs
@@ -205,6 +210,7 @@ config("platform_linux_config") {
 
 ohos_source_set("hiperf_platform_linux") {
   part_name = "hiperf"
+  subsystem_name = "developtools"
   use_exceptions = true
   public_deps = common_deps
   public_configs = common_configs
@@ -219,6 +225,7 @@ config("elf_config") {
 }
 ohos_source_set("support_elf") {
   part_name = "hiperf"
+  subsystem_name = "developtools"
   public_configs = common_configs
   public_configs += [ ":elf_config" ]
 }
@@ -234,6 +241,7 @@ config("protobuf_config") {
 
 ohos_source_set("support_protobuf") {
   part_name = "hiperf"
+  subsystem_name = "developtools"
   use_exceptions = true
 
   #protobuf
@@ -311,6 +319,7 @@ config("proto_file_cpp_config") {
 
 ohos_source_set("proto_file_cpp") {
   part_name = "hiperf"
+  subsystem_name = "developtools"
   cflags = []
 
   deps = [ ":hiperf_host_build_proto" ]
@@ -395,6 +404,7 @@ group("hiperf_etc") {
 
 ohos_source_set("hiperf_platform_host") {
   part_name = "hiperf"
+  subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
   public_deps = [ ":hiperf_platform_common" ]
 }

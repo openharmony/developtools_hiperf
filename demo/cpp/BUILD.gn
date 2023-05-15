@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//developtools/hiperf/hiperf.gni")
+import("../../hiperf.gni")
 
 ohos_executable("hiperf_demo") {
   deps = [ "${hiperf_path}/interfaces/innerkits/native:hiperf_client" ]
