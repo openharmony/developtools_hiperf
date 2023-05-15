@@ -31,7 +31,7 @@ ohos_shared_library("hiperf_client_napi") {
     "${innerkits_path}/native:hiperf_client",
   ]
 
-  external_deps = [ 
+  external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "napi:ace_napi",
   ]
