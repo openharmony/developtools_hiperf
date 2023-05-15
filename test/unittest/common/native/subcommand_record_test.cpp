@@ -817,8 +817,8 @@ HWTEST_F(SubCommandRecordTest, DumpOptions, TestSize.Level1)
     SubCommandRecord cmd;
     cmd.DumpOptions();
     std::string stringOut = stdoutRecord.Stop();
-    EXPECT_TRUE(stringOut.find("cpuPercent: 25") != std::string::npos);
-    EXPECT_TRUE(stringOut.find("mmapPage_: 1024") != std::string::npos);
+    EXPECT_TRUE(stringOut.find("cpuPercent:	25") != std::string::npos);
+    EXPECT_TRUE(stringOut.find("mmapPages_:	1024") != std::string::npos);
 }
 
 /**
