@@ -35,6 +35,7 @@ ohos_shared_library("hiperf_client") {
   }
 
   subsystem_name = "developtools"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "hiperf"
 }
 
