@@ -27,9 +27,7 @@ ohos_shared_library("hiperf_client_napi") {
 
   configs = [ ":hiperf_client_napi_config" ]
   sources = [ "hiperf_client_napi.cpp" ]
-  deps = [
-    "${innerkits_path}/native:hiperf_client",
-  ]
+  deps = [ "${innerkits_path}/native:hiperf_client" ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
