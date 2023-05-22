@@ -30,6 +30,8 @@
 #include "subcommand_dump.h"
 #include "subcommand_report.h"
 
+const int MEMORY_SIZE = 4;
+
 using namespace std;
 using namespace OHOS::Developtools::HiPerf;
 
@@ -37,13 +39,14 @@ using namespace OHOS::Developtools::HiPerf;
 #define main HiperfFuzzerMain
 #endif
 
-bool LittleMemory() {
+bool LittleMemory()
+{
     ifstream file("/proc/meminfo");
     string line;
     while (getline(file, line)) {
         if (line.find("MemTotal:") != string::npos) {
             int memSize = stoi(line.substr(line.find(":") + 1));
-            if (memSize < (4*1024*1024)) {
+            if (memSize < (MEMORY_SIZE * 1024 * 1024)) {
                 return true;
             }
         }
@@ -56,7 +59,7 @@ int main(const int argc, const char *argv[])
     if (LittleMemory()) {
 #define LITTLE_MEMORY
     }
-    
+
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
