@@ -531,7 +531,7 @@ const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thr
 {
     Symbol vaddrSymbol(ip, thread.name_);
     int64_t memMapIndex = thread.FindMapIndexByAddr(ip);
-    if (memMapIndex != -1) {
+    if (memMapIndex >= 0) {
         const MemMapItem *mmap = &(thread.GetMaps()[memMapIndex]);
         SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(*mmap);
         if (symbolsFile != nullptr) {
