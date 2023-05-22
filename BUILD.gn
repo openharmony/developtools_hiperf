@@ -64,14 +64,6 @@ config("hiperf_inner_config") {
     ]
   }
 
-  declare_args() {
-    hispark_taurus_little = true
-  }
-
-  if (hispark_taurus_little) {
-    defines += [ "LITTLE_MEMORY" ]
-  }
-
   if (hiperf_check_time) {
     defines += [ "HIPERF_DEBUG_TIME" ]
   }
