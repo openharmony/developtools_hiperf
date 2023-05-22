@@ -32,6 +32,7 @@
 #include "subcommand_report.h"
 
 const int MEMORY_SIZE = 4;
+const int MULTIPLE_SIZE = 1024;
 
 using namespace std;
 using namespace OHOS::Developtools::HiPerf;
@@ -47,7 +48,7 @@ bool LittleMemory()
     while (getline(file, line)) {
         if (line.find("MemTotal:") != string::npos) {
             int memSize = stoi(line.substr(line.find(":") + 1));
-            if (memSize < (MEMORY_SIZE * 1024 * 1024)) {
+            if (memSize < (MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE)) {
                 return true;
             }
         }
