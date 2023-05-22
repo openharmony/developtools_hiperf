@@ -15,6 +15,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 
 #include "command.h"
 #include "debug_logger.h"
