@@ -13,3 +13,4 @@
 hiviewdfx.hiperf.perf_event_max_sample_rate=root:shell:0775
 hiviewdfx.hiperf.perf_cpu_time_max_percent=root:shell:0775
 hiviewdfx.hiperf.perf_event_mlock_kb=root:shell:0775
+security.perf_harden=root:shell:0775

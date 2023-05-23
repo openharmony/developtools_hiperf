@@ -530,9 +530,8 @@ const Symbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<MemM
 const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thread)
 {
     Symbol vaddrSymbol(ip, thread.name_);
-    int64_t retIndex = thread.FindMapIndexByAddr(ip);
-    uint64_t memMapIndex = static_cast<uint64_t>(retIndex);
-    if (memMapIndex != -1) {
+    int64_t memMapIndex = thread.FindMapIndexByAddr(ip);
+    if (memMapIndex >= 0) {
         const MemMapItem *mmap = &(thread.GetMaps()[memMapIndex]);
         SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(*mmap);
         if (symbolsFile != nullptr) {
@@ -607,7 +606,7 @@ const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
         }
         userSymbolCache_[symbol.fileVaddr_] = symbol;
         HLOGV("cache ip 0x%" PRIx64 " to %s", ip,
-              userSymbolCache_[symbol.funcVaddr_].ToDebugString().c_str());
+              userSymbolCache_[symbol.fileVaddr_].ToDebugString().c_str());
     }
 
     if (context == PERF_CONTEXT_KERNEL or (context == PERF_CONTEXT_MAX and !symbol.isValid())) {

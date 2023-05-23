@@ -93,6 +93,9 @@ ohos_unittest("hiperf_unittest") {
   resource_config_file = "unittest/resource/ohos_test.xml"
   deps = common_deps
   external_deps = [ "hilog_native:libhilog" ]
+  cflags = [
+    "-Dprivate=public",  #allow test code access private members
+  ]
 
   sources = sources_interface
   sources += sources_base
