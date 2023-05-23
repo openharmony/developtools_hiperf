@@ -31,7 +31,7 @@
 #include "subcommand_dump.h"
 #include "subcommand_report.h"
 
-const int MEMORY_SIZE = 4;
+const int MEMORY_SIZE = 1;
 const int MULTIPLE_SIZE = 1024;
 
 using namespace std;
