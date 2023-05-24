@@ -15,7 +15,6 @@
 
 #include <cstdio>
 #include <iostream>
-#include <fstream>
 
 #include "command.h"
 #include "debug_logger.h"
@@ -31,9 +30,6 @@
 #include "subcommand_dump.h"
 #include "subcommand_report.h"
 
-const int MEMORY_SIZE = 1;
-const int MULTIPLE_SIZE = 1024;
-
 using namespace std;
 using namespace OHOS::Developtools::HiPerf;
 
@@ -41,27 +37,8 @@ using namespace OHOS::Developtools::HiPerf;
 #define main HiperfFuzzerMain
 #endif
 
-bool LittleMemory()
-{
-    ifstream file("/proc/meminfo");
-    string line;
-    while (getline(file, line)) {
-        if (line.find("MemTotal:") != string::npos) {
-            int memSize = stoi(line.substr(line.find(":") + 1));
-            if (memSize < (MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 int main(const int argc, const char *argv[])
 {
-    if (LittleMemory()) {
-#define LITTLE_MEMORY
-    }
-
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
