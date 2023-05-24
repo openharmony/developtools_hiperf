@@ -326,11 +326,6 @@ public:
     static constexpr uint64_t DEFAULT_SAMPLE_PERIOD = 1;
     static constexpr uint64_t DEFAULT_TIMEOUT = 10 * 1000;
     static constexpr size_t MIN_BUFFER_SIZE = 64 * 1024 * 1024;
-#ifdef LITTLE_MEMORY
-    static constexpr size_t MAX_BUFFER_SIZE = 128 * 1024 * 1024;
-#else
-    static constexpr size_t MAX_BUFFER_SIZE = 256 * 1024 * 1024;
-#endif
     static constexpr size_t BUFFER_LOW_LEVEL = 10 * 1024 * 1024;
     static constexpr size_t BUFFER_CRITICAL_LEVEL = 5 * 1024 * 1024;
 

@@ -670,6 +670,20 @@ const std::string GetUserType()
 #endif
 }
 
+bool LittleMemory() {
+    std::ifstream file("/proc/meminfo");
+    std::string line;
+    while (getline(file, line)) {
+        if (line.find("MemTotal:") != std::string::npos) {
+            int memSize = stoi(line.substr(line.find(":") + 1));
+            if (memSize < (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // only for domestic beta
 bool IsBeta()
 {
