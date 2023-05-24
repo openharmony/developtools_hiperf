@@ -1098,11 +1098,11 @@ size_t PerfEvents::CalcBufferSize()
 {
     static int MAX_BUFFER_SIZE;
     if (LittleMemory()) {
-        MAX_BUFFER_SIZE = 128 * 1024 * 1024;
-    }else {
-        MAX_BUFFER_SIZE = 256 * 1024 * 1024;
+        MAX_BUFFER_SIZE = MAX_BUFFER_SIZE_LITTLE;
+    } else {
+        MAX_BUFFER_SIZE = MAX_BUFFER_SIZE_LARGE;
     }
-    
+
     size_t bufferSize = MAX_BUFFER_SIZE;
     if (!systemTarget_) {
         // suppose ring buffer is 4 times as much as mmap

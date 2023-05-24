@@ -328,6 +328,8 @@ public:
     static constexpr size_t MIN_BUFFER_SIZE = 64 * 1024 * 1024;
     static constexpr size_t BUFFER_LOW_LEVEL = 10 * 1024 * 1024;
     static constexpr size_t BUFFER_CRITICAL_LEVEL = 5 * 1024 * 1024;
+    static constexpr size_t MAX_BUFFER_SIZE_LITTLE = 128 * 1024 * 1024;
+    static constexpr size_t MAX_BUFFER_SIZE_LARGE = 256 * 1024 * 1024;
 
     PerfEvents();
     ~PerfEvents();

@@ -670,7 +670,8 @@ const std::string GetUserType()
 #endif
 }
 
-bool LittleMemory() {
+bool LittleMemory()
+{
     std::ifstream file("/proc/meminfo");
     std::string line;
     while (getline(file, line)) {
