@@ -1,7 +1,7 @@
 {
   "name": "@ohos/hiperf",
   "description": "hiperf interface provided for system",
-  "version": "3.1",
+  "version": "4.0",
   "license": "Apache License 2.0",
   "publishAs": "code-segment",
   "segment": {
@@ -15,7 +15,7 @@
     "adapted_system_type": [
       "standard"
     ],
-    "rom": "188KB",
+    "rom": "930KB",
     "ram": "2000KB",
     "deps": {
       "components": [

@@ -73,6 +73,9 @@ constexpr const int HUNDREDS = 100;
 constexpr const int DEFAULT_STRING_BUF_SIZE = 4096;
 constexpr const int FIVE_THOUSANDS = 5000;
 constexpr const int DATA_MAX_SIZE = 1001;
+constexpr const int LITTLE_MEMORY_SIZE = 1;
+constexpr const int MULTIPLE_SIZE = 1024;
+
 #if !is_mingw
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -208,6 +211,8 @@ std::vector<std::string> GetSubDirs(const std::string &basePath);
 bool IsDir(const std::string &path);
 
 bool IsPath(const std::string &fileName);
+
+bool LittleMemory();
 
 #if is_mingw
 const char PATH_SEPARATOR = '\\';

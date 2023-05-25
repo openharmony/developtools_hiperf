@@ -12,11 +12,11 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//developtools/hiperf/hiperf.gni")
+import("../../../hiperf.gni")
 
 config("hiperf_client_config") {
   visibility = [ ":*" ]
-  visibility += [ "//developtools/hiperf/:*" ]
+  visibility += [ "../../../:*" ]
   include_dirs = [
     "include",
     "${hiperf_path}/include",
