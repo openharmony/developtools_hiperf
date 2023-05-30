@@ -101,6 +101,8 @@ struct Symbol {
     // copy
     Symbol(const Symbol &other) = default;
 
+    Symbol& operator=(const Symbol& other) = default;
+
     static bool SameVaddr(const Symbol &a, const Symbol &b)
     {
         return (a.funcVaddr_ == b.funcVaddr_);
