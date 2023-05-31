@@ -71,6 +71,9 @@ public:
         "   --chkms <millisec>\n"
         "         Set the interval of querying the <package_name>.\n"
         "         <millisec> is in range [1-200], default is 10.\n"
+        "   --restart\n"
+        "         Collect performance counter information of application startup.\n"
+        "         Record will exit if the process is not started within 30 seconds.\n"
         "   --verbose\n"
         "         Show more detailed reports.\n"
                      // clang-format on
@@ -91,6 +94,7 @@ private:
     int timeReportMs_ {0};
     std::vector<std::vector<std::string>> selectEvents_;
     std::vector<std::vector<std::string>> selectGroups_;
+    bool restart_ {false};
     bool noCreateNew_ {false};
     std::string appPackage_ = {};
     int checkAppMs_ = DEFAULT_CHECK_APP_MS;

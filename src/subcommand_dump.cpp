@@ -80,12 +80,18 @@ bool SubCommandDump::ParseOption(std::vector<std::string> &args)
         HLOGD("get option --elf failed");
         return false;
     }
+    if (!Option::GetOptionValue(args, "-i", dumpFileName_)) {
+        return false;
+    }
 #if HAVE_PROTOBUF
     if (!Option::GetOptionValue(args, "--proto", protobufDumpFileName_)) {
         HLOGD("get option --proto failed");
         return false;
     }
 #endif
+    if (!Option::GetOptionValue(args, "-o", outputFilename_)) {
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--export", exportSampleIndex_)) {
         HLOGD("get option --export failed");
         return false;
@@ -94,26 +100,43 @@ bool SubCommandDump::ParseOption(std::vector<std::string> &args)
     if (dumpHeader_ || dumpFeatures_ || dumpData_) {
         dumpAll_ = false;
     }
-
-    if (args.size() > 1) {
-        printf("unknown option %s\n", args[0].c_str());
+    if (!args.empty()) {
+        printf("'%s' option usage error, please check usage.\n", VectorToString(args).c_str());
         return false;
-    }
-    if (args.size() == 1) {
-        dumpFileName_ = args[0];
-        args.clear();
     }
 
     return CheckInputFile();
 }
 
+bool SubCommandDump::PrepareDumpOutput()
+{
+    if (outputFilename_.empty()) {
+        return true;
+    }
+    std::string resolvedPath = CanonicalizeSpecPath(outputFilename_.c_str());
+    outputDump_ = fopen(resolvedPath.c_str(), "w");
+    if (outputDump_ == nullptr) {
+        printf("unable open file to '%s' because '%d'\n", outputFilename_.c_str(), errno);
+        return false;
+    }
+    printf("dump result will save at '%s'\n", outputFilename_.c_str());
+    return true;
+}
+
 SubCommandDump::~SubCommandDump()
 {
+    if (outputDump_ != nullptr && outputDump_ != stdout) {
+        fclose(outputDump_);
+    }
     SymbolsFile::onRecording_ = true; // back to default for UT
 }
 
 bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
 {
+    if (!PrepareDumpOutput()) {
+        return false;
+    }
+
     if (!elfFileName_.empty()) {
         return DumpElfFile();
     }
@@ -421,7 +444,7 @@ void SubCommandDump::DumpDataPortion(int indent)
         vr_.UpdateFromRecord(*record);
 
         recordCount++;
-        record->Dump(indent);
+        record->Dump(indent, outputFilename_);
 
         if (record->GetType() == PERF_RECORD_SAMPLE) {
             std::unique_ptr<PerfRecordSample> sample(

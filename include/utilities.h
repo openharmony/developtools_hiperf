@@ -95,6 +95,8 @@ const std::set<int> ALLOW_UIDS = {1201};
 
 static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";
+static FILE *outputDump_ = nullptr;
+const uint64_t waitAppRunCheckTimeOut = 10;
 
 // string function
 class MemoryHold {
@@ -300,7 +302,11 @@ bool PowerOfTwo(uint64_t n);
 
 #define PrintIndent(indent, format, ...)                                                           \
     if (indent >= 0) {                                                                             \
-        printf("%*s" format, (indent)*2, "", ##__VA_ARGS__);                                       \
+        if (outputDump_ == nullptr) {                                                              \
+            printf("%*s" format, (indent)*2, "", ##__VA_ARGS__);                                   \
+        } else {                                                                                   \
+            fprintf(outputDump_, "%*s" format, (indent)*2, "", ##__VA_ARGS__);                     \
+        }                                                                                          \
     } else {                                                                                       \
         HLOGV("%s" format, "", ##__VA_ARGS__);                                                     \
     }
@@ -311,7 +317,8 @@ bool PowerOfTwo(uint64_t n);
 #ifndef MAP_FAILED
 #define MAP_FAILED MMAP_FAILED
 #endif
-pid_t GetAppPackagePid(const std::string &appPackge);
+pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
+                       const uint64_t waitAppTimeOut);
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName);
 bool IsExistDebugByPid(const std::vector<pid_t> pids);

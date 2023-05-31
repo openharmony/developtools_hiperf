@@ -43,6 +43,7 @@ void SubCommandStat::DumpOptions() const
     printf(" checkAppMs_:\t%d\n", checkAppMs_);
     printf(" selectPids:\t%s\n", VectorToString(selectPids_).c_str());
     printf(" selectTids:\t%s\n", VectorToString(selectTids_).c_str());
+    printf(" restart:\t%s\n", restart_ ? "true" : "false");
     printf(" verbose:\t%s\n", verboseReport_ ? "true" : "false");
 }
 
@@ -106,6 +107,10 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
     }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
         HLOGD("get option -t failed");
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--restart", restart_)) {
+        HLOGD("get option --restart failed");
         return false;
     }
     if (!Option::GetOptionValue(args, "--verbose", verboseReport_)) {
@@ -343,6 +348,9 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 {
     if (HelpOption()) {
         return true;
+    }
+    if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
+        return false;
     }
     // check option
     if (!CheckSelectCpuPidOption()) {

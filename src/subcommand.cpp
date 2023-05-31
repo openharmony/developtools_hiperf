@@ -61,6 +61,96 @@ bool SubCommand::OnSubCommandOptions(std::vector<std::string> args)
     return true;
 }
 
+bool SubCommand::CheckRestartOption(std::string appPackage, bool targetSystemWide, bool restart,
+                                    std::vector<pid_t> &selectPids)
+{
+    if (!restart) {
+        return true;
+    }
+    if (appPackage.empty()) {
+        printf("to detect the performance of application startup, --app option must be given\n");
+        return false;
+    }
+    if (targetSystemWide || !selectPids.empty()) {
+        printf("option --restart and -p/-a is conflict, please check usage\n");
+        return false;
+    }
+    
+    if (!appPackage.empty()) {
+        printf("please restart %s for profiling within 30 seconds\n", appPackage.c_str());
+        pid_t oldAppPid = GetAppPackagePid(appPackage, -1, CHECK_FREQUENCY, 0);
+        pid_t newAppPid = GetAppPackagePid(appPackage, oldAppPid, CHECK_FREQUENCY, CHECK_TIMEOUT);
+        if (newAppPid < 0 || oldAppPid == newAppPid) {
+            printf("app %s was not restarted within 30 seconds\n", appPackage.c_str());
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+bool SubCommand::HandleSubCommandExclude(const std::vector<pid_t> &excludeTids, const std::vector<std::string>
+                                         &excludeThreadNames, std::vector<pid_t> &selectTids)
+{
+    if (!excludeTids.empty() && !excludeThreadNames.empty()) {
+        printf("option --exclude-thread and --exclude-tid is conflict, please check usage\n");
+        return false;
+    }
+    if (excludeTids.empty() && excludeThreadNames.empty()) {
+        return true;
+    }
+    if (selectTids.empty()) {
+        printf("No thread is Monitored, while attempt to exclude some threads.\n");
+        return false;
+    }
+    if (!excludeTids.empty()) {
+        ExcludeTidsFromSelectTids(excludeTids, selectTids);
+        return true;
+    }
+    ExcludeThreadsFromSelectTids(excludeThreadNames, selectTids);
+    return true;
+}
+
+void SubCommand::ExcludeTidsFromSelectTids(const std::vector<pid_t> &excludeTids, std::vector<pid_t> &selectTids)
+{
+    for (auto excludeTid : excludeTids) {
+        bool hasExclude = false;
+        auto pos = selectTids.begin();
+        while (pos != selectTids.end()) {
+            if (excludeTid == *pos) {
+                pos = selectTids.erase(pos);
+                hasExclude = true;
+                continue;
+            }
+            ++pos;
+        }
+        if (!hasExclude) {
+            printf("No thread id %d was found to exclude.\n", excludeTid);
+        }
+    }
+}
+
+void SubCommand::ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
+                                              std::vector<pid_t> &selectTids)
+{
+    for (auto excludeName : excludeThreadNames) {
+        bool hasExclude = false;
+        auto pos = selectTids.begin();
+        while (pos != selectTids.end()) {
+            std::string threadName = virtualRuntime_.ReadThreadName(*pos, true);
+            if (excludeName == threadName) {
+                pos = selectTids.erase(pos);
+                hasExclude = true;
+                continue;
+            }
+            ++pos;
+        }
+        if (!hasExclude) {
+            printf("No thread named %s was found to exclude.\n", excludeName.c_str());
+        }
+    }
+}
+
 bool SubCommand::RegisterSubCommand(std::string cmdName, std::unique_ptr<SubCommand> subCommand)
 {
     HLOGV("%s", cmdName.c_str());
