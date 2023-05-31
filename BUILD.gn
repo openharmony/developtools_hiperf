@@ -143,7 +143,6 @@ sources_platform_linux = [
 common_deps = [
   ":support_elf",
   ":support_protobuf",
-  "../../base/hiviewdfx/faultloggerd/interfaces/innerkits/callstack:callstack_perf",
   "//third_party/bounds_checking_function:libsec_static",
   "//third_party/zlib:libz",
 ]
@@ -170,7 +169,6 @@ config("hiperf_syspara_config") {
 
 if (is_ohos && hiperf_use_syspara) {
   common_configs += [ ":hiperf_syspara_config" ]
-  common_deps += [ "../../base/startup/init/interfaces/innerkits:libbegetutil" ]
 }
 
 ohos_source_set("hiperf_platform_common") {
@@ -186,11 +184,14 @@ ohos_source_set("hiperf_platform_common") {
       "bundle_framework:appexecfwk_base",
       "bundle_framework:appexecfwk_core",
       "c_utils:utils",
+      "faultloggerd:callstack_perf",
       "hiviewdfx_hilog_native:libhilog",
+      "init:libbegetutil",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
   } else {
+    external_deps = [ "faultloggerd:callstack_perf" ]
     defines += [ "CONFIG_NO_HILOG" ]
   }
   sources = sources_platform_common
@@ -206,6 +207,13 @@ ohos_source_set("hiperf_platform_linux") {
   use_exceptions = true
   public_deps = common_deps
   public_configs = common_configs
+
+  if (is_ohos) {
+    external_deps = [
+      "faultloggerd:callstack_perf",
+      "init:libbegetutil",
+    ]
+  }
 
   public_configs += [ ":platform_linux_config" ]
   configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
@@ -336,6 +344,10 @@ ohos_executable("hiperf") {
     static_link = true
   }
 
+  if (is_ohos) {
+    external_deps = [ "faultloggerd:callstack_perf" ]
+  }
+
   if (is_linux || is_mingw) {
     # ld.lld: error: attempted static link of dynamic object hiviewdfx/hilog_native/libhilog.so
     static_link = true
@@ -353,6 +365,7 @@ ohos_executable("hiperf_host") {
     static_link = true
   }
 
+  external_deps = [ "faultloggerd:callstack_perf" ]
   subsystem_name = "developtools"
   part_name = "hiperf"
 }
@@ -399,6 +412,7 @@ ohos_source_set("hiperf_platform_host") {
   subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
   public_deps = [ ":hiperf_platform_common" ]
+  external_deps = [ "faultloggerd:callstack_perf" ]
 }
 
 ohos_shared_library("hiperf_host_lib") {
@@ -407,6 +421,7 @@ ohos_shared_library("hiperf_host_lib") {
 
   ldflags = [ "-static-libstdc++" ]
 
+  external_deps = [ "faultloggerd:callstack_perf" ]
   subsystem_name = "developtools"
   part_name = "hiperf"
 }
