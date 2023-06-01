@@ -1096,22 +1096,22 @@ std::vector<AttrWithId> PerfEvents::GetAttrWithId() const
 
 size_t PerfEvents::CalcBufferSize()
 {
-    size_t MAX_BUFFER_SIZE;
+    size_t maxBufferSize;
     if (LittleMemory()) {
-        MAX_BUFFER_SIZE = MAX_BUFFER_SIZE_LITTLE;
+        maxBufferSize = MAX_BUFFER_SIZE_LITTLE;
     } else {
-        MAX_BUFFER_SIZE = MAX_BUFFER_SIZE_LARGE;
+        maxBufferSize = MAX_BUFFER_SIZE_LARGE;
     }
 
-    size_t bufferSize = MAX_BUFFER_SIZE;
+    size_t bufferSize = maxBufferSize;
     if (!systemTarget_) {
         // suppose ring buffer is 4 times as much as mmap
         static constexpr int TIMES = 4;
         bufferSize = cpuMmap_.size() * mmapPages_ * pageSize_ * TIMES;
         if (bufferSize < MIN_BUFFER_SIZE) {
             bufferSize = MIN_BUFFER_SIZE;
-        } else if (bufferSize > MAX_BUFFER_SIZE) {
-            bufferSize = MAX_BUFFER_SIZE;
+        } else if (bufferSize > maxBufferSize) {
+            bufferSize = maxBufferSize;
         }
     }
     HLOGD("CalcBufferSize return %zu", bufferSize);
