@@ -20,11 +20,17 @@
     "deps": {
       "components": [
         "hiviewdfx_hilog_native",
-        "napi"
+        "napi",
+        "samgr",
+        "ipc",
+        "c_utils",
+        "bundle_framework"
       ],
       "third_party": [
-        "libz",
-        "libsec_static"
+        "zlib",
+        "libsec_static",
+        "bounds_checking_function",
+        "protobuf"
       ]
     },
     "build": {

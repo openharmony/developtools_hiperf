@@ -92,7 +92,10 @@ ohos_unittest("hiperf_unittest") {
   module_out_path = module_output_path
   resource_config_file = "unittest/resource/ohos_test.xml"
   deps = common_deps
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "faultloggerd:callstack_perf",
+    "hilog_native:libhilog",
+  ]
   cflags = [
     "-Dprivate=public",  #allow test code access private members
   ]
@@ -122,7 +125,10 @@ ohos_fuzztest("CommandLineFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "faultloggerd:callstack_perf",
+    "hilog_native:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [
     "${hiperf_path}/src/main.cpp",
@@ -136,7 +142,10 @@ ohos_fuzztest("LibReportFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "faultloggerd:callstack_perf",
+    "hilog_native:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/libreport_fuzzer/LibReport_fuzzer.cpp" ]
 }
@@ -147,7 +156,10 @@ ohos_fuzztest("ClientApiFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "faultloggerd:callstack_perf",
+    "hilog_native:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/clientapi_fuzzer/ClientApi_fuzzer.cpp" ]
 }
@@ -159,7 +171,10 @@ ohos_fuzztest("PerfFileFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "faultloggerd:callstack_perf",
+    "hilog_native:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/perffile_fuzzer/PerfFile_fuzzer.cpp" ]
 }
@@ -171,7 +186,10 @@ ohos_fuzztest("ElfParserFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "faultloggerd:callstack_perf",
+    "hilog_native:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/elfparser_fuzzer/ElfParser_fuzzer.cpp" ]
 }
