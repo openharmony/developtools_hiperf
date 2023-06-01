@@ -1096,7 +1096,7 @@ std::vector<AttrWithId> PerfEvents::GetAttrWithId() const
 
 size_t PerfEvents::CalcBufferSize()
 {
-    static int MAX_BUFFER_SIZE;
+    size_t MAX_BUFFER_SIZE;
     if (LittleMemory()) {
         MAX_BUFFER_SIZE = MAX_BUFFER_SIZE_LITTLE;
     } else {
