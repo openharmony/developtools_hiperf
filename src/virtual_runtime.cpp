@@ -41,9 +41,14 @@ VirtualRuntime::VirtualRuntime(bool onDevice)
     UpdateThread(0, 0, "swapper");
 }
 
-std::string VirtualRuntime::ReadThreadName(pid_t tid)
+std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
 {
-    std::string comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid)).c_str();
+    std::string comm = "";
+    if (isThread) {
+        comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid)).c_str();
+    } else {
+        comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid)).c_str();
+    }
     comm.erase(std::remove(comm.begin(), comm.end(), '\r'), comm.end());
     comm.erase(std::remove(comm.begin(), comm.end(), '\n'), comm.end());
     return comm;
@@ -90,7 +95,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
 #ifdef HIPERF_DEBUG_TIME
         const auto startCreateMmapTime = steady_clock::now();
 #endif
-        thread.name_ = ReadThreadName(pid);
+        thread.name_ = ReadThreadName(pid, false);
         HLOGD("create a new thread record for %u:%u:%s with %zu dso", pid, tid,
               thread.name_.c_str(), thread.GetMaps().size());
         // we need make a PerfRecordComm

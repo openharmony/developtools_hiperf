@@ -16,6 +16,7 @@
 #define HIPERF_SUBCOMMAND_H_
 #include <string>
 #include "utilities.h"
+#include "virtual_runtime.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -82,6 +83,21 @@ public:
 
     // for test code
     static void ClearSubCommands();
+    
+    // check restart option
+    bool CheckRestartOption(std::string appPackage, bool targetSystemWide, bool restart,
+                                                    std::vector<pid_t> &selectPids);
+
+    // handle subcommand exclude
+    bool HandleSubCommandExclude(const std::vector<pid_t> &excludeTids, const std::vector<std::string>
+                                       &excludeThreadNames, std::vector<pid_t> &selectTids);
+private:
+    void ExcludeTidsFromSelectTids(const std::vector<pid_t> &excludeTids, std::vector<pid_t> &selectTids);
+    void ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
+        std::vector<pid_t> &selectTids);
+    VirtualRuntime virtualRuntime_;
+    const int CHECK_FREQUENCY = 100;
+    const uint64_t CHECK_TIMEOUT = 30;
 
 protected:
     const std::string name_;

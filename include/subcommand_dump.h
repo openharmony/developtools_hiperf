@@ -47,6 +47,8 @@ public:
         "       Dump addtional features only.\n"
         "   --sympath <symbols path>\n"
         "       use symbols path to find symbols.\n"
+        "   -i <file name>\n"
+        "       perf data file to dump, default is perf.data\n"
         "   --elf <elf file name>\n"
         "       dump elf not perf data.\n"
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
@@ -59,8 +61,8 @@ public:
         "       named with sample index(0 base):\n"
         "           hiperf_<pid>_<tid>_user_regs_<index>.dump\n"
         "           hiperf_<pid>_<tid>_user_data_<index>.dump\n"
-        "   <file name>\n"
-        "       perf data file to dump, default is perf.data\n\n"
+        "   -o <filename>\n"
+        "       dump file name. if empty will use stdout print\n"
         )
     // clang-format on
     {
@@ -77,10 +79,12 @@ public:
 
 private:
     static void DumpSampleType(uint64_t sampleType, int indent);
+    bool PrepareDumpOutput();
     int exportSampleIndex_ = -1;
     int currectSampleIndex_ = 0;
     std::string dumpFileName_;
     std::string elfFileName_;
+    std::string outputFilename_ = "";
     std::string protobufDumpFileName_;
     int indent_ = 0;
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF

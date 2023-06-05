@@ -119,6 +119,9 @@ void SubCommandRecord::DumpOptions() const
     printf(" no_inherit:\t%s\n", noInherit_ ? "true" : "false");
     printf(" selectPids:\t%s\n", VectorToString(selectPids_).c_str());
     printf(" selectTids:\t%s\n", VectorToString(selectTids_).c_str());
+    printf(" excludeTids:\t%s\n", VectorToString(excludeTids_).c_str());
+    printf(" excludeThreads:\t%s\n", VectorToString(excludeThreadNames_).c_str());
+    printf(" restart:\t%s\n", restart_ ? "true" : "false");
     printf(" verbose:\t%s\n", verboseReport_ ? "true" : "false");
     printf(" excludePerf:\t%d\n", excludeHiperf_);
     printf(" cpuPercent:\t%d\n", cpuPercent_);
@@ -225,7 +228,13 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-s", callStackType_)) {
         return false;
     }
+    if (!Option::GetOptionValue(args, "--exclude-tid", excludeTids_)) {
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--exclude-thread", excludeThreadNames_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--restart", restart_)) {
         return false;
     }
     std::vector<std::string> callStackType = {};
@@ -399,28 +408,10 @@ bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
         printf("unknown option %s\n", args.begin()->c_str());
         return false;
     }
-    return CheckOptions();
-}
-
-void SubCommandRecord::ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
-                                                    std::vector<pid_t> &selectTids)
-{
-    for (auto excludeName : excludeThreadNames) {
-        bool hasExclude = false;
-        auto pos = selectTids.begin();
-        while (pos != selectTids.end()) {
-            std::string threadName = virtualRuntime_.ReadThreadName(*pos);
-            if (excludeName == threadName) {
-                pos = selectTids.erase(pos);
-                hasExclude = true;
-            } else {
-                ++pos;
-            }
-        }
-        if (!hasExclude) {
-            printf("No thread named %s was found to exclude.\n", excludeName.c_str());
-        }
+    if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
+        return false;
     }
+    return CheckOptions();
 }
 
 bool SubCommandRecord::CheckTargetProcessOptions()
@@ -485,12 +476,8 @@ bool SubCommandRecord::CheckTargetPids()
             }
         }
     }
-    if (!excludeThreadNames_.empty()) {
-        if (selectTids_.empty()) {
-            printf("No thread is Monitored, while attempt to exclude some threads.\n");
-            return false;
-        }
-        ExcludeThreadsFromSelectTids(excludeThreadNames_, selectTids_);
+    if (!SubCommand::HandleSubCommandExclude(excludeTids_, excludeThreadNames_, selectTids_)) {
+        return false;
     }
     selectPids_.insert(selectPids_.end(), selectTids_.begin(), selectTids_.end());
 

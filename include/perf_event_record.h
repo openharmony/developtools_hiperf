@@ -149,7 +149,7 @@ public:
     };
 
     virtual bool GetBinary(std::vector<uint8_t> &buf) const = 0;
-    void Dump(int indent = 0) const;
+    void Dump(int indent = 0, std::string outputFilename = "") const;
     virtual void DumpData(int indent) const = 0;
     virtual void DumpLog(const std::string &prefix) const;
 };

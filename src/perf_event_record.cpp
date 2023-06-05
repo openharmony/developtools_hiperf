@@ -138,8 +138,16 @@ void PerfEventRecord::GetHeaderBinary(std::vector<uint8_t> &buf) const
     *(reinterpret_cast<perf_event_header *>(p)) = header;
 }
 
-void PerfEventRecord::Dump(int indent) const
+void PerfEventRecord::Dump(int indent, std::string outputFilename) const
 {
+    if (!outputFilename.empty() && outputDump_ == nullptr) {
+        std::string resolvedPath = CanonicalizeSpecPath(outputFilename.c_str());
+        outputDump_ = fopen(resolvedPath.c_str(), "w");
+        if (outputDump_ == nullptr) {
+            printf("unable open file to '%s' because '%d'\n", outputFilename.c_str(), errno);
+            return;
+        }
+    }
     PrintIndent(indent, "\n");
     PrintIndent(indent, "record %s: type %u, misc %u, size %zu\n", GetName().c_str(), GetType(),
                 GetMisc(), GetSize());

@@ -101,6 +101,8 @@ public:
         "         Limit the process id of the collection target. Conflicts with the -a option.\n"
         "   -t <tid1>[,tid2]...\n"
         "         Limit the thread id of the collection target. Conflicts with the -a option.\n"
+        "   --exclude-tid <tid1>[,tid2]...\n"
+        "         Exclude threads of the collection target by thread ids. Conflicts with the -a option.\n"
         "   --exclude-thread <tname1>[,tname2]...\n"
         "         Exclude threads of the collection target by thread names. Conflicts with the -a option.\n"
         "   --offcpu\n"
@@ -152,6 +154,9 @@ public:
         "         Set output file name, default is /data/local/tmp/perf.data.\n"
         "   -z\n"
         "         Compress record data.\n"
+        "   --restart\n"
+        "         Collect performance counter information of application startup.\n"
+        "         Record will exit if the process is not started within 30 seconds.\n"
         "   --verbose\n"
         "         Show more detailed reports.\n"
         "   --control <command>\n"
@@ -199,6 +204,8 @@ private:
     std::vector<pid_t> selectCpus_ = {};
     std::vector<pid_t> selectPids_ = {};
     std::vector<pid_t> selectTids_ = {};
+    std::vector<pid_t> excludeTids_ = {};
+    bool restart_ = false;
     std::vector<std::string> selectEvents_ = {};
     std::vector<std::vector<std::string>> selectGroups_ = {};
     std::vector<std::string> callStackType_ = {};
@@ -289,9 +296,6 @@ private:
     bool ParseControlCmd(const std::string cmd);
     bool CheckTargetProcessOptions();
     bool CheckTargetPids();
-
-    void ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
-        std::vector<pid_t> &selectTids);
 
     VirtualRuntime virtualRuntime_;
 #if USE_COLLECT_SYMBOLIC
