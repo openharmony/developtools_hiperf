@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "hiperf_client.h"
+#include <sys/wait.h>
 #include <algorithm>
 #include <cinttypes>
 #include <csignal>
@@ -151,6 +152,7 @@ void RecordOption::SetSelectCpus(const std::vector<int> &cpus)
 
 void RecordOption::SetTimeStopSec(int timeStopSec)
 {
+    this->timeSpec_ = true;
     SetOption(ArgTimeStopSec, timeStopSec);
 }
 
@@ -346,8 +348,7 @@ bool Client::Start()
     return Start(args);
 }
 
-void Client::GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
-                        const std::vector<std::string> &args)
+void Client::PrepareExecCmd(std::vector<std::string> &cmd)
 {
     cmd.clear();
     cmd.emplace_back(executeCommandPath_);
@@ -363,12 +364,26 @@ void Client::GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
     }
 
     cmd.emplace_back(CommandRecord);
+    cmd.emplace_back(ArgOutputPath);
+    cmd.emplace_back(GetOutputPerfDataPath());
+}
+
+void Client::GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
+                        const std::vector<std::string> &args)
+{
+    PrepareExecCmd(cmd);
     cmd.emplace_back(ArgPipeInput);
     cmd.emplace_back(std::to_string(pipeIn));
     cmd.emplace_back(ArgPipeOutput);
     cmd.emplace_back(std::to_string(pipeOut));
-    cmd.emplace_back(ArgOutputPath);
-    cmd.emplace_back(GetOutputPerfDataPath());
+
+    cmd.insert(cmd.end(), args.begin(), args.end());
+}
+
+void Client::GetExecCmd(std::vector<std::string> &cmd,
+                        const std::vector<std::string> &args)
+{
+    PrepareExecCmd(cmd);
 
     cmd.insert(cmd.end(), args.begin(), args.end());
 }
@@ -415,23 +430,7 @@ bool Client::Start(const std::vector<std::string> &args)
 
         std::vector<std::string> cmd;
         GetExecCmd(cmd, clientToServerFd[PIPE_READ], serverToClientFd[PIPE_WRITE], args);
-        // conver vector to array for execvp()
-        char *argv[cmd.size() + SIZE_ARGV_TAIL];
-        size_t i = 0;
-        for (i = 0; i < cmd.size(); ++i) {
-            HIPERF_HILOGD(MODULE_CPP_API, "args %" HILOG_PUBLIC "zu : %" HILOG_PUBLIC "s", i,
-                          cmd[i].c_str());
-            argv[i] = cmd[i].data();
-        }
-        argv[i] = nullptr;
-
-        execv(argv[0], argv);
-        char errInfo[ERRINFOLEN] = { 0 };
-        strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGD(MODULE_CPP_API,
-                      "failed to call exec: '%" HILOG_PUBLIC "s' %" HILOG_PUBLIC "s\n",
-                      executeCommandPath_.c_str(), errInfo);
-        exit(0);
+        ChildRunExecv(cmd);
     } else {
         // parent process
         close(clientToServerFd[PIPE_READ]);
@@ -455,7 +454,124 @@ bool Client::Start(const RecordOption &option)
     if (!option.GetOutputFileName().empty()) {
         outputFileName_ = option.GetOutputFileName();
     }
+    if (option.IsTimeSpecified()) {
+        return RunHiperfCmdSync(option);
+    }
     return Start(option.GetOptionVecString());
+}
+
+void Client::ChildRunExecv(std::vector<std::string> &cmd)
+{
+    // conver vector to array for execvp()
+    char *argv[cmd.size() + SIZE_ARGV_TAIL];
+    size_t i = 0;
+    for (i = 0; i < cmd.size(); ++i) {
+        HIPERF_HILOGD(MODULE_CPP_API, "args %" HILOG_PUBLIC "zu : %" HILOG_PUBLIC "s", i,
+                        cmd[i].c_str());
+        argv[i] = cmd[i].data();
+    }
+    argv[i] = nullptr;
+
+    execv(argv[0], argv);
+
+    // never reach the following line, unless calling of execv function failed.
+    char errInfo[ERRINFOLEN] = { 0 };
+    strerror_r(errno, errInfo, ERRINFOLEN);
+    HIPERF_HILOGD(MODULE_CPP_API,
+            "failed to call exec: '%" HILOG_PUBLIC "s' %" HILOG_PUBLIC "s\n",
+            executeCommandPath_.c_str(), errInfo);
+    exit(EXIT_FAILURE); // EXIT_FAILURE 1
+}
+
+bool Client::ParentWait(pid_t &wpid, int &childStatus)
+{
+    bool ret = false;
+    do {
+        // blocking...
+        int option;
+#ifdef WCONTINUED
+        option = WUNTRACED | WCONTINUED;
+#else
+        option = WUNTRACED;
+#endif
+        wpid = waitpid(hperfPid_, &childStatus, option);
+        if (wpid == -1) {
+            perror("waitpid");
+            exit(EXIT_FAILURE);
+        }
+
+        if (WIFEXITED(childStatus)) {
+            // child normally exit
+            // WEXITSTATUS(childStatus) value :
+            // true -> Calling of execv func successed, and recording finished
+            // and child will return the value of recording process's retVal
+            // false -> Calling of execv func failed, child will output errInfo
+            ret = WEXITSTATUS(childStatus) == 0 ? true : false;
+            HIPERF_HILOGD(MODULE_CPP_API,
+                "Hiperf Api Child normally exit Calling of execv : '%" HILOG_PUBLIC "s' \n",
+                ret ? "success" : "failed");
+            return ret;
+        } else if (WIFSIGNALED(childStatus)) [[unlikely]] {
+            // child was killed by SIGKILL
+            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process was killed by signal SIGKILL\n");
+            ret = false;
+            return ret;
+        } else if (WIFSTOPPED(childStatus)) [[unlikely]] {
+            // child was stopped by SIGSTOP, and waiting for SIGCONT
+            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process was stopped by signal SIGSTOP\n");
+#ifdef WIFCONTINUED
+        } else if (WIFCONTINUED(childStatus)) {
+            // child was continued by SIGCONT
+            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process was continued\n by SIGCONT");
+#endif
+        } else [[unlikely]] {
+            // non-standard case, may never happen
+            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process Unexpected status\n");
+        }
+    } while (!WIFEXITED(childStatus) && !WIFSIGNALED(childStatus));
+
+    // normal exit.
+    if (WIFEXITED(childStatus)) {
+        ret = WEXITSTATUS(childStatus) == HIPERF_EXIT_CODE;
+    } else {
+    // signal exit, means Hiperf recording process may occur some runtime errors.
+        HIPERF_HILOGD(MODULE_CPP_API,
+            "Hiperf recording occurs some runtime errors, end with signal : %"
+            HILOG_PUBLIC "d,  exit status : %" HILOG_PUBLIC "d\n",
+            WIFSIGNALED(childStatus), WEXITSTATUS(childStatus));
+        ret = false;
+    }
+    return ret;
+}
+
+
+bool Client::RunHiperfCmdSync(const RecordOption &option)
+{
+    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    if (!ready_) {
+        HIPERF_HILOGD(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        return false;
+    }
+    const std::vector<std::string> &args = option.GetOptionVecString();
+
+    pid_t wpid;
+    int childStatus;
+    bool ret = false;
+    hperfPid_ = fork();
+    if (hperfPid_ == -1) {
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGD(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
+        return false;
+    } else if (hperfPid_ == 0) {
+        // child execute
+        std::vector<std::string> cmd;
+        GetExecCmd(cmd, args);
+        ChildRunExecv(cmd);
+    } else {
+        ret = ParentWait(wpid, childStatus);
+    }
+    return ret;
 }
 
 bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)

@@ -73,6 +73,8 @@ static const std::string ArgMmapPages = "-m";
 static const int DEFAULT_DURATION_TIME = 10;
 static const int DEFAULT_FREQUENCY_TIME = 100;
 
+#define HIPERF_EXIT_CODE 0
+
 class RecordOption {
 public:
     /**
@@ -232,7 +234,15 @@ public:
         return args_;
     }
 
+    /**
+     * Get TimeSpec attribute
+     */
+    bool IsTimeSpecified() const
+    {
+        return timeSpec_;
+    }
 private:
+    bool timeSpec_ = false;
     std::vector<std::string> args_ = {};
     std::vector<std::string> selectEvents_ = {"hw-cpu-cycles:u"};
     std::string outputFileName_ = "";
@@ -263,6 +273,10 @@ public:
      * Start record with options of RecordOption
      */
     bool Start(const RecordOption &option);
+    /**
+     * Start record synchronizely with specified time
+     */
+    bool RunHiperfCmdSync(const RecordOption &option);
     /**
      * Pause recording
      */
@@ -306,6 +320,18 @@ public:
         return outputDir_ + outputFileName_;
     }
 
+    /**
+     * Child run execv cmd
+     */
+    void ChildRunExecv(std::vector<std::string> &cmd);
+    /**
+     * Prepare execv cmd
+     */
+    void PrepareExecCmd(std::vector<std::string> &cmd);
+    /**
+     * Parent wait for child exit
+     */
+    bool ParentWait(pid_t &wpid, int &childStatus);
     void SetDebugMode();
     void SetDebugMuchMode();
     void EnableHilog();
@@ -322,6 +348,8 @@ private:
     void GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
                     const std::vector<std::string> &args);
 
+    void GetExecCmd(std::vector<std::string> &cmd,
+                    const std::vector<std::string> &args);
     std::string outputDir_ = "";
     std::string outputFileName_ = "";
     std::string executeCommandPath_ = "";
