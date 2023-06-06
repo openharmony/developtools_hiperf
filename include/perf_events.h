@@ -388,11 +388,38 @@ public:
     {
         clockId_ = clockId;
     };
+    void SetPerCpu(bool perCpu);
+    void SetPerThread(bool perThread);
     bool SetBranchSampleType(uint64_t value);
     bool AddDefaultEvent(perf_type_id type);
 
     std::map<__u64, std::string> GetSupportEvents(perf_type_id type);
 
+    struct Summary {
+        int cpu;
+        pid_t tid;
+        __u64 eventCount = 0;
+        __u64 time_enabled = 0;
+        __u64 time_running = 0;
+        Summary(const int cpu, const pid_t tid, const __u64 eventCount,
+                const __u64 time_enabled, const __u64 time_running)
+            : cpu(cpu), tid(tid), eventCount(eventCount), time_enabled(time_enabled), time_running(time_running)
+        {
+        }
+    };
+
+    struct ReportSum {
+        int cpu;
+        pid_t pid;
+        pid_t tid;
+        double scaleSum = 1.0;
+        double commentSum = 0;
+        __u64 eventCountSum = 0;
+        __u64 enabledSum = 0;
+        __u64 runningSum = 0;
+        std::string configName = "";
+        std::string threadName = "";
+    };
     struct CountEvent {
         bool userOnly = false;
         bool kernelOnly = false;
@@ -401,6 +428,7 @@ public:
         __u64 time_running = 0;
         __u64 id = 0;
         double used_cpus = 0;
+        std::vector<Summary> summaries;
     };
     using StatCallBack =
         std::function<void(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &)>;
@@ -516,6 +544,8 @@ private:
     std::vector<OHOS::UniqueFd> groups_;
     std::chrono::milliseconds timeOut_;    // milliseconds
     std::chrono::milliseconds timeReport_; // means same as timeOut
+    bool perCpu_ = false;
+    bool perThread_ = false;
     bool verboseReport_ = false;
     bool prepared_ = false;
     ConfigTable traceConfigTable;

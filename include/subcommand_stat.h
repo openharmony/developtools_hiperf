@@ -71,6 +71,10 @@ public:
         "   --chkms <millisec>\n"
         "         Set the interval of querying the <package_name>.\n"
         "         <millisec> is in range [1-200], default is 10.\n"
+        "   --per-core\n"
+        "         Print counters for each cpu core.\n"
+        "   --per-thread\n"
+        "         Print counters for each thread.\n"
         "   --restart\n"
         "         Collect performance counter information of application startup.\n"
         "         Record will exit if the process is not started within 30 seconds.\n"
@@ -84,6 +88,7 @@ public:
 
     bool OnSubCommand(std::vector<std::string> &args) override;
     bool ParseOption(std::vector<std::string> &args) override;
+    bool ParseSpecialOption(std::vector<std::string> &args);
     void DumpOptions(void) const override;
 
 private:
@@ -100,6 +105,8 @@ private:
     int checkAppMs_ = DEFAULT_CHECK_APP_MS;
     std::vector<pid_t> selectPids_;
     std::vector<pid_t> selectTids_;
+    bool perCpus_ {false};
+    bool perThreads_ {false};
     bool verboseReport_ {false};
     std::vector<std::string> trackedCommand_ {};
     bool helpOption_ {false};
@@ -118,7 +125,22 @@ private:
     static std::string GetCommentConfigName(
         const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName);
 
-    static void Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &);
+    static void Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
+    static void PrintPerHead();
+    static void GetPerKey(std::string &perKey, const PerfEvents::Summary &summary);
+    static void FormatComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr);
+    static void ReportNormal(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
+    static void ReportDetailInfos(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
+    static void PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,
+                              std::string &configName);
+    static void InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
+                           const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance);
+    static bool FindPerCoreEventCount(PerfEvents::Summary &summary, __u64 &eventCount, double &scale);
+    static bool FindPercoreRunningTime(PerfEvents::Summary &summary, double &running_time_in_sec, double &main_scale);
+    static std::string GetDetailComments(const std::unique_ptr<PerfEvents::CountEvent> &countEvent, double &comment,
+                                  PerfEvents::Summary &summary, std::string &configName);
+    static std::string HandleOtherConfig(double &comment, PerfEvents::Summary &summary,
+                                         double running_time_in_sec, double scale, bool findRunningTime);
 
     void PrintUsage();
     inline bool HelpOption()
@@ -128,6 +150,7 @@ private:
     bool PrepairEvents();
     bool CheckOptions(const std::vector<pid_t> &pids);
     bool CheckSelectCpuPidOption();
+    void SetReportFlags(bool cpuFlag, bool threadFlag);
 };
 
 bool RegisterSubCommandStat(void);

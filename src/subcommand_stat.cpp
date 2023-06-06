@@ -29,6 +29,10 @@ const uint16_t THOUSNADS_SEPARATOR = 3;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+static std::map<pid_t, ThreadInfos> thread_map_;
+static bool g_reportCpuFlag = false;
+static bool g_reportThreadFlag = false;
+static VirtualRuntime runtimeInstance_;
 void SubCommandStat::DumpOptions() const
 {
     printf("DumpOptions:\n");
@@ -44,6 +48,8 @@ void SubCommandStat::DumpOptions() const
     printf(" selectPids:\t%s\n", VectorToString(selectPids_).c_str());
     printf(" selectTids:\t%s\n", VectorToString(selectTids_).c_str());
     printf(" restart:\t%s\n", restart_ ? "true" : "false");
+    printf(" perCore:\t%s\n", perCpus_ ? "true" : "false");
+    printf(" perTread:\t%s\n", perThreads_ ? "true" : "false");
     printf(" verbose:\t%s\n", verboseReport_ ? "true" : "false");
 }
 
@@ -113,10 +119,23 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option --restart failed");
         return false;
     }
+    if (!Option::GetOptionValue(args, "--per-core", perCpus_)) {
+        HLOGD("get option --per-core failed");
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--per-thread", perThreads_)) {
+        HLOGD("get option --per-thread failed");
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--verbose", verboseReport_)) {
         HLOGD("get option --verbose failed");
         return false;
     }
+    return ParseSpecialOption(args);
+}
+
+bool SubCommandStat::ParseSpecialOption(std::vector<std::string> &args)
+{
     if (!Option::GetOptionTrackedCommand(args, trackedCommand_)) {
         HLOGD("get cmd failed");
         return false;
@@ -133,19 +152,146 @@ void SubCommandStat::PrintUsage()
     printf("%s\n", Help().c_str());
 }
 
-void SubCommandStat::Report(
+void SubCommandStat::SetReportFlags(bool cpuFlag, bool threadFlag)
+{
+    g_reportCpuFlag = cpuFlag;
+    g_reportThreadFlag = threadFlag;
+}
+
+void SubCommandStat::Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
+{
+    bool isNeedPerCpuTid = false;
+    for (auto it = countEvents.begin(); it != countEvents.end(); ++it) {
+        if (!(it->second->summaries.empty())) {
+            isNeedPerCpuTid = true;
+            break;
+        }
+    }
+    if (isNeedPerCpuTid) {
+        PrintPerHead();
+        ReportDetailInfos(countEvents);
+    } else {
+        ReportNormal(countEvents);
+    }
+}
+
+void SubCommandStat::PrintPerHead()
+{
+    // print head
+    if (g_reportCpuFlag && g_reportThreadFlag) {
+        printf(" %24s  %-30s | %-30s %10s %10s %10s | %-32s | %s\n", "count", "event_name", "thread_name",
+               "pid", "tid", "coreid", "comment", "coverage");
+        return;
+    }
+    if (g_reportCpuFlag) {
+        printf(" %24s  %-30s | %10s | %-32s | %s\n", "count", "event_name", "coreid", "comment", "coverage");
+        return;
+    }
+    printf(" %24s  %-30s | %-30s %10s %10s | %-32s | %s\n", "count", "event_name", "thread_name", "pid", "tid",
+           "comment", "coverage");
+    return;
+}
+
+void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,
+                                   std::string &configName)
+{
+    // print value
+    std::string strEventCount = std::to_string(reportSum->eventCountSum);
+    for (size_t i = strEventCount.size() - 1, j = 1; i > 0; --i, ++j) {
+        if (j == THOUSNADS_SEPARATOR) {
+            strEventCount.insert(strEventCount.begin() + i, ',');
+            j = 0;
+        }
+    }
+    std::string commentStr;
+    FormatComments(reportSum, commentStr);
+    if (g_reportCpuFlag && g_reportThreadFlag) {
+        printf(" %24s  %-30s | %-30s %10d %10d %10d | %-32s | (%.0lf%%)\n", strEventCount.c_str(), configName.c_str(),
+               reportSum->threadName.c_str(), reportSum->pid, reportSum->tid, reportSum->cpu, commentStr.c_str(),
+               reportSum->scaleSum * ratio);
+    } else if (g_reportCpuFlag) {
+        printf(" %24s  %-30s | %10d | %-32s | (%.0lf%%)\n", strEventCount.c_str(), configName.c_str(),
+               reportSum->cpu, commentStr.c_str(), reportSum->scaleSum * ratio);
+    } else {
+        printf(" %24s  %-30s | %-30s %10d %10d | %-32s | (%.0lf%%)\n", strEventCount.c_str(), configName.c_str(),
+               reportSum->threadName.c_str(), reportSum->pid, reportSum->tid, commentStr.c_str(),
+               reportSum->scaleSum * ratio);
+    }
+    fflush(stdout);
+}
+
+void SubCommandStat::InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
+                                const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance)
+{
+    newPerMap->cpu = summary.cpu;
+    if (g_reportCpuFlag && !g_reportThreadFlag) {
+        return;
+    }
+    newPerMap->tid = summary.tid;
+    newPerMap->pid = thread_map_.find(summary.tid)->second.pid;
+    bool isTid = true;
+    if (newPerMap->pid == newPerMap->tid) {
+        isTid = false;
+    }
+    newPerMap->threadName = virtualInstance.ReadThreadName(summary.tid, isTid);
+}
+
+void SubCommandStat::GetPerKey(std::string &perKey, const PerfEvents::Summary &summary)
+{
+    perKey = "";
+    if (g_reportCpuFlag) {
+        perKey += std::to_string(summary.cpu);
+    }
+    if (g_reportThreadFlag) {
+        perKey += std::to_string(summary.tid);
+    }
+    return;
+}
+
+void SubCommandStat::ReportDetailInfos(
     const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
 {
-    // head
-    printf(" %24s  %-30s | %-32s | %s\n", "count", "name", "comment", "coverage");
+    std::string perKey = "";
+    std::map<std::string, std::unique_ptr<PerfEvents::ReportSum>> perMaps;
+    for (auto event = countEvents.begin(); event != countEvents.end(); ++event) {
+        if (event->second->eventCount == 0) {
+            continue;
+        }
+        double scale = 1.0;
+        constexpr float ratio {100.0};
+        std::string configName = event->first;
+        perMaps.clear();
+        for (auto &it : event->second->summaries) {
+            GetPerKey(perKey, it);
+            if (perMaps.count(perKey) == 0) {
+                auto perMap = std::make_unique<PerfEvents::ReportSum>(PerfEvents::ReportSum {});
+                InitPerMap(perMap, it, runtimeInstance_);
+                perMaps[perKey] = std::move(perMap);
+            }
+            perMaps[perKey]->configName = GetDetailComments(event->second, perMaps[perKey]->commentSum,
+                                                            it, configName);
+            perMaps[perKey]->eventCountSum += it.eventCount;
+            if (it.time_running < it.time_enabled && it.time_running != 0) {
+                perMaps[perKey]->scaleSum += 1 / (static_cast<double>(it.time_enabled) / it.time_running);
+            }
+        }
+        for (auto iper = perMaps.begin(); iper != perMaps.end(); iper++) {
+            PrintPerValue(iper->second, ratio, configName);
+        }
+    }
+}
 
+void SubCommandStat::ReportNormal(
+    const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
+{
+    // print head
     std::map<std::string, std::string> comments;
     GetComments(countEvents, comments);
-    for (auto it = countEvents.begin(); it != countEvents.end(); it++) {
+    for (auto it = countEvents.begin(); it != countEvents.end(); ++it) {
         double scale = 1.0;
+        constexpr float ratio {100.0};
         std::string configName = it->first;
         std::string comment = comments[configName];
-        constexpr float ratio {100.0};
         std::string strEventCount = std::to_string(it->second->eventCount);
         for (size_t i = strEventCount.size() - 1, j = 1; i > 0; --i, ++j) {
             if (j == THOUSNADS_SEPARATOR) {
@@ -163,8 +309,7 @@ void SubCommandStat::Report(
     }
 }
 
-bool SubCommandStat::FindEventCount(
-    const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
+bool SubCommandStat::FindEventCount(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
     const std::string &configName, const __u64 group_id, __u64 &eventCount, double &scale)
 {
     auto itr = countEvents.find(configName);
@@ -176,6 +321,16 @@ bool SubCommandStat::FindEventCount(
             scale = static_cast<double>(itr->second->time_enabled) / itr->second->time_running;
             return true;
         }
+    }
+    return false;
+}
+
+bool SubCommandStat::FindPerCoreEventCount(PerfEvents::Summary &summary, __u64 &eventCount, double &scale)
+{
+    eventCount = summary.eventCount;
+    if (summary.time_running < summary.time_enabled && summary.time_running != 0) {
+        scale = static_cast<double>(summary.time_enabled) / summary.time_running;
+        return true;
     }
     return false;
 }
@@ -195,6 +350,109 @@ std::string SubCommandStat::GetCommentConfigName(
         commentConfigName = eventName;
     }
     return commentConfigName;
+}
+
+void SubCommandStat::FormatComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
+{
+    if (reportSum->commentSum == 0) {
+        return;
+    }
+    if (reportSum->configName == "sw-task-clock") {
+        commentStr = StringPrintf("%lf cpus used", reportSum->commentSum);
+        return;
+    }
+    if (reportSum->configName == "hw-cpu-cycles") {
+        commentStr = StringPrintf("%lf GHz", reportSum->commentSum);
+        return;
+    }
+    if (reportSum->configName == "hw-instructions") {
+        commentStr = StringPrintf("%lf cycles per instruction", reportSum->commentSum);
+        return;
+    }
+    if (reportSum->configName == "hw-branch-misses") {
+        commentStr = StringPrintf("%lf miss rate", reportSum->commentSum);
+        return;
+    }
+
+    if (reportSum->commentSum > 1e9) {
+        commentStr = StringPrintf("%.3lf G/sec", reportSum->commentSum / 1e9);
+        return;
+    }
+    if (reportSum->commentSum > 1e6) {
+        commentStr = StringPrintf("%.3lf M/sec", reportSum->commentSum / 1e6);
+        return;
+    }
+    if (reportSum->commentSum > 1e3) {
+        commentStr = StringPrintf("%.3lf K/sec", reportSum->commentSum / 1e3);
+        return;
+    }
+    commentStr = StringPrintf("%.3lf /sec", reportSum->commentSum);
+}
+
+std::string SubCommandStat::GetDetailComments(const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+    double &comment, PerfEvents::Summary &summary, std::string &configName)
+{
+    double running_time_in_sec = 0;
+    double main_scale = 1.0;
+    bool findRunningTime = FindPercoreRunningTime(summary, running_time_in_sec, main_scale);
+    if (configName == GetCommentConfigName(countEvent, "sw-cpu-clock")) {
+        comment = 0;
+        return "sw-cpu-clock";
+    }
+    double scale = 1.0;
+    if (summary.time_running < summary.time_enabled && summary.time_running != 0) {
+        scale = static_cast<double>(summary.time_enabled) / summary.time_running;
+    }
+    if (configName == GetCommentConfigName(countEvent, "sw-task-clock")) {
+        comment += countEvent->used_cpus * scale;
+        return "sw-task-clock";
+    }
+    if (configName == GetCommentConfigName(countEvent, "hw-cpu-cycles")) {
+        if (findRunningTime) {
+            double hz = 0;
+            if (running_time_in_sec != 0) {
+                hz = summary.eventCount / (running_time_in_sec / scale);
+            }
+            comment += hz / 1e9;
+        } else {
+            comment += 0;
+        }
+        return "hw-cpu-cycles";
+    }
+    if (configName == GetCommentConfigName(countEvent, "hw-instructions") && summary.eventCount != 0) {
+        double otherScale = 1.0;
+        __u64 cpuCyclesCount = 0;
+        bool other = FindPerCoreEventCount(summary, cpuCyclesCount, otherScale);
+        if (other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) {
+            comment += static_cast<double>(cpuCyclesCount) / summary.eventCount;
+            return "hw-instructions";
+        }
+    }
+    if (configName == GetCommentConfigName(countEvent, "hw-branch-misses")) {
+        double otherScale = 1.0;
+        __u64 branchInstructionsCount = 0;
+        bool other = FindPerCoreEventCount(summary, branchInstructionsCount, otherScale);
+        if ((other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) &&
+            branchInstructionsCount != 0) {
+            comment += (static_cast<double>(summary.eventCount) / branchInstructionsCount) * ONE_HUNDRED;
+            return "hw-branch-misses";
+        }
+    }
+    return HandleOtherConfig(comment, summary, running_time_in_sec, scale, findRunningTime);
+}
+
+std::string SubCommandStat::HandleOtherConfig(double &comment, PerfEvents::Summary &summary, double running_time_in_sec,
+                                              double scale, bool findRunningTime)
+{
+    comment = 0;
+    if (findRunningTime) {
+        double rate = 0;
+        if (scale != 0) {
+            rate = summary.eventCount / (running_time_in_sec / scale);
+        }
+        comment += rate;
+    }
+    return "";
 }
 
 bool SubCommandStat::IsMonitoredAtAllTime(const double &scale)
@@ -314,6 +572,19 @@ bool SubCommandStat::FindRunningTime(
     return false;
 }
 
+bool SubCommandStat::FindPercoreRunningTime(PerfEvents::Summary &summary, double &running_time_int_sec,
+                                            double &main_scale)
+{
+    if (summary.eventCount == 0) {
+        return false;
+    }
+    running_time_int_sec = summary.eventCount / 1e9;
+    if (summary.time_running < summary.time_enabled && summary.time_running != 0) {
+        main_scale = static_cast<double>(summary.time_enabled) /summary.time_running;
+    }
+    return true;
+}
+
 bool SubCommandStat::CheckOptionPidAndApp(std::vector<pid_t> pids)
 {
     if (!CheckOptionPid(pids)) {
@@ -361,7 +632,7 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     std::vector<pid_t> pids;
     for (auto selectPid : selectPids_) {
         pids.push_back(selectPid);
-        std::vector<pid_t> subTids = GetSubthreadIDs(selectPid);
+        std::vector<pid_t> subTids = GetSubthreadIDs(selectPid, thread_map_);
         if (!subTids.empty()) {
             pids.insert(pids.end(), subTids.begin(), subTids.end());
         }
@@ -376,9 +647,12 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         HLOGV("CheckOptionPidAndApp() failed");
         return false;
     }
+    SetReportFlags(perCpus_, perThreads_);
     perfEvents_.SetSystemTarget(targetSystemWide_);
     perfEvents_.SetTimeOut(timeStopSec_);
     perfEvents_.SetTimeReport(timeReportMs_);
+    perfEvents_.SetPerCpu(perCpus_);
+    perfEvents_.SetPerThread(perThreads_);
     perfEvents_.SetVerboseReport(verboseReport_);
     perfEvents_.SetInherit(!noCreateNew_);
     perfEvents_.SetTrackedCommand(trackedCommand_);

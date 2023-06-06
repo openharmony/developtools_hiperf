@@ -719,6 +719,16 @@ void PerfEvents::LoadTracepointEventTypesFromSystem()
     }
 }
 
+void PerfEvents::SetPerCpu(bool perCpu)
+{
+    perCpu_ = perCpu;
+}
+
+void PerfEvents::SetPerThread(bool perThread)
+{
+    perThread_ = perThread;
+}
+
 void PerfEvents::SetVerboseReport(bool verboseReport)
 {
     verboseReport_ = verboseReport;
@@ -829,7 +839,10 @@ bool PerfEvents::PrepareFdEvents(void)
             pids_.push_back(0); // no pid means use 0 as self pid
         }
     }
-
+    if (perCpu_ || perThread_) {
+        cpus_.clear();
+        PutAllCpus();
+    }
     if (cpus_.empty()) {
         PutAllCpus();
     }
@@ -1023,6 +1036,10 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
                                eventItem.configName.c_str(), readNoGroupValue.id, fditem.cpu,
                                fditem.pid, readNoGroupValue.time_enabled,
                                readNoGroupValue.time_running, readNoGroupValue.value);
+                    }
+                    if ((perCpu_ || perThread_) && readNoGroupValue.value) {
+                        countEvent->summaries.emplace_back(fditem.cpu, fditem.pid, readNoGroupValue.value,
+                            readNoGroupValue.time_enabled, readNoGroupValue.time_running);
                     }
                 } else {
                     printf("read failed from event '%s'\n", eventItem.configName.c_str());

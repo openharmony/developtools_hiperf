@@ -522,6 +522,24 @@ std::vector<pid_t> GetSubthreadIDs(const pid_t pid)
     return res;
 }
 
+std::vector<pid_t> GetSubthreadIDs(const pid_t pid, std::map<pid_t, ThreadInfos> &thread_map)
+{
+    std::string path {"/proc/"};
+    path += std::to_string(pid);
+    path += "/task/";
+    auto tids = GetSubDirs(path);
+    std::vector<pid_t> res{};
+    for (auto tidStr : tids) {
+        ThreadInfos info;
+        pid_t tid = static_cast<pid_t>(std::stoul(tidStr, nullptr));
+        info.tid = tid;
+        info.pid = pid;
+        thread_map[tid] = info;
+        res.push_back(tid);
+    }
+    return res;
+}
+
 bool StringStartsWith(const std::string &string, const std::string &with)
 {
     return string.find(with) == 0;
@@ -588,22 +606,31 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
             }
             std::string fileName {basePath + subDir};
             fileName += "/cmdline";
-            if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
-                res = std::stoul(subDir, nullptr);
-                if (res == oldPid) {
-                    res = -1;
-                    continue;
-                }
-                if (res >= 0) {
-                    HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage.c_str(), res);
-                    return res;
-                }
+            if (!IsNeedCheckSamePid(fileName, appPackage, subDir, res, oldPid)) {
+                return res;
             }
         }
         std::this_thread::sleep_for(milliseconds(checkAppMs));
     } while (steady_clock::now() < endTime);
 
     return res;
+}
+
+bool IsNeedCheckSamePid(const std::string &fileName, const std::string &appPackage, const std::string &subDir,
+                        pid_t &res, const pid_t oldPid)
+{
+    if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+        res = std::stoul(subDir, nullptr);
+        if (res == oldPid) {
+            res = -1;
+            return true;
+        }
+        if (res >= 0) {
+            HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage.c_str(), res);
+            return false;
+        }
+    }
+    return true;
 }
 
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
