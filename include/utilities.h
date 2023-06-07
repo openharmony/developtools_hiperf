@@ -101,6 +101,10 @@ static const std::string USER_TYPE_PARAM_GET = "";
 static FILE *outputDump_ = nullptr;
 const uint64_t waitAppRunCheckTimeOut = 10;
 
+struct ThreadInfos {
+    pid_t tid;
+    pid_t pid;
+};
 // string function
 class MemoryHold {
 public:
@@ -209,6 +213,7 @@ std::string StringPrintf(const char *stringFormat, VA... args)
 std::vector<std::string> GetEntriesInDir(const std::string &basePath);
 
 std::vector<std::string> GetSubDirs(const std::string &basePath);
+std::vector<pid_t> GetSubthreadIDs(const pid_t pid, std::map<pid_t, ThreadInfos> &thread_map);
 
 bool IsDir(const std::string &path);
 
@@ -324,6 +329,8 @@ bool PowerOfTwo(uint64_t n);
 #endif
 pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
                        const uint64_t waitAppTimeOut);
+bool IsNeedCheckSamePid(const std::string &fileName, const std::string &appPackage, const std::string &subDir,
+                        pid_t &res, const pid_t oldPid);
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName);
 bool IsExistDebugByPid(const std::vector<pid_t> pids);
