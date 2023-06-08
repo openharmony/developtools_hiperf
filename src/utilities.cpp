@@ -641,6 +641,7 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
             printf("app %s not running\n", appPackage.c_str());
             return false;
         }
+        HLOGD("[CheckAppIsRunning] get appPid %d for app %s\n", appPid, appPackage.c_str());
         selectPids.push_back(appPid);
     }
     return true;
