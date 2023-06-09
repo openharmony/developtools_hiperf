@@ -281,6 +281,16 @@ HWTEST_F(HiperfClientTest, SetSelectPids, TestSize.Level1)
     TestCaseOption(opt);
 }
 
+HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigs, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    opt.SetCallStackSamplingConfigs(1);
+
+    TestCaseOption(opt);
+}
+
 HWTEST_F(HiperfClientTest, SetSelectTids, TestSize.Level1)
 {
     HiperfClient::RecordOption opt;
