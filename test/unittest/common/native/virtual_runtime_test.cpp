@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -370,25 +370,11 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
 
     // unwind
     runtime_->UnwindFromRecord(sample);
-    GTEST_LOG_(INFO) << "expect record callstack size = " << TEST_RECORD_CALLSTACK_IP_FUNC.size() <<
-        ", callframe size = " << sample.callFrames_.size();
     ASSERT_LE(TEST_RECORD_CALLSTACK_IP_FUNC.size(), sample.callFrames_.size());
-    size_t frameOffset = 0;
-    while (TEST_RECORD_CALLSTACK_IP_FUNC[0].first != sample.callFrames_[frameOffset].vaddrInFile_ &&
-           frameOffset < sample.callFrames_.size()) {
-        frameOffset++;
-    }
-    ASSERT_LE(frameOffset + TEST_RECORD_CALLSTACK_IP_FUNC.size(), sample.callFrames_.size());
-    size_t expectIdx = 0;
-    for (; expectIdx < TEST_RECORD_CALLSTACK_IP_FUNC.size() && (expectIdx + frameOffset < sample.callFrames_.size());
-         expectIdx++) {
-        EXPECT_EQ(TEST_RECORD_CALLSTACK_IP_FUNC[expectIdx].first,
-                  sample.callFrames_[expectIdx + frameOffset].vaddrInFile_);
-        EXPECT_STREQ(TEST_RECORD_CALLSTACK_IP_FUNC[expectIdx].second.data(),
-                     sample.callFrames_[expectIdx + frameOffset].symbolName_.data());
-    }
-    if (expectIdx < TEST_RECORD_CALLSTACK_IP_FUNC.size() - 1) {
-        FAIL();
+    for (size_t i = 0; i < TEST_RECORD_CALLSTACK_IP_FUNC.size(); i++) {
+        EXPECT_EQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].first, sample.callFrames_[i].vaddrInFile_);
+        EXPECT_STREQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].second.data(),
+                     sample.callFrames_[i].symbolName_.data());
     }
 }
 } // namespace HiPerf

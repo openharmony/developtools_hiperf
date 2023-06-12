@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,9 +32,6 @@ using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-// if ip is 0 , 1 both not useful
-const uint64_t BAD_IP_ADDRESS = 2;
-
 // we unable to access 'swapper' from /proc/0/
 VirtualRuntime::VirtualRuntime(bool onDevice)
 {
@@ -340,7 +337,7 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
     for (u64 i = 0; i < recordSample.data_.nr; i++) {
         uint64_t ip = recordSample.data_.ips[i];
         if (ip >= PERF_CONTEXT_MAX) {
-            std::string contextName = OHOS::HiviewDFX::UpdatePerfContext(ip, context);
+            std::string contextName = UpdatePerfContext(ip, context);
             HLOGV("context switch to %s", contextName.c_str());
             continue;
         } else if (ip < BAD_IP_ADDRESS) {
