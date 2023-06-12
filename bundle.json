@@ -31,7 +31,8 @@
         "zlib",
         "libsec_static",
         "bounds_checking_function",
-        "protobuf"
+        "protobuf",
+        "libunwind"
       ]
     },
     "build": {
