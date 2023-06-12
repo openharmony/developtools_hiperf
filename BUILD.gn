@@ -230,6 +230,7 @@ config("unwind_config") {
 
 ohos_source_set("support_libunwind") {
   part_name = "hiperf"
+  subsystem_name = "developtools"
   public_configs = common_configs
   public_configs += [ ":unwind_config" ]
   if (hiperf_target_host) {
