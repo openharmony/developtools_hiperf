@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -261,7 +261,7 @@ void SubCommandDump::DumpPrintFileHeader(int indent)
     // read here , because we need found symbols
     reader_->ReadFeatureSection();
 
-    SetDeviceArch(OHOS::HiviewDFX::GetArchTypeFromUname(reader_->GetFeatureString(FEATURE::ARCH)));
+    SetDeviceArch(GetArchTypeFromUname(reader_->GetFeatureString(FEATURE::ARCH)));
 
     // found symbols in file
     for (auto &featureSection : reader_->GetFeatureSections()) {

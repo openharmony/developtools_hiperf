@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -27,6 +27,7 @@ sources_base = [
   "unittest/common/native/subcommand_test.cpp",
   "unittest/common/native/utilities_test.cpp",
   "unittest/common/native/elf_parser_test.cpp",
+  "unittest/common/native/register_test.cpp",
   "unittest/common/native/option_test.cpp",
   "unittest/common/native/perf_file_reader_test.cpp",
   "unittest/common/native/virtual_thread_test.cpp",
@@ -39,6 +40,7 @@ sources_base = [
   "unittest/common/native/subcommand_help_test.cpp",
   "unittest/common/native/subcommand_list_test.cpp",
   "unittest/common/native/subcommand_dump_test.cpp",
+  "unittest/common/native/hashlist_test.cpp",
   "unittest/common/native/report_test.cpp",
   "unittest/common/native/report_json_file_test.cpp",
 ]
@@ -92,10 +94,7 @@ ohos_unittest("hiperf_unittest") {
   module_out_path = module_output_path
   resource_config_file = "unittest/resource/ohos_test.xml"
   deps = common_deps
-  external_deps = [
-    "faultloggerd:callstack_perf",
-    "hilog_native:libhilog",
-  ]
+  external_deps = [ "hilog_native:libhilog" ]
   cflags = [
     "-Dprivate=public",  #allow test code access private members
   ]
@@ -125,10 +124,7 @@ ohos_fuzztest("CommandLineFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [
-    "faultloggerd:callstack_perf",
-    "hilog_native:libhilog",
-  ]
+  external_deps = [ "hilog_native:libhilog" ]
   defines = [ "FUZZER_TEST" ]
   sources = [
     "${hiperf_path}/src/main.cpp",
@@ -142,10 +138,7 @@ ohos_fuzztest("LibReportFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [
-    "faultloggerd:callstack_perf",
-    "hilog_native:libhilog",
-  ]
+  external_deps = [ "hilog_native:libhilog" ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/libreport_fuzzer/LibReport_fuzzer.cpp" ]
 }
@@ -156,10 +149,7 @@ ohos_fuzztest("ClientApiFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [
-    "faultloggerd:callstack_perf",
-    "hilog_native:libhilog",
-  ]
+  external_deps = [ "hilog_native:libhilog" ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/clientapi_fuzzer/ClientApi_fuzzer.cpp" ]
 }
@@ -171,10 +161,7 @@ ohos_fuzztest("PerfFileFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [
-    "faultloggerd:callstack_perf",
-    "hilog_native:libhilog",
-  ]
+  external_deps = [ "hilog_native:libhilog" ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/perffile_fuzzer/PerfFile_fuzzer.cpp" ]
 }
@@ -186,10 +173,7 @@ ohos_fuzztest("ElfParserFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [
-    "faultloggerd:callstack_perf",
-    "hilog_native:libhilog",
-  ]
+  external_deps = [ "hilog_native:libhilog" ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/elfparser_fuzzer/ElfParser_fuzzer.cpp" ]
 }

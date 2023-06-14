@@ -23,10 +23,10 @@
 #include <sys/mman.h>
 
 #include <hilog/log.h>
+
 #include "callstack.h"
 #include "debug_logger.h"
 #include "utilities.h"
-#include "virtual_thread.h"
 
 namespace OHOS {
 namespace Developtools {
