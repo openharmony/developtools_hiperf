@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,7 +58,7 @@ OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, pid_t pid, int cpu, int g
 PerfEvents::PerfEvents() : timeOut_(DEFAULT_TIMEOUT * THOUSANDS), timeReport_(0)
 {
     pageSize_ = sysconf(_SC_PAGESIZE);
-    HLOGI("BuildArch %s", GetArchName(OHOS::HiviewDFX::buildArchType).c_str());
+    HLOGI("BuildArch %s", GetArchName(buildArchType).c_str());
 }
 
 PerfEvents::~PerfEvents()
@@ -345,7 +345,7 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
             eventItem.attr.sample_type = SAMPLE_TYPE | PERF_SAMPLE_CALLCHAIN |
                                          PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
             eventItem.attr.exclude_callchain_user = 1;
-            eventItem.attr.sample_regs_user = GetSupportedRegMask(OHOS::HiviewDFX::GetDeviceArch());
+            eventItem.attr.sample_regs_user = GetSupportedRegMask(GetDeviceArch());
             eventItem.attr.sample_stack_user = dwarfSampleStackSize_;
         } else if (sampleStackType_ == SampleStackType::FP) {
             eventItem.attr.sample_type = SAMPLE_TYPE | PERF_SAMPLE_CALLCHAIN;

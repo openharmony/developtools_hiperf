@@ -24,13 +24,15 @@
         "samgr",
         "ipc",
         "c_utils",
-        "bundle_framework"
+        "bundle_framework",
+        "init"
       ],
       "third_party": [
         "zlib",
         "libsec_static",
         "bounds_checking_function",
-        "protobuf"
+        "protobuf",
+        "libunwind"
       ]
     },
     "build": {
@@ -53,4 +55,4 @@
     }
   }
 }
-  
+

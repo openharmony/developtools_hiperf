@@ -241,6 +241,7 @@ void SubCommandStat::GetPerKey(std::string &perKey, const PerfEvents::Summary &s
     perKey = "";
     if (g_reportCpuFlag) {
         perKey += std::to_string(summary.cpu);
+        perKey += "|";
     }
     if (g_reportThreadFlag) {
         perKey += std::to_string(summary.tid);
@@ -594,9 +595,6 @@ bool SubCommandStat::CheckOptionPidAndApp(std::vector<pid_t> pids)
         printf("-t <tid>        stat events on existing thread id\n");
         return false;
     }
-    if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
-        return false;
-    }
     return true;
 }
 
@@ -627,22 +625,29 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     if (!CheckSelectCpuPidOption()) {
         return false;
     }
+    if (!CheckOptions(selectPids_)) {
+        HLOGV("CheckOptions() failed");
+        return false;
+    }
+    if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
+        HLOGV("CheckAppIsRunning() failed");
+        return false;
+    }
 
     perfEvents_.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
     for (auto selectPid : selectPids_) {
+        HLOGD("[OnSubCommand] selectPid %d\n", selectPid);
         pids.push_back(selectPid);
         std::vector<pid_t> subTids = GetSubthreadIDs(selectPid, thread_map_);
         if (!subTids.empty()) {
             pids.insert(pids.end(), subTids.begin(), subTids.end());
+        } else {
+            HLOGD("[OnSubCommand] subTids empty for %d\n", selectPid);
         }
     }
     pids.insert(pids.end(), selectTids_.begin(), selectTids_.end());
     perfEvents_.SetPid(pids);
-    if (!CheckOptions(pids)) {
-        HLOGV("CheckOptions() failed");
-        return false;
-    }
     if (!CheckOptionPidAndApp(pids)) {
         HLOGV("CheckOptionPidAndApp() failed");
         return false;
@@ -741,7 +746,7 @@ bool SubCommandStat::CheckSelectCpuPidOption()
 bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
 {
     if (targetSystemWide_) {
-        if (!pids.empty()) {
+        if (!pids.empty() || !selectTids_.empty()) {
             printf("You cannot specify -a and -t/-p at the same time\n");
             return false;
         }
@@ -750,7 +755,7 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
             return false;
         }
     }
-    if (!appPackage_.empty() && !pids.empty()) {
+    if (!appPackage_.empty() && (!pids.empty() || !selectTids_.empty())) {
         printf("You cannot specify --app and -t/-p at the same time\n");
         return false;
     }
@@ -763,7 +768,7 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
         return false;
     }
     if (!trackedCommand_.empty()) {
-        if (!pids.empty()) {
+        if (!pids.empty() || !selectTids_.empty()) {
             printf("You cannot specify a cmd and -t/-p at the same time\n");
             return false;
         }
