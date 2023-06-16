@@ -97,49 +97,54 @@ void SubCommandDumpTest::TestDumpCommand(const std::string &option, bool expect)
  * @tc.desc: record
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandDumpTest, DumpInputFilename, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpInputFilename1, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data ");
+    TestDumpCommand("/data/test/resource/testdata/perf.data ", false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpInputFilename2, TestSize.Level1)
+{
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data ");
 }
 
 HWTEST_F(SubCommandDumpTest, DumpInputFilenamErr, TestSize.Level1)
 {
-    TestDumpCommand("whatfile ", false);
+    TestDumpCommand("-i whatfile ", false);
 }
 
 HWTEST_F(SubCommandDumpTest, DumpHeaderAttrs, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data --head ");
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data --head ");
 }
 
 HWTEST_F(SubCommandDumpTest, DumpData, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data -d ");
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data -d ");
 }
 
 HWTEST_F(SubCommandDumpTest, DumpFeatures, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data -f ");
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data -f ");
 }
 
 HWTEST_F(SubCommandDumpTest, DumpSympath, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data --sympath ./ ");
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data --sympath ./ ");
 }
 
 HWTEST_F(SubCommandDumpTest, DumpSympathErr, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data --sympath where ", false);
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data --sympath where ", false);
 }
 
 HWTEST_F(SubCommandDumpTest, DumpExportUserdata0, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data --export 0");
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data --export 0");
 }
 
 HWTEST_F(SubCommandDumpTest, DumpExportUserdata1, TestSize.Level1)
 {
-    TestDumpCommand("/data/test/resource/testdata/perf.data --export 1");
+    TestDumpCommand("-i /data/test/resource/testdata/perf.data --export 1");
 }
 
 HWTEST_F(SubCommandDumpTest, DumpElffile, TestSize.Level1)

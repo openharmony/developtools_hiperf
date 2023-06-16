@@ -286,6 +286,7 @@ void SubCommandStat::ReportNormal(
     const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
 {
     // print head
+    printf(" %24s %-30s | %-32s | %s\n", "count", "name", "comment", "coverage");
     std::map<std::string, std::string> comments;
     GetComments(countEvents, comments);
     for (auto it = countEvents.begin(); it != countEvents.end(); ++it) {
