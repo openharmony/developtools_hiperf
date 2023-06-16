@@ -760,7 +760,8 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
         printf("You cannot specify --app and -t/-p at the same time\n");
         return false;
     }
-    if (!targetSystemWide_ && trackedCommand_.empty() && pids.empty() && appPackage_.empty()) {
+    if (!targetSystemWide_ && trackedCommand_.empty() && pids.empty() && appPackage_.empty()
+    && selectTids_.empty() ) {
         printf("You need to set the -p option or --app option.\n");
         return false;
     }
