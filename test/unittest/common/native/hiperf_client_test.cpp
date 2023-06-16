@@ -218,7 +218,9 @@ HWTEST_F(HiperfClientTest, SetTimeStopSec, TestSize.Level1)
     opt.SetSelectPids(selectPids);
     opt.SetTimeStopSec(40);
 
-    TestCaseOption(opt);
+    HiperfClient::Client myHiperf;
+    ASSERT_TRUE(myHiperf.IsReady());
+    ASSERT_TRUE(myHiperf.Start(opt));
 }
 
 HWTEST_F(HiperfClientTest, SetFrequency, TestSize.Level1)
@@ -288,7 +290,9 @@ HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigs, TestSize.Level1)
     opt.SetSelectPids(selectPids);
     opt.SetCallStackSamplingConfigs(1);
 
-    TestCaseOption(opt);
+    HiperfClient::Client myHiperf;
+    ASSERT_TRUE(myHiperf.IsReady());
+    ASSERT_TRUE(myHiperf.Start(opt));
 }
 
 HWTEST_F(HiperfClientTest, SetSelectTids, TestSize.Level1)

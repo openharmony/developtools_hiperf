@@ -286,6 +286,7 @@ void SubCommandStat::ReportNormal(
     const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
 {
     // print head
+    printf(" %24s %-30s | %-32s | %s\n", "count", "name", "comment", "coverage");
     std::map<std::string, std::string> comments;
     GetComments(countEvents, comments);
     for (auto it = countEvents.begin(); it != countEvents.end(); ++it) {
@@ -759,7 +760,8 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
         printf("You cannot specify --app and -t/-p at the same time\n");
         return false;
     }
-    if (!targetSystemWide_ && trackedCommand_.empty() && pids.empty() && appPackage_.empty()) {
+    if (!targetSystemWide_ && trackedCommand_.empty() && pids.empty() && appPackage_.empty()
+        && selectTids_.empty() ) {
         printf("You need to set the -p option or --app option.\n");
         return false;
     }
