@@ -299,7 +299,7 @@ foreach(proto_file, proto_file_defines) {
 
 # this is so bad , but someone config the protoc's subsystem_name
 # the better way is build system need provider host tools path or prebuild tools path
-protoc_subsystem_out_path = "developtools/profiler"
+protoc_subsystem_out_path = "thirdparty/protobuf"
 
 if (default_toolchain == current_toolchain) {
   #if target build
