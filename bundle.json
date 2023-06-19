@@ -19,7 +19,7 @@
     "ram": "2000KB",
     "deps": {
       "components": [
-        "hiviewdfx_hilog_native",
+        "hilog",
         "napi",
         "samgr",
         "ipc",
