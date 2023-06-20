@@ -335,15 +335,6 @@ HWTEST_F(HiperfLibReportTest, Test_Report_Parameter_Empty, TestSize.Level1)
     EXPECT_NE(access(ILLEGAL_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_Dump_Success, TestSize.Level1)
-{
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-    EXPECT_EQ(::Dump(PERF_DATA_INPUT_PATH), 0);
-    std::string stringOut = stdoutRecord.Stop();
-    DefaultDumpContentCheck(stringOut);
-}
-
 HWTEST_F(HiperfLibReportTest, Test_Dump_IllegalPath, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;

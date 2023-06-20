@@ -97,6 +97,26 @@ void SubCommandDumpTest::TestDumpCommand(const std::string &option, bool expect)
  * @tc.desc: record
  * @tc.type: FUNC
  */
+
+HWTEST_F(SubCommandDumpTest, Test_LibReport_Success, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/report/perf.data.libreport";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    size_t symbolsCount = 39;
+    size_t buildIdCount = 32;
+    size_t sampleCount = 1000;
+    size_t featureCount = 10;
+
+    EXPECT_EQ(stringOut.find("magic: PERFILE2") != std::string::npos, true);
+    EXPECT_EQ(SubStringCount(stringOut, "fileid:"), symbolsCount);
+    EXPECT_EQ(SubStringCount(stringOut, "buildId:"), buildIdCount);
+    EXPECT_EQ(SubStringCount(stringOut, "record sample:"), sampleCount);
+    EXPECT_EQ(SubStringCount(stringOut, "feature:"), featureCount);
+}
+
 HWTEST_F(SubCommandDumpTest, DumpInputFilename1, TestSize.Level1)
 {
     TestDumpCommand("/data/test/resource/testdata/perf.data ", false);

@@ -20,5 +20,6 @@
 #include <hilog/log.h>
 
 #include "subcommand_dump.h"
+#include "utilities.h"
 
 #endif // HIPERF_SUBCOMMAND_DUMP_TEST_H
