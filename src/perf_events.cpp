@@ -1031,8 +1031,8 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
                     }
                     if (verboseReport_) {
                         printf("%s id:%llu(c%d:p%d) time_enabled:%llu time_running:%llu value:%llu\n",
-                               eventItem.configName.c_str(), readNoGroupValue.id, fditem.cpu,fditem.pid,
-                               readNoGroupValue.time_enabled,readNoGroupValue.time_running, readNoGroupValue.value);
+                               eventItem.configName.c_str(), readNoGroupValue.id, fditem.cpu, fditem.pid,
+                               readNoGroupValue.time_enabled, readNoGroupValue.time_running, readNoGroupValue.value);
                     }
                     if ((perCpu_ || perThread_) && readNoGroupValue.value) {
                         countEvent->summaries.emplace_back(fditem.cpu, fditem.pid, readNoGroupValue.value,
