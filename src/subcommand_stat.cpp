@@ -639,6 +639,7 @@ bool SubCommandStat::CheckAllOption()
 bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 {
     CheckAllOption();
+    
     perfEvents_.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
     for (auto selectPid : selectPids_) {
