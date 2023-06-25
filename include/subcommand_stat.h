@@ -151,6 +151,7 @@ private:
     bool CheckOptions(const std::vector<pid_t> &pids);
     bool CheckSelectCpuPidOption();
     void SetReportFlags(bool cpuFlag, bool threadFlag);
+    void SetPerfEvent();
 };
 
 bool RegisterSubCommandStat(void);

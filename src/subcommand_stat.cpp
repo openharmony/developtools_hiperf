@@ -614,6 +614,21 @@ bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
     return true;
 }
 
+void SubCommandStat::SetPerfEvent()
+{
+    SetReportFlags(perCpus_, perThreads_);
+    perfEvents_.SetSystemTarget(targetSystemWide_);
+    perfEvents_.SetTimeOut(timeStopSec_);
+    perfEvents_.SetTimeReport(timeReportMs_);
+    perfEvents_.SetPerCpu(perCpus_);
+    perfEvents_.SetPerThread(perThreads_);
+    perfEvents_.SetVerboseReport(verboseReport_);
+    perfEvents_.SetInherit(!noCreateNew_);
+    perfEvents_.SetTrackedCommand(trackedCommand_);
+    // set report handle
+    perfEvents_.SetStatCallBack(Report);
+}
+
 bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 {
     if (HelpOption()) {
@@ -653,17 +668,7 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         HLOGV("CheckOptionPidAndApp() failed");
         return false;
     }
-    SetReportFlags(perCpus_, perThreads_);
-    perfEvents_.SetSystemTarget(targetSystemWide_);
-    perfEvents_.SetTimeOut(timeStopSec_);
-    perfEvents_.SetTimeReport(timeReportMs_);
-    perfEvents_.SetPerCpu(perCpus_);
-    perfEvents_.SetPerThread(perThreads_);
-    perfEvents_.SetVerboseReport(verboseReport_);
-    perfEvents_.SetInherit(!noCreateNew_);
-    perfEvents_.SetTrackedCommand(trackedCommand_);
-    // set report handle
-    perfEvents_.SetStatCallBack(Report);
+    SetPerfEvent();
     if (!PrepairEvents()) {
         HLOGV("PrepairEvents() failed");
         return false;
