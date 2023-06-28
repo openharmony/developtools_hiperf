@@ -408,9 +408,12 @@ bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
         printf("unknown option %s\n", args.begin()->c_str());
         return false;
     }
-    if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
-        return false;
-    }
+    if (control_Cmd.empty())
+    {
+	    if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
+	        return false;
+	    }
+	}
     return CheckOptions();
 }
 
@@ -447,7 +450,11 @@ bool SubCommandRecord::CheckTargetProcessOptions()
         printf("please select a target process\n");
         return false;
     }
-
+    if (controlCmd_ == CONTROL_CMD_PREPARE) {
+		if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
+		        return false;
+		    }
+	}
     return CheckTargetPids();
 }
 
@@ -990,7 +997,11 @@ bool SubCommandRecord::CreateFifoServer()
             return false;
         }
         close(fd);
-        printf("create control hiperf sampling success.\n");
+		if (restart_) {
+		    printf("start control hiperf sampling success.\n");
+		} else {
+		    printf("create control hiperf sampling success.\n");
+        }
     }
     return true;
 }
@@ -1090,9 +1101,17 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     }
 
     // start tracking
-    if (!perfEvents_.StartTracking(!isFifoServer_)) {
-        return false;
+    if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
+        if (!perfEvents_.StartTracking(isFifoServer_)) {
+            return false;
+        }
+    } else {
+        if (!perfEvents_.StartTracking(!isFifoServer_)) {
+            return false;
+        }
     }
+    
+
 
     startSaveFileTimes_ = steady_clock::now();
     if (!FinishWriteRecordFile()) {
