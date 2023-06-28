@@ -408,7 +408,7 @@ bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
         printf("unknown option %s\n", args.begin()->c_str());
         return false;
     }
-    if (control_Cmd.empty())
+    if (controlCmd_.empty())
     {
         if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
             return false;
