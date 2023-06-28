@@ -410,10 +410,10 @@ bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
     }
     if (control_Cmd.empty())
     {
-	    if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
-	        return false;
-	    }
-	}
+        if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
+            return false;
+        }
+    }
     return CheckOptions();
 }
 
@@ -997,10 +997,10 @@ bool SubCommandRecord::CreateFifoServer()
             return false;
         }
         close(fd);
-		if (restart_) {
-		    printf("start control hiperf sampling success.\n");
-		} else {
-		    printf("create control hiperf sampling success.\n");
+        if (restart_) {
+            printf("start control hiperf sampling success.\n");
+        } else {
+            printf("create control hiperf sampling success.\n");
         }
     }
     return true;
