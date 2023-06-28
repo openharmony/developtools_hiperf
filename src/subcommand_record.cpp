@@ -454,7 +454,7 @@ bool SubCommandRecord::CheckTargetProcessOptions()
         if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
             return false;
         }
-	}
+    }
     return CheckTargetPids();
 }
 
@@ -1110,8 +1110,6 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
             return false;
         }
     }
-    
-
 
     startSaveFileTimes_ = steady_clock::now();
     if (!FinishWriteRecordFile()) {
