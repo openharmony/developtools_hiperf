@@ -91,6 +91,7 @@ bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
         printf("event not support %s\n", GetStaticConfigName(type, config).c_str());
         return false;
     } else {
+        close(fd);
         return true;
     }
 }
@@ -100,6 +101,7 @@ bool PerfEvents::IsEventAttrSupport(perf_event_attr &attr)
     if (fd < 0) {
         return false;
     } else {
+        close(fd);
         return true;
     }
 }
