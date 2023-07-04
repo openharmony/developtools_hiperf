@@ -17,6 +17,7 @@
 #include "callstack.h"
 
 #include <string>
+#include <utility>
 #if HAVE_LIBUNWIND
 #include <libunwind.h>
 extern "C" {
