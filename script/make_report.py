@@ -56,9 +56,12 @@ def main():
     parser.add_argument('-l', '--local_lib_dir', type=dir_check, default='./binary_cache',
                         help="""Path to find symbol dir use to
                          do offline unwind stack""")
+    parser.add_argument('-t', '--html_template', default='./',
+                        type=dir_check, help=""" The path of report html template
+                        """)
     args = parser.parse_args()
 
-    get_used_binaries(args.perf_data, args.report_html, args.local_lib_dir)
+    get_used_binaries(args.perf_data, args.report_html, args.local_lib_dir, args.html_template)
 
 
 if __name__ == '__main__':
