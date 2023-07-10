@@ -210,6 +210,12 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-c", selectCpus_)) {
         return false;
     }
+    if (!Option::GetOptionValue(args, "-p", selectPids_)) {
+        return false;
+    }
+    if (!IsExistDebugByPid(selectPids_)) {
+        return false;
+    }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
         return false;
     }
@@ -258,12 +264,6 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--control", controlCmd_)) {
-        return false;
-    }
-    if (!Option::GetOptionValue(args, "-p", selectPids_)) {
-        return false;
-    }
-    if (!IsExistDebugByPid(selectPids_)) {
         return false;
     }
 
