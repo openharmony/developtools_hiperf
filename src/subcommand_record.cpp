@@ -950,6 +950,7 @@ bool SubCommandRecord::ProcessControl()
 
 bool SubCommandRecord::CreateFifoServer()
 {
+    char errInfo[ERRINFOLEN] = { 0 };
     const mode_t fifoMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 or
         mkfifo(CONTROL_FIFO_FILE_C2S.c_str(), fifoMode) != 0) {
@@ -959,14 +960,12 @@ bool SubCommandRecord::CreateFifoServer()
             remove(CONTROL_FIFO_FILE_S2C.c_str());
             remove(CONTROL_FIFO_FILE_C2S.c_str());
         }
-        char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("create fifo file failed. %d:%s", errno, errInfo);
         return false;
     }
 
     pid_t pid = fork();
-    char errInfo[ERRINFOLEN] = { 0 };
     if (pid == -1) {
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("fork failed. %d:%s", errno, errInfo);
@@ -996,11 +995,7 @@ bool SubCommandRecord::CreateFifoServer()
             return false;
         }
         close(fd);
-        if (restart_) {
-            printf("start control hiperf sampling success.\n");
-        } else {
-            printf("create control hiperf sampling success.\n");
-        }
+        printf("%s control hiperf sampling success.\n", restart_ ? "start" : "creat");
     }
     return true;
 }
