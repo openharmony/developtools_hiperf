@@ -122,7 +122,7 @@ bool GetOptionValue(argsVector &args, std::string optionName, T &value)
             } else {
                 // have value but convert failed.
                 printf("incorrect option value '%s' for option '%s'. View the usage with the --help option.\n",
-                        (*it).c_str(), optionName.c_str());
+                       (*it).c_str(), optionName.c_str());
                 return false;
             }
         }
