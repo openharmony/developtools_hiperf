@@ -795,6 +795,14 @@ bool IsDebugableApp(const std::string& bundleName)
 #endif
 }
 
+std::string AdaptSandboxPath(std::string filePath, int pid)
+{
+    if (filePath.find("/data/storage") == 0 && access(filePath.c_str(), F_OK) != 0) {
+        filePath = "/proc/" + std::to_string(pid) + "/root" + filePath;
+    }
+    return filePath;
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
