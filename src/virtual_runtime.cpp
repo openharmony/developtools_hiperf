@@ -415,6 +415,12 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
         UpdatekernelMap(recordMmap.data_.addr, recordMmap.data_.addr + recordMmap.data_.len,
                         recordMmap.data_.pgoff, recordMmap.data_.filename);
     } else {
+        std::string libPath = AdaptSandboxPath(recordMmap.data_.filename, recordMmap.data_.pid);
+        recordMmap.header.size += libPath.size() - strlen(recordMmap.data_.filename);
+        (void)memset_s(recordMmap.data_.filename, KILO, '\0', KILO);
+        if (strncpy_s(recordMmap.data_.filename, KILO, libPath.c_str(), libPath.size() != 0)) {
+            HLOGD("strncpy_s recordMmap failed!");
+        }
         UpdateThreadMaps(recordMmap.data_.pid, recordMmap.data_.tid, recordMmap.data_.filename,
                          recordMmap.data_.addr, recordMmap.data_.len, recordMmap.data_.pgoff);
         UpdateSymbols(recordMmap.data_.filename);
@@ -431,6 +437,12 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
     HLOGV("  MMAP2: %s dso '%s' (0x%llx-0x%llx)@0x%llx", recordMmap2.inKernel() ? "kernel" : "user",
           recordMmap2.data_.filename, recordMmap2.data_.addr,
           recordMmap2.data_.addr + recordMmap2.data_.len, recordMmap2.data_.pgoff);
+    std::string libPath = AdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid);
+    recordMmap2.header.size += libPath.size() - strlen(recordMmap2.data_.filename);
+    (void)memset_s(recordMmap2.data_.filename, KILO, '\0', KILO);
+    if (strncpy_s(recordMmap2.data_.filename, KILO, libPath.c_str(), libPath.size() != 0)) {
+        HLOGD("strncpy_s recordMmap2 failed!");
+    }
     UpdateThreadMaps(recordMmap2.data_.pid, recordMmap2.data_.tid, recordMmap2.data_.filename,
                      recordMmap2.data_.addr, recordMmap2.data_.len, recordMmap2.data_.pgoff);
     UpdateSymbols(recordMmap2.data_.filename);
