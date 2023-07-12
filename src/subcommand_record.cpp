@@ -995,7 +995,7 @@ bool SubCommandRecord::CreateFifoServer()
             return false;
         }
         close(fd);
-        printf("%s control hiperf sampling success.\n", restart_ ? "start" : "creat");
+        printf("%s control hiperf sampling success.\n", restart_ ? "start" : "create");
     }
     return true;
 }
