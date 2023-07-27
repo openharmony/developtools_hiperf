@@ -538,6 +538,42 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c4, TestSize.Level1)
 }
 
 /**
+ * @tc.name: TestOnSubCommand_c5
+ * @tc.desc: -c
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_c5, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat -p ";
+    cmdstr += std::to_string(tid1);
+    cmdstr += " -c -2 -d 3";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+
+    // some times 'sw-page-faults' is 0
+    std::string expectStr = "Invalid -c value";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
+    t1.join();
+}
+
+/**
  * @tc.name: TestOnSubCommand_d
  * @tc.desc: -d
  * @tc.type: FUNC
@@ -570,6 +606,176 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
     uint effectiveHeadCounter = 0u;
     EXPECT_GE(EffectiveCounter(stringOut, defaultConfigNames_, effectiveHeadCounter),
               (defaultConfigNames_.size() - 1));
+    t1.join();
+}
+
+/**
+ * @tc.name: TestOnSubCommand_p
+ * @tc.desc: -p
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat -p -1 -d 3";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+
+    // some times 'sw-page-faults' is 0
+    std::string expectStr = "Invalid -p value";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
+    t1.join();
+}
+
+/**
+ * @tc.name: TestOnSubCommand_p
+ * @tc.desc: -p
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p1, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat -a --app test -d 3";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+
+    // some times 'sw-page-faults' is 0
+    std::string expectStr = "You cannot specify -a and --app at the same time";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
+    t1.join();
+}
+
+/**
+ * @tc.name: TestOnSubCommand_p2
+ * @tc.desc: -p
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat --app test -p 1234 -d 3";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+
+    // some times 'sw-page-faults' is 0
+    std::string expectStr = "You cannot specify --app and -t/-p at the same time";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
+    t1.join();
+}
+
+/**
+ * @tc.name: TestOnSubCommand_chkms
+ * @tc.desc: --chkms
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat -a -d 3 --chkms 201";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+
+    // some times 'sw-page-faults' is 0
+    std::string expectStr = "Invalid --chkms value '201'";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
+    t1.join();
+}
+
+/**
+ * @tc.name: TestOnSubCommand_aa
+ * @tc.desc: aa
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_aa, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat aa --app 123 -d 3";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+
+    // some times 'sw-page-faults' is 0
+    std::string expectStr = "You cannot specify a cmd and --app at the same time";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
     t1.join();
 }
 
