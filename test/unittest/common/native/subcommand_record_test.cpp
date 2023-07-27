@@ -232,6 +232,23 @@ HWTEST_F(SubCommandRecordTest, SystemWide, TestSize.Level1)
     TestRecordCommand("-d 2 -a ", true, false);
 }
 
+// trackedCommand_
+HWTEST_F(SubCommandRecordTest, TrackedCommandErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a aa ", false, false);
+}
+
+// --app and -p
+HWTEST_F(SubCommandRecordTest, HasTargetErr, TestSize.Level1)
+{
+    TestRecordCommand("--app test -p 123 -d 3 ", false, false);
+}
+
+HWTEST_F(SubCommandRecordTest, HasTargetErr1, TestSize.Level1)
+{
+    TestRecordCommand("-d 3 ", false, false);
+}
+
 // exclude hiperf
 HWTEST_F(SubCommandRecordTest, ExcludePerf, TestSize.Level1)
 {
@@ -478,6 +495,11 @@ HWTEST_F(SubCommandRecordTest, SelectPidMulti, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, SelectPidMinErr, TestSize.Level1)
 {
     TestRecordCommand("-d 2 -p 0 ", false, false);
+}
+
+HWTEST_F(SubCommandRecordTest, SelectPidMinErr1, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -p -1 ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidErr, TestSize.Level1)
