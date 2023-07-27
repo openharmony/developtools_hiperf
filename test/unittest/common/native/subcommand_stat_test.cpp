@@ -644,7 +644,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestOnSubCommand_p1
+ * @tc.name: TestOnSubCommand_p
  * @tc.desc: -p
  * @tc.type: FUNC
  */
