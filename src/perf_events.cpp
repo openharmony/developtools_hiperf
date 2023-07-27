@@ -1312,7 +1312,7 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
     uint8_t *buf = recordBuf_->AllocForWrite(mmap.header.size);
     // copy1: new_header
     if (buf == nullptr) {
-        return;
+        return false;
     }
     if (memcpy_s(buf, sizeof(perf_event_header), &(mmap.header), sizeof(perf_event_header)) != 0) {
         HLOGEP("memcpy_s %p to %p failed. size %zd", &(mmap.header), buf,
