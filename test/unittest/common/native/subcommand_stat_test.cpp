@@ -716,7 +716,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level1)
  * @tc.desc: --chkms
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_chkms, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level1)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
