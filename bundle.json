@@ -29,7 +29,6 @@
       ],
       "third_party": [
         "zlib",
-        "libsec_static",
         "bounds_checking_function",
         "protobuf",
         "libunwind"
