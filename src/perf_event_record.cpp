@@ -200,16 +200,17 @@ void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
         }
 
         if (sampleType_ & PERF_SAMPLE_REGS_USER) {
-            data_.reg_nr = 0;
             header.size -= data_.reg_nr * sizeof(u64);
+            data_.reg_nr = 0;
+            data_.user_abi = 0;
         }
 
         if (sampleType_ & PERF_SAMPLE_STACK_USER) {
             // 1. remove the user stack
             header.size -= data_.stack_size;
+            header.size -= sizeof(data_.dyn_size);
 
             // 2. clean the size
-            data_.user_abi = 0;
             data_.stack_size = 0;
             data_.dyn_size = 0;
         }

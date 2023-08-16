@@ -519,26 +519,28 @@ void SubCommandDump::DumpFeaturePortion(int indent)
             PrintFeatureEventdesc(
                 indent, *static_cast<const PerfFileSectionEventDesc *>(featureSection.get()));
             continue;
-        }
+        } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_SYMBOL) {
+            const PerfFileSectionSymbolsFiles *sectionSymbolsFiles =
+                static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
+            if (sectionSymbolsFiles != nullptr) {
+                PrintIndent(LEVEL2, "SymbolFiles:%zu\n",
+                            sectionSymbolsFiles->symbolFileStructs_.size());
 
-        const PerfFileSectionSymbolsFiles *sectionSymbolsFiles =
-            static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
-        if (sectionSymbolsFiles != nullptr) {
-            PrintIndent(LEVEL2, "SymbolFiles:%zu\n",
-                        sectionSymbolsFiles->symbolFileStructs_.size());
-
-            int fileid = 0;
-            for (auto &symbolFileStruct : sectionSymbolsFiles->symbolFileStructs_) {
-                PrintIndent(LEVEL2, "\n");
-                PrintIndent(LEVEL2, "fileid:%d\n", fileid);
-                fileid++;
-                // symbol file info
-                PrintSymbolFile(indent, symbolFileStruct);
+                int fileid = 0;
+                for (auto &symbolFileStruct : sectionSymbolsFiles->symbolFileStructs_) {
+                    PrintIndent(LEVEL2, "\n");
+                    PrintIndent(LEVEL2, "fileid:%d\n", fileid);
+                    fileid++;
+                    // symbol file info
+                    PrintSymbolFile(indent, symbolFileStruct);
+                }
+            } else {
+                PrintIndent(LEVEL2, "get SymbolFiles failed\n");
             }
             continue;
+        } else {
+            PrintIndent(LEVEL2, "not support dump this feature(%d).\n", featureSection.get()->featureId_);
         }
-
-        PrintIndent(LEVEL2, "not support dump this feature.\n");
     }
 }
 
