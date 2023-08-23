@@ -59,8 +59,8 @@ pid_t CpuUsageTest::GetPidByProcessName(std::string procName)
     if ((fp = popen(cmd.c_str(), "r")) != nullptr) {
         if (fgets(buf, sizeof(buf), fp) != nullptr) {
             pid = atoi(buf);
-        }
         pclose(fp);
+        }
     }
     return pid;
 }
