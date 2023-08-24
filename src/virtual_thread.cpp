@@ -250,7 +250,8 @@ bool VirtualThread::IsLegalFileName(const std::string &fileName)
         fileName.back() == ']' or std::strncmp(fileName.c_str(), "/dev/", sizeof("/dev/")) == 0 or
         std::strncmp(fileName.c_str(), "/memfd:", sizeof("/memfd:")) == 0 or
         std::strncmp(fileName.c_str(), "//anon", sizeof("//anon")) == 0 or
-        StringEndsWith(fileName, ".ttf")) {
+        StringEndsWith(fileName, ".ttf") or StringEndsWith(fileName, ".an") or
+        StringEndsWith(fileName, ".ai")) {
         return false;
     }
     return true;
