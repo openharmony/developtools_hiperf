@@ -111,19 +111,17 @@ sources_platform_common = [
   "./src/perf_file_reader.cpp",
   "./src/perf_event_record.cpp",
   "./src/dwarf_encoding.cpp",
-  "./src/elf_file.cpp",
-  "./src/elf_header.cpp",
-  "./src/section_header.cpp",
-  "./src/program_header.cpp",
-  "./src/elf_symbol.cpp",
   "./src/subcommand_help.cpp",
   "./src/subcommand_dump.cpp",
   "./src/subcommand_report.cpp",
   "./src/report.cpp",
   "./src/report_json_file.cpp",
   "./src/register.cpp",
-  "./src/callstack.cpp",
 ]
+
+if (is_ohos) {
+  sources_platform_common += [ "./src/callstack.cpp" ]
+}
 
 if (hiperf_debug) {
   sources_platform_common += [
@@ -144,15 +142,17 @@ sources_platform_linux = [
 
 common_deps = [
   ":support_elf",
-  ":support_libunwind",
   ":support_protobuf",
   "//third_party/bounds_checking_function:libsec_static",
   "//third_party/zlib:libz",
 ]
 
-if (!hiperf_use_libunwind) {
-  common_deps -= [ ":support_libunwind" ]
-}
+common_configs = [
+  ":hiperf_inner_config",
+  "//third_party/bounds_checking_function:libsec_public_config",
+  "../../commonlibrary/c_utils/base:utils_config",
+  "//third_party/googletest:gtest_config",
+]
 
 if (is_ohos) {
   common_deps += [ "//third_party/bounds_checking_function:libsec_shared" ]
@@ -163,15 +163,20 @@ if (hiperf_target_static) {
   common_deps -= [ ":support_protobuf" ]
 }
 
-common_configs = [
-  ":hiperf_inner_config",
-  "//third_party/bounds_checking_function:libsec_public_config",
-  "../../commonlibrary/c_utils/base:utils_config",
-  "//third_party/googletest:gtest_config",
-]
+if (hiperf_use_libunwind) {
+  common_deps += [ ":support_libunwind" ]
+}
 
 config("hiperf_syspara_config") {
   defines = [ "CONFIG_HAS_SYSPARA" ]
+}
+
+config("libunwinder_config") {
+  defines = [ "HAVE_LIBUNWINDER=1" ]
+}
+
+if (hiperf_use_libunwinder) {
+  common_configs += [ ":libunwinder_config" ]
 }
 
 if (is_ohos && hiperf_use_syspara) {
@@ -191,12 +196,15 @@ ohos_source_set("hiperf_platform_common") {
       "bundle_framework:appexecfwk_base",
       "bundle_framework:appexecfwk_core",
       "c_utils:utils",
+      "faultloggerd:libunwinder_static",
       "hilog:libhilog",
+      "hitrace:hitrace_meter",
       "init:libbegetutil",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
   } else {
+    external_deps = [ "faultloggerd:unwinder_host" ]
     defines += [ "CONFIG_NO_HILOG" ]
   }
   sources = sources_platform_common
@@ -214,7 +222,12 @@ ohos_source_set("hiperf_platform_linux") {
   public_configs = common_configs
 
   if (is_ohos) {
-    external_deps = [ "init:libbegetutil" ]
+    external_deps = [
+      "faultloggerd:libunwinder_static",
+      "init:libbegetutil",
+    ]
+  } else {
+    external_deps = [ "faultloggerd:unwinder_host" ]
   }
 
   public_configs += [ ":platform_linux_config" ]
@@ -223,7 +236,7 @@ ohos_source_set("hiperf_platform_linux") {
   sources = sources_platform_linux
 }
 
-config("unwind_config") {
+config("libunwind_config") {
   defines = [ "HAVE_LIBUNWIND=1" ]
 }
 
@@ -231,7 +244,7 @@ ohos_source_set("support_libunwind") {
   part_name = "hiperf"
   subsystem_name = "developtools"
   public_configs = common_configs
-  public_configs += [ ":unwind_config" ]
+  public_configs += [ ":libunwind_config" ]
   if (hiperf_target_host) {
     public_deps = [ "//third_party/libunwind:unwind_source_${host_cpu}" ]
   } else {
@@ -273,6 +286,12 @@ ohos_source_set("support_protobuf") {
     ":proto_file_cpp",
     "//third_party/bounds_checking_function:libsec_static",
   ]
+
+  if (is_ohos) {
+    external_deps = [ "faultloggerd:libunwinder_static" ]
+  } else {
+    external_deps = [ "faultloggerd:unwinder_host" ]
+  }
 
   sources = [ "./src/report_protobuf_file.cpp" ]
 }
@@ -371,6 +390,11 @@ ohos_executable("hiperf") {
     static_link = true
   }
 
+  external_deps = [
+    "faultloggerd:libunwinder_static",
+    "hitrace:hitrace_meter",
+  ]
+
   subsystem_name = "developtools"
   part_name = "hiperf"
 }
@@ -382,6 +406,8 @@ ohos_executable("hiperf_host") {
   if (use_musl) {
     static_link = true
   }
+
+  external_deps = [ "faultloggerd:unwinder_host" ]
 
   subsystem_name = "developtools"
   part_name = "hiperf"
@@ -429,6 +455,7 @@ ohos_source_set("hiperf_platform_host") {
   subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
   public_deps = [ ":hiperf_platform_common" ]
+  external_deps = [ "faultloggerd:unwinder_host" ]
 }
 
 ohos_shared_library("hiperf_host_lib") {

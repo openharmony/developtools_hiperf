@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,10 @@
 
 #include "callstack.h"
 
+#include <dlfcn.h>
+#include <pthread.h>
+#include <iostream>
+
 #include <string>
 #include <utility>
 #if HAVE_LIBUNWIND
@@ -25,6 +29,9 @@ extern "C" {
 }
 #endif
 
+#include "dfx_ark.h"
+#include "dfx_regs.h"
+#include "hitrace_meter.h"
 #include "register.h"
 #ifdef target_cpu_arm
 // reg size is int (unw_word_t)
@@ -36,6 +43,28 @@ extern "C" {
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+using namespace OHOS::HiviewDFX;
+
+bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, ADDR_TYPE vaddr, ADDR_TYPE *data)
+{
+    if (__builtin_expect(unwindInfoPtr.thread.pid_ == unwindInfoPtr.callStack.lastPid_ &&
+        vaddr == unwindInfoPtr.callStack.lastAddr_, true)) {
+        *data = unwindInfoPtr.callStack.lastData_;
+        return true;
+    }
+
+    if (unwindInfoPtr.thread.ReadRoMemory(vaddr, reinterpret_cast<uint8_t*>(data), sizeof(ADDR_TYPE))) {
+        unwindInfoPtr.callStack.lastPid_ = unwindInfoPtr.thread.pid_;
+        unwindInfoPtr.callStack.lastAddr_ = vaddr;
+        unwindInfoPtr.callStack.lastData_ = *data;
+        return true;
+    } else {
+        unwindInfoPtr.callStack.lastPid_ = -1;
+        unwindInfoPtr.callStack.lastAddr_ = 0;
+        return false;
+    }
+}
+
 #if HAVE_LIBUNWIND
 const std::map<unw_error_t, const std::string> UNW_ERROR_MAP = {
     {UNW_ESUCCESS, std::to_string(UNW_ESUCCESS)},
@@ -69,11 +98,11 @@ void CallStack::dumpUDI(unw_dyn_info_t &di)
     HLOGV(" di.u.rti.table_len:     0x%016" UNW_WORD_PFLAG "", di.u.rti.table_len);
 }
 
-bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemMapItem &mmap,
+bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, std::shared_ptr<DfxMap> map,
                         const VirtualThread &thread)
 {
-    di.start_ip = mmap.begin_;
-    di.end_ip = mmap.end_;
+    di.start_ip = map->begin;
+    di.end_ip = map->end;
 #ifndef target_cpu_arm
     uint64_t fdeTableElfOffset;
     uint64_t fdeTableSize;
@@ -104,18 +133,17 @@ bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemM
                             0x000000000000bb04 0x000000000000bb04  R      0x4
 
         */
-        const MemMapItem *ehFrameMmap = thread.FindMapByFileInfo(mmap.name_, ehFrameHdrElfOffset);
-
-        if (ehFrameMmap == nullptr) {
-            HLOGE("no ehframe mmap found.");
+        auto ehFrameMap = thread.FindMapByFileInfo(map->name, ehFrameHdrElfOffset);
+        if (ehFrameMap == nullptr) {
+            HLOGE("no ehframe map found.");
             return false;
         }
 
-        di.u.rti.segbase = ehFrameMmap->begin_ + ehFrameHdrElfOffset - ehFrameMmap->pageoffset_;
-        di.u.rti.table_data = ehFrameMmap->begin_ + fdeTableElfOffset - ehFrameMmap->pageoffset_;
-        di.u.rti.table_len = fdeTableSize / sizeof(unw_word_t);
+        di.u.rti.segbase = ehFrameMap->begin + ehFrameHdrElfOffset - ehFrameMap->offset;
+        di.u.rti.table_data = ehFrameMap->begin + fdeTableElfOffset - ehFrameMap->offset;
+        di.u.rti.table_len = fdeTableSize / sizeof(uintptr_t);
 
-        HLOGV(" map pageoffset:         0x%016" PRIx64 "", mmap.pageoffset_);
+        HLOGV(" map pageoffset:         0x%016" PRIx64 "", map->offset);
         HLOGV(" ehFrameHdrElfOffset:    0x%016" PRIx64 "", ehFrameHdrElfOffset);
         HLOGV(" fdeTableElfOffset:      0x%016" PRIx64 "", fdeTableElfOffset);
         HLOGV(" fdeTableSize:           0x%016" PRIx64 "", fdeTableSize);
@@ -129,15 +157,15 @@ bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemM
     uint64_t SectionFileOffset;
     if ((UNW_INFO_FORMAT_ARM_EXIDX == di.format) &&
         symbolsFile.GetSectionInfo(ARM_EXIDX, SectionVaddr, SectionSize, SectionFileOffset)) {
-        const MemMapItem *targetMmap = thread.FindMapByFileInfo(mmap.name_, SectionFileOffset);
-        if (targetMmap == nullptr) {
-            HLOGE("no debug mmap found.");
+        auto targetMap = thread.FindMapByFileInfo(map->name, SectionFileOffset);
+        if (targetMap == nullptr) {
+            HLOGE("no debug map found.");
             return false;
         }
-        HLOGV(" begin: %" PRIx64 " offset:%" PRIx64 "", targetMmap->begin_,
-              targetMmap->pageoffset_);
+        HLOGV(" begin: %" PRIx64 " offset:%" PRIx64 "", targetMap->begin,
+              targetMap->offset);
 
-        di.u.rti.table_data = targetMmap->begin_ + SectionFileOffset - targetMmap->pageoffset_;
+        di.u.rti.table_data = targetMap->begin + SectionFileOffset - targetMap->offset;
         di.u.rti.table_len = SectionSize;
         HLOGV(" SectionName:           %s", std::string(ARM_EXIDX).c_str());
         HLOGV(" SectionVaddrt:         0x%016" PRIx64 "", SectionVaddr);
@@ -157,13 +185,13 @@ bool CallStack::fillUDI(unw_dyn_info_t &di, SymbolsFile &symbolsFile, const MemM
 /*
     https://www.nongnu.org/libunwind/man/libunwind-dynamic(3).html
 */
-int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, const MemMapItem &mmap,
+int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap> map,
                                UnwindInfo *unwindInfoPtr, unw_addr_space_t as, unw_word_t ip,
                                unw_proc_info_t *pi, int need_unwind_info, void *arg)
 {
     HLOGM("try search debug info at %s", symbolsFile->filePath_.c_str());
-    auto &dynInfoProcessMap = unwindInfoPtr->callStack.unwindDynInfoMap_;
-    // all the thread in same process have same mmap and symbols
+    auto &dynInfoProcessMap = unwindInfoPtr->callStack.unwindTableInfoMap_;
+    // all the thread in same process have same map and symbols
     if (dynInfoProcessMap.find(unwindInfoPtr->thread.pid_) == dynInfoProcessMap.end()) {
         dynInfoProcessMap.emplace(unwindInfoPtr->thread.pid_, dsoUnwDynInfoMap {});
     }
@@ -182,7 +210,7 @@ int CallStack::FindUnwindTable(SymbolsFile *symbolsFile, const MemMapItem &mmap,
         // otherwise we use EH FRAME
         newdi.format = UNW_INFO_FORMAT_REMOTE_TABLE;
 #endif
-        if (fillUDI(newdi, *symbolsFile, mmap, unwindInfoPtr->thread)) {
+        if (fillUDI(newdi, *symbolsFile, map, unwindInfoPtr->thread)) {
             dumpUDI(newdi);
             // we make a option empty value first
             std::optional<unw_dyn_info_t> &odi = dynFileMap[symbolsFile->filePath_];
@@ -237,12 +265,11 @@ int CallStack::FindProcInfo(unw_addr_space_t as, unw_word_t ip, unw_proc_info_t 
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
 
     HLOGM("need_unwind_info ret %d ip %" UNW_WORD_PFLAG "", need_unwind_info, ip);
-    const MemMapItem *mmap = unwindInfoPtr->thread.FindMapByAddr(ip);
-    if (mmap != nullptr) {
-        SymbolsFile *symbolsFile = unwindInfoPtr->thread.FindSymbolsFileByMap(*mmap);
+    auto map = unwindInfoPtr->thread.FindMapByAddr(ip);
+    if (map != nullptr) {
+        SymbolsFile *symbolsFile = unwindInfoPtr->thread.FindSymbolsFileByMap(map);
         if (symbolsFile != nullptr) {
-            return FindUnwindTable(symbolsFile, *mmap, unwindInfoPtr, as, ip, pi, need_unwind_info,
-                                   arg);
+            return FindUnwindTable(symbolsFile, map, unwindInfoPtr, as, ip, pi, need_unwind_info, arg);
         } else {
             HLOGW("no symbols file found for thread %d:%s", unwindInfoPtr->thread.tid_,
                   unwindInfoPtr->thread.name_.c_str());
@@ -253,27 +280,6 @@ int CallStack::FindProcInfo(unw_addr_space_t as, unw_word_t ip, unw_proc_info_t 
     }
 
     return -UNW_EUNSPEC;
-}
-
-bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, unw_word_t vaddr,
-                                        unw_word_t *data)
-{
-    if (__builtin_expect(unwindInfoPtr.thread.pid_ == unwindInfoPtr.callStack.lastPid_ &&
-        vaddr == unwindInfoPtr.callStack.lastAddr_, true)) {
-        *data = unwindInfoPtr.callStack.lastData_;
-        return true;
-    }
-
-    if (unwindInfoPtr.thread.ReadRoMemory(vaddr, reinterpret_cast<uint8_t*>(data), sizeof(unw_word_t))) {
-        unwindInfoPtr.callStack.lastPid_ = unwindInfoPtr.thread.pid_;
-        unwindInfoPtr.callStack.lastAddr_ = vaddr;
-        unwindInfoPtr.callStack.lastData_ = *data;
-        return true;
-    } else {
-        unwindInfoPtr.callStack.lastPid_ = -1;
-        unwindInfoPtr.callStack.lastAddr_ = 0;
-        return false;
-    }
 }
 
 int CallStack::AccessMem([[maybe_unused]] unw_addr_space_t as, unw_word_t addr,
@@ -437,6 +443,7 @@ bool CallStack::GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, size_t regN
 bool CallStack::DoUnwind(const VirtualThread &thread, std::vector<CallFrame> &callStack,
                          size_t maxStackLevel)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_OHOS, __PRETTY_FUNCTION__);
     unw_addr_space_t addr_space;
     UnwindInfo unwindInfo = {
         .thread = thread,
@@ -485,7 +492,6 @@ bool CallStack::UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *re
         stackEnd_ = stackPoint_ + stackSize_;
     }
 
-#if HAVE_LIBUNWIND
     uint64_t ip;
     uint64_t sp;
     if (!GetIpSP(ip, sp, regs_, regsNum_)) {
@@ -503,9 +509,12 @@ bool CallStack::UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *re
      * unwind itself.
      */
     if (maxStackLevel - 1 > 0) {
+#if HAVE_LIBUNWIND
         return DoUnwind(thread, callStack, maxStackLevel);
-    }
+#else
+        return DoUnwind2(thread, callStack, maxStackLevel);
 #endif
+    }
     return true;
 }
 
@@ -513,7 +522,7 @@ void CallStack::LogFrame(const std::string msg, const std::vector<CallFrame> &fr
 {
     HLOGM("%s", msg.c_str());
     int level = 0;
-    for (auto frame : frames) {
+    for (auto& frame : frames) {
         HLOGM("%d:%s", level++, frame.ToString().c_str());
     }
 }
@@ -547,7 +556,7 @@ size_t CallStack::DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
         return 0; // size not enough
     }
 
-    // called (Stack Buttom) , this will NOT change when compare
+    // called (Stack Bottom) , this will NOT change when compare
     // in case1 newIt -> C
     // in case2 newIt -> B
     const auto newIt = newCallFrames.end() - expandLimit;
@@ -648,7 +657,209 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
     return expand;
 }
 
-CallStack::CallStack() {}
+#if HAVE_LIBUNWINDER
+#ifdef target_cpu_arm64
+namespace {
+static bool IsArkExecutableMap(const VirtualThread &thread, const uintptr_t& pc)
+{
+    auto map = thread.FindMapByAddr(pc);
+    if (map == nullptr) {
+        return false;
+    }
+
+    if ((!StringEndsWith(map->name, "[anon:ArkTS Code]")) && (!StringEndsWith(map->name, "/dev/zero"))) {
+        return false;
+    }
+
+    if ((map->flag & PROT_EXEC) == 0) {
+        return false;
+    }
+
+    return true;
+}
+}
+
+bool CallStack::CheckAndStepArkFrame(const VirtualThread &thread, uintptr_t& pc, uintptr_t& fp, uintptr_t& sp)
+{
+    if (!IsArkExecutableMap(thread, pc)) {
+        return false;
+    }
+    char buf[128] = { 0 }; // 128 : step ark frame buf size
+    if (DfxArk::StepArkManagedNativeFrame(thread.tid_, pc, fp, sp, buf, 128)) { // 128 : step ark frame buf size
+        pc = fp + sizeof(uintptr_t);
+        return true;
+    }
+    return false;
+}
+#endif
+
+bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &callStack,
+                          size_t maxStackLevel)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_OHOS, __PRETTY_FUNCTION__);
+    UnwindInfo unwindInfo = {
+        .thread = thread,
+        .callStack = *this,
+    };
+
+    if (pidUnwinder_.count(thread.tid_) == 0) {
+        pidUnwinder_.emplace(thread.tid_, std::make_shared<Unwinder>(accessor_));
+    }
+    auto unwinder = pidUnwinder_[thread.tid_];
+
+#ifdef target_cpu_arm
+    std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm>();
+#else
+    std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
+#endif
+    std::vector<uintptr_t> tempRegs;
+    for (auto i = 0; i < regsNum_; ++i) {
+        tempRegs.push_back((uintptr_t)regs_[i]);
+    }
+    regs->SetRegsData(tempRegs);
+    unwinder->SetRegs(regs);
+
+    uintptr_t pc = regs->GetPc();
+    uintptr_t sp = regs->GetSp();
+    while (callStack.size() < maxStackLevel) {
+        if (unwinder->Step(pc, sp, &unwindInfo)) {
+            if (pc == callStack.back().ip_ && sp == callStack.back().sp_) {
+                HLOGW("we found a same frame, stop here");
+                break;
+            }
+            callStack.emplace_back(pc, sp);
+            HLOGV("unwind:%zu: ip 0x%" UNW_WORD_PFLAG " sp 0x%" UNW_WORD_PFLAG "", callStack.size(), pc, sp);
+        } else {
+#ifdef target_cpu_arm64
+            uintptr_t fp = regs->GetFp();
+            if (CheckAndStepArkFrame(thread, pc, fp, sp)) {
+                regs->SetSp(sp);
+                regs->SetPc(pc);
+                regs->SetFp(fp);
+                callStack.emplace_back(pc, sp);
+                continue;
+            }
+#endif
+            HLOGV("no more frame step found. error code(%d)", unwinder->GetLastErrorCode());
+            break;
+        }
+    }
+    return true;
+}
+
+void CallStack::DumpTableInfo(UnwindTableInfo &outTableInfo)
+{
+    HLOGV("unwind_table info: ");
+    HLOGV(" start_ip:            0x%016" UNW_WORD_PFLAG "", outTableInfo.startPc);
+    HLOGV(" end_ip:              0x%016" UNW_WORD_PFLAG "", outTableInfo.endPc);
+    HLOGV(" segbase:             0x%016" UNW_WORD_PFLAG "", outTableInfo.segbase);
+    HLOGV(" table_data:          0x%016" UNW_WORD_PFLAG "", outTableInfo.tableData);
+    HLOGV(" table_len:           0x%016" UNW_WORD_PFLAG "", outTableInfo.tableLen);
+}
+
+int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap> map, UnwindInfo *unwindInfoPtr,
+                               uintptr_t pc, UnwindTableInfo& outTableInfo)
+{
+    HLOGM("try search debug info at %s", symbolsFile->filePath_.c_str());
+    auto &tableInfoMap = unwindInfoPtr->callStack.unwindTableInfoMap_;
+    // all the thread in same process have same mmap and symbols
+    if (tableInfoMap.find(unwindInfoPtr->thread.pid_) == tableInfoMap.end()) {
+        tableInfoMap.emplace(unwindInfoPtr->thread.pid_, DsoUnwindTableInfoMap {});
+    }
+    DsoUnwindTableInfoMap &unwTabMap = tableInfoMap[unwindInfoPtr->thread.pid_];
+    // find use dso name as key
+    if (unwTabMap.find(symbolsFile->filePath_) == unwTabMap.end()) {
+        ElfTableInfo eti;
+        auto elf = symbolsFile->GetElfFile();
+        if (elf == nullptr) {
+            return -1;
+        }
+        if (elf->FindElfTableInfo(pc, map, eti) == 0) {
+#ifdef target_cpu_arm
+            auto& table = eti.diExidx;
+#else
+            auto& table = eti.diEhHdr;
+#endif
+            if (table.format == -1) {
+                HLOGV("parse unwind table failed.");
+                return -1;
+            }
+            unwTabMap[symbolsFile->filePath_] = table;
+            outTableInfo = unwTabMap[symbolsFile->filePath_];
+            DumpTableInfo(table);
+            return 0;
+        } else {
+            HLOGV("FillUnwindTable failed");
+            return -1;
+        }
+    } else {
+        outTableInfo = unwTabMap[symbolsFile->filePath_];
+        return 0;
+    }
+    return -1;
+}
+
+int CallStack::FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void *arg)
+{
+    UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
+    auto map = unwindInfoPtr->thread.FindMapByAddr(pc);
+    if (map != nullptr) {
+        SymbolsFile *symbolsFile = unwindInfoPtr->thread.FindSymbolsFileByMap(map);
+        if (symbolsFile != nullptr) {
+            return FillUnwindTable(symbolsFile, map, unwindInfoPtr, pc, outTableInfo);
+        } else {
+            HLOGW("no symbols file found for thread %d:%s", unwindInfoPtr->thread.tid_,
+                  unwindInfoPtr->thread.name_.c_str());
+        }
+    } else {
+        HLOGE("pc 0x%016" UNW_WORD_PFLAG " not found in thread %d:%s", pc,
+              unwindInfoPtr->thread.tid_, unwindInfoPtr->thread.name_.c_str());
+    }
+    return -1;
+}
+
+int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
+{
+    UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
+    *val = 0;
+
+    /* Check overflow. */
+    if (addr + sizeof(uintptr_t) < addr) {
+        HLOGE("address overflow at 0x%" UNW_WORD_PFLAG " increase 0x%zu", addr, sizeof(uintptr_t));
+        return -1;
+    }
+
+    if (addr < unwindInfoPtr->callStack.stackPoint_ or
+        addr + sizeof(uintptr_t) >= unwindInfoPtr->callStack.stackEnd_) {
+        if (ReadVirtualThreadMemory(*unwindInfoPtr, addr, val)) {
+            HLOGM("access_mem addr get val 0x%" UNW_WORD_PFLAG ", from mmap", *val);
+        } else {
+            HLOGW("access_mem mmap 0x%" PRIx64 " failed, STACK RANGE 0x%" PRIx64 "- 0x%" PRIx64 "(0x%" PRIx64 ")",
+                  (uint64_t)addr,
+                  unwindInfoPtr->callStack.stackPoint_, unwindInfoPtr->callStack.stackEnd_,
+                  unwindInfoPtr->callStack.stackEnd_ - unwindInfoPtr->callStack.stackPoint_);
+            return -1;
+        }
+    } else {
+        size_t stackOffset = addr - unwindInfoPtr->callStack.stackPoint_;
+        *val = *(uintptr_t *)&unwindInfoPtr->callStack.stack_[stackOffset];
+        HLOGM("access_mem addr %p val %" UNW_WORD_PFLAG ", from stack offset %zu",
+              reinterpret_cast<void *>(addr), *val, stackOffset);
+    }
+
+    return 0;
+}
+#endif
+
+CallStack::CallStack()
+{
+#if HAVE_LIBUNWINDER
+    accessor_ = std::make_shared<OHOS::HiviewDFX::UnwindAccessors>();
+    accessor_->FindUnwindTable = &CallStack::FindUnwindTable;
+    accessor_->AccessMem = &CallStack::AccessMem2;
+    accessor_->AccessReg = nullptr;
+#endif
+}
 
 CallStack::~CallStack()
 {

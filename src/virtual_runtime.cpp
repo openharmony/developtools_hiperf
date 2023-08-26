@@ -24,6 +24,7 @@
 #include <sys/mman.h>
 #endif
 
+#include "dfx_maps.h"
 #include "register.h"
 #include "symbols_file.h"
 #include "utilities.h"
@@ -32,6 +33,10 @@ using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+namespace {
+// if ip is 0 , 1 both not useful
+const uint64_t BAD_IP_ADDRESS = 2;
+}
 // we unable to access 'swapper' from /proc/0/
 VirtualRuntime::VirtualRuntime(bool onDevice)
 {
@@ -100,17 +105,17 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
         recordCallBack_(std::move(commRecord));
         // only work for pid
         if (pid == tid) {
-            for (auto &memMapItem : thread.GetMaps()) {
+            for (auto &map : thread.GetMaps()) {
                 auto mmapRecord =
-                    std::make_unique<PerfRecordMmap2>(false, thread.pid_, thread.tid_, memMapItem);
+                    std::make_unique<PerfRecordMmap2>(false, thread.pid_, thread.tid_, map);
                 if (mmapRecord->data_.pgoff == 0 || (mmapRecord->data_.prot & PROT_EXEC) == 0) {
                     continue;
                 }
                 HLOGD("make PerfRecordMmap2 %d:%d:%s:%s(0x%" PRIx64 "-0x%" PRIx64 ")@%" PRIx64 " ",
-                      thread.pid_, thread.tid_, thread.name_.c_str(), memMapItem.name_.c_str(),
-                      memMapItem.begin_, memMapItem.end_, memMapItem.pageoffset_);
+                      thread.pid_, thread.tid_, thread.name_.c_str(), map->name.c_str(),
+                      map->begin, map->end, map->offset);
                 recordCallBack_(std::move(mmapRecord));
-                UpdateSymbols(memMapItem.name_);
+                UpdateSymbols(map->name);
             }
         }
         HLOGV("thread created");
@@ -149,7 +154,7 @@ void VirtualRuntime::UpdateThreadMaps(pid_t pid, pid_t tid, const std::string fi
 void VirtualRuntime::UpdateKernelModulesSpaceMaps()
 {
     // found the kernel modules
-    std::vector<MemMapItem> koMaps;
+    std::vector<DfxMap> koMaps;
     std::ifstream ifs("/proc/modules", std::ifstream::in);
     if (!ifs.is_open()) {
         perror("kernel modules read failed(/proc/modules)\n");
@@ -176,7 +181,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
                            sizeof(module), &size, &addr, sizeof(addr));
         constexpr int numSlices {3};
         if (ret == numSlices) {
-            MemMapItem &map = koMaps.emplace_back(addr, addr + size, 0, std::string(module));
+            auto &map = koMaps.emplace_back(addr, addr + size, 0, "", std::string(module));
             HLOGV("add ko map %s", map.ToString().c_str());
         } else {
             HLOGE("unknown line %d: '%s'", ret, line.c_str());
@@ -184,14 +189,14 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
     }
 
     if (std::all_of(koMaps.begin(), koMaps.end(),
-                    [](const MemMapItem &item) { return item.begin_ == 0; })) {
+                    [](const DfxMap &item) { return item.begin == 0; })) {
         koMaps.clear();
         HLOGW("no addr found in /proc/modules. remove all the ko");
     }
     if (recordCallBack_) {
-        for (MemMapItem &map : koMaps) {
-            auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin_,
-                                                           map.end_ - map.begin_, 0, map.name_);
+        for (auto &map : koMaps) {
+            auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin,
+                                                           map.end - map.begin, 0, map.name);
             recordCallBack_(std::move(record));
         }
     }
@@ -201,11 +206,10 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
 void VirtualRuntime::UpdateKernelSpaceMaps()
 {
     // add kernel first
-    auto &map = kernelSpaceMemMaps_.emplace_back(0, std::numeric_limits<uint64_t>::max(), 0,
-                                                 KERNEL_MMAP_NAME);
+    auto &map = kernelSpaceMemMaps_.emplace_back(0, std::numeric_limits<uint64_t>::max(), 0, "", KERNEL_MMAP_NAME);
     if (recordCallBack_) {
-        auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin_,
-                                                       map.end_ - map.begin_, 0, map.name_);
+        auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin,
+                                                       map.end - map.begin, 0, map.name);
         recordCallBack_(std::move(record));
     }
 }
@@ -213,12 +217,11 @@ void VirtualRuntime::UpdateKernelSpaceMaps()
 void VirtualRuntime::UpdateKernelModulesSymbols()
 {
     HLOGD("load ko symbol and build id");
-    for (MemMapItem &map : kernelSpaceMemMaps_) {
-        if (map.name_ == KERNEL_MMAP_NAME) {
+    for (auto &map : kernelSpaceMemMaps_) {
+        if (map.name == KERNEL_MMAP_NAME) {
             continue;
         }
-        auto kernelModuleFile =
-            SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE, map.name_);
+        auto kernelModuleFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE, map.name);
         if (symbolsPaths_.size() > 0) {
             kernelModuleFile->setSymbolsFilePath(symbolsPaths_); // also load from search path
         }
@@ -232,7 +235,7 @@ void VirtualRuntime::UpdateKernelSymbols()
     HLOGD("create a kernel mmap record");
     // found kernel source
     auto kernelFile = SymbolsFile::CreateSymbolsFile(KERNEL_MMAP_NAME);
-    // set sybol path If it exists
+    // set symbol path If it exists
     if (symbolsPaths_.size() > 0) {
         kernelFile->setSymbolsFilePath(symbolsPaths_); // also load from search path
     }
@@ -259,12 +262,12 @@ void VirtualRuntime::UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offs
     HLOG_ASSERT(!filename.empty());
     auto it = find(kernelSpaceMemMaps_.begin(), kernelSpaceMemMaps_.end(), filename);
     if (it == kernelSpaceMemMaps_.end()) {
-        kernelSpaceMemMaps_.emplace_back(begin, end, offset, filename);
+        kernelSpaceMemMaps_.emplace_back(begin, end, offset, "", filename);
     } else {
-        it->begin_ = begin;
-        it->end_ = end;
-        it->pageoffset_ = offset;
-        it->name_ = filename;
+        it->begin = begin;
+        it->end = end;
+        it->offset = offset;
+        it->name = filename;
     }
 }
 
@@ -277,37 +280,37 @@ void VirtualRuntime::UpdateFromRecord(PerfEventRecord &record)
         auto recordSample = static_cast<PerfRecordSample *>(&record);
         UpdateFromRecord(*recordSample);
 #ifdef HIPERF_DEBUG_TIME
-        prcessSampleRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+        processSampleRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
     } else if (record.GetType() == PERF_RECORD_MMAP) {
         auto recordMmap = static_cast<PerfRecordMmap *>(&record);
         UpdateFromRecord(*recordMmap);
 #ifdef HIPERF_DEBUG_TIME
-        prcessMmapRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+        processMmapRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
     } else if (record.GetType() == PERF_RECORD_MMAP2) {
         auto recordMmap2 = static_cast<PerfRecordMmap2 *>(&record);
         UpdateFromRecord(*recordMmap2);
 #ifdef HIPERF_DEBUG_TIME
-        prcessMmap2RecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+        processMmap2RecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
     } else if (record.GetType() == PERF_RECORD_COMM) {
-        auto recordCommp = static_cast<PerfRecordComm *>(&record);
-        UpdateFromRecord(*recordCommp);
+        auto recordComm = static_cast<PerfRecordComm *>(&record);
+        UpdateFromRecord(*recordComm);
 #ifdef HIPERF_DEBUG_TIME
-        prcessCommRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+        processCommRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
     } else {
         HLOGW("skip record type %d", record.GetType());
     }
 }
 
-void VirtualRuntime::MakeCallFrame(Symbol &symbol, CallFrame &callFrame)
+void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, CallFrame &callFrame)
 {
     callFrame.vaddrInFile_ = symbol.funcVaddr_;
     callFrame.offsetToVaddr_ = symbol.offsetToVaddr_;
     callFrame.symbolFileIndex_ = symbol.symbolFileIndex_;
-    callFrame.symbolName_ = symbol.Name();
+    callFrame.symbolName_ = symbol.GetName();
     callFrame.symbolIndex_ = symbol.index_;
     callFrame.filePath_ = symbol.module_.empty() ? symbol.comm_ : symbol.module_;
     HLOG_ASSERT_MESSAGE(!callFrame.symbolName_.empty(), "%s", symbol.ToDebugString().c_str());
@@ -349,7 +352,7 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
 #ifdef HIPERF_DEBUG_TIME
     auto usedTime = duration_cast<microseconds>(steady_clock::now() - startTime);
     if (usedTime.count() != 0) {
-        HLOGV("cost %0.3f ms to symbolic ", usedTime.count() / MS_DUARTION);
+        HLOGV("cost %0.3f ms to symbolic ", usedTime.count() / MS_DURATION);
     }
     symbolicRecordTimes_ += usedTime;
 #endif
@@ -357,6 +360,7 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
 
 void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 {
+#if defined(is_ohos) && is_ohos
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
@@ -389,6 +393,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
         // find the symbols , reabuild frame info
         SymbolicRecord(recordSample);
     }
+#endif
 }
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
@@ -429,7 +434,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
 {
-    if (!VirtualThread::IsLegalFileName(recordMmap2.data_.filename)) {
+    if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(recordMmap2.data_.filename)) {
         return;
     }
     HLOGV("  MMAP2: size %d pid %u tid %u", recordMmap2.header.size, recordMmap2.data_.pid,
@@ -474,7 +479,7 @@ void VirtualRuntime::UpdateSymbols(std::string fileName)
     // found it by name
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(fileName);
 
-    // set sybol path If it exists
+    // set symbol path If it exists
     if (symbolsPaths_.size() > 0) {
         symbolsFile->setSymbolsFilePath(symbolsPaths_); // also load from search path
     }
@@ -489,42 +494,42 @@ void VirtualRuntime::UpdateSymbols(std::string fileName)
 #ifdef HIPERF_DEBUG_TIME
     auto usedTime = duration_cast<microseconds>(steady_clock::now() - startTime);
     if (usedTime.count() != 0) {
-        HLOGV("cost %0.3f ms to load '%s'", usedTime.count() / MS_DUARTION, fileName.c_str());
+        HLOGV("cost %0.3f ms to load '%s'", usedTime.count() / MS_DURATION, fileName.c_str());
     }
     updateSymbolsTimes_ += usedTime;
 #endif
 }
 
-const Symbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<MemMapItem> &memMaps,
-                                             const VirtualThread &thread)
+const DfxSymbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<DfxMap> &memMaps,
+                                                const VirtualThread &thread)
 {
-    Symbol vaddrSymbol(ip, thread.name_);
+    DfxSymbol vaddrSymbol(ip, thread.name_);
     for (auto &map : memMaps) {
-        if (ip > map.begin_ && ip < map.end_) {
+        if (ip > map.begin && ip < map.end) {
             HLOGM("found addr 0x%" PRIx64 " in kernel map 0x%" PRIx64 " - 0x%" PRIx64 " from %s",
-                  ip, map.begin_, map.end_, map.name_.c_str());
-            vaddrSymbol.module_ = map.name_;
+                  ip, map.begin, map.end, map.name.c_str());
+            vaddrSymbol.module_ = map.name;
             // found symbols by file name
             for (auto &symbolsFile : symbolsFiles_) {
-                if (symbolsFile->filePath_ == map.name_) {
+                if (symbolsFile->filePath_ == map.name) {
                     vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
                     vaddrSymbol.fileVaddr_ =
-                        symbolsFile->GetVaddrInSymbols(ip, map.begin_, map.pageoffset_);
+                        symbolsFile->GetVaddrInSymbols(ip, map.begin, map.offset);
                     perf_callchain_context context = PERF_CONTEXT_KERNEL;
                     if (GetSymbolCache(ip, vaddrSymbol, context)) {
                         return vaddrSymbol;
                     }
                     HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64
                           " at '%s'",
-                          vaddrSymbol.fileVaddr_, ip, map.name_.c_str());
+                          vaddrSymbol.fileVaddr_, ip, map.name.c_str());
                     if (!symbolsFile->SymbolsLoaded()) {
                         symbolsFile->LoadSymbols();
                     }
-                    Symbol foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+                    DfxSymbol foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
                     foundSymbols.taskVaddr_ = ip;
-                    if (!foundSymbols.isValid()) {
+                    if (!foundSymbols.IsValid()) {
                         HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s",
-                              ip, vaddrSymbol.fileVaddr_, map.name_.c_str());
+                              ip, vaddrSymbol.fileVaddr_, map.name.c_str());
                         return vaddrSymbol;
                     } else {
                         return foundSymbols;
@@ -532,48 +537,48 @@ const Symbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<MemM
                 }
             }
             HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip,
-                  map.name_.c_str());
+                  map.name.c_str());
         } else {
             HLOGM("addr 0x%" PRIx64 " not in map 0x%" PRIx64 " - 0x%" PRIx64 " from %s", ip,
-                  map.begin_, map.end_, map.name_.c_str());
+                  map.begin, map.end, map.name.c_str());
         }
     }
     return vaddrSymbol;
 }
 
-const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thread)
+const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thread)
 {
-    Symbol vaddrSymbol(ip, thread.name_);
-    int64_t memMapIndex = thread.FindMapIndexByAddr(ip);
-    if (memMapIndex >= 0) {
-        const MemMapItem *mmap = &(thread.GetMaps()[memMapIndex]);
-        SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(*mmap);
+    DfxSymbol vaddrSymbol(ip, thread.name_);
+    int64_t mapIndex = thread.FindMapIndexByAddr(ip);
+    if (mapIndex >= 0) {
+        auto map = thread.GetMaps()[mapIndex];
+        SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(map);
         if (symbolsFile != nullptr) {
             vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
-            vaddrSymbol.module_ = mmap->nameHold_;
+            vaddrSymbol.module_ = map->name;
             vaddrSymbol.fileVaddr_ =
-                symbolsFile->GetVaddrInSymbols(ip, mmap->begin_, mmap->pageoffset_);
+                symbolsFile->GetVaddrInSymbols(ip, map->begin, map->offset);
             perf_callchain_context context = PERF_CONTEXT_USER;
             if (GetSymbolCache(ip, vaddrSymbol, context)) {
                 return vaddrSymbol;
             }
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
-                  vaddrSymbol.fileVaddr_, ip, mmap->name_.c_str());
+                  vaddrSymbol.fileVaddr_, ip, map->name.c_str());
             if (!symbolsFile->SymbolsLoaded()) {
                 symbolsFile->LoadSymbols();
             }
-            Symbol foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            auto foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
             foundSymbols.taskVaddr_ = ip;
-            if (!foundSymbols.isValid()) {
+            if (!foundSymbols.IsValid()) {
                 HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s", ip,
-                      vaddrSymbol.fileVaddr_, mmap->name_.c_str());
+                      vaddrSymbol.fileVaddr_, map->name.c_str());
                 return vaddrSymbol;
             } else {
                 return foundSymbols;
             }
         } else {
             HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip,
-                  mmap->name_.c_str());
+                  map->name.c_str());
         }
     } else {
 #ifdef HIPERF_DEBUG
@@ -583,7 +588,7 @@ const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thr
     return vaddrSymbol;
 }
 
-bool VirtualRuntime::GetSymbolCache(uint64_t ip, Symbol &symbol,
+bool VirtualRuntime::GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
                                     const perf_callchain_context &context)
 {
     if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(ip)) {
@@ -595,7 +600,7 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, Symbol &symbol,
         HLOGV("hit kernel cache 0x%" PRIx64 " %d", ip, symbol.hit_);
         return true;
     } else if (userSymbolCache_.count(symbol.fileVaddr_) != 0) {
-        Symbol &cachedSymbol = userSymbolCache_[symbol.fileVaddr_];
+        DfxSymbol &cachedSymbol = userSymbolCache_[symbol.fileVaddr_];
         // must be the same file
         if (cachedSymbol.module_ != symbol.module_) {
             return false;
@@ -611,13 +616,12 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, Symbol &symbol,
     return false;
 }
 
-const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
-                                       const perf_callchain_context &context)
+DfxSymbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid, const perf_callchain_context &context)
 {
-    HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles", tid, ip, symbolsFiles_.size());
-    Symbol symbol;
+    HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles\n", tid, ip, symbolsFiles_.size());
+    DfxSymbol symbol;
 
-    if (context == PERF_CONTEXT_USER or (context == PERF_CONTEXT_MAX and !symbol.isValid())) {
+    if (context == PERF_CONTEXT_USER or (context == PERF_CONTEXT_MAX and !symbol.IsValid())) {
         // check userspace memmap
         symbol = GetUserSymbol(ip, GetThread(pid, tid));
         if (userSymbolCache_.find(symbol.fileVaddr_) == userSymbolCache_.end()) {
@@ -628,7 +632,7 @@ const Symbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
               userSymbolCache_[symbol.fileVaddr_].ToDebugString().c_str());
     }
 
-    if (context == PERF_CONTEXT_KERNEL or (context == PERF_CONTEXT_MAX and !symbol.isValid())) {
+    if (context == PERF_CONTEXT_KERNEL or (context == PERF_CONTEXT_MAX and !symbol.IsValid())) {
         // check kernelspace
         HLOGM("try found addr in kernelspace %zu maps", kernelSpaceMemMaps_.size());
         symbol = GetKernelSymbol(ip, kernelSpaceMemMaps_, GetThread(pid, tid));
@@ -666,8 +670,7 @@ void VirtualRuntime::UpdateFromPerfData(const std::vector<SymbolFileStruct> &sym
               symbolFileStruct.buildId_.c_str());
 
         // load from symbolFileStruct (perf.data)
-        std::unique_ptr<SymbolsFile> symbolsFile =
-            SymbolsFile::LoadSymbolsFromSaved(symbolFileStruct);
+        std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::LoadSymbolsFromSaved(symbolFileStruct);
 
         // reaload from sybol path If it exists
         if (symbolsPaths_.size() > 0) {
@@ -716,9 +719,9 @@ void VirtualRuntime::LoadVdso()
     VirtualThread myThread(getpid(), symbolsFiles_);
     myThread.ParseMap();
     for (const auto &map : myThread.GetMaps()) {
-        if (map.name_ == MMAP_VDSO_NAME) {
-            std::string memory(map.end_ - map.begin_, '\0');
-            std::copy(reinterpret_cast<char *>((map.begin_)), reinterpret_cast<char *>((map.end_)),
+        if (map->name == MMAP_VDSO_NAME) {
+            std::string memory(map->end - map->begin, '\0');
+            std::copy(reinterpret_cast<char *>((map->begin)), reinterpret_cast<char *>((map->end)),
                       &memory[0]);
             std::string tempPath("/data/local/tmp/");
             std::string tempFileName = tempPath + MMAP_VDSO_NAME;

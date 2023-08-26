@@ -87,18 +87,18 @@ void Report::AddReportItemBranch(const PerfRecordSample &sample)
     HLOG_ASSERT(configs_.size() > configIndex);
     VirtualThread &thread = virtualRuntime_.GetThread(sample.data_.pid, sample.data_.tid);
     for (u64 i = 0; i < sample.data_.bnr; i++) {
-        Symbol symbol_to =
+        DfxSymbol symbol_to =
             virtualRuntime_.GetSymbol(sample.data_.lbr[i].to, sample.data_.pid, sample.data_.tid);
-        Symbol symbol_from =
+        DfxSymbol symbol_from =
             virtualRuntime_.GetSymbol(sample.data_.lbr[i].from, sample.data_.pid, sample.data_.tid);
 
         // branch only have 1 time only for period
         ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-            sample.data_.pid, sample.data_.tid, thread.name_, symbol_to.module_, symbol_to.Name(),
+            sample.data_.pid, sample.data_.tid, thread.name_, symbol_to.module_, symbol_to.GetName(),
             symbol_to.funcVaddr_, 1u);
 
         item.fromDso_ = symbol_from.module_;
-        item.fromFunc_ = symbol_from.Name();
+        item.fromFunc_ = symbol_from.GetName();
 
         HLOGV("%s 0x%" PRIx64 "", item.ToDebugString().c_str(), symbol_to.taskVaddr_);
     }

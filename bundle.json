@@ -25,6 +25,8 @@
         "ipc",
         "c_utils",
         "bundle_framework",
+        "faultloggerd",
+        "hitrace",
         "init"
       ],
       "third_party": [

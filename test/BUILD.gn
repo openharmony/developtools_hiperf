@@ -26,7 +26,6 @@ sources_base = [
   "unittest/common/native/perf_file_writer_test.cpp",
   "unittest/common/native/subcommand_test.cpp",
   "unittest/common/native/utilities_test.cpp",
-  "unittest/common/native/elf_parser_test.cpp",
   "unittest/common/native/register_test.cpp",
   "unittest/common/native/option_test.cpp",
   "unittest/common/native/perf_file_reader_test.cpp",
@@ -94,7 +93,10 @@ ohos_unittest("hiperf_unittest") {
   module_out_path = module_output_path
   resource_config_file = "unittest/resource/ohos_test.xml"
   deps = common_deps
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "faultloggerd:libunwinder_static",
+    "hilog:libhilog",
+  ]
   cflags = [
     "-Dprivate=public",  #allow test code access private members
   ]
@@ -124,7 +126,11 @@ ohos_fuzztest("CommandLineFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "faultloggerd:libunwinder",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [
     "${hiperf_path}/src/main.cpp",
@@ -161,21 +167,12 @@ ohos_fuzztest("PerfFileFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "faultloggerd:libunwinder",
+    "hilog:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/perffile_fuzzer/PerfFile_fuzzer.cpp" ]
-}
-
-ohos_fuzztest("ElfParserFuzzTest") {
-  module_out_path = hiperf_fuzz_test_output_path
-  fuzz_config_file = "${hiperf_path}/test/fuzztest/elfparser_fuzzer"
-  resource_config_file = "fuzztest/resource/ohos_test.xml"
-  configs = [ ":hiperf_test_config" ]
-  cflags = fuzz_cflags
-  deps = fuzz_deps
-  external_deps = [ "hilog:libhilog" ]
-  defines = [ "FUZZER_TEST" ]
-  sources = [ "fuzztest/elfparser_fuzzer/ElfParser_fuzzer.cpp" ]
 }
 
 group("hiperf_fuzztest") {
@@ -183,7 +180,6 @@ group("hiperf_fuzztest") {
   deps = [
     ":ClientApiFuzzTest",
     ":CommandLineFuzzTest",
-    ":ElfParserFuzzTest",
     ":LibReportFuzzTest",
     ":PerfFileFuzzTest",
   ]

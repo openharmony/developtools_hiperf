@@ -32,6 +32,7 @@ void ReportJsonFile::addNewFunction(int libId, std::string_view name)
     functionList_.emplace_back(functionKey(libId, name));
     functionMap_.emplace(functionMap_.size(), ReportFuncMapItem(libId, name));
 }
+
 void ReportJsonFile::ProcessSymbolsFiles(
     const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
 {
@@ -42,7 +43,7 @@ void ReportJsonFile::ProcessSymbolsFiles(
         const auto &symbols = symbolsFileIt->get()->GetSymbols();
         auto symbolIt = symbols.begin();
         while (symbolIt != symbols.end()) {
-            addNewFunction(libId, symbolIt->Name());
+            addNewFunction(libId, symbolIt->GetName());
             symbolIt++;
         }
         symbolsFileIt++;
@@ -74,7 +75,7 @@ ReportConfigItem &ReportJsonFile::GetConfig(uint64_t id)
     return reportConfigItems_.begin()->second;
 }
 
-int ReportJsonFile::GetFuncionID(int libId, std::string_view function)
+int ReportJsonFile::GetFunctionID(int libId, std::string_view function)
 {
     auto it = find(functionList_.begin(), functionList_.end(), functionKey(libId, function));
     if (it != functionList_.end()) {
@@ -109,7 +110,7 @@ void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem 
     while (it != frames.end()) {
         int libId = GetLibID(it->filePath_);
         if (libId >= 0) {
-            int funcId = GetFuncionID(libId, it->symbolName_);
+            int funcId = GetFunctionID(libId, it->symbolName_);
             // new children funid
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
@@ -141,7 +142,7 @@ void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNo
     while (it != frames.rend()) {
         int libId = GetLibID(it->filePath_);
         if (libId >= 0) {
-            int funcId = GetFuncionID(libId, it->symbolName_);
+            int funcId = GetFunctionID(libId, it->symbolName_);
             // new children funid
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
@@ -207,7 +208,7 @@ void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, ui
         }
         ReportLibItem &lib = thread.libs_[libId];
         lib.libId_ = libId;
-        int funcId = GetFuncionID(libId, it->symbolName_);
+        int funcId = GetFunctionID(libId, it->symbolName_);
         // we will always have a funId, it will create a new one if not found
         // so that we can see abc+0x123 in the html
         HLOG_ASSERT(funcId >= 0);

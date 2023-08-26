@@ -48,8 +48,9 @@ public:
 
     void TestEvents(std::string &opt, std::string &uk);
 
-    static void TestRecordCommand(const std::string &option, bool expect = true,
-                                  bool fixPid = true);
+    static void ForkAndRunTest(const std::string& cmd, bool expect = true, bool fixPid = true);
+
+    static void TestRecordCommand(const std::string &option, bool expect, bool fixPid);
 
     size_t GetFileSize(const char* fileName);
 
@@ -100,6 +101,23 @@ void SubCommandRecordTest::TearDown()
     MemoryHold::Get().Clean();
 }
 
+void SubCommandRecordTest::ForkAndRunTest(const std::string& cmd, bool expect, bool fixPid)
+{
+    pid_t pid = fork();
+    if (pid < 0) {
+        FAIL() << "Fork test process failed";
+        return;
+    }
+    if (pid == 0) {
+        TestRecordCommand(cmd, expect, fixPid);
+        _exit(0);
+    }
+    int status;
+    int ret = wait(&status);
+    GTEST_LOG_(INFO) << "Status:" << status << " Result:" << ret;
+    ASSERT_EQ(status, 0);
+}
+
 void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool expect, bool fixPid)
 {
     StdoutRecord stdoutRecord;
@@ -138,12 +156,12 @@ size_t SubCommandRecordTest::GetFileSize(const char* fileName)
 // app package name
 HWTEST_F(SubCommandRecordTest, PackageName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2  --app com.ohos.launcher ", true, false);
+    ForkAndRunTest("-d 2  --app com.ohos.launcher ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2  --app package_name ", false, false);
+    ForkAndRunTest("-d 2  --app package_name ", false, false);
 }
 
 // check app milliseconds
@@ -155,7 +173,7 @@ HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, CheckAppMsMin, TestSize.Level1)
 {
-    TestRecordCommand("-d 0.5 --chkms 1 ");
+    ForkAndRunTest("-d 0.5 --chkms 1 ");
 }
 
 /**
@@ -166,7 +184,7 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMin, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, CheckAppMsMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 0.5 --chkms 0 ", false);
+    ForkAndRunTest("-d 0.5 --chkms 0 ", false);
 }
 
 /**
@@ -177,7 +195,7 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMinErr, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, CheckAppMsMax, TestSize.Level1)
 {
-    TestRecordCommand("-d 0.5 --chkms 200 ");
+    ForkAndRunTest("-d 0.5 --chkms 200 ");
 }
 
 /**
@@ -188,7 +206,7 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMax, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, CheckAppMsMaxErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 0.5 --chkms 201 ", false);
+    ForkAndRunTest("-d 0.5 --chkms 201 ", false);
 }
 
 /**
@@ -199,71 +217,71 @@ HWTEST_F(SubCommandRecordTest, CheckAppMsMaxErr, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, CheckAppMsInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 0.5 --chkms abc ", false);
+    ForkAndRunTest("-d 0.5 --chkms abc ", false);
 }
 // stop seconds
 HWTEST_F(SubCommandRecordTest, StopSecondsMin, TestSize.Level1)
 {
-    TestRecordCommand("-d 0.1 ");
+    ForkAndRunTest("-d 0.1 ");
 }
 
 HWTEST_F(SubCommandRecordTest, StopSecondsMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 0.099 ", false);
+    ForkAndRunTest("-d 0.099 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, StopSecondsMax, TestSize.Level1)
 {
     std::string opt = "-d 10000.0 ";
     opt += " ls "; // because UT don't need wait so long
-    TestRecordCommand(opt, true, false);
+    ForkAndRunTest(opt, true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, StopSecondsMaxErr, TestSize.Level1)
 {
     std::string opt = "-d 10000.1 ";
     opt += " ";
-    TestRecordCommand(opt, false);
+    ForkAndRunTest(opt, false);
 }
 
 // system wide
 HWTEST_F(SubCommandRecordTest, SystemWide, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -a ", true, false);
+    ForkAndRunTest("-d 2 -a ", true, false);
 }
 
 // trackedCommand_
 HWTEST_F(SubCommandRecordTest, TrackedCommandErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -a aa ", false, false);
+    ForkAndRunTest("-d 2 -a aa ", false, false);
 }
 
 // --app and -p
 HWTEST_F(SubCommandRecordTest, HasTargetErr, TestSize.Level1)
 {
-    TestRecordCommand("--app test -p 123 -d 3 ", false, false);
+    ForkAndRunTest("--app test -p 123 -d 3 ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, HasTargetErr1, TestSize.Level1)
 {
-    TestRecordCommand("-d 3 ", false, false);
+    ForkAndRunTest("-d 3 ", false, false);
 }
 
 // exclude hiperf
 HWTEST_F(SubCommandRecordTest, ExcludePerf, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -a --exclude-hiperf ", true, false);
+    ForkAndRunTest("-d 2 -a --exclude-hiperf ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, ExcludePerfErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --exclude-hiperf ", false, true);
+    ForkAndRunTest("-d 2 --exclude-hiperf ", false, true);
 }
 
 // select cpu
 HWTEST_F(SubCommandRecordTest, SelectCpu, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -c 0 ");
+    ForkAndRunTest("-d 2 -c 0 ");
 }
 
 HWTEST_F(SubCommandRecordTest, SelectCpuMulti, TestSize.Level1)
@@ -276,12 +294,12 @@ HWTEST_F(SubCommandRecordTest, SelectCpuMulti, TestSize.Level1)
     }
     opt.pop_back();
     opt += " ";
-    TestRecordCommand(opt);
+    ForkAndRunTest(opt);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectCpuMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -c -1 ", false);
+    ForkAndRunTest("-d 2 -c -1 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectCpuMaxErr, TestSize.Level1)
@@ -290,81 +308,81 @@ HWTEST_F(SubCommandRecordTest, SelectCpuMaxErr, TestSize.Level1)
     std::string opt = "-d 2 -c ";
     opt += std::to_string(maxCpuid);
     opt += " ";
-    TestRecordCommand(opt, false);
+    ForkAndRunTest(opt, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectCpuInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -c abc ", false);
+    ForkAndRunTest("-d 2 -c abc ", false);
 }
 
 // --control
 HWTEST_F(SubCommandRecordTest, CheckControlErr, TestSize.Level1)
 {
-    TestRecordCommand("-a --control st", false, false);
+    ForkAndRunTest("-a --control st", false, false);
 }
 
 // cpu percent
 HWTEST_F(SubCommandRecordTest, CpuLimitMin, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --cpu-limit 1 ");
+    ForkAndRunTest("-d 2 --cpu-limit 1 ");
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --cpu-limit 0 ", false);
+    ForkAndRunTest("-d 2 --cpu-limit 0 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitMax, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --cpu-limit 100 ");
+    ForkAndRunTest("-d 2 --cpu-limit 100 ");
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitMaxErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --cpu-limit 101 ", false);
+    ForkAndRunTest("-d 2 --cpu-limit 101 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --cpu-limit abc ", false);
+    ForkAndRunTest("-d 2 --cpu-limit abc ", false);
 }
 
 // frequency
 HWTEST_F(SubCommandRecordTest, FrequncyMin, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 1 ");
+    ForkAndRunTest("-d 2 -f 1 ");
 }
 
 HWTEST_F(SubCommandRecordTest, FrequncyMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 0 ", false);
+    ForkAndRunTest("-d 2 -f 0 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, FrequncyMax, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 100000 ");
+    ForkAndRunTest("-d 2 -f 100000 ");
 }
 
 HWTEST_F(SubCommandRecordTest, FrequncyMaxErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 100001 ", false);
+    ForkAndRunTest("-d 2 -f 100001 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, FrequncyInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f abc ", false);
+    ForkAndRunTest("-d 2 -f abc ", false);
 }
 
 // period
 HWTEST_F(SubCommandRecordTest, PeriodMin, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --period 1 ");
+    ForkAndRunTest("-d 2 --period 1 ");
 }
 
 HWTEST_F(SubCommandRecordTest, PeriodMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --period 0 ", false);
+    ForkAndRunTest("-d 2 --period 0 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, PeriodMax, TestSize.Level1)
@@ -372,7 +390,7 @@ HWTEST_F(SubCommandRecordTest, PeriodMax, TestSize.Level1)
     std::string opt = "-d 2 --period ";
     opt += std::to_string(INT_MAX);
     opt += " ";
-    TestRecordCommand(opt);
+    ForkAndRunTest(opt);
 }
 
 HWTEST_F(SubCommandRecordTest, PeriodMaxErr, TestSize.Level1)
@@ -381,17 +399,17 @@ HWTEST_F(SubCommandRecordTest, PeriodMaxErr, TestSize.Level1)
     uint32_t value = static_cast<uint32_t>(INT_MAX) + 1;
     opt += std::to_string(value);
     opt += " ";
-    TestRecordCommand(opt, false);
+    ForkAndRunTest(opt, false);
 }
 
 HWTEST_F(SubCommandRecordTest, PeriodInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --period abc ", false);
+    ForkAndRunTest("-d 2 --period abc ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, PeriodAndFrequncyConflict, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -f 2000 --period 10 ", false);
+    ForkAndRunTest("-d 2 -f 2000 --period 10 ", false);
 }
 
 void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk)
@@ -416,7 +434,7 @@ void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk)
             testEventCount--;
         }
         cmdline.pop_back(); // remove the last ','
-        TestRecordCommand(cmdline);
+        ForkAndRunTest(cmdline);
         TearDown();
         SetUp();
     }
@@ -446,7 +464,7 @@ HWTEST_F(SubCommandRecordTest, SelectEventsKernel, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, SelectEventsErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -c 0 -e what ", false);
+    ForkAndRunTest("-d 2 -c 0 -e what ", false);
 }
 
 // select group events
@@ -473,363 +491,363 @@ HWTEST_F(SubCommandRecordTest, GroupEventsKernal, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, GroupEventsErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -c 0 -g what ", false);
+    ForkAndRunTest("-d 2 -c 0 -g what ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, NoInherit, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --no-inherit ");
+    ForkAndRunTest("-d 2 --no-inherit ");
 }
 
 // select pid
 HWTEST_F(SubCommandRecordTest, SelectPid, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -p 1 ", true, false);
+    ForkAndRunTest("-d 2 -p 1 ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidMulti, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -p 1,2,3 ", true, false);
+    ForkAndRunTest("-d 2 -p 1,2,3 ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -p 0 ", false, false);
+    ForkAndRunTest("-d 2 -p 0 ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidMinErr1, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -p -1 ", false, false);
+    ForkAndRunTest("-d 2 -p -1 ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -p 99999999 ", false, false);
+    ForkAndRunTest("-d 2 -p 99999999 ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -p abc ", false, false);
+    ForkAndRunTest("-d 2 -p abc ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidInputConfict, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -a -p 1 ", false, false);
+    ForkAndRunTest("-d 2 -a -p 1 ", false, false);
 }
 
 // select tid
 HWTEST_F(SubCommandRecordTest, SelectTid, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -t 1 ", true, false);
+    ForkAndRunTest("-d 2 -t 1 ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectTidMulti, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -t 1,2,3 ", true, false);
+    ForkAndRunTest("-d 2 -t 1,2,3 ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectTidMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -t 0 ", false, false);
+    ForkAndRunTest("-d 2 -t 0 ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectTidErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -t 99999999 ", false, false);
+    ForkAndRunTest("-d 2 -t 99999999 ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectTidInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -t abc ", false, false);
+    ForkAndRunTest("-d 2 -t abc ", false, false);
 }
 
 // cpu off
 HWTEST_F(SubCommandRecordTest, CpuOff, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --offcpu ");
+    ForkAndRunTest("-d 2 --offcpu ");
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterAny, TestSize.Level1)
 {
 #if is_ohos
-    TestRecordCommand("-d 2 -j any ", false); // broad doesn't support
+    ForkAndRunTest("-d 2 -j any ", false); // broad doesn't support
 #else
-    TestRecordCommand("-d 2 -j any ");
+    ForkAndRunTest("-d 2 -j any ");
 #endif
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterAnyCall, TestSize.Level1)
 {
 #if is_ohos
-    TestRecordCommand("-d 2 -j any_call ", false); // broad doesn't support
+    ForkAndRunTest("-d 2 -j any_call ", false); // broad doesn't support
 #else
-    TestRecordCommand("-d 2 -j any_call ");
+    ForkAndRunTest("-d 2 -j any_call ");
 #endif
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterIndCall, TestSize.Level1)
 {
 #if is_ohos
-    TestRecordCommand("-d 2 -j ind_call ", false); // broad doesn't support
+    ForkAndRunTest("-d 2 -j ind_call ", false); // broad doesn't support
 #else
-    TestRecordCommand("-d 2 -j ind_call ");
+    ForkAndRunTest("-d 2 -j ind_call ");
 #endif
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterAnyRet, TestSize.Level1)
 {
 #if is_ohos
-    TestRecordCommand("-d 2 -j any_ret ", false); // broad doesn't support
+    ForkAndRunTest("-d 2 -j any_ret ", false); // broad doesn't support
 #else
-    TestRecordCommand("-d 2 -j any_ret ");
+    ForkAndRunTest("-d 2 -j any_ret ");
 #endif
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterOnlyCall, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -j call ", false);
+    ForkAndRunTest("-d 2 -j call ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterAll, TestSize.Level1)
 {
 #if is_ohos
-    TestRecordCommand("-d 2 -j any,any_call,any_ret,ind_call,u,k ", false); // broad doesn't support
+    ForkAndRunTest("-d 2 -j any,any_call,any_ret,ind_call,u,k ", false); // broad doesn't support
 #else
-    TestRecordCommand("-d 2 -j any,any_call,any_ret,ind_call,u,k ");
+    ForkAndRunTest("-d 2 -j any,any_call,any_ret,ind_call,u,k ");
 #endif
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -j what ", false);
+    ForkAndRunTest("-d 2 -j what ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterInputMoreErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -j any,n ", false);
+    ForkAndRunTest("-d 2 -j any,n ", false);
 }
 
 // call stack
 HWTEST_F(SubCommandRecordTest, CallStackFp, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack fp ");
+    ForkAndRunTest("-d 2 --call-stack fp ");
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s fp ");
+    ForkAndRunTest("-d 2 -s fp ");
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackFpInputMoreErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack fp,abc ", false);
+    ForkAndRunTest("-d 2 --call-stack fp,abc ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s fp,abc ", false);
+    ForkAndRunTest("-d 2 -s fp,abc ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack what ", false);
+    ForkAndRunTest("-d 2 --call-stack what ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s what ", false);
+    ForkAndRunTest("-d 2 -s what ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeMin, TestSize.Level1)
 {
     // it will cause some crash in -fprofile-arcs and -ftest-coverage
     // we will fix it latter
-    TestRecordCommand("-d 2 --call-stack dwarf,8 ");
+    ForkAndRunTest("-d 2 --call-stack dwarf,8 ");
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s dwarf,8 ");
+    ForkAndRunTest("-d 2 -s dwarf,8 ");
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack dwarf,7 ", false);
+    ForkAndRunTest("-d 2 --call-stack dwarf,7 ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s dwarf,7 ", false);
+    ForkAndRunTest("-d 2 -s dwarf,7 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeMax, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack dwarf,65528 ");
+    ForkAndRunTest("-d 2 --call-stack dwarf,65528 ");
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s dwarf,65528 ");
+    ForkAndRunTest("-d 2 -s dwarf,65528 ");
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeMaxErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack dwarf,65529 ", false);
+    ForkAndRunTest("-d 2 --call-stack dwarf,65529 ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s dwarf,65529 ", false);
+    ForkAndRunTest("-d 2 -s dwarf,65529 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack dwarf,15 ", false);
+    ForkAndRunTest("-d 2 --call-stack dwarf,15 ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s dwarf,15 ", false);
+    ForkAndRunTest("-d 2 -s dwarf,15 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack dwarf,abc ", false);
+    ForkAndRunTest("-d 2 --call-stack dwarf,abc ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s dwarf,abc ", false);
+    ForkAndRunTest("-d 2 -s dwarf,abc ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackDwarfSizeInputMoreErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --call-stack dwarf,16,32 ", false);
+    ForkAndRunTest("-d 2 --call-stack dwarf,16,32 ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 -s dwarf,16,32 ", false);
+    ForkAndRunTest("-d 2 -s dwarf,16,32 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, CallStackUsageErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -s abc --call-stack bcd", false);
+    ForkAndRunTest("-d 2 -s abc --call-stack bcd", false);
 }
 
 // unwind
 HWTEST_F(SubCommandRecordTest, DlayUnwind, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -s dwarf,16 --delay-unwind ");
+    ForkAndRunTest("-d 2 -s dwarf,16 --delay-unwind ");
 }
 
 HWTEST_F(SubCommandRecordTest, DisableUnwind, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -s dwarf,16 --disable-unwind ");
+    ForkAndRunTest("-d 2 -s dwarf,16 --disable-unwind ");
 }
 
 HWTEST_F(SubCommandRecordTest, DisableCallstackMerge, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -s dwarf,16 --disable-callstack-expand ");
+    ForkAndRunTest("-d 2 -s dwarf,16 --disable-callstack-expand ");
 }
 
 // symbol dir
 HWTEST_F(SubCommandRecordTest, SymbolDir, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --symbol-dir ./ ");
+    ForkAndRunTest("-d 2 --symbol-dir ./ ");
 }
 
 HWTEST_F(SubCommandRecordTest, SymbolDirErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --symbol-dir where ", false);
+    ForkAndRunTest("-d 2 --symbol-dir where ", false);
 }
 
 // clock id
 HWTEST_F(SubCommandRecordTest, ClockIdMonotonic, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --clockid monotonic ");
+    ForkAndRunTest("-d 2 --clockid monotonic ");
 }
 
 HWTEST_F(SubCommandRecordTest, ClockIdMonotonicRaw, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --clockid monotonic_raw ");
+    ForkAndRunTest("-d 2 --clockid monotonic_raw ");
 }
 
 HWTEST_F(SubCommandRecordTest, ClockIdBoottime, TestSize.Level1)
 {
-    TestRecordCommand("-c 0 -d 2 -e sw-task-clock --clockid boottime ");
+    ForkAndRunTest("-c 0 -d 2 -e sw-task-clock --clockid boottime ");
 }
 
 HWTEST_F(SubCommandRecordTest, ClockIdRealtime, TestSize.Level1)
 {
-    TestRecordCommand("-c 0 -d 2 -e sw-task-clock --clockid realtime ");
+    ForkAndRunTest("-c 0 -d 2 -e sw-task-clock --clockid realtime ");
 }
 
 HWTEST_F(SubCommandRecordTest, ClockIdClockTai, TestSize.Level1)
 {
-    TestRecordCommand("-c 0 -d 2 -e sw-task-clock --clockid clock_tai ");
+    ForkAndRunTest("-c 0 -d 2 -e sw-task-clock --clockid clock_tai ");
 }
 
 HWTEST_F(SubCommandRecordTest, ClockIdInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-c 0 -d 2 --clockid what ", false);
+    ForkAndRunTest("-c 0 -d 2 --clockid what ", false);
 }
 
 // mmap pages
 HWTEST_F(SubCommandRecordTest, MmapPagesPower2Err, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -m 101 ", false);
+    ForkAndRunTest("-d 2 -m 101 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, MmapPagesMin, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -m 2 ");
+    ForkAndRunTest("-d 2 -m 2 ");
 }
 
 HWTEST_F(SubCommandRecordTest, MmapPagesMinErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -m 1 ", false);
+    ForkAndRunTest("-d 2 -m 1 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, MmapPagesMax, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -m 1024 ");
+    ForkAndRunTest("-d 2 -m 1024 ");
 }
 
 HWTEST_F(SubCommandRecordTest, MmapPagesMaxErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -m 1025 ", false);
+    ForkAndRunTest("-d 2 -m 1025 ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, MmapPagesInputErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -m abc ", false);
+    ForkAndRunTest("-d 2 -m abc ", false);
 }
 
 // output file name
 HWTEST_F(SubCommandRecordTest, OutputFileName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -o /data/local/tmp/output.perf.data ");
+    ForkAndRunTest("-d 2 -o /data/local/tmp/output.perf.data ");
 }
 
 HWTEST_F(SubCommandRecordTest, OutputFileNameErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -o nopath/output.perf.data ", false);
+    ForkAndRunTest("-d 2 -o nopath/output.perf.data ", false);
 }
 
 // data size limit
 HWTEST_F(SubCommandRecordTest, DataLimit, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --data-limit 1K ");
+    ForkAndRunTest("-d 2 --data-limit 1K ");
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 --data-limit 1M ");
+    ForkAndRunTest("-d 2 --data-limit 1M ");
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 --data-limit 1G ");
+    ForkAndRunTest("-d 2 --data-limit 1G ");
 }
 
 HWTEST_F(SubCommandRecordTest, DataLimit1, TestSize.Level1)
 {
-    TestRecordCommand("-a --data-limit 1K ", true, false);
+    ForkAndRunTest("-a --data-limit 1K ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, DataLimitErr, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --data-limit 10A ", false);
+    ForkAndRunTest("-d 2 --data-limit 10A ", false);
     TearDown();
     SetUp();
-    TestRecordCommand("-d 2 --data-limit 0G ", false);
+    ForkAndRunTest("-d 2 --data-limit 0G ", false);
 }
 
 HWTEST_F(SubCommandRecordTest, RecordCompress, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 -z ");
+    ForkAndRunTest("-d 2 -z ");
 }
 
 HWTEST_F(SubCommandRecordTest, Verbose, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --verbose ");
+    ForkAndRunTest("-d 2 --verbose ");
 }
 
 HWTEST_F(SubCommandRecordTest, DumpOptions, TestSize.Level1)
@@ -850,7 +868,7 @@ HWTEST_F(SubCommandRecordTest, DumpOptions, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 100 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -a -f 100 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_SYSTEM);
@@ -863,7 +881,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_SYSTEM, TestSize.Lev
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 500 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -a -f 500 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_SYSTEM);
@@ -876,7 +894,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_SYSTEM, TestSize.Lev
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 1000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -a -f 1000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_SYSTEM);
@@ -889,7 +907,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_SYSTEM, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 2000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -a -f 2000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_SYSTEM);
@@ -902,7 +920,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_SYSTEM, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 4000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -a -f 4000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_SYSTEM);
@@ -915,7 +933,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_SYSTEM, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 8000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -a -f 8000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_SYSTEM);
@@ -928,7 +946,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_SYSTEM, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 100 -s fp", true, false);
+    ForkAndRunTest("-d 10 -a -f 100 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F100_FP_SYSTEM);
@@ -941,7 +959,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_SYSTEM, TestSize.Level1
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 500 -s fp", true, false);
+    ForkAndRunTest("-d 10 -a -f 500 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F500_FP_SYSTEM);
@@ -954,7 +972,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_SYSTEM, TestSize.Level1
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 1000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -a -f 1000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_SYSTEM);
@@ -967,7 +985,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_SYSTEM, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 2000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -a -f 2000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_SYSTEM);
@@ -980,7 +998,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_SYSTEM, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 4000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -a -f 4000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_SYSTEM);
@@ -993,7 +1011,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_SYSTEM, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_SYSTEM, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 -a -f 8000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -a -f 8000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_SYSTEM);
@@ -1006,7 +1024,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_SYSTEM, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 100 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 100 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_PROCESS);
@@ -1019,7 +1037,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_PROCESS, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 500 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 500 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_PROCESS);
@@ -1032,7 +1050,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 1000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 1000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_PROCESS);
@@ -1045,7 +1063,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 2000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 2000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_PROCESS);
@@ -1058,7 +1076,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 4000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 4000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_PROCESS);
@@ -1071,7 +1089,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 8000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 8000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_PROCESS);
@@ -1084,7 +1102,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 100 -s fp", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 100 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F100_FP_PROCESS);
@@ -1097,7 +1115,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_PROCESS, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 500 -s fp", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 500 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F500_FP_PROCESS);
@@ -1110,7 +1128,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_PROCESS, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 1000 -s fp", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 1000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_PROCESS);
@@ -1123,7 +1141,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 2000 -s fp", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 2000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_PROCESS);
@@ -1136,7 +1154,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 4000 -s fp", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 4000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_PROCESS);
@@ -1149,7 +1167,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Level1)
 {
-    TestRecordCommand("-d 10 --app com.ohos.systemui -f 8000 -s fp", true, false);
+    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 8000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_PROCESS);
@@ -1162,7 +1180,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, ExcludeThreadName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --exclude-thread DfxWatchdog ", true);
+    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog ", true);
 }
 
 /**
@@ -1172,7 +1190,7 @@ HWTEST_F(SubCommandRecordTest, ExcludeThreadName, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeThreadNames, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --exclude-thread DfxWatchdog,GC_WorkerThread ", true);
+    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog,GC_WorkerThread ", true);
 }
 
 /**
@@ -1182,7 +1200,7 @@ HWTEST_F(SubCommandRecordTest, ExcludeThreadNames, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --exclude-thread test ", true);
+    ForkAndRunTest("-d 2 --exclude-thread test ", true);
 }
 
 /**
@@ -1192,7 +1210,7 @@ HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadName, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadNames, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --exclude-thread test1,test2 ", true);
+    ForkAndRunTest("-d 2 --exclude-thread test1,test2 ", true);
 }
 
 /**
@@ -1202,39 +1220,39 @@ HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadNames, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeMixedThreadName, TestSize.Level1)
 {
-    TestRecordCommand("-d 2 --exclude-thread DfxWatchdog,test ", true);
+    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog,test ", true);
 }
 
 // --restart
 HWTEST_F(SubCommandRecordTest, ReStartNotApp1, TestSize.Level1)
 {
-    TestRecordCommand("-p 5 --restart ", false ,false);
+    ForkAndRunTest("-p 5 --restart ", false ,false);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStartNotApp2, TestSize.Level1)
 {
-    TestRecordCommand("-a --restart ", false ,false);
+    ForkAndRunTest("-a --restart ", false ,false);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStartNotApp3, TestSize.Level1)
 {
-    TestRecordCommand("-p 5 -a --restart ", false ,false);
+    ForkAndRunTest("-p 5 -a --restart ", false ,false);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStartConflict, TestSize.Level1)
 {
-    TestRecordCommand("--restart -a ", false ,true);
+    ForkAndRunTest("--restart -a ", false ,true);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStart, TestSize.Level1)
 {
-    TestRecordCommand("--restart ", false ,true);
+    ForkAndRunTest("--restart ", false ,true);
 }
 
 // --exclude-tid
 HWTEST_F(SubCommandRecordTest, ExcludeTidConflict, TestSize.Level1)
 {
-    TestRecordCommand("--exclude-tid 5 --exclude-thread test ", false , true);
+    ForkAndRunTest("--exclude-tid 5 --exclude-thread test ", false , true);
 }
 
 } // namespace HiPerf

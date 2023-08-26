@@ -29,13 +29,15 @@
 #include <linux/types.h>
 
 #include "debug_logger.h"
-#include "mem_map_item.h"
+#include "dfx_map.h"
 #include "perf_record_format.h"
 #include "utilities.h"
 
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+using namespace OHOS::HiviewDFX;
+
 static constexpr uint32_t RECORD_SIZE_LIMIT = 65535;
 
 enum perf_event_hiperf_ext_type {
@@ -188,7 +190,7 @@ public:
     PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff, u32 maj, u32 min,
                     u64 ino, u32 prot, u32 flags, const std::string &filename);
 
-    PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, const MemMapItem &item);
+    PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<DfxMap> item);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     void DumpData(int indent) const override;

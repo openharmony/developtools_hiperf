@@ -18,6 +18,9 @@
 
 #include "command.h"
 #include "debug_logger.h"
+#if defined(is_ohos) && is_ohos
+#include "hitrace_meter.h"
+#endif
 #include "option_debug.h"
 #include "subcommand.h"
 #include "subcommand_help.h"
@@ -39,6 +42,9 @@ using namespace OHOS::Developtools::HiPerf;
 
 int main(const int argc, const char *argv[])
 {
+#if defined(is_ohos) && is_ohos
+    HITRACE_METER_NAME(HITRACE_TAG_OHOS, __PRETTY_FUNCTION__);
+#endif
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 

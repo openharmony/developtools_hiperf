@@ -41,6 +41,7 @@ constexpr const char *PERF_DATA_ERROR_FORMAT_INPUT_PATH =
     "/data/test/resource/testdata/report/perf.data.error.format.libreport";
 constexpr const char *REPORT_OUTPUT_PATH = "./report.txt";
 constexpr const char *REPORT_JSON_OUTPUT_PATH = "./perf.json";
+
 constexpr const char *ILLEGAL_PATH = "/proc/illegal";
 
 constexpr const char *TEST_ELF32 = "/data/test/resource/testdata/report/buildid_test_elf_32";
@@ -131,10 +132,10 @@ void HiperfLibReportTest::UnwindJsonContentCheck(const std::string &content, boo
     ASSERT_EQ(content.front(), '{');
     ASSERT_EQ(content.back(), '}');
 #ifdef __arm__
-    ASSERT_EQ(content.find("{\"symbol\":8,\"counts\":[0,0,1006548]}") != std::string::npos,
+    ASSERT_EQ(content.find("{\"symbol\":6522,\"counts\":[3,548767,2923570]}") != std::string::npos,
               haveUnwind);
 #else
-    ASSERT_EQ(content.find("{\"symbol\":16,\"counts\":[24,9065269,190755171]}") != std::string::npos,
+    ASSERT_EQ(content.find("{\"symbol\":79,\"counts\":[0,0,147027]}") != std::string::npos,
               haveUnwind);
 #endif
 }

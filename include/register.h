@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,16 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef HIPERF_REGISTER_H
 #define HIPERF_REGISTER_H
 
 #include <map>
 #include <linux/perf_event.h>
+
 #include "utilities.h"
+#include "unwind_define.h"
 
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+using namespace OHOS::HiviewDFX;
+
 // these define copy from kernel uapi
 enum perf_event_x86_regs {
     PERF_REG_X86_AX,
@@ -109,14 +114,6 @@ enum perf_event_arm_regs {
     PERF_REG_ARM_MAX,
 };
 
-enum ArchType {
-    X86_32,
-    X86_64,
-    ARM,
-    ARM64,
-    UNSUPPORT,
-};
-
 // order is IP , SP for ut
 static const std::map<size_t, const std::string> PERF_REG_NAME_MAP = {
 #if defined(target_cpu_x86_64)
@@ -143,11 +140,11 @@ static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
 };
 
 #if defined(target_cpu_x86_64)
-constexpr ArchType buildArchType = ArchType::X86_64;
+constexpr ArchType buildArchType = ArchType::ARCH_X86_64;
 #elif defined(target_cpu_arm64)
-constexpr ArchType buildArchType = ArchType::ARM64;
+constexpr ArchType buildArchType = ArchType::ARCH_ARM64;
 #elif defined(target_cpu_arm)
-constexpr ArchType buildArchType = ArchType::ARM;
+constexpr ArchType buildArchType = ArchType::ARCH_ARM;
 #else
 #error NOT SUPPORT ARCH
 #endif

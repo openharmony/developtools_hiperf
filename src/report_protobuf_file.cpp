@@ -190,7 +190,7 @@ bool ReportProtobufFileWriter::ProcessSymbolsFiles(
         message->set_path(symbolsFile->filePath_);
 
         for (auto &symbol : symbolsFile->GetSymbols()) {
-            message->add_function_name(symbol.Name().data());
+            message->add_function_name(symbol.GetName().data());
         }
 
         protpbufCodedOutputStream_->WriteLittleEndian32(record.ByteSizeLong());

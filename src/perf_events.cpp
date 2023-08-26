@@ -494,10 +494,10 @@ void PerfEvents::WaitRecordThread()
     HLOGV("Record Process Completed (wait %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
 #ifdef HIPERF_DEBUG_TIME
     printf("%zu record processed, used %0.3f ms(%4.2f us/record)\n", recordEventCount_,
-           recordCallBackTime_.count() / MS_DUARTION,
+           recordCallBackTime_.count() / MS_DURATION,
            recordCallBackTime_.count() / static_cast<double>(recordEventCount_));
-    printf("total wait sleep time %0.3f ms.\n", recordSleepTime_.count() / MS_DUARTION);
-    printf("read from kernel time %0.3f ms.\n", recordKernelReadTime_.count() / MS_DUARTION);
+    printf("total wait sleep time %0.3f ms.\n", recordSleepTime_.count() / MS_DURATION);
+    printf("read from kernel time %0.3f ms.\n", recordKernelReadTime_.count() / MS_DURATION);
 #endif
 }
 

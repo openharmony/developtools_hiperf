@@ -1551,43 +1551,43 @@ bool SubCommandRecord::FinishWriteRecordFile()
 void SubCommandRecord::ReportTime()
 {
     printf("updateSymbolsTimes: %0.3f ms\n",
-           virtualRuntime_.updateSymbolsTimes_.count() / MS_DUARTION);
-    printf("saveFeatureTimes: %0.3f ms\n", saveFeatureTimes_.count() / MS_DUARTION);
+           virtualRuntime_.updateSymbolsTimes_.count() / MS_DURATION);
+    printf("saveFeatureTimes: %0.3f ms\n", saveFeatureTimes_.count() / MS_DURATION);
 
-    printf("prcessRecordTimes: %0.3f ms\n", prcessRecordTimes_.count() / MS_DUARTION);
+    printf("prcessRecordTimes: %0.3f ms\n", prcessRecordTimes_.count() / MS_DURATION);
     printf("-prcessSampleRecordTimes: %0.3f ms\n",
-           virtualRuntime_.prcessSampleRecordTimes_.count() / MS_DUARTION);
+           virtualRuntime_.processSampleRecordTimes_.count() / MS_DURATION);
     printf("--unwindFromRecordTimes: %0.3f ms\n",
-           virtualRuntime_.unwindFromRecordTimes_.count() / MS_DUARTION);
+           virtualRuntime_.unwindFromRecordTimes_.count() / MS_DURATION);
     printf("-prcessMmapRecordTimes: %0.3f ms\n",
-           virtualRuntime_.prcessMmapRecordTimes_.count() / MS_DUARTION);
+           virtualRuntime_.processMmapRecordTimes_.count() / MS_DURATION);
     printf("-prcessMmap2RecordTimes: %0.3f ms\n",
-           virtualRuntime_.prcessMmap2RecordTimes_.count() / MS_DUARTION);
+           virtualRuntime_.processMmap2RecordTimes_.count() / MS_DURATION);
     printf("-prcessCommRecordTimes: %0.3f ms\n",
-           virtualRuntime_.prcessCommRecordTimes_.count() / MS_DUARTION);
+           virtualRuntime_.processCommRecordTimes_.count() / MS_DURATION);
     printf("-prcessMmap2RecordTimes: %0.3f ms\n",
-           virtualRuntime_.prcessMmap2RecordTimes_.count() / MS_DUARTION);
+           virtualRuntime_.processMmap2RecordTimes_.count() / MS_DURATION);
     printf("--updateThreadTimes: %0.3f ms\n",
-           virtualRuntime_.updateThreadTimes_.count() / MS_DUARTION);
+           virtualRuntime_.updateThreadTimes_.count() / MS_DURATION);
     printf("---threadParseMapsTimes: %0.3f ms\n",
-           virtualRuntime_.threadParseMapsTimes_.count() / MS_DUARTION);
+           virtualRuntime_.threadParseMapsTimes_.count() / MS_DURATION);
     printf("---threadCreateMmapTimes: %0.3f ms\n",
-           virtualRuntime_.threadCreateMmapTimes_.count() / MS_DUARTION);
+           virtualRuntime_.threadCreateMmapTimes_.count() / MS_DURATION);
     printf("--unwindCallStackTimes: %0.3f ms\n",
-           virtualRuntime_.unwindCallStackTimes_.count() / MS_DUARTION);
+           virtualRuntime_.unwindCallStackTimes_.count() / MS_DURATION);
     printf("-symbolicRecordTimes: %0.3f ms\n",
-           virtualRuntime_.symbolicRecordTimes_.count() / MS_DUARTION);
-    printf("saveRecordTimes: %0.3f ms\n", saveRecordTimes_.count() / MS_DUARTION);
-    printf("-writeTimes: %0.3f ms\n", fileWriter_->writeTimes_.count() / MS_DUARTION);
+           virtualRuntime_.symbolicRecordTimes_.count() / MS_DURATION);
+    printf("saveRecordTimes: %0.3f ms\n", saveRecordTimes_.count() / MS_DURATION);
+    printf("-writeTimes: %0.3f ms\n", fileWriter_->writeTimes_.count() / MS_DURATION);
 
-    printf("logTimes: %0.3f ms\n", DebugLogger::GetInstance()->logTimes_.count() / MS_DUARTION);
+    printf("logTimes: %0.3f ms\n", DebugLogger::GetInstance()->logTimes_.count() / MS_DURATION);
     printf("-logSprintfTimes: %0.3f ms\n",
-           DebugLogger::GetInstance()->logSprintfTimes_.count() / MS_DUARTION);
+           DebugLogger::GetInstance()->logSprintfTimes_.count() / MS_DURATION);
     printf("-logWriteTimes: %0.3f ms\n",
-           DebugLogger::GetInstance()->logWriteTimes_.count() / MS_DUARTION);
+           DebugLogger::GetInstance()->logWriteTimes_.count() / MS_DURATION);
     printf("logCount: %zu (%4.2f ms/log)\n", DebugLogger::GetInstance()->logCount_,
            DebugLogger::GetInstance()->logTimes_.count() /
-               static_cast<double>(DebugLogger::GetInstance()->logCount_) / MS_DUARTION);
+               static_cast<double>(DebugLogger::GetInstance()->logCount_) / MS_DURATION);
 }
 #endif
 
@@ -1596,11 +1596,11 @@ bool SubCommandRecord::RecordCompleted()
     if (verboseReport_) {
         printf("Save Record used %0.3f ms.\n",
                duration_cast<microseconds>(steady_clock::now() - startSaveFileTimes_).count() /
-                   MS_DUARTION);
+                   MS_DURATION);
     }
     HLOGV("Save Record used %0.3f ms.\n",
           duration_cast<microseconds>(steady_clock::now() - startSaveFileTimes_).count() /
-              MS_DUARTION);
+              MS_DURATION);
 
     // print brief file info
     double mb = static_cast<double>(fileWriter_->GetDataSize()) / (KILO * KILO);

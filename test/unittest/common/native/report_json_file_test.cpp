@@ -600,11 +600,11 @@ HWTEST_F(ReportJsonFileTest, ProcessSymbolsFiles, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetFuncionID
+ * @tc.name: GetFunctionID
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, GetFuncionID, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, GetFunctionID, TestSize.Level1)
 {
     StdoutRecord output;
     VirtualRuntime virtualRuntime;
@@ -617,12 +617,12 @@ HWTEST_F(ReportJsonFileTest, GetFuncionID, TestSize.Level1)
             funcb1 in libb
             funcc1 in libc
     */
-    EXPECT_EQ(json->GetFuncionID(0, "funca1"), 0);
-    EXPECT_EQ(json->GetFuncionID(0, "funca2"), 1);
-    EXPECT_EQ(json->GetFuncionID(0, "funca3"), 4);
-    EXPECT_EQ(json->GetFuncionID(0, "funcb1"), 5);
-    EXPECT_EQ(json->GetFuncionID(1, "funcb1"), 2);
-    EXPECT_EQ(json->GetFuncionID(2, "funcc1"), 3);
+    EXPECT_EQ(json->GetFunctionID(0, "funca1"), 0);
+    EXPECT_EQ(json->GetFunctionID(0, "funca2"), 1);
+    EXPECT_EQ(json->GetFunctionID(0, "funca3"), 4);
+    EXPECT_EQ(json->GetFunctionID(0, "funcb1"), 5);
+    EXPECT_EQ(json->GetFunctionID(1, "funcb1"), 2);
+    EXPECT_EQ(json->GetFunctionID(2, "funcc1"), 3);
 }
 
 /**

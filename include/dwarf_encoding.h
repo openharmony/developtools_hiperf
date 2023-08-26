@@ -61,7 +61,7 @@ enum DW_EH_PE_A {
     DW_EH_PE_datarel = 0x30, // relative to the beginning of the .got or .eh_frame_hdr section.
     DW_EH_PE_funcrel = 0x40, // relative to the beginning of the function.
     DW_EH_PE_aligned = 0x50, // aligned to an address unit sized boundary.
-    DW_EH_PE_omit = 0xff,    // indicate that no value ispresent.
+    DW_EH_PE_omit = 0xff,    // indicate that no value is present.
 };
 
 const std::map<dw_encode_t, size_t> DWFormatSizeMap = {
