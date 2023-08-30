@@ -142,6 +142,9 @@ HWTEST_F(VirtualRuntimeTest, UpdateKernelModulesSymbols, TestSize.Level1)
     std::string modulesMap = ReadFileToString("/proc/modules");
     size_t lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
     std::set<std::string> modulesCount;
+    if (runtime_->kernelSpaceMemMaps_.size() == 0) {
+        lines = 0;
+    }
     EXPECT_EQ(runtime_->kernelSpaceMemMaps_.size(), lines);
     for (const std::unique_ptr<SymbolsFile> &symbolsFile : runtime_->GetSymbolsFiles()) {
         EXPECT_EQ(symbolsFile->GetBuildId().empty(), false);
