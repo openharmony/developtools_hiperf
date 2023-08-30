@@ -138,9 +138,11 @@ void PerfEventRecord::GetHeaderBinary(std::vector<uint8_t> &buf) const
     *(reinterpret_cast<perf_event_header *>(p)) = header;
 }
 
-void PerfEventRecord::Dump(int indent, std::string outputFilename) const
+void PerfEventRecord::Dump(int indent, std::string outputFilename, FILE *outputDump) const
 {
-    if (!outputFilename.empty() && outputDump_ == nullptr) {
+    if (outputDump != nullptr) {
+        outputDump_ = outputDump;
+    } else if (!outputFilename.empty() && outputDump_ == nullptr) {
         std::string resolvedPath = CanonicalizeSpecPath(outputFilename.c_str());
         outputDump_ = fopen(resolvedPath.c_str(), "w");
         if (outputDump_ == nullptr) {
