@@ -654,7 +654,6 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     std::vector<pid_t> pids;
     for (auto selectPid : selectPids_) {
         HLOGD("[OnSubCommand] selectPid %d\n", selectPid);
-        pids.push_back(selectPid);
         std::vector<pid_t> subTids = GetSubthreadIDs(selectPid, thread_map_);
         if (!subTids.empty()) {
             pids.insert(pids.end(), subTids.begin(), subTids.end());
