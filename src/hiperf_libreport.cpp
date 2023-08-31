@@ -140,17 +140,16 @@ const char *ReportGetSymbolFiles(const char *perfFile)
                 static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
             auto it = sectionSymbolsFiles->symbolFileStructs_.begin();
             while (it != sectionSymbolsFiles->symbolFileStructs_.end()) {
-                if (it != sectionSymbolsFiles->symbolFileStructs_.begin()) {
-                    result.append(",");
-                }
                 HLOGD("%s buildId:%s\n", it->filePath_.c_str(), it->buildId_.c_str());
                 result.append("[");
                 result.append(it->filePath_.c_str());
                 result.append(",");
                 result.append(it->buildId_.c_str());
                 result.append("]");
+                result.append(",");
                 it++;
             }
+            result[result.size() - 1] = '\0';
         }
     }
     return result.c_str();
