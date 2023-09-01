@@ -444,7 +444,7 @@ void SubCommandDump::DumpDataPortion(int indent)
         vr_.UpdateFromRecord(*record);
 
         recordCount++;
-        record->Dump(indent, outputFilename_);
+        record->Dump(indent, outputFilename_, outputDump_);
 
         if (record->GetType() == PERF_RECORD_SAMPLE) {
             std::unique_ptr<PerfRecordSample> sample(
