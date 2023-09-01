@@ -1204,6 +1204,39 @@ HWTEST_F(SubCommandRecordTest, ExcludeMixedThreadName, TestSize.Level1)
 {
     TestRecordCommand("-d 2 --exclude-thread DfxWatchdog,test ", true);
 }
+
+// --restart
+HWTEST_F(SubCommandRecordTest, ReStartNotApp1, TestSize.Level1)
+{
+    TestRecordCommand("-p 5 --restart ", false ,false);
+}
+
+HWTEST_F(SubCommandRecordTest, ReStartNotApp2, TestSize.Level1)
+{
+    TestRecordCommand("-a --restart ", false ,false);
+}
+
+HWTEST_F(SubCommandRecordTest, ReStartNotApp3, TestSize.Level1)
+{
+    TestRecordCommand("-p 5 -a --restart ", false ,false);
+}
+
+HWTEST_F(SubCommandRecordTest, ReStartConflict, TestSize.Level1)
+{
+    TestRecordCommand("--restart -a ", false ,true);
+}
+
+HWTEST_F(SubCommandRecordTest, ReStart, TestSize.Level1)
+{
+    TestRecordCommand("--restart ", false ,true);
+}
+
+// --exclude-tid
+HWTEST_F(SubCommandRecordTest, ExcludeTidConflict, TestSize.Level1)
+{
+    TestRecordCommand("--exclude-tid 5 --exclude-thread test ", false , true);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
