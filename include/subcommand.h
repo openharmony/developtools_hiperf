@@ -85,7 +85,7 @@ public:
     static void ClearSubCommands();
     
     // check restart option
-    bool CheckRestartOption(std::string appPackage, bool targetSystemWide, bool restart,
+    bool CheckRestartOption(std::string &appPackage, bool targetSystemWide, bool restart,
                                                     std::vector<pid_t> &selectPids);
 
     // handle subcommand exclude
@@ -96,8 +96,6 @@ private:
     void ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,
         std::vector<pid_t> &selectTids);
     VirtualRuntime virtualRuntime_;
-    const int CHECK_FREQUENCY = 100;
-    const uint64_t CHECK_TIMEOUT = 30;
 
 protected:
     const std::string name_;
