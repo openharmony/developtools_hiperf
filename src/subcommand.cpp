@@ -63,7 +63,7 @@ bool SubCommand::OnSubCommandOptions(std::vector<std::string> args)
     return true;
 }
 
-bool SubCommand::CheckRestartOption(std::string appPackage, bool targetSystemWide, bool restart,
+bool SubCommand::CheckRestartOption(std::string &appPackage, bool targetSystemWide, bool restart,
                                     std::vector<pid_t> &selectPids)
 {
     if (!restart) {
@@ -79,14 +79,7 @@ bool SubCommand::CheckRestartOption(std::string appPackage, bool targetSystemWid
     }
     
     if (!appPackage.empty()) {
-        printf("please restart %s for profiling within 30 seconds\n", appPackage.c_str());
-        pid_t oldAppPid = GetAppPackagePid(appPackage, -1, CHECK_FREQUENCY, 0);
-        pid_t newAppPid = GetAppPackagePid(appPackage, oldAppPid, CHECK_FREQUENCY, CHECK_TIMEOUT);
-        if (newAppPid < 0 || oldAppPid == newAppPid) {
-            printf("app %s was not restarted within 30 seconds\n", appPackage.c_str());
-            return false;
-        }
-        return true;
+        return IsRestarted(appPackage);
     }
     return false;
 }

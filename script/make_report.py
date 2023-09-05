@@ -22,7 +22,7 @@ from hiperf_utils import dir_check
 from hiperf_utils import file_check
 
 
-def get_used_binaries(perf_data, report_file, local_lib_dir):
+def get_used_binaries(perf_data, report_file, local_lib_dir, html_template):
     if local_lib_dir:
         get_lib().ReportUnwindJson(perf_data.encode("utf-8"),
                                    'json.txt'.encode("utf-8"),
@@ -33,7 +33,7 @@ def get_used_binaries(perf_data, report_file, local_lib_dir):
     time.sleep(2)
     with open('json.txt', 'r') as json_file:
         all_json = json_file.read()
-    with open('report.html', 'r', encoding='utf-8') as html_file:
+    with open(html_template + '/report.html', 'r', encoding='utf-8') as html_file:
         html_str = html_file.read()
     with open(report_file, 'w', encoding='utf-8') as report_html_file:
         report_html_file.write(html_str + all_json + '</script>'

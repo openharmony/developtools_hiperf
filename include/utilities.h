@@ -75,7 +75,8 @@ constexpr const int FIVE_THOUSANDS = 5000;
 constexpr const int DATA_MAX_SIZE = 1001;
 constexpr const int LITTLE_MEMORY_SIZE = 1;
 constexpr const int MULTIPLE_SIZE = 1024;
-
+constexpr const uint16_t CHECK_FREQUENCY = 100; //
+constexpr const uint8_t CHECK_TIMEOUT = 30;
 #if !is_mingw
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -329,8 +330,8 @@ bool PowerOfTwo(uint64_t n);
 #endif
 pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
                        const uint64_t waitAppTimeOut);
-bool IsNeedCheckSamePid(const std::string &fileName, const std::string &appPackage, const std::string &subDir,
-                        pid_t &res, const pid_t oldPid);
+bool IsRestarted(const std::string &appPackage);
+void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage);
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName);
 bool IsExistDebugByPid(const std::vector<pid_t> pids);

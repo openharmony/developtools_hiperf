@@ -591,11 +591,53 @@ std::string BufferToHexString(const unsigned char buf[], size_t size)
     return ss.str();
 }
 
+void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage)
+{
+    const std::string basePath {"/proc/"};
+    const std::string cmdline {"/cmdline"};
+    std::vector<std::string> subDirs = GetSubDirs(basePath);
+    for (const auto &subDir : subDirs) {
+        if (!IsDigits(subDir)) {
+            continue;
+        }
+        std::string fileName {basePath + subDir + cmdline};
+        if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+            pids.emplace(std::stoul(subDir, nullptr));
+        }
+    }
+}
+
+bool IsRestarted(const std::string &appPackage)
+{
+    printf("please restart %s for profiling within 30 seconds\n", appPackage.c_str());
+    std::set<pid_t> oldPids {};
+    std::set<pid_t> newPids {};
+    std::vector<pid_t> intersection;
+    const auto startTime = steady_clock::now();
+    const auto endTime = startTime + std::chrono::seconds(CHECK_TIMEOUT);
+    CollectPidsByAppname(oldPids, appPackage);
+    do {
+        CollectPidsByAppname(newPids, appPackage);
+        std::set_intersection(oldPids.begin(), oldPids.end(),
+            newPids.begin(), newPids.end(), std::back_insert_iterator(intersection));
+        if (intersection.empty()) {
+            // app names are same, no intersection, means app restarted
+            return true;
+        }
+        intersection.clear();
+        newPids.clear();
+        std::this_thread::sleep_for(milliseconds(CHECK_FREQUENCY));
+    } while (steady_clock::now() < endTime);
+    printf("app %s was not stopped within 30 seconds\n", appPackage.c_str());
+    return false;
+}
+
 pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
                        const uint64_t waitAppTimeOut)
 {
     pid_t res {-1};
     const std::string basePath {"/proc/"};
+    const std::string cmdline {"/cmdline"};
     const auto startTime = steady_clock::now();
     const auto endTime = startTime + std::chrono::seconds(waitAppTimeOut);
     do {
@@ -604,33 +646,19 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
             if (!IsDigits(subDir)) {
                 continue;
             }
-            std::string fileName {basePath + subDir};
-            fileName += "/cmdline";
-            if (!IsNeedCheckSamePid(fileName, appPackage, subDir, res, oldPid)) {
-                return res;
+            std::string fileName {basePath + subDir + cmdline};
+            if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+                res = std::stoul(subDir, nullptr);
+                if (res >= 0 ) {
+                    HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage.c_str(), res);
+                    return res;
+                }
             }
         }
         std::this_thread::sleep_for(milliseconds(checkAppMs));
     } while (steady_clock::now() < endTime);
 
     return res;
-}
-
-bool IsNeedCheckSamePid(const std::string &fileName, const std::string &appPackage, const std::string &subDir,
-                        pid_t &res, const pid_t oldPid)
-{
-    if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
-        res = std::stoul(subDir, nullptr);
-        if (res == oldPid) {
-            res = -1;
-            return true;
-        }
-        if (res >= 0) {
-            HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage.c_str(), res);
-            return false;
-        }
-    }
-    return true;
 }
 
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
