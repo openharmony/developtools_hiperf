@@ -119,7 +119,7 @@ fuzz_deps = [
 ]
 
 ohos_fuzztest("CommandLineFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = hiperf_fuzz_test_output_path
   fuzz_config_file = "${hiperf_path}/test/fuzztest/commandline_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
@@ -133,7 +133,7 @@ ohos_fuzztest("CommandLineFuzzTest") {
 }
 
 ohos_fuzztest("LibReportFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = hiperf_fuzz_test_output_path
   fuzz_config_file = "${hiperf_path}/test/fuzztest/libreport_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
@@ -144,7 +144,7 @@ ohos_fuzztest("LibReportFuzzTest") {
 }
 
 ohos_fuzztest("ClientApiFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = hiperf_fuzz_test_output_path
   fuzz_config_file = "${hiperf_path}/test/fuzztest/clientapi_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
@@ -155,7 +155,7 @@ ohos_fuzztest("ClientApiFuzzTest") {
 }
 
 ohos_fuzztest("PerfFileFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = hiperf_fuzz_test_output_path
   fuzz_config_file = "${hiperf_path}/test/fuzztest/perffile_fuzzer"
   resource_config_file = "fuzztest/resource/ohos_test.xml"
   configs = [ ":hiperf_test_config" ]
@@ -167,7 +167,7 @@ ohos_fuzztest("PerfFileFuzzTest") {
 }
 
 ohos_fuzztest("ElfParserFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = hiperf_fuzz_test_output_path
   fuzz_config_file = "${hiperf_path}/test/fuzztest/elfparser_fuzzer"
   resource_config_file = "fuzztest/resource/ohos_test.xml"
   configs = [ ":hiperf_test_config" ]
