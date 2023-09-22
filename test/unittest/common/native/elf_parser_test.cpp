@@ -301,7 +301,6 @@ bool ElfFileFromReadelf::ParseSecHeaders32()
 {
     std::string line {};
     while (true) {
-        int status {0};
         line = GetNextShdrLine();
         if (line == "") {
             HLOGV("no more section header lines");

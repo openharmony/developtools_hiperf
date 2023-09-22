@@ -41,7 +41,6 @@ constexpr const char *PERF_DATA_ERROR_FORMAT_INPUT_PATH =
     "/data/test/resource/testdata/report/perf.data.error.format.libreport";
 constexpr const char *REPORT_OUTPUT_PATH = "./report.txt";
 constexpr const char *REPORT_JSON_OUTPUT_PATH = "./perf.json";
-constexpr const char *REPORT_PROTO_OUTPUT_PATH = "./perf.proto";
 constexpr const char *ILLEGAL_PATH = "/proc/illegal";
 
 constexpr const char *TEST_ELF32 = "/data/test/resource/testdata/report/buildid_test_elf_32";
