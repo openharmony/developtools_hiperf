@@ -258,7 +258,6 @@ void SubCommandStat::ReportDetailInfos(
         if (event->second->eventCount == 0) {
             continue;
         }
-        double scale = 1.0;
         constexpr float ratio {100.0};
         std::string configName = event->first;
         perMaps.clear();

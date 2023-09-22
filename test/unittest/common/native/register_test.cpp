@@ -123,7 +123,6 @@ HWTEST_F(RegisterTest, RegisterGetValue, TestSize.Level1)
 {
     uint64_t value = 0;
     const u64 registers[4] = {1, 2, 3, 4};
-    size_t registerIndex = 0;
 
     EXPECT_EQ(RegisterGetValue(value, registers, 0, sizeof(registers)), true);
     EXPECT_EQ(RegisterGetValue(value, registers, sizeof(registers), sizeof(registers)), false);
@@ -145,7 +144,6 @@ HWTEST_F(RegisterTest, RegisterGetSPValue, TestSize.Level1)
     uint64_t value = 0;
     uint64_t value2 = 0;
     u64 registers[PERF_REG_ARM64_MAX] = {1, 2, 3, 4};
-    size_t registerIndex = 0;
     size_t sp = RegisterGetSP(buildArchType);
     registers[sp] = 0x1234;
 
@@ -165,7 +163,6 @@ HWTEST_F(RegisterTest, RegisterGetIPValue, TestSize.Level1)
     uint64_t value = 0;
     uint64_t value2 = 0;
     u64 registers[PERF_REG_ARM64_MAX] = {1, 2, 3, 4};
-    size_t registerIndex = 0;
     size_t ip = RegisterGetIP(buildArchType);
     registers[ip] = 0x1234;
 
