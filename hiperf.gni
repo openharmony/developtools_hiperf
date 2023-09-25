@@ -17,6 +17,8 @@ innerkits_path = "${hiperf_path}/interfaces/innerkits"
 
 kits_path = "${hiperf_path}/interfaces/kits"
 
+hiperf_fuzz_test_output_path = "hiperf/hiperf"
+
 declare_args() {
   hiperf_target_host = false
   hiperf_target_static = false
