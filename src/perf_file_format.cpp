@@ -221,17 +221,17 @@ size_t PerfFileSectionSymbolsFiles::GetSize()
     return size;
 }
 
-PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(FEATURE id, const char *buf, size_t size)
-    : PerfFileSection(id)
+void PerfFileSectionSymbolsFiles::ReadSymbolFileStructs()
 {
-    Init(buf, size);
     uint32_t symbolFileNumber = 0;
     if (!Read(symbolFileNumber)) {
         HLOGE(" symbolFileNumber read failed");
         return;
+#ifdef FUZZER_TEST
     } else if (symbolFileNumber > MAX_SYMBOLS_FILE_NUMBER) {
         HLOGE(" symbolFileNumber %u too large", symbolFileNumber);
         return;
+#endif
     } else {
         HLOGV(" symbolFileNumber %u", symbolFileNumber);
     }
@@ -251,9 +251,11 @@ PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(FEATURE id, const char 
         if (!Read(symbolsNumber)) {
             HLOGE(" symbols read failed");
             return;
+#ifdef FUZZER_TEST
         } else if (symbolsNumber > MAX_SYMBOLS_NUMBER) {
             HLOGE(" symbols %u too large", symbolsNumber);
             return;
+#endif
         } else {
             HLOGV(" symbols %u", symbolsNumber);
         }
@@ -265,6 +267,13 @@ PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(FEATURE id, const char 
         }
         HLOGV(" %zu SymbolStruct read.", symbolFileStruct.symbolStructs_.size());
     }
+}
+
+PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(FEATURE id, const char *buf, size_t size)
+    : PerfFileSection(id)
+{
+    Init(buf, size);
+    ReadSymbolFileStructs();
     HLOGV(" %zu SymbolFileStruct read.", symbolFileStructs_.size());
 }
 

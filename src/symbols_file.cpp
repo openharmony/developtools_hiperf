@@ -1345,6 +1345,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
     }
     symbolsFile->AdjustSymbols(); // reorder
     symbolsFile->debugInfoLoadResult_ = true;
+    symbolsFile->symbolsLoaded_ = true; // skip unneccessary steps
     HLOGV("load %zu symbol from SymbolFileStruct for file '%s'", symbolsFile->symbols_.size(),
           symbolsFile->filePath_.c_str());
     return symbolsFile;
