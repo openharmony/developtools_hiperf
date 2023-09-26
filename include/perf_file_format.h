@@ -209,11 +209,13 @@ public:
     PerfFileSectionSymbolsFiles(FEATURE id, const char *buf, size_t size);
 
     bool GetBinary(char *buf, size_t size);
-
+    void ReadSymbolFileStructs();
 private:
-    // issue from fuzz test
+#ifdef FUZZER_TEST
+    // issue from fuzz test and also will lead to PerfFileSectionSymbolsFiles uncompletely construct
     const size_t MAX_SYMBOLS_FILE_NUMBER = 300;
     const size_t MAX_SYMBOLS_NUMBER = 10000;
+#endif
 };
 
 // NRCPUS: A structure defining the number of CPUs.
