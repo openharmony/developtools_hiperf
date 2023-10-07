@@ -550,13 +550,13 @@ const Symbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thr
         SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(*mmap);
         if (symbolsFile != nullptr) {
             vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
+            vaddrSymbol.module_ = mmap->nameHold_;
             vaddrSymbol.fileVaddr_ =
                 symbolsFile->GetVaddrInSymbols(ip, mmap->begin_, mmap->pageoffset_);
             perf_callchain_context context = PERF_CONTEXT_USER;
             if (GetSymbolCache(ip, vaddrSymbol, context)) {
                 return vaddrSymbol;
             }
-            vaddrSymbol.module_ = mmap->nameHold_;
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
                   vaddrSymbol.fileVaddr_, ip, mmap->name_.c_str());
             if (!symbolsFile->SymbolsLoaded()) {
@@ -595,10 +595,15 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, Symbol &symbol,
         HLOGV("hit kernel cache 0x%" PRIx64 " %d", ip, symbol.hit_);
         return true;
     } else if (userSymbolCache_.count(symbol.fileVaddr_) != 0) {
-        symbol = userSymbolCache_[symbol.fileVaddr_];
+        Symbol &cachedSymbol = userSymbolCache_[symbol.fileVaddr_];
+        // must be the same file
+        if (cachedSymbol.module_ != symbol.module_) {
+            return false;
+        }
+        symbol = cachedSymbol;
         symbol.hit_++;
         HLOGV("hit user cache 0x%" PRIx64 " %d %s", ip, symbol.hit_,
-              symbol.ToDebugString().c_str());
+            symbol.ToDebugString().c_str());
         return true;
     } else {
         HLOGM("cache miss k %zu u %zu", kernelSymbolCache_.size(), userSymbolCache_.size());
