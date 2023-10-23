@@ -497,41 +497,6 @@ HWTEST_F(CallStackTest, ExpendCallStackFullCache, TestSize.Level1)
 }
 
 /**
- * @tc.name: LibUnwindEmptyFunc
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(CallStackTest, LibUnwindEmptyFunc, TestSize.Level1)
-{
-    CallStack callStack = {};
-    unw_addr_space_t as = {};
-    unw_word_t word = {};
-    unw_word_t *wordPtr = {};
-    void *voidPtr = {};
-    char *buf = {};
-    size_t size = {};
-    unw_proc_info_t pi = {};
-    unw_regnum_t rn = {};
-    unw_fpreg_t fp = {};
-    unw_cursor_t t = {};
-    EXPECT_LE(CallStack::getProcName(as, word, buf, size, wordPtr, voidPtr), 0);
-    CallStack::PutUnwindInfo(as, &pi, voidPtr);
-    EXPECT_LE(CallStack::AccessFpreg(as, rn, &fp, 0, voidPtr), 0);
-    EXPECT_LE(CallStack::Resume(as, &t, voidPtr), 0);
-}
-
-/**
- * @tc.name: GetUnwErrorName
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(CallStackTest, GetUnwErrorName, TestSize.Level1)
-{
-    EXPECT_STREQ(CallStack::GetUnwErrorName(UNW_ENOINFO).c_str(), "UNKNOW_UNW_ERROR");
-    EXPECT_STRNE(CallStack::GetUnwErrorName(-UNW_ENOINFO).c_str(), "UNKNOW_UNW_ERROR");
-}
-
-/**
  * @tc.name: ExpandCallStack
  * @tc.desc:
  * @tc.type: FUNC
@@ -670,8 +635,9 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
         std::vector<CallFrame> callFrames;
         CallStack callStack;
 
-        callStack.UnwindCallStack(thread, false, regs.data(), regs.size(), data.data(), data.size(),
-                                  callFrames);
+        bool ret = callStack.UnwindCallStack(thread, false, regs.data(), regs.size(), data.data(), data.size(),
+                                             callFrames);
+        ASSERT_TRUE(ret);
         ASSERT_LE(TEST_DWARF_FRAMES.size(), callFrames.size());
 
         for (size_t i = 0; i < TEST_DWARF_FRAMES.size(); i++) {

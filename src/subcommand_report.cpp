@@ -598,7 +598,7 @@ bool SubCommandReport::OnSubCommand(std::vector<std::string> &args)
     }
 #ifdef HIPERF_DEBUG_TIME
     printf("SymbolicRecordTimes: %0.3f ms\n",
-           GetReport(FIRST).virtualRuntime_.symbolicRecordTimes_.count() / MS_DUARTION);
+           GetReport(FIRST).virtualRuntime_.symbolicRecordTimes_.count() / MS_DURATION);
 #endif
 
     printf("report done\n");

@@ -21,7 +21,7 @@
 #include <unordered_map>
 
 #include "debug_logger.h"
-#include "mem_map_item.h"
+#include "dfx_maps.h"
 #include "perf_event_record.h"
 #include "symbols_file.h"
 
@@ -72,24 +72,21 @@ public:
     pid_t tid_;
     std::string name_;
 
-    const std::vector<MemMapItem> &GetMaps() const
+    const std::vector<std::shared_ptr<DfxMap>> &GetMaps() const
     {
         return memMaps_;
     }
 
     void ParseMap();
     void CreateMapItem(const std::string filename, uint64_t begin, uint64_t len, uint64_t offset);
-    const MemMapItem *FindMapByAddr(uint64_t addr) const;
-    const MemMapItem *FindMapByAddr2(uint64_t addr) const;
-    const MemMapItem *FindMapByFileInfo(const std::string name, uint64_t offset) const;
+    std::shared_ptr<DfxMap> FindMapByAddr(uint64_t addr) const;
+    std::shared_ptr<DfxMap> FindMapByFileInfo(const std::string name, uint64_t offset) const;
     int64_t FindMapIndexByAddr(uint64_t addr) const;
-    SymbolsFile *FindSymbolsFileByMap(const MemMapItem &inMap) const;
+    SymbolsFile *FindSymbolsFileByMap(std::shared_ptr<DfxMap> inMap) const;
     bool ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) const;
 #ifdef HIPERF_DEBUG
     void ReportVaddrMapMiss(uint64_t vaddr) const;
 #endif
-    // caller want to check if new mmap is legal
-    static bool IsLegalFileName(const std::string &filename);
 
 private:
     void SortMemMaps();
@@ -101,10 +98,10 @@ private:
     // proc/xx/map
     // use to put the parent thread's map
     // only process have memmap
-    std::vector<MemMapItem> processMemMaps_;
+    std::vector<std::shared_ptr<DfxMap>> processMemMaps_;
     std::unordered_map<uint64_t, uint64_t> vaddr4kPageCacheOfProc_;
     // thread must use ref from process
-    std::vector<MemMapItem> &memMaps_;
+    std::vector<std::shared_ptr<DfxMap>> &memMaps_;
     std::unordered_map<uint64_t, uint64_t> &vaddr4kPageCache_;
     std::vector<int> processMemMapsIndexs_;
     std::vector<int> &memMapsIndexs_;

@@ -17,7 +17,10 @@
 
 #include <functional>
 
+#if defined(is_ohos) && is_ohos
 #include "callstack.h"
+#endif
+#include "hashlist.hpp"
 #include "perf_event_record.h"
 #include "symbols_file.h"
 #include "virtual_thread.h"
@@ -87,7 +90,7 @@ public:
         disableUnwind_ = disableUnwind;
     }
 
-    const Symbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
+    DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
 
     VirtualThread &GetThread(pid_t pid, pid_t tid);
@@ -109,10 +112,10 @@ public:
     std::chrono::microseconds unwindCallStackTimes_ = std::chrono::microseconds::zero();
     std::chrono::microseconds symbolicRecordTimes_ = std::chrono::microseconds::zero();
     std::chrono::microseconds updateThreadTimes_ = std::chrono::microseconds::zero();
-    std::chrono::microseconds prcessSampleRecordTimes_ = std::chrono::microseconds::zero();
-    std::chrono::microseconds prcessMmapRecordTimes_ = std::chrono::microseconds::zero();
-    std::chrono::microseconds prcessMmap2RecordTimes_ = std::chrono::microseconds::zero();
-    std::chrono::microseconds prcessCommRecordTimes_ = std::chrono::microseconds::zero();
+    std::chrono::microseconds processSampleRecordTimes_ = std::chrono::microseconds::zero();
+    std::chrono::microseconds processMmapRecordTimes_ = std::chrono::microseconds::zero();
+    std::chrono::microseconds processMmap2RecordTimes_ = std::chrono::microseconds::zero();
+    std::chrono::microseconds processCommRecordTimes_ = std::chrono::microseconds::zero();
     std::chrono::microseconds threadParseMapsTimes_ = std::chrono::microseconds::zero();
     std::chrono::microseconds threadCreateMmapTimes_ = std::chrono::microseconds::zero();
 #endif
@@ -121,23 +124,25 @@ public:
 private:
     bool disableUnwind_ = true;
     size_t callstackMergeLevel_ = 1;
+#if defined(is_ohos) && is_ohos
     CallStack callstack_;
+#endif
     // pid map with user space thread
     std::map<pid_t, VirtualThread> userSpaceThreadMap_;
     // not pid , just memmap
-    std::vector<MemMapItem> kernelSpaceMemMaps_;
+    std::vector<DfxMap> kernelSpaceMemMaps_;
     RecordCallBack recordCallBack_;
     std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles_;
     enum SymbolCacheLimit : std::size_t {
         KERNEL_SYMBOL_CACHE_LIMIT = 4000,
         USER_SYMBOL_CACHE_LIMIT = 4000,
     };
-    HashList<uint64_t, Symbol> userSymbolCache_;
-    HashList<uint64_t, Symbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
-    bool GetSymbolCache(uint64_t ip, Symbol &symbol,
+    HashList<uint64_t, DfxSymbol> userSymbolCache_;
+    HashList<uint64_t, DfxSymbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
+    bool GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
                         const perf_callchain_context &context);
     // find synbols function name
-    void MakeCallFrame(Symbol &symbol, CallFrame &callFrame);
+    void MakeCallFrame(DfxSymbol &symbol, CallFrame &callFrame);
     // records
     void UpdateSymbols(std::string filename);
     void UpdateFromRecord(PerfRecordSample &recordSample);
@@ -154,9 +159,9 @@ private:
                           uint64_t len, uint64_t offset);
     void UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offset, std::string filename);
 
-    const Symbol GetKernelSymbol(uint64_t ip, const std::vector<MemMapItem> &memMaps,
+    const DfxSymbol GetKernelSymbol(uint64_t ip, const std::vector<DfxMap> &memMaps,
                                  const VirtualThread &thread);
-    const Symbol GetUserSymbol(uint64_t ip, const VirtualThread &thread);
+    const DfxSymbol GetUserSymbol(uint64_t ip, const VirtualThread &thread);
 #ifdef HIPERF_DEBUG
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
 #endif

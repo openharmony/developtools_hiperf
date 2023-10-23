@@ -16,9 +16,10 @@
 
 #include "perf_event_record.h"
 #include <cinttypes>
+
 #include "utilities.h"
 
-
+using namespace OHOS::HiviewDFX;
 using namespace std;
 namespace OHOS {
 namespace Developtools {
@@ -501,25 +502,24 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 
     header.size = sizeof(header) + sizeof(data_) - KILO + filename.size() + 1;
 }
 
-PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, const MemMapItem &item)
+PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<DfxMap> item)
     : PerfEventRecord(PERF_RECORD_MMAP2, inKernel, "mmap2")
 {
     data_.pid = pid;
     data_.tid = tid;
-    data_.addr = item.begin_;
-    data_.len = item.end_ - item.begin_;
-    data_.pgoff = item.pageoffset_;
-    data_.maj = item.major_;
-    data_.min = item.minor_;
-    data_.ino = item.inode;
+    data_.addr = item->begin;
+    data_.len = item->end - item->begin;
+    data_.pgoff = item->offset;
+    data_.maj = item->major;
+    data_.min = item->minor;
+    data_.ino = item->inode;
     data_.ino_generation = 0;
-    data_.prot = item.type_;
-    data_.flags = item.flags;
-    if (strncpy_s(data_.filename, KILO, item.name_.c_str(), item.name_.size()) != 0) {
+    DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
+    if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
         HLOGE("strncpy_s failed");
     }
 
-    header.size = sizeof(header) + sizeof(data_) - KILO + item.name_.size() + 1;
+    header.size = sizeof(header) + sizeof(data_) - KILO + item->name.size() + 1;
 }
 
 bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const

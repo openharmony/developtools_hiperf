@@ -389,7 +389,7 @@ private:
     std::string GetConfigName(uint64_t id);
     uint32_t GetConfigIndex(uint64_t id);
 
-    int GetFuncionID(int libId, std::string_view function);
+    int GetFunctionID(int libId, std::string_view function);
     int GetLibID(std::string_view filepath);
 
     void OutputJsonFeatureString();
@@ -405,7 +405,7 @@ private:
     FRIEND_TEST(ReportJsonFileTest, UpdateReportCallStack);
     FRIEND_TEST(ReportJsonFileTest, UpdateCallNodeEventCount);
     FRIEND_TEST(ReportJsonFileTest, ProcessSymbolsFiles);
-    FRIEND_TEST(ReportJsonFileTest, GetFuncionID);
+    FRIEND_TEST(ReportJsonFileTest, GetFunctionID);
     FRIEND_TEST(ReportJsonFileTest, GetLibID);
     FRIEND_TEST(ReportJsonFileTest, GetConfigIndex);
     FRIEND_TEST(ReportJsonFileTest, GetConfigName);

@@ -26,6 +26,7 @@
 #include "option.h"
 #include "perf_event_record.h"
 #include "perf_events.h"
+#include "register.h"
 #include "symbols_file.h"
 #include "utilities.h"
 #include "virtual_runtime.h"
@@ -33,6 +34,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+using namespace OHOS::HiviewDFX;
 #define LEVEL1 (indent + 1)
 #define LEVEL2 (indent + 2)
 #define LEVEL3 (indent + 3)
@@ -413,6 +415,7 @@ void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
         HLOGD("export user data index %d time %llu", exportSampleIndex_, recordSample->data_.time);
     }
 }
+
 void SubCommandDump::DumpCallChain(int indent, std::unique_ptr<PerfRecordSample> &sample)
 {
     PrintIndent(indent, "\n callchain: %zu\n", sample->callFrames_.size());

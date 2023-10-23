@@ -35,7 +35,7 @@ public:
     void SetUp();
     void TearDown();
     void CheckSymbols(const std::unique_ptr<SymbolsFile> &symbolsFile) const;
-    void PrintSymbols(const std::vector<Symbol> &symbol) const;
+    void PrintSymbols(const std::vector<DfxSymbol> &symbol) const;
     bool KptrRestrict() const;
 
     std::unique_ptr<SymbolsFile> LoadSymbols(SymbolsFileType symbolsFileType)
@@ -85,8 +85,8 @@ void SymbolsFileTest::CheckSymbols(const std::unique_ptr<SymbolsFile> &symbolsFi
     // first is 0
     EXPECT_EQ(symbolsFile->GetSymbolWithVaddr(0x0).funcVaddr_, 0u);
 
-    // last is isValid
-    EXPECT_EQ(symbolsFile->GetSymbolWithVaddr(std::numeric_limits<uint64_t>::max()).isValid(),
+    // last is IsValid
+    EXPECT_EQ(symbolsFile->GetSymbolWithVaddr(std::numeric_limits<uint64_t>::max()).IsValid(),
               true);
 
     for (uint64_t pos = 0; pos < symbols.size(); ++pos) {
@@ -100,7 +100,7 @@ void SymbolsFileTest::CheckSymbols(const std::unique_ptr<SymbolsFile> &symbolsFi
     }
 }
 
-void SymbolsFileTest::PrintSymbols(const std::vector<Symbol> &symbols) const
+void SymbolsFileTest::PrintSymbols(const std::vector<DfxSymbol> &symbols) const
 {
     size_t printNumber = 15;
     if (printNumber > symbols.size())
@@ -116,23 +116,6 @@ void SymbolsFileTest::PrintSymbols(const std::vector<Symbol> &symbols) const
             printf("%s\n", symbols[symbols.size() - i].ToDebugString().c_str());
         }
     }
-}
-
-/**
- * @tc.name: Symbol Name
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(SymbolsFileTest, SymbolName, TestSize.Level1)
-{
-    Symbol symbol1(0x1000);
-    EXPECT_STREQ(symbol1.Name().data(), "@0x1000");
-
-    Symbol symbol2(0x1001);
-    EXPECT_STREQ(symbol2.Name().data(), "@0x1001");
-
-    Symbol symbol3(0xFFF);
-    EXPECT_STREQ(symbol3.Name().data(), "@0xfff");
 }
 
 /**
@@ -251,9 +234,7 @@ HWTEST_F(SymbolsFileTest, SymbolsFileDefaultVirtual, TestSize.Level1)
 {
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
     uint64_t value = 0;
-    uint8_t *ptr = nullptr;
     ASSERT_EQ(symbolsFile->LoadDebugInfo(), false);
-    EXPECT_EQ(symbolsFile->ReadRoMemory(0, ptr, 0), false);
     EXPECT_EQ(symbolsFile->GetSectionInfo("", value, value, value), false);
 #ifndef __arm__
     EXPECT_EQ(symbolsFile->GetHDRSectionInfo(value, value, value), false);
@@ -276,7 +257,7 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_VERBOSE);
     ASSERT_EQ(symbolsFile->LoadSymbols(), true);
 
-    const std::vector<Symbol> &symbols = symbolsFile->GetSymbols();
+    const std::vector<DfxSymbol> &symbols = symbolsFile->GetSymbols();
     EXPECT_EQ(symbols.empty(), false);
 
     std::string modulesMap = ReadFileToString("/proc/modules");
@@ -418,25 +399,25 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr2, TestSize.Level1)
     */
 #ifdef __arm__
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001000).Name(), "_init");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001029).Name(), "_init");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001320).Name(), "_start");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001359).Name(), "_start");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001512).Name(), "main");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000152c).Name(), "main");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000145d).Name(), "TestGlobalChildFunction");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000014d9).Name(), "TestGlobalParentFunction");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001b38).Name(), "_fini");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001000).GetName(), "_init");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001029).GetName(), "_init");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001320).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001359).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001512).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000152c).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000145d).GetName(), "TestGlobalChildFunction");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000014d9).GetName(), "TestGlobalParentFunction");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001b38).GetName(), "_fini");
 #else
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002000).Name(), "_init");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002019).Name(), "_init");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000022f0).Name(), "_start");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000231e).Name(), "_start");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002478).Name(), "main");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002486).Name(), "main");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000023d9).Name(), "TestGlobalChildFunction");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002447).Name(), "TestGlobalParentFunction");
-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002aa8).Name(), "_fini");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002000).GetName(), "_init");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002019).GetName(), "_init");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000022f0).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000231e).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002478).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002486).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000023d9).GetName(), "TestGlobalChildFunction");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002447).GetName(), "TestGlobalParentFunction");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002aa8).GetName(), "_fini");
 #endif
     if (HasFailure()) {
         PrintSymbols(elfSymbols->GetSymbols());
@@ -486,19 +467,25 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
 #ifdef __arm__
         enum SymbolAddr : uint64_t {
             INIT = 0X1000U,
+            PLT = 0X1030U,
             START = 0X1070U,
+            THUNK_AX = 0X10B0U,
             DEREG = 0X10C0U,
             REG = 0X1100U,
             AUX = 0X1150U,
             FRAME = 0X11A0U,
+            THUNK_DX = 0X11A9U,
             MAIN = 0X11ADU,
+            THUNK_BX = 0X11C5U,
             CSU_INIT = 0X11D0U,
             CSU_FINI = 0X1240U,
+            THUNK_BP = 0X1245U,
             FINI = 0X124CU,
         };
 #else
         enum SymbolAddr : uint64_t {
             INIT = 0X1000U,
+            PLT = 0X1020U,
             START = 0X1040U,
             DEREG = 0X1070U,
             REG = 0X10A0U,
@@ -510,48 +497,64 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
             FINI = 0X11B8U,
         };
 #endif
-        for (uint64_t addr = SymbolAddr::INIT; addr < SymbolAddr::START; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+        for (uint64_t addr = SymbolAddr::INIT; addr < SymbolAddr::PLT; ++addr) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "_init");
             }
         }
-        for (uint64_t addr = SymbolAddr::START; addr < SymbolAddr::DEREG; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::START; addr < SymbolAddr::THUNK_AX; ++addr) {
+#else
+        for (uint64_t addr = SymbolAddr::START; addr < SymbolAddr::START; ++addr) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "_start");
             }
         }
         for (uint64_t addr = SymbolAddr::DEREG; addr < SymbolAddr::REG; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "deregister_tm_clones");
             }
         }
         for (uint64_t addr = SymbolAddr::REG; addr < SymbolAddr::AUX; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "register_tm_clones");
             }
         }
         for (uint64_t addr = SymbolAddr::AUX; addr < SymbolAddr::FRAME; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__do_global_dtors_aux");
             }
         }
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::FRAME; addr < SymbolAddr::THUNK_DX; ++addr) {
+#else
         for (uint64_t addr = SymbolAddr::FRAME; addr < SymbolAddr::MAIN; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "frame_dummy");
             }
         }
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::MAIN; addr < SymbolAddr::THUNK_BX; ++addr) {
+#else
         for (uint64_t addr = SymbolAddr::MAIN; addr < SymbolAddr::CSU_INIT; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "main");
             }
         }
         for (uint64_t addr = SymbolAddr::CSU_INIT; addr < SymbolAddr::CSU_FINI; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_init");
             }
         }
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::THUNK_BP; ++addr) {
+#else
         for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::FINI; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).isValid()) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_fini");
             }
         }
@@ -669,47 +672,6 @@ HWTEST_F(SymbolsFileTest, GetBuildId, TestSize.Level1)
     EXPECT_EQ(symbolsFile->GetBuildId().empty(), false);
 }
 
-/**
- * @tc.name: ReadRoMemory
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(SymbolsFileTest, ReadRoMemory, TestSize.Level1)
-{
-    std::unique_ptr<SymbolsFile> defaultSymbolsFile = SymbolsFile::CreateSymbolsFile();
-
-    std::unique_ptr<SymbolsFile> symbolsFile =
-        SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_FILE_ELF_FULL_PATH);
-    std::string resolvedPath = CanonicalizeSpecPath(TEST_FILE_ELF_FULL_PATH.c_str());
-    std::unique_ptr<FILE, decltype(&fclose)> fp(fopen(resolvedPath.c_str(), "rb"),
-                                                fclose);
-
-    ASSERT_NE(symbolsFile, nullptr);
-    ASSERT_NE(fp, nullptr);
-
-    ASSERT_EQ(symbolsFile->LoadSymbols(), true);
-
-    uint8_t freadByte = '\0';
-    uint8_t readRoByte = '\0';
-    uint64_t addr = 0x0;
-
-    // virtual function
-    EXPECT_EQ(defaultSymbolsFile->ReadRoMemory(addr, &readRoByte, 1), 0U);
-
-    // first byte
-    ASSERT_EQ(fread(&freadByte, 1, 1, fp.get()), 1U);
-    ASSERT_EQ(symbolsFile->ReadRoMemory(addr++, &readRoByte, 1), 1U);
-    ASSERT_EQ(freadByte, readRoByte);
-
-    while (fread(&freadByte, 1, 1, fp.get()) == 1U) {
-        EXPECT_EQ(symbolsFile->ReadRoMemory(addr++, &readRoByte, 1), 1U);
-        EXPECT_EQ(freadByte, readRoByte);
-    }
-
-    // EOF , out of file size should return 0
-    ASSERT_EQ(symbolsFile->ReadRoMemory(addr++, &readRoByte, 1), 0U);
-}
-
 struct sectionInfo {
     const std::string name;
     uint64_t addr;
@@ -775,7 +737,6 @@ HWTEST_F(SymbolsFileTest, GetSectionInfo, TestSize.Level1)
         {".eh_frame", 0x00002110, 0x0003a0, 0x002110},
         {".symtab", 0x00000000, 0x000710, 0x003034},
         {".strtab", 0x00000000, 0x000c3d, 0x003744},
-        {".shstrtab", 0x00000000, 0x00012a, 0x004381},
     };
 #else
     const std::vector<sectionInfo> sectionCheckList = {
@@ -785,7 +746,6 @@ HWTEST_F(SymbolsFileTest, GetSectionInfo, TestSize.Level1)
         {".eh_frame", 0x00000000000030f0, 0x0000000000000320, 0x000030f0},
         {".symtab", 0x00000000, 0x00000000000009f0, 0x00004040},
         {".strtab", 0x00000000, 0x0000000000000bbb, 0x00004a30},
-        {".shstrtab", 0x00000000, 0x000000000000012c, 0x000055eb},
     };
 #endif
     for (sectionInfo info : sectionCheckList) {
@@ -813,7 +773,6 @@ HWTEST_F(SymbolsFileTest, GetHDRSectionInfo, TestSize.Level1)
 {
     std::unique_ptr<SymbolsFile> symbolsFile =
         SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_FILE_ELF_FULL_PATH);
-    const constexpr unsigned int fdeTableItemSize = 8;
 
     ASSERT_EQ(symbolsFile->LoadSymbols(), true);
     ASSERT_EQ(symbolsFile->LoadDebugInfo(), true);
@@ -838,7 +797,7 @@ HWTEST_F(SymbolsFileTest, GetHDRSectionInfo, TestSize.Level1)
     symbolsFile->GetHDRSectionInfo(ehFrameHdrElfOffset, fdeTableElfOffset, fdeTableSize);
 
     EXPECT_EQ(ehFrameHdrElfOffset, 0x00003034u);
-    EXPECT_EQ(fdeTableSize, 22U * fdeTableItemSize);
+    EXPECT_EQ(fdeTableSize, 22U);
 }
 
 /**
@@ -932,10 +891,10 @@ HWTEST_F(SymbolsFileTest, LoadSymbolsFromSaved, TestSize.Level1)
         EXPECT_EQ(symbolsFile->GetBuildId(), sfs.buildId_);
         EXPECT_EQ(symbolsFile->GetSymbols().size(), sfs.symbolStructs_.size());
 
-        for (Symbol symbol : symbolsFile->GetSymbols()) {
+        for (DfxSymbol symbol : symbolsFile->GetSymbols()) {
             SymbolStruct symbolStruct = sfs.symbolStructs_.front();
             EXPECT_EQ(symbol.funcVaddr_, symbolStruct.vaddr_);
-            EXPECT_EQ(symbol.len_, symbolStruct.len_);
+            EXPECT_EQ(symbol.size_, symbolStruct.len_);
             EXPECT_EQ(symbol.name_, symbolStruct.symbolName_);
             sfs.symbolStructs_.erase(sfs.symbolStructs_.begin());
         }

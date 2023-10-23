@@ -83,7 +83,7 @@ constexpr const uint8_t CHECK_TIMEOUT = 30;
 #endif
 #endif
 
-constexpr const double MS_DUARTION =
+constexpr const double MS_DURATION =
     static_cast<double>(std::chrono::milliseconds::duration::period::den);
 
 constexpr uint64_t KILO = 1024;
@@ -350,10 +350,6 @@ std::string AdaptSandboxPath(std::string filePath, int pid);
 #if !is_double_framework
 #define HAVE_MMAP   1
 #define MAP_PRIVATE 0x02
-#define PROT_NONE   0
-#define PROT_READ   1
-#define PROT_WRITE  2
-#define PROT_EXEC   4
 void *mmap(void *addr, size_t length, int prot, int flags, int fd, size_t offset);
 int munmap(void *addr, size_t);
 #endif

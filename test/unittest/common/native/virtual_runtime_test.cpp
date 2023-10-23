@@ -245,10 +245,10 @@ void VirtualRuntimeTest::PrepareKernelSymbol()
     runtime_->symbolsFiles_.emplace_back(std::move(kernel));
 
     auto &kernelMap = runtime_->kernelSpaceMemMaps_.emplace_back();
-    kernelMap.name_ = kernelSymbol;
-    kernelMap.begin_ = 0;
-    kernelMap.end_ = 0 + testKernelLen;
-    kernelMap.pageoffset_ = 0;
+    kernelMap.name = kernelSymbol;
+    kernelMap.begin = 0;
+    kernelMap.end = 0 + testKernelLen;
+    kernelMap.offset = 0;
 }
 
 void VirtualRuntimeTest::PrepareUserSymbol()
@@ -274,24 +274,24 @@ void VirtualRuntimeTest::PrepareUserSymbol()
  */
 HWTEST_F(VirtualRuntimeTest, GetSymbol, TestSize.Level1)
 {
-    Symbol symbol;
+    DfxSymbol symbol;
     PrepareKernelSymbol();
     PrepareUserSymbol();
 
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
 
     symbol = runtime_->GetSymbol(0u, testTid, testTid);
-    EXPECT_EQ(symbol.isValid(), false);
+    EXPECT_EQ(symbol.IsValid(), false);
 
     symbol = runtime_->GetSymbol(testKernelVaddr, testTid, testTid);
     // in kernel
-    EXPECT_EQ(symbol.isValid(), true);
+    EXPECT_EQ(symbol.IsValid(), true);
     EXPECT_EQ(symbol.funcVaddr_, testKernelVaddr);
     EXPECT_STREQ(symbol.name_.data(), "first_kernel_func");
 
     symbol = runtime_->GetSymbol(testUserVaddr + testUserMapBegin, testTid, testTid);
     // in user
-    EXPECT_EQ(symbol.isValid(), true);
+    EXPECT_EQ(symbol.IsValid(), true);
     EXPECT_EQ(symbol.funcVaddr_, testUserVaddr);
     EXPECT_STREQ(symbol.name_.data(), "first_user_func");
 }

@@ -22,6 +22,7 @@
 #include "perf_event_record.h"
 #include "perf_file_format.h"
 #include "symbols_file.h"
+#include "virtual_runtime.h"
 
 namespace OHOS {
 namespace Developtools {

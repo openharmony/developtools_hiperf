@@ -33,17 +33,18 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#include "dfx_symbols.h"
 #include "dwarf_encoding.h"
-#include "elf_parser.h"
 #include "utilities.h"
 
-using namespace OHOS::Developtools::HiPerf::ELF;
+using namespace OHOS::HiviewDFX;
 using namespace std::chrono;
 
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 bool SymbolsFile::onRecording_ = true;
+
 const std::string SymbolsFile::GetBuildId() const
 {
     return buildId_;
@@ -163,11 +164,6 @@ public:
 
     virtual ~ElfFileSymbols()
     {
-        if (mmap_ != MMAP_FAILED) {
-            if (munmap(mmap_, mmapSize_) != 0) {
-                HLOGE("munmap failed");
-            }
-        }
     }
 
     bool LoadSymbols(const std::string &symbolFilePath) override
@@ -187,153 +183,12 @@ public:
         return false;
     }
 
-    size_t ReadRoMemory(uint64_t addr, uint8_t * const data, size_t size) const override
+    std::shared_ptr<DfxElf> GetElfFile() override
     {
-        size_t readSize = 0;
-        const int wideBytes = 8;
-        const unsigned int wideMaskPosi = 7;
-        const int shortBytes = 4;
-        const unsigned int shortMaskPosi = 3;
-        if (mmap_ != MMAP_FAILED) {
-            if ((addr + size) <= mmapSize_) {
-                if (size == wideBytes && (addr & wideMaskPosi) == 0) {
-                    *(uint64_t * const)data = *(uint64_t *) (static_cast<uint8_t *>(mmap_) + addr);
-                } else if (size == shortBytes && (addr & shortMaskPosi) == 0) {
-                    *(uint32_t * const)data = *(uint32_t *) (static_cast<uint8_t *>(mmap_) + addr);
-                } else {
-                    std::copy_n(static_cast<uint8_t *>(mmap_) + addr, size, data);
-                }
-                readSize = size;
-            } else {
-                HLOGW("read out of range.");
-                HLOGW("try read 0x%" PRIx64 "(elf offset)+%zu max is 0x%" PRIx64 "", addr, size,
-                      mmapSize_);
-            }
-        } else {
-            if (readFd_ != nullptr) {
-                if (fseek(readFd_.get(), addr, SEEK_SET) != 0) {
-                    return 0;
-                }
-                if (fread(data, size, 1u, readFd_.get())) {
-                    readSize = size;
-                } else {
-                    HLOGEP("read at %" PRIx64 " failed for %s", addr, filePath_.c_str());
-                }
-            }
-            HLOGM("no mmap files loaded");
-        }
-
-        HLOGM("read %zu/%zu bytes at %" PRIx64 "(elf offset)", readSize, size, addr);
-
-        return readSize;
+        return elfFile_;
     }
 
 protected:
-    std::string CovertByteBufferToHexString(const unsigned char *buffer, size_t size) const
-    {
-        if (buffer == nullptr) {
-            HLOGE("param is null");
-            return "";
-        }
-        std::string descString;
-        size_t i = 0;
-        while (i < size) {
-            descString.append(ToHex(buffer[i]));
-            i++; // move to next char
-        }
-        return descString;
-    }
-
-    std::string ElfGetBuildId(const unsigned char *buffer, size_t size) const
-    {
-        if (buffer == nullptr) {
-            HLOGE("param is null");
-            return "";
-        }
-        const unsigned char *end = buffer + size;
-        HLOGV("size:%zu", size);
-
-        /*
-        Note Section
-        A vendor or system engineer might need to mark an object file with special
-        information that other programs can check for conformance or compatibility. Sections
-        of type SHT_NOTE and program header elements of type PT_NOTE can be used for this
-        purpose.
-
-        The note information in sections and program header elements holds any number of
-        entries, as shown in the following figure. For 64–bit objects and 32–bit objects,
-        each entry is an array of 4-byte words in the format of the target processor. Labels
-        are shown in Figure 12-6 to help explain note information organization, but are not
-        part of the specification.
-
-        Figure 12-5 Note Information
-
-        image:ELF note section information.
-        namesz and name
-        The first namesz bytes in name contain a null-terminated character representation of
-        the entry's owner or originator. No formal mechanism exists for avoiding name
-        conflicts. By convention, vendors use their own name, such as “XYZ Computer
-        Company,” as the identifier. If no name is present, namesz contains the value zero.
-        Padding is present, if necessary, to ensure 4-byte alignment for the descriptor.
-        Such padding is not included in namesz.
-
-        descsz and desc
-        The first descsz bytes in desc hold the note descriptor. If no descriptor is
-        present, descsz contains the value zero. Padding is present, if necessary, to ensure
-        4-byte alignment for the next note entry. Such padding is not included in descsz.
-
-        type
-        Provides the interpretation of the descriptor. Each originator controls its own
-        types. Multiple interpretations of a single type value can exist. A program must
-        recognize both the name and the type to understand a descriptor. Types currently
-        must be nonnegative.
-
-        The note segment that is shown in the following figure holds two entries.
-        */
-
-        // namesz + descsz + type
-        static constexpr const int elfNoteSectionLens = sizeof(uint32_t) * 3;
-
-        while (end - buffer >= elfNoteSectionLens) {
-            uint32_t namesz;
-            uint32_t descsz;
-            uint32_t type;
-            CopyFromBufferAndMove(buffer, &namesz);
-            CopyFromBufferAndMove(buffer, &descsz);
-            CopyFromBufferAndMove(buffer, &type);
-
-            // to ensure 4-byte alignment for the descriptor.
-            constexpr const int elfNoteSectionNameAlign = 4;
-
-            namesz = RoundUp(namesz, elfNoteSectionNameAlign);
-            descsz = RoundUp(descsz, elfNoteSectionNameAlign);
-            HLOGM("namesz:%u descsz:%u type:%u", namesz, descsz, type);
-
-            // size enough ?
-            if (buffer >= end) {
-                return EMPTY_STRING;
-            }
-            if (type == NT_GNU_BUILD_ID) {
-                char name[namesz + 1];
-                CopyFromBufferAndMove(buffer, &name[0], namesz);
-                name[namesz] = 0;
-                HLOGM("found buildid name:%s", name);
-                if (strcmp(name, ELF_NOTE_GNU) == 0) {
-                    std::string descString = CovertByteBufferToHexString(buffer, descsz);
-                    HLOGD("found buildid:%s", descString.c_str());
-                    return descString;
-                } else {
-                    // next
-                    buffer += descsz;
-                }
-            } else {
-                // next
-                buffer += namesz + descsz;
-            }
-        }
-        return EMPTY_STRING; // found nothing
-    }
-
     bool LoadDebugInfo(const std::string &symbolFilePath) override
     {
         if (debugInfoLoadResult_) {
@@ -348,32 +203,37 @@ protected:
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
             return false;
         }
-        std::unique_ptr<ElfFile> elfFile = LoadElfFile(elfPath);
-        if (elfFile == nullptr) {
+        elfFile_ = std::make_shared<DfxElf>(elfPath);
+        if (elfFile_ == nullptr) {
             HLOGD("elf load failed");
             return false;
         } else {
             HLOGD("loaded elf %s", elfPath.c_str());
         }
-        for (const auto &phdr : elfFile->phdrs_) {
-            if ((phdr->type_ == PT_LOAD) && (phdr->flags_ & PF_X)) {
-                // find the min addr
-                if (textExecVaddr_ != std::min(textExecVaddr_, phdr->vaddr_)) {
-                    textExecVaddr_ = std::min(textExecVaddr_, phdr->vaddr_);
-                    textExecVaddrFileOffset_ = phdr->offset_;
-                }
+
+        if (!elfFile_->IsValid()) {
+            HLOGD("parser elf file failed.");
+            return false;
+        }
+
+        auto ptloads = elfFile_->GetPtLoads();
+        for (const auto &ptload : ptloads) {
+            if (textExecVaddr_ != std::min(textExecVaddr_, ptload.second.tableVaddr)) {
+                textExecVaddr_ = std::min(textExecVaddr_, ptload.second.tableVaddr);
+                textExecVaddrFileOffset_ = ptload.second.offset;
             }
         }
 
         HLOGD("textExecVaddr_ 0x%016" PRIx64 " file offset 0x%016" PRIx64 "", textExecVaddr_,
               textExecVaddrFileOffset_);
 
-        if (!ParseShdr(std::move(elfFile))) {
-            return false;
+#ifndef __arm__
+        ShdrInfo shinfo;
+        if (elfFile_->GetSectionInfo(shinfo, ".eh_frame_hdr")) {
+            LoadEhFrameHDR(elfFile_->GetMmapPtr() + shinfo.offset, shinfo.size, shinfo.offset);
         }
+#endif
 
-        // mmap it for later use
-        LoadFileToMemory(elfPath);
         debugInfoLoadResult_ = true;
         return true;
     }
@@ -384,69 +244,17 @@ private:
     uint64_t ehFrameHDRFdeCount_ {0};
     uint64_t ehFrameHDRFdeTableItemSize_ {0};
     uint64_t ehFrameHDRFdeTableElfOffset_ {0};
-    OHOS::UniqueFd fd_ {-1};
-    std::unique_ptr<FILE, decltype(&fclose)> readFd_ {nullptr, &fclose};
-    struct ShdrInfo {
-        uint64_t sectionVaddr_;
-        uint64_t sectionSize_;
-        uint64_t sectionFileOffset_;
-        ShdrInfo(uint64_t sectionVaddr, uint64_t sectionSize, uint64_t sectionFileOffset)
-            : sectionVaddr_(sectionVaddr),
-              sectionSize_(sectionSize),
-              sectionFileOffset_(sectionFileOffset)
-        {
-        }
-    };
-    std::map<const std::string, ShdrInfo> shdrMap_ {};
-    void *mmap_ {MMAP_FAILED};
-    uint64_t mmapSize_ = {0};
-
-    const std::string GetReadableName(const std::string &name) const
-    {
-        int status = 0;
-        const char *nameStart = name.c_str();
-        bool linkerName = false;
-        if (StringStartsWith(name, LINKER_PREFIX)) {
-            nameStart += LINKER_PREFIX.size();
-            linkerName = true;
-        }
-
-        char *demangle = abi::__cxa_demangle(nameStart, nullptr, nullptr, &status);
-        if (status == 0) {
-            std::string demangleName = demangle;
-            free(static_cast<void *>(demangle));
-            return linkerName ? (LINKER_PREFIX_NAME + demangleName) : demangleName;
-        } else {
-            return linkerName ? (LINKER_PREFIX_NAME + nameStart) : nameStart;
-        }
-    }
-
-    const std::string ElfStTypeName(unsigned char stt) const
-    {
-        switch (stt) {
-            case STT_FUNC:
-                return "function";
-            case STT_GNU_IFUNC:
-                return "gun_func";
-            case STT_OBJECT:
-                return "  object";
-            default:
-                return "  unknown";
-        }
-    }
+    std::shared_ptr<DfxElf> elfFile_;
 
     bool GetSectionInfo(const std::string &name, uint64_t &sectionVaddr, uint64_t &sectionSize,
                         uint64_t &sectionFileOffset) const override
     {
-        HLOGM("Section '%s' found in %zu", name.c_str(), shdrMap_.size());
-        if (shdrMap_.count(name) > 0) {
-            HLOGM("Section '%s' found", name.c_str());
-            const auto &shdrInfo = shdrMap_.at(name);
-            sectionVaddr = shdrInfo.sectionVaddr_;
-            sectionSize = shdrInfo.sectionSize_;
-            sectionFileOffset = shdrInfo.sectionFileOffset_;
-            HLOGM("Get Section '%s' %" PRIx64 " - %" PRIx64 "", name.c_str(), sectionVaddr,
-                  sectionSize);
+        struct ShdrInfo shdrInfo;
+        if (elfFile_->GetSectionInfo(shdrInfo, name)) {
+            sectionVaddr = shdrInfo.addr;
+            sectionSize = shdrInfo.size;
+            sectionFileOffset = shdrInfo.offset;
+            HLOGM("Get Section '%s' %" PRIx64 " - %" PRIx64 "", name.c_str(), sectionVaddr, sectionSize);
             return true;
         } else {
             HLOGW("Section '%s' not found", name.c_str());
@@ -456,21 +264,33 @@ private:
 
 #ifndef __arm__
     bool GetHDRSectionInfo(uint64_t &ehFrameHdrElfOffset, uint64_t &fdeTableElfOffset,
-                           uint64_t &fdeTableSize) const override
+                           uint64_t &fdeTableSize) override
     {
+        ShdrInfo shinfo;
+        if (!elfFile_->GetSectionInfo(shinfo, ".eh_frame_hdr")) {
+            return false;
+        }
+
+        ehFrameHDRElfOffset_ = shinfo.offset;
         if (EhFrameHDRValid_) {
             ehFrameHdrElfOffset = ehFrameHDRElfOffset_;
             fdeTableElfOffset = ehFrameHDRFdeTableElfOffset_;
-            fdeTableSize = ehFrameHDRFdeCount_ * ehFrameHDRFdeTableItemSize_;
+            fdeTableSize = ehFrameHDRFdeCount_;
             return true;
-        } else {
-            HLOGW("!EhFrameHDRValid_");
+        }
+        if (!LoadEhFrameHDR(elfFile_->GetMmapPtr() + shinfo.offset, elfFile_->GetMmapSize(), shinfo.offset)) {
+            HLOGW("Failed to load eh_frame_hdr");
             return false;
         }
+
+        ehFrameHdrElfOffset = ehFrameHDRElfOffset_;
+        fdeTableElfOffset = ehFrameHDRFdeTableElfOffset_;
+        fdeTableSize = ehFrameHDRFdeCount_;
+        return true;
     }
 #endif
 
-    void DumpEhFrameHDR() const
+    void DumpEhFrameHDR()
     {
         HLOGD("  ehFrameHDRElfOffset_:          0x%" PRIx64 "", ehFrameHDRElfOffset_);
         HLOGD("  ehFrameHDRFdeCount_:           0x%" PRIx64 "", ehFrameHDRFdeCount_);
@@ -490,14 +310,13 @@ private:
         HLOGD("eh_frame_hdr:");
         HexDump(ehFrameHdr, BITS_OF_FOUR_BYTE, bufferSize);
         unsigned char version = ehFrameHdr->version;
-        HLOGD("  version:           %02x:%s", version, (version == 1) ? "valid" : "invalid");
-        HLOGD("  eh_frame_ptr_enc:  %s", dwEhFramePtr.ToString().c_str());
-        HLOGD("  fde_count_enc:     %s", dwFdeCount.ToString().c_str());
-        HLOGD("  table_enc:         %s", dwTable.ToString().c_str());
-        HLOGD("  table_enc:         %s", dwTable.ToString().c_str());
-        HLOGD("  table_value_enc:   %s", dwTableValue.ToString().c_str());
-        HLOGD("  table_iteam_size:  %zd", dwTable.GetSize() + dwTableValue.GetSize());
-        HLOGD("  table_offset_in_hdr:   %zu", dwTable.GetData() - buffer);
+        HLOGD("  version:             %02x:%s", version, (version == 1) ? "valid" : "invalid");
+        HLOGD("  eh_frame_ptr_enc:    %s", dwEhFramePtr.ToString().c_str());
+        HLOGD("  fde_count_enc:       %s", dwFdeCount.ToString().c_str());
+        HLOGD("  table_enc:           %s", dwTable.ToString().c_str());
+        HLOGD("  table_value_enc:     %s", dwTableValue.ToString().c_str());
+        HLOGD("  table_item_size:     %zd", dwTable.GetSize() + dwTableValue.GetSize());
+        HLOGD("  table_offset_in_hdr: %zu", dwTable.GetData() - buffer);
 
         if (version != 1) {
             HLOGD("eh_frame_hdr version is invalid");
@@ -513,229 +332,12 @@ private:
         if (!dwFdeCount.IsOmit() && dwFdeCount.GetValue() > 0) {
             return true;
         } else {
-            HLOGW("fde table not found.");
+            HLOGW("fde table not found.\n");
         }
         return false;
     }
 
-    void LoadFileToMemory(const std::string &loadElfPath)
-    {
-#ifndef HIPERF_ELF_READ_USE_MMAP
-        if (readFd_ == nullptr) {
-            std::string resolvedPath = CanonicalizeSpecPath(loadElfPath.c_str());
-            FILE *fp = fopen(resolvedPath.c_str(), "rb");
-            if (fp == nullptr) {
-                return;
-            }
-            readFd_ =
-                std::unique_ptr<FILE, decltype(&fclose)>(fp, &fclose);
-            return;
-        }
-#else
-        if (fd_ != -1) {
-            return;
-        }
-#if is_mingw
-        std::string resolvedPath = CanonicalizeSpecPath(loadElfPath.c_str());
-        fd_ = OHOS::UniqueFd(open(resolvedPath.c_str(), O_RDONLY | O_BINARY));
-#else
-        std::string resolvedPath = CanonicalizeSpecPath(loadElfPath.c_str());
-        fd_ = OHOS::UniqueFd(open(resolvedPath.c_str(), O_RDONLY));
-#endif
-        if (fd_ != -1) {
-            struct stat sb = {};
-
-            if (fstat(fd_, &sb) == -1) {
-                HLOGE("unable to check the file size");
-            } else {
-                HLOGV("file stat size %" PRIu64 "", sb.st_size);
-
-                // unmap it first
-                if (mmap_ != MMAP_FAILED) {
-                    munmap(mmap_, mmapSize_);
-                }
-
-                mmap_ = mmap(0, sb.st_size, PROT_READ, MAP_PRIVATE, fd_, 0);
-                if (mmap_ == MMAP_FAILED) {
-                    HLOGE("unable to map the file size %" PRIu64 " ", sb.st_size);
-                    mmapSize_ = 0;
-                } else {
-                    mmapSize_ = sb.st_size;
-                    HLOGD("mmap build with size %" PRIu64 " ", mmapSize_);
-                }
-            }
-        } else {
-            HLOGD("elf file open failed with %s by %d", loadElfPath.c_str(), errno);
-            return;
-        }
-#endif
-    }
-
-    bool ReadSymTab(const std::unique_ptr<ElfFile> &elfFile, const ELF::SectionHeader *shdr,
-                    std::vector<Symbol> &symbolsTable) const
-    {
-        if (shdr == nullptr) {
-            HLOGE("param is null");
-            return false;
-        }
-        HLOGV("ParseSymTable");
-        if (!elfFile->ParseSymTable(shdr)) {
-            return false;
-        }
-
-        HLOGV("Symbol Table:%s", shdr->secTypeName_.c_str());
-        HLOGM("%*s|%16s|%4s|%s", MAX_SYMBOLS_TYPE_NAME_LEN, "type", "addr", "size", "name");
-
-        for (const std::unique_ptr<ElfSymbol> &symbol : elfFile->symTable_->symbols_) {
-            if (ELF64_ST_TYPE(symbol->symInfo_) == STT_FUNC or
-                ELF64_ST_TYPE(symbol->symInfo_) == STT_GNU_IFUNC) {
-                /*
-                    name|            addr|size|name
-                function|00000000c0102b8c|  56|__lookup_processor_type
-                function|00000000c0102bd4|   0|__error_p
-                function|00000000c0008224|  64|__vet_atags
-                function|00000000c0008144| 128|__fixup_smp
-                function|00000000c00081d0|  64|__fixup_pv_table
-                function|00000000c000808c| 168|__create_page_tables
-                function|00000000c0b002e0|  68|__mmap_switched
-                function|00000000c0102acc|  20|__enable_mmu
-                object|00000000c0102ac0|   0|__secondary_data
-                function|00000000c0102ae0|  20|__do_fixup_smp_on_up
-                */
-
-                std::string name = elfFile->GetStrPtr(shdr->link_, symbol->nameIndex_);
-                std::string type = ElfStTypeName(ELF64_ST_TYPE(symbol->symInfo_));
-                // this will cause malloc , maybe need do this in report ?
-                std::string demangle = GetReadableName(name);
-                HLOGV("%10s|%016" PRIx64 "|%4" PRIu64 "|%s", type.c_str(), symbol->symValue_,
-                      symbol->symSize_, demangle.c_str());
-
-                if (symbol->symValue_ == 0) {
-                    continue; // we don't need 0 addr symbol
-                }
-                symbolsTable.emplace_back(symbol->symValue_, symbol->symSize_, name, demangle,
-                                          filePath_);
-            } else {
-                continue;
-            }
-        } // for symbols
-        return true;
-    }
-
-    bool ParseShdr(const std::unique_ptr<ElfFile> elfFile)
-    {
-        // only save the section info , not actually read any file content
-        for (const auto &shdrPair : elfFile->shdrs_) {
-            const auto &shdr = shdrPair.second;
-            const char *sh_name =
-                elfFile->GetStrPtr(elfFile->ehdr_->shdrStrTabIdx_, shdr->nameIndex_);
-            const unsigned char *data = elfFile->GetSectionData(shdr->secIndex_);
-
-            if (sh_name == nullptr || data == nullptr) {
-                HLOGE("name %p or data %p get failed.", sh_name, data);
-                return false;
-            }
-
-            HLOGV("shdr name '%s' vaddr 0x%" PRIx64 " offset 0x%" PRIx64 " size 0x%" PRIx64
-                  " type 0x%" PRIx64 "(%s) index %u link 0x%u entry 0x%" PRIx64 "",
-                  sh_name, shdr->secVaddr_, shdr->fileOffset_, shdr->secSize_, shdr->secType_,
-                  shdr->secTypeName_.c_str(), shdr->secIndex_, shdr->link_, shdr->secEntrySize_);
-
-            shdrMap_.emplace(sh_name, ShdrInfo(shdr->secVaddr_, shdr->secSize_, shdr->fileOffset_));
-#ifndef __arm__
-            if (shdr->secType_ == SHT_PROGBITS) {
-                if (EH_FRAME_HR == sh_name) {
-                    LoadEhFrameHDR(data, shdr->secSize_, shdr->fileOffset_);
-                    break;
-                }
-            } // for shdr
-#endif
-        }
-        return true;
-    }
-
-    void AddSectionAsSymbol(const std::unique_ptr<ELF::SectionHeader> &shdr, const char *name,
-                            std::vector<Symbol> &symbolsTable) const
-    {
-        HLOGV("add section %s as function symbol from 0x%" PRIx64 " size 0x%" PRIx64 "", name,
-              shdr->secVaddr_, shdr->secSize_);
-        symbolsTable.emplace_back(shdr->secVaddr_, shdr->secSize_, name, name, filePath_);
-    }
-
-    bool ParseShdr(const std::unique_ptr<ElfFile> elfFile, std::vector<Symbol> &symbolsTable,
-                   std::string &buildIdFound)
-    {
-        const ELF::SectionHeader *symTableShdr = nullptr;
-        // walkthough
-        for (const auto &shdrPair : elfFile->shdrs_) {
-            const auto &shdr = shdrPair.second;
-            const char *sh_name =
-                elfFile->GetStrPtr(elfFile->ehdr_->shdrStrTabIdx_, shdr->nameIndex_);
-            const unsigned char *data = elfFile->GetSectionData(shdr->secIndex_);
-
-            if (sh_name == nullptr || data == nullptr) {
-                HLOGE("name or data get failed.");
-                return false;
-            }
-
-            HLOGVVV("shdr name '%s' vaddr 0x%" PRIx64 " offset 0x%" PRIx64 " size 0x%" PRIx64
-                    " type 0x%" PRIx64 "(%s) index %u link 0x%u entry 0x%" PRIx64 "",
-                    sh_name, shdr->secVaddr_, shdr->fileOffset_, shdr->secSize_, shdr->secType_,
-                    shdr->secTypeName_.c_str(), shdr->secIndex_, shdr->link_, shdr->secEntrySize_);
-
-            shdrMap_.emplace(sh_name, ShdrInfo(shdr->secVaddr_, shdr->secSize_, shdr->fileOffset_));
-            switch (shdr->secType_) {
-                case SHT_SYMTAB:
-                    symTableShdr = shdr.get();
-                    break;
-                case SHT_DYNSYM:
-                    // if we already have SHT_SYMTAB ?
-                    if (symTableShdr == nullptr) {
-                        symTableShdr = shdr.get();
-                    }
-                    break;
-                case SHT_NOTE:
-                    // notes
-                    if (buildIdFound.empty()) {
-                        // we use our function, not from gelf_getnote
-                        HLOGM("found NOTE_GNU_BUILD_ID size:  %" PRIu64 "", shdr->secSize_);
-
-                        // there will be a log of note sh , we just need the right one
-                        buildIdFound = ElfGetBuildId(data, shdr->secSize_);
-                    }
-                    break;
-                case SHT_PROGBITS:
-                    if (PLT == sh_name) {
-                        // this is a plt section, PLT table will put here
-                        // we make it as named PLT function
-                        AddSectionAsSymbol(shdr, sh_name, symbolsTable);
-                    }
-                    break;
-                default:
-                    HLOGM("skip shdr.sh_type %" PRIx64 "", shdr->secType_);
-                    break;
-            } // for shdr
-        }     // for each shdrs_
-        // load symtab
-        if (symTableShdr != nullptr) {
-            if (!ReadSymTab(elfFile, symTableShdr, symbolsTable)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    std::unique_ptr<ElfFile> LoadElfFile(std::string &elfPath) const
-    {
-        HLOGD("try load elf %s", elfPath.c_str());
-        if (elfPath.empty()) {
-            elfPath = filePath_;
-            HLOGD("use default elf path %s\n", elfPath.c_str());
-        }
-        return ElfFile::MakeUnique(elfPath);
-    }
-
-    void UpdateSymbols(std::vector<Symbol> &symbolsTable, const std::string &elfPath)
+    void UpdateSymbols(std::vector<DfxSymbol> &symbolsTable, const std::string &elfPath)
     {
         symbols_.clear();
         HLOGD("%zu symbols loadded from symbolsTable.", symbolsTable.size());
@@ -756,34 +358,38 @@ private:
 #ifdef HIPERF_DEBUG_TIME
         const auto startTime = steady_clock::now();
 #endif
-        std::unique_ptr<ElfFile> elfFile = LoadElfFile(elfPath);
-        if (elfFile == nullptr) {
+        elfFile_ = std::make_shared<DfxElf>(elfPath);
+        if (elfFile_ == nullptr) {
             HLOGD("elf load failed");
             return false;
         } else {
             HLOGD("loaded elf %s", elfPath.c_str());
         }
-        // we prepare two table here
-        // only one we will push in to symbols_
-        // or both drop if build id is not same
-        std::vector<Symbol> symbolsTable;
-        std::string buildIdFound;
-        for (const auto &phdr : elfFile->phdrs_) {
-            if ((phdr->type_ == PT_LOAD) && (phdr->flags_ & PF_X)) {
-                // find the min addr
-                if (textExecVaddr_ != std::min(textExecVaddr_, phdr->vaddr_)) {
-                    textExecVaddr_ = std::min(textExecVaddr_, phdr->vaddr_);
-                    textExecVaddrFileOffset_ = phdr->offset_;
-                }
-            }
+
+        if (!elfFile_->IsValid()) {
+            HLOGD("parser elf file failed.");
+            return false;
         }
 
+        auto ptloads = elfFile_->GetPtLoads();
+        for (const auto &ptload : ptloads) {
+            if (textExecVaddr_ != std::min(textExecVaddr_, ptload.second.tableVaddr)) {
+                textExecVaddr_ = std::min(textExecVaddr_, ptload.second.tableVaddr);
+                textExecVaddrFileOffset_ = ptload.second.offset;
+            }
+        }
         HLOGD("textExecVaddr_ 0x%016" PRIx64 " file offset 0x%016" PRIx64 "", textExecVaddr_,
               textExecVaddrFileOffset_);
 
-        if (!ParseShdr(std::move(elfFile), symbolsTable, buildIdFound)) {
-            return false;
-        }
+        // we prepare two table here
+        // only one we will push in to symbols_
+        // or both drop if build id is not same
+        std::string buildIdFound = elfFile_->GetBuildId();
+        std::vector<DfxSymbol> symbolsTable;
+
+        // use elfFile_ to get symbolsTable
+        DfxSymbols::ParseSymbols(symbolsTable, elfFile_, elfPath);
+        DfxSymbols::AddSymbolsByPlt(symbolsTable, elfFile_, elfPath);
 
         if (UpdateBuildIdIfMatch(buildIdFound)) {
             UpdateSymbols(symbolsTable, elfPath);
@@ -794,8 +400,6 @@ private:
             return false;
         }
 
-        // mmap it for later use
-        LoadFileToMemory(elfPath);
 #ifdef HIPERF_DEBUG_TIME
         auto usedTime = duration_cast<microseconds>(steady_clock::now() - startTime);
         if (usedTime.count() != 0) {
@@ -939,11 +543,11 @@ public:
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
         std::chrono::microseconds usedTime =
             duration_cast<milliseconds>(steady_clock::now() - startTime);
-        printf("parse kernel symbols use : %0.3f ms\n", usedTime.count() / MS_DUARTION);
-        printf("parse line use : %0.3f ms\n", parseLineTime.count() / MS_DUARTION);
-        printf("sscanf line use : %0.3f ms\n", sscanfTime.count() / MS_DUARTION);
-        printf("new symbols use : %0.3f ms\n", newTime.count() / MS_DUARTION);
-        printf("read file use : %0.3f ms\n", readFileTime.count() / MS_DUARTION);
+        printf("parse kernel symbols use : %0.3f ms\n", usedTime.count() / MS_DURATION);
+        printf("parse line use : %0.3f ms\n", parseLineTime.count() / MS_DURATION);
+        printf("sscanf line use : %0.3f ms\n", sscanfTime.count() / MS_DURATION);
+        printf("new symbols use : %0.3f ms\n", newTime.count() / MS_DURATION);
+        printf("read file use : %0.3f ms\n", readFileTime.count() / MS_DURATION);
 #endif
         HLOGD("%zu line processed(%zu symbols)", lines, symbols_.size());
         return true;
@@ -1034,7 +638,7 @@ public:
                 return false;
             } else {
                 HLOGD("kernel notes size: %zu", notes.size());
-                buildId_ = ElfGetBuildId(reinterpret_cast<const unsigned char*>(notes.data()), notes.size());
+                buildId_ = DfxElf::GetBuildId((uint64_t)notes.data(), (uint64_t)notes.size());
             }
         } // no search path
 
@@ -1095,7 +699,7 @@ private:
         std::string sysFile = "/sys/module/" + module_ + "/notes/.note.gnu.build-id";
         std::string buildIdRaw = ReadFileToString(sysFile);
         if (!buildIdRaw.empty()) {
-            buildId_ = ElfGetBuildId(reinterpret_cast<const unsigned char*>(buildIdRaw.data()), buildIdRaw.size());
+            buildId_ = DfxElf::GetBuildId((uint64_t)buildIdRaw.data(), (uint64_t)buildIdRaw.size());
             HLOGD("kerne module %s(%s) build id %s", module_.c_str(), filePath_.c_str(),
                   buildId_.c_str());
             return buildId_.empty() ? false : true;
@@ -1199,14 +803,18 @@ void SymbolsFile::AdjustSymbols()
     }
 
     // order
-    sort(symbols_.begin(), symbols_.end(), Symbol::CompareLessThen);
+    sort(symbols_.begin(), symbols_.end(), [](const DfxSymbol& a, const DfxSymbol& b) {
+        return a.funcVaddr_ < b.funcVaddr_;
+    });
     HLOGV("sort completed");
 
     size_t fullSize = symbols_.size();
     size_t erased = 0;
 
     // Check for duplicate vaddr
-    auto last = std::unique(symbols_.begin(), symbols_.end(), &Symbol::SameVaddr);
+    auto last = std::unique(symbols_.begin(), symbols_.end(), [](const DfxSymbol &a, const DfxSymbol &b) {
+        return (a.funcVaddr_ == b.funcVaddr_);
+    });
     symbols_.erase(last, symbols_.end());
     erased = fullSize - symbols_.size();
     HLOGV("uniqued completed");
@@ -1234,28 +842,30 @@ void SymbolsFile::SortMatchedSymbols()
     if (matchedSymbols_.size() <= 1u) {
         return;
     }
-    sort(matchedSymbols_.begin(), matchedSymbols_.end(), Symbol::CompareByPointer);
+    sort(matchedSymbols_.begin(), matchedSymbols_.end(), [](const DfxSymbol* a, const DfxSymbol* b) {
+        return a->funcVaddr_ < b->funcVaddr_;
+    });
 }
 
-const std::vector<Symbol> &SymbolsFile::GetSymbols()
+const std::vector<DfxSymbol> &SymbolsFile::GetSymbols()
 {
     return symbols_;
 }
 
-const std::vector<Symbol *> &SymbolsFile::GetMatchedSymbols()
+const std::vector<DfxSymbol *> &SymbolsFile::GetMatchedSymbols()
 {
     return matchedSymbols_;
 }
 
-const Symbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
+const DfxSymbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
 {
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
-    Symbol symbol;
+    DfxSymbol symbol;
     // it should be already order from small to large
     auto found =
-        std::upper_bound(symbols_.begin(), symbols_.end(), vaddrInFile, Symbol::ValueLessThen);
+        std::upper_bound(symbols_.begin(), symbols_.end(), vaddrInFile, DfxSymbol::ValueLessThen);
     /*
     if data is { 1, 2, 4, 5, 5, 6 };
     upper_bound for each val :
@@ -1283,8 +893,8 @@ const Symbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
         found = std::prev(found);
         if (found->Contain(vaddrInFile)) {
             found->offsetToVaddr_ = vaddrInFile - found->funcVaddr_;
-            if (!found->HasMatched()) {
-                found->SetMatchFlag();
+            if (!found->matched_) {
+                found->matched_ = true;
                 matchedSymbols_.push_back(&(*found));
             }
             symbol = *found; // copy
@@ -1292,7 +902,7 @@ const Symbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
         }
     }
 
-    if (!symbol.isValid()) {
+    if (!symbol.IsValid()) {
         HLOGV("NOT found vaddr 0x%" PRIx64 " in symbole file %s(%zu)", vaddrInFile,
               filePath_.c_str(), symbols_.size());
     }
@@ -1365,8 +975,8 @@ void SymbolsFile::ExportSymbolToFileFormat(SymbolFileStruct &symbolFileStruct)
     for (auto symbol : symbols) {
         auto &symbolStruct = symbolFileStruct.symbolStructs_.emplace_back();
         symbolStruct.vaddr_ = symbol->funcVaddr_;
-        symbolStruct.len_ = symbol->len_;
-        symbolStruct.symbolName_ = symbol->Name();
+        symbolStruct.len_ = symbol->size_;
+        symbolStruct.symbolName_ = symbol->GetName();
     }
 
     HLOGV("export %zu symbol to SymbolFileStruct from %s", symbolFileStruct.symbolStructs_.size(),
