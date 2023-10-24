@@ -649,7 +649,7 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
             std::string fileName {basePath + subDir + cmdline};
             if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
                 res = std::stoul(subDir, nullptr);
-                if (res >= 0 ) {
+                if (res > 0 ) {
                     HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage.c_str(), res);
                     return res;
                 }

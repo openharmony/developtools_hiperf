@@ -600,7 +600,7 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
         HLOGV("hit kernel cache 0x%" PRIx64 " %d", ip, symbol.hit_);
         return true;
     } else if (userSymbolCache_.count(symbol.fileVaddr_) != 0) {
-        DfxSymbol &cachedSymbol = userSymbolCache_[symbol.fileVaddr_];
+        const DfxSymbol &cachedSymbol = userSymbolCache_[symbol.fileVaddr_];
         // must be the same file
         if (cachedSymbol.module_ != symbol.module_) {
             return false;
