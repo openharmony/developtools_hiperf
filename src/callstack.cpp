@@ -696,6 +696,9 @@ bool CallStack::CheckAndStepArkFrame(const VirtualThread &thread, uintptr_t& pc,
 bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &callStack,
                           size_t maxStackLevel)
 {
+#ifdef target_cpu_x86_64
+    return false;
+#else
     HITRACE_METER_NAME(HITRACE_TAG_OHOS, __PRETTY_FUNCTION__);
     UnwindInfo unwindInfo = {
         .thread = thread,
@@ -745,6 +748,7 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &c
         }
     }
     return true;
+#endif
 }
 
 void CallStack::DumpTableInfo(UnwindTableInfo &outTableInfo)
