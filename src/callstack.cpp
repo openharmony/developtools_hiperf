@@ -769,24 +769,19 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
     DsoUnwindTableInfoMap &unwTabMap = tableInfoMap[unwindInfoPtr->thread.pid_];
     // find use dso name as key
     if (unwTabMap.find(symbolsFile->filePath_) == unwTabMap.end()) {
-        ElfTableInfo eti;
+        UnwindTableInfo uti;
         auto elf = symbolsFile->GetElfFile();
         if (elf == nullptr) {
             return -1;
         }
-        if (elf->FindElfTableInfo(pc, map, eti) == 0) {
-#ifdef target_cpu_arm
-            auto& table = eti.diExidx;
-#else
-            auto& table = eti.diEhHdr;
-#endif
-            if (table.format == -1) {
+        if (elf->FindUnwindTableInfo(pc, map, uti) == 0) {
+            if (uti.format == -1) {
                 HLOGV("parse unwind table failed.");
                 return -1;
             }
-            unwTabMap[symbolsFile->filePath_] = table;
+            unwTabMap[symbolsFile->filePath_] = uti;
             outTableInfo = unwTabMap[symbolsFile->filePath_];
-            DumpTableInfo(table);
+            DumpTableInfo(uti);
             return 0;
         } else {
             HLOGV("FillUnwindTable failed");
