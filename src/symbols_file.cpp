@@ -183,6 +183,11 @@ public:
         return false;
     }
 
+    void EnableMiniDebugInfo() override
+    {
+        enbleMiniDebugInfo_ = true;
+    }
+
     std::shared_ptr<DfxElf> GetElfFile() override
     {
         return elfFile_;
@@ -240,6 +245,7 @@ protected:
 
 private:
     bool EhFrameHDRValid_ {false};
+    bool enbleMiniDebugInfo_ {false};
     uint64_t ehFrameHDRElfOffset_ {0};
     uint64_t ehFrameHDRFdeCount_ {0};
     uint64_t ehFrameHDRFdeTableItemSize_ {0};
@@ -353,6 +359,18 @@ private:
         }
     }
 
+    void AddSymbols(std::vector<DfxSymbol>& symbolsTable, std::shared_ptr<DfxElf> elf, const std::string& filePath)
+    {
+        // use elfFile_ to get symbolsTable
+        DfxSymbols::ParseSymbols(symbolsTable, elf, filePath);
+        DfxSymbols::AddSymbolsByPlt(symbolsTable, elf, filePath);
+        auto embeddedElf = elf->GetEmbeddedElf();
+        if (enbleMiniDebugInfo_ && embeddedElf) {
+            DfxSymbols::ParseSymbols(symbolsTable, embeddedElf, filePath);
+            DfxSymbols::AddSymbolsByPlt(symbolsTable, embeddedElf, filePath);
+        }
+    }
+
     bool LoadElfSymbols(std::string elfPath)
     {
 #ifdef HIPERF_DEBUG_TIME
@@ -364,6 +382,10 @@ private:
             return false;
         } else {
             HLOGD("loaded elf %s", elfPath.c_str());
+        }
+
+        if (enbleMiniDebugInfo_) {
+            elfFile_->EnableMiniDebugInfo();
         }
 
         if (!elfFile_->IsValid()) {
@@ -386,11 +408,7 @@ private:
         // or both drop if build id is not same
         std::string buildIdFound = elfFile_->GetBuildId();
         std::vector<DfxSymbol> symbolsTable;
-
-        // use elfFile_ to get symbolsTable
-        DfxSymbols::ParseSymbols(symbolsTable, elfFile_, elfPath);
-        DfxSymbols::AddSymbolsByPlt(symbolsTable, elfFile_, elfPath);
-
+        AddSymbols(symbolsTable, elfFile_, elfPath);
         if (UpdateBuildIdIfMatch(buildIdFound)) {
             UpdateSymbols(symbolsTable, elfPath);
         } else {

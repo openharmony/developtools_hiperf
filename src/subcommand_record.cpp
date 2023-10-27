@@ -129,6 +129,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" delayUnwind_:\t%d\n", delayUnwind_);
     printf(" disableUnwind_:\t%d\n", disableUnwind_);
     printf(" disableCallstackExpend_:\t%d\n", disableCallstackExpend_);
+    printf(" enableDebugInfoSymbolic:\t%d\n", enableDebugInfoSymbolic_);
     printf(" symbolDir_:\t%s\n", VectorToString(symbolDir_).c_str());
     printf(" outputFilename_:\t%s\n", outputFilename_.c_str());
     printf(" appPackage_:\t%s\n", appPackage_.c_str());
@@ -172,6 +173,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--disable-callstack-expand", disableCallstackExpend_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--enable-debuginfo-symbolic", enableDebugInfoSymbolic_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--verbose", verboseReport_)) {
@@ -792,6 +796,7 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     virtualRuntime_.SetCallStackExpend(disableCallstackExpend_ ? 0 : 1);
     // these is same for virtual runtime
     virtualRuntime_.SetDisableUnwind(disableUnwind_ or delayUnwind_);
+    virtualRuntime_.EnableDebugInfoSymbolic(enableDebugInfoSymbolic_);
     if (!symbolDir_.empty()) {
         if (!virtualRuntime_.SetSymbolsPaths(symbolDir_)) {
             printf("Failed to set symbol path(%s)\n", VectorToString(symbolDir_).c_str());

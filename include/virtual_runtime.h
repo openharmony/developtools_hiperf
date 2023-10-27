@@ -90,6 +90,10 @@ public:
         disableUnwind_ = disableUnwind;
     }
 
+    void EnableDebugInfoSymbolic(bool enable)
+    {
+        enableDebugInfoSymbolic_ = enable;
+    }
     DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
 
@@ -123,6 +127,7 @@ public:
 
 private:
     bool disableUnwind_ = true;
+    bool enableDebugInfoSymbolic_ = false;
     size_t callstackMergeLevel_ = 1;
 #if defined(is_ohos) && is_ohos
     CallStack callstack_;
