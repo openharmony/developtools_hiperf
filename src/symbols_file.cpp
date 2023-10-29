@@ -444,11 +444,17 @@ public:
     {
     }
 
+    KernelSymbols(const std::string &symbolFilePath,
+                  const SymbolsFileType symbolsFileType)
+        : ElfFileSymbols(symbolFilePath, symbolsFileType)
+    {
+    }
+
     static constexpr const int KSYM_MIN_TOKENS = 3;
     static constexpr const int KSYM_DEFAULT_LINE = 35000;
     static constexpr const int KSYM_DEFAULT_SIZE = 1024 * 1024 * 1; // 1MB
 
-    bool ParseKallsymsLine()
+    bool ParseKallsymsLine(const std::string &kallsymsPath)
     {
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
         const auto startTime = steady_clock::now();
@@ -462,8 +468,8 @@ public:
         const auto eachFileStartTime = steady_clock::now();
 #endif
         std::string kallsym;
-        if (!ReadFileToString("/proc/kallsyms", kallsym, KSYM_DEFAULT_SIZE) || kallsym.empty()) {
-            HLOGW("/proc/kallsyms load failed.");
+        if (!ReadFileToString(kallsymsPath, kallsym, KSYM_DEFAULT_SIZE) || kallsym.empty()) {
+            HLOGW("%s load failed.", kallsymsPath.c_str());
             return false;
         }
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
@@ -549,7 +555,7 @@ public:
         printf("new symbols use : %0.3f ms\n", newTime.count() / MS_DURATION);
         printf("read file use : %0.3f ms\n", readFileTime.count() / MS_DURATION);
 #endif
-        HLOGD("%zu line processed(%zu symbols)", lines, symbols_.size());
+        HLOGD("load %s: %zu line processed(%zu symbols)", kallsymsPath.c_str(), lines, symbols_.size());
         return true;
     }
 
@@ -578,7 +584,7 @@ public:
         }
 
         // getline end
-        if (!ParseKallsymsLine()) {
+        if (!ParseKallsymsLine("/proc/kallsyms")) {
             return false;
         }
 
@@ -651,6 +657,87 @@ public:
         return ip;
     }
     ~KernelSymbols() override {}
+};
+
+class KernelThreadSymbols : public KernelSymbols {
+public:
+    explicit KernelThreadSymbols(const std::string &symbolFilePath)
+        : KernelSymbols(symbolFilePath, SYMBOL_KERNEL_THREAD_FILE)
+    {
+    }
+
+    bool LoadKernelSyms()
+    {
+        // find real proc path by filePath_
+        std::string procPath;
+        HLOGD("try read kernel thread symbol file %s in %s", filePath_.c_str(), procPath.c_str());
+        if (access(procPath.c_str(), R_OK) != 0) {
+            printf("kernel thread symbol file %s cannot be opened\n", filePath_.c_str());
+            return false;
+        }
+        bool hasChangeKptr = false;
+        std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
+        if (oldKptrRestrict.front() != '0') {
+            if (!IsSupportNonDebuggableApp()) {
+                HLOGD("user mode do not load kernel syms");
+                printf("Hiperf is not running as root mode. Do not need load kernel syms\n");
+                return false;
+            }
+            printf("/proc/sys/kernel/kptr_restrict is NOT 0, will try set it to 0.\n");
+            hasChangeKptr = WriteStringToFile(KPTR_RESTRICT, "0");
+            if (!hasChangeKptr) {
+                printf("/proc/sys/kernel/kptr_restrict write failed and we can't not change it.\n");
+            }
+        }
+
+        // getline end
+        if (!ParseKallsymsLine(procPath)) {
+            return false;
+        }
+
+        if (hasChangeKptr) {
+            if (!WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict)) {
+                printf("recover /proc/sys/kernel/kptr_restrict fail.\n");
+            }
+        }
+
+        if (symbols_.empty()) {
+            printf("The symbol table addresses in %s are all 0.\n"
+                   "Please check the value of /proc/sys/kernel/kptr_restrict, it "
+                   "should be 0.\n", filePath_.c_str());
+            return false;
+        } else {
+            AdjustSymbols();
+            HLOGV("%zu symbols_ loadded from %s.\n", symbols_.size(), procPath.c_str());
+            return true;
+        }
+    }
+    bool LoadSymbols(const std::string &symbolFilePath) override
+    {
+        symbolsLoaded_ = true;
+        HLOGV("KernelThreadSymbols try read '%s', inDeviceRecord %d",
+              filePath_.c_str(), onRecording_);
+
+        if (onRecording_) {
+            const auto startTime = std::chrono::steady_clock::now();
+            if (!LoadKernelSyms()) {
+                if (IsRoot()) {
+                    printf("parse %s failed.\n", filePath_.c_str());
+                }
+            } else {
+                const auto thisTime = std::chrono::steady_clock::now();
+                const auto usedTimeMsTick =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(thisTime - startTime);
+                HLOGV("Load kernel thread symbols (total %" PRId64 " ms)\n", (int64_t)usedTimeMsTick.count());
+                // load complete
+                return true;
+            }
+        } // no search path
+
+        // try elf
+        return ElfFileSymbols::LoadSymbols(filePath_);
+    }
+    ~KernelThreadSymbols() override {}
 };
 
 class KernelModuleSymbols : public ElfFileSymbols {
@@ -772,6 +859,8 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
                                                                           : symbolFilePath);
         case SYMBOL_KERNEL_MODULE_FILE:
             return std::make_unique<KernelModuleSymbols>(symbolFilePath);
+        case SYMBOL_KERNEL_THREAD_FILE:
+            return std::make_unique<KernelThreadSymbols>(symbolFilePath);
         case SYMBOL_ELF_FILE:
             return std::make_unique<ElfFileSymbols>(symbolFilePath);
         case SYMBOL_JAVA_FILE:
