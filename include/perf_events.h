@@ -491,6 +491,8 @@ public:
         size_t posCallChain = 0;
     };
 
+    bool isHM_ = false;
+    void SetHM(bool isHM);
 private:
     size_t recordEventCount_ = 0; // only for debug time
 #ifdef HIPERF_DEBUG_TIME

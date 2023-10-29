@@ -116,6 +116,8 @@ private:
     void PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct);
     void PrintFeatureEventdesc(int indent, const PerfFileSectionEventDesc &sectionEventdesc);
     VirtualRuntime vr_;
+
+    void SetHM();
 };
 } // namespace HiPerf
 } // namespace Developtools

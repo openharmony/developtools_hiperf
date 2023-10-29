@@ -465,6 +465,8 @@ bool SubCommandReport::LoadPerfData()
     ProcessSymbolsData();
 
     HLOGD("process record");
+    // before load data section
+    SetHM();
     recordFileReader_->ReadDataSection(
         std::bind(&SubCommandReport::RecordCallBack, this, std::placeholders::_1));
     if (cpuOffMode_) {
@@ -609,6 +611,14 @@ bool SubCommandReport::RegisterSubCommandReport()
 {
     std::unique_ptr<SubCommand> cmd = std::make_unique<SubCommandReport>();
     return SubCommand::RegisterSubCommand("report", std::move(cmd));
+}
+
+void SubCommandReport::SetHM()
+{
+    std::string os = recordFileReader_->GetFeatureString(FEATURE::OSRELEASE);
+    isHM_ = os.find(HMKERNEL) != std::string::npos;
+    GetReport().virtualRuntime_.SetHM(isHM_);
+    HLOGD("Set isHM_: %d", isHM_);
 }
 } // namespace HiPerf
 } // namespace Developtools

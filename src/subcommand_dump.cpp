@@ -180,6 +180,8 @@ bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
     }
 
     if (dumpAll_ || dumpData_) {
+        // before load data section
+        SetHM();
         DumpDataPortion(indent_);
     }
 
@@ -550,6 +552,14 @@ void SubCommandDump::DumpFeaturePortion(int indent)
 bool SubCommandDump::RegisterSubCommandDump()
 {
     return SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
+}
+
+void SubCommandDump::SetHM()
+{
+    std::string os = reader_->GetFeatureString(FEATURE::OSRELEASE);
+    isHM_ = os.find(HMKERNEL) != std::string::npos;
+    vr_.SetHM(isHM_);
+    HLOGD("Set isHM_: %d", isHM_);
 }
 } // namespace HiPerf
 } // namespace Developtools

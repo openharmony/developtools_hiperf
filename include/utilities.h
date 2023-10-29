@@ -308,6 +308,8 @@ bool IsBeta();
 bool IsAllowProfilingUid();
 bool PowerOfTwo(uint64_t n);
 
+const std::string HMKERNEL = "hmkernel";
+
 #define INDENT_ONE_LEVEL (indent + 1)
 #define INDENT_TWO_LEVEL (indent + 2)
 

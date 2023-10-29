@@ -310,6 +310,8 @@ private:
     std::chrono::microseconds saveFeatureTimes_ = std::chrono::microseconds::zero();
 #endif
     std::chrono::time_point<std::chrono::steady_clock> startSaveFileTimes_;
+
+    void SetHM();
 };
 } // namespace HiPerf
 } // namespace Developtools

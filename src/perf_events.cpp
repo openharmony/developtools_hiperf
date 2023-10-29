@@ -686,6 +686,9 @@ void PerfEvents::LoadTracepointEventTypesFromSystem()
 {
     if (traceConfigTable.empty()) {
         std::string basePath {"/sys/kernel/tracing/events"};
+        if (isHM_) {
+            basePath = "/sys/kernel/tracing/hongmeng/events";
+        }
         if (access(basePath.c_str(), R_OK) != 0) {
             basePath = "/sys/kernel/debug/tracing/events";
         }
@@ -784,6 +787,11 @@ bool PerfEvents::PerfEventsEnable(bool enable)
         }
     }
     return true;
+}
+
+void PerfEvents::SetHM(bool isHM)
+{
+    isHM_ = isHM;
 }
 
 void PerfEvents::SetStatCallBack(StatCallBack reportCallBack)

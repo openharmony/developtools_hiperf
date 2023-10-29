@@ -90,6 +90,12 @@ public:
         disableUnwind_ = disableUnwind;
     }
 
+    bool isHM_ = false;
+    void SetHM(bool isHM)
+    {
+        isHM_ = isHM;
+    }
+
     DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
 

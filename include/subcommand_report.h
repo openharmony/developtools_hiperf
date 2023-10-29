@@ -184,6 +184,8 @@ private:
     FRIEND_TEST(SubCommandReportTest, TestVerifyDisplayOption);
     FRIEND_TEST(SubCommandReportTest, TestPrepareConsole);
     FRIEND_TEST(SubCommandReportTest, TestPrepareConsole);
+
+    void SetHM();
 };
 } // namespace HiPerf
 } // namespace Developtools

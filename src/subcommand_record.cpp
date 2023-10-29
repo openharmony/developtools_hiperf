@@ -673,7 +673,10 @@ bool SubCommandRecord::TraceOffCpu()
 {
     // whether system support sched_switch event
     int enable = -1;
-    const std::string node = "/sys/kernel/tracing/events/sched/sched_switch/enable";
+    std::string node = "/sys/kernel/tracing/events/sched/sched_switch/enable";
+    if (isHM_) {
+        node = "/sys/kernel/tracing/hongmeng/events/sched/sched_switch/enable";
+    }
     const std::string nodeDebug = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
     if (!ReadIntFromProcFile(node.c_str(), enable) and
         !ReadIntFromProcFile(nodeDebug.c_str(), enable)) {
@@ -1068,6 +1071,8 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     } else if (isFifoClient_) {
         return true;
     }
+
+    SetHM();
 
     // prepare PerfEvents
     if (!PrepareSysKernel() or !PreparePerfEvent()) {
@@ -1625,6 +1630,15 @@ bool SubCommandRecord::RecordCompleted()
 bool SubCommandRecord::RegisterSubCommandRecord(void)
 {
     return SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
+}
+
+void SubCommandRecord::SetHM()
+{
+    std::string version = ReadFileToString("/proc/version");
+    isHM_ = version.find(HMKERNEL) != std::string::npos;
+    virtualRuntime_.SetHM(isHM_);
+    perfEvents_.SetHM(isHM_);
+    HLOGD("Set isHM_: %d", isHM_);
 }
 } // namespace HiPerf
 } // namespace Developtools

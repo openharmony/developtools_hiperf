@@ -60,6 +60,7 @@ private:
     };
 
     bool ShowSupportEventsTypes(std::vector<perf_type_id> requestEventTypes);
+    void SetHM();
 };
 } // namespace HiPerf
 } // namespace Developtools
