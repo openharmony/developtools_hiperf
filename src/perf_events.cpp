@@ -340,7 +340,7 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
             eventItem.attr.comm = 1;
             eventItem.attr.mmap = 1;
             eventItem.attr.mmap2 = 1;
-            eventItem.attr.mmap_data = 0;
+            eventItem.attr.mmap_data = 1;
         }
 
         if (sampleStackType_ == SampleStackType::DWARF) {
