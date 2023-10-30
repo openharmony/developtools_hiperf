@@ -301,6 +301,7 @@ private:
 #if USE_COLLECT_SYMBOLIC
     std::unordered_set<uint64_t> kernelSymbolsHits_;
     std::unordered_map<pid_t, std::unordered_set<uint64_t>> userSymbolsHits_;
+    std::unordered_map<pid_t, std::unordered_set<uint64_t>> kernelThreadSymbolsHits_;
     void SymbolicHits();
 #endif
 

@@ -234,6 +234,34 @@ void VirtualThread::ParseMap()
 }
 #endif
 
+constexpr const int MMAP_LINE_TOKEN_INDEX_NAME = 5;
+constexpr const int MMAP_LINE_MAX_TOKEN = 6;
+void VirtualThread::ParseServiceMap(const std::string &filename)
+{
+    std::string mapPath = StringPrintf("/proc/%d/maps", pid_);
+    std::string mapContent = ReadFileToString(mapPath);
+    uint64_t begin = 0;
+    uint64_t end = 0;
+    if (mapContent.size() == 0) {
+        HLOGW("Parse %s failed, content empty", mapPath.c_str());
+        return;
+    }
+    std::istringstream s(mapContent);
+    std::string line;
+    while (std::getline(s, line)) {
+        std::vector<std::string> mapTokens = StringSplit(line, " ");
+        if (mapTokens.size() == MMAP_LINE_MAX_TOKEN &&
+            mapTokens[MMAP_LINE_TOKEN_INDEX_NAME] == name_) {
+            HLOGM("map line: %s", line.c_str());
+            std::vector<std::string> addrRanges = StringSplit(mapTokens[0], "-");
+            begin = std::stoull(addrRanges[0], nullptr, NUMBER_FORMAT_HEX_BASE);
+            end = std::stoull(addrRanges[1], nullptr, NUMBER_FORMAT_HEX_BASE);
+            break;
+        }
+    }
+    CreateMapItem(filename, begin, end - begin, 0);
+}
+
 void VirtualThread::SortMemMaps()
 {
     for (int currPos = 1; currPos < static_cast<int>(memMaps_.size()); ++currPos) {

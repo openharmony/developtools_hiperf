@@ -808,6 +808,9 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     // prepare from kernel and ko
     virtualRuntime_.UpdateKernelSpaceMaps();
     virtualRuntime_.UpdateKernelModulesSpaceMaps();
+    if (isHM_) {
+        virtualRuntime_.UpdateServiceSpaceMaps();
+    }
     return true;
 }
 
@@ -1459,6 +1462,15 @@ bool SubCommandRecord::PostProcessRecordFile()
 #if USE_COLLECT_SYMBOLIC
 void SubCommandRecord::SymbolicHits()
 {
+    if (isHM_) {
+        for (auto &processPair : kernelThreadSymbolsHits_) {
+            for (auto &vaddr : processPair.second) {
+                virtualRuntime_.GetSymbol(vaddr, processPair.first, processPair.first,
+                                          PERF_CONTEXT_MAX);
+            }
+        }
+    }
+
     for (auto &vaddr : kernelSymbolsHits_) {
         virtualRuntime_.GetSymbol(vaddr, 0, 0, PERF_CONTEXT_KERNEL);
     }
@@ -1481,7 +1493,9 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
                                                             : PERF_CONTEXT_USER;
         // if no nr use ip
         if (sample->data_.nr == 0) {
-            if (context == PERF_CONTEXT_KERNEL) {
+            if (virtualRuntime_.IsKernelThread(sample->data_.pid)) {
+                kernelThreadSymbolsHits_[sample->data_.pid].insert(sample->data_.ip);
+            } else if (context == PERF_CONTEXT_KERNEL) {
                 kernelSymbolsHits_.insert(sample->data_.ip);
             } else {
                 userSymbolsHits_[sample->data_.pid].insert(sample->data_.ip);
@@ -1495,7 +1509,9 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
                         context = PERF_CONTEXT_USER;
                     }
                 } else {
-                    if (context == PERF_CONTEXT_KERNEL) {
+                    if (virtualRuntime_.IsKernelThread(sample->data_.pid)) {
+                        kernelThreadSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
+                    } else if (context == PERF_CONTEXT_KERNEL) {
                         kernelSymbolsHits_.insert(sample->data_.ips[i]);
                     } else {
                         userSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
@@ -1522,6 +1538,9 @@ bool SubCommandRecord::FinishWriteRecordFile()
         HLOGD("Load kernel symbols");
         virtualRuntime_.UpdateKernelSymbols();
         virtualRuntime_.UpdateKernelModulesSymbols();
+        if (isHM_) {
+            virtualRuntime_.UpdateServiceSymbols();
+        }
 #endif
         HLOGD("Load user symbols");
         fileWriter_->ReadDataSection(

@@ -78,6 +78,7 @@ public:
     }
 
     void ParseMap();
+    void ParseServiceMap(const std::string &filename);
     void CreateMapItem(const std::string filename, uint64_t begin, uint64_t len, uint64_t offset);
     std::shared_ptr<DfxMap> FindMapByAddr(uint64_t addr) const;
     std::shared_ptr<DfxMap> FindMapByFileInfo(const std::string name, uint64_t offset) const;

@@ -62,11 +62,13 @@ public:
     // we make a kernel symbols from some proc file
     void UpdateKernelSpaceMaps();
     void UpdateKernelModulesSpaceMaps();
+    void UpdateServiceSpaceMaps();
     // load vdso
     void LoadVdso();
 
     void UpdateKernelSymbols();
     void UpdateKernelModulesSymbols();
+    void UpdateServiceSymbols();
 
     // set symbols path , it will send to every symobile file for search
     bool SetSymbolsPaths(const std::vector<std::string> &symbolsPaths);
@@ -110,6 +112,7 @@ public:
     void UpdateFromPerfData(const std::vector<SymbolFileStruct> &);
     void UnwindFromRecord(PerfRecordSample &recordSample);
     std::string ReadThreadName(pid_t tid, bool isThread);
+    bool IsKernelThread(pid_t pid);
 
     // debug time
 #ifdef HIPERF_DEBUG_TIME
@@ -145,6 +148,7 @@ private:
     };
     HashList<uint64_t, DfxSymbol> userSymbolCache_;
     HashList<uint64_t, DfxSymbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
+    HashList<uint64_t, DfxSymbol> kThreadSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
     bool GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
                         const perf_callchain_context &context);
     // find synbols function name
@@ -168,6 +172,7 @@ private:
     const DfxSymbol GetKernelSymbol(uint64_t ip, const std::vector<DfxMap> &memMaps,
                                  const VirtualThread &thread);
     const DfxSymbol GetUserSymbol(uint64_t ip, const VirtualThread &thread);
+    const DfxSymbol GetKernelThreadSymbol(uint64_t ip, const VirtualThread &thread);
 #ifdef HIPERF_DEBUG
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
 #endif
@@ -175,6 +180,9 @@ private:
                            perf_callchain_context context);
 
     std::vector<std::string> symbolsPaths_;
+
+    // kernel thread
+    void UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, std::string filename);
 
     FRIEND_TEST(VirtualRuntimeTest, SetRecordMode);
     FRIEND_TEST(VirtualRuntimeTest, UpdateKernelSymbols);

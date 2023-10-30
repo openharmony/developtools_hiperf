@@ -670,6 +670,9 @@ public:
     {
         // find real proc path by filePath_
         std::string procPath;
+        if (filePath_ == SYSMGR_FILE_NAME) {
+            procPath = StringPrintf("/proc/%u/uallsyms", SYSMGR_PID);
+        }
         HLOGD("try read kernel thread symbol file %s in %s", filePath_.c_str(), procPath.c_str());
         if (access(procPath.c_str(), R_OK) != 0) {
             printf("kernel thread symbol file %s cannot be opened\n", filePath_.c_str());
@@ -877,6 +880,8 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &s
     // we need check file name here
     if (symbolFilePath == KERNEL_MMAP_NAME) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE, symbolFilePath);
+    } else if (symbolFilePath == SYSMGR_FILE_NAME) {
+        return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, symbolFilePath);
     } else if (StringEndsWith(symbolFilePath, KERNEL_MODULES_EXT_NAME)) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE, symbolFilePath);
     } else {

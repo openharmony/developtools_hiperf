@@ -53,6 +53,10 @@ const std::string LINKER_PREFIX_NAME = "[linker]";
 
 const int MAX_SYMBOLS_TYPE_NAME_LEN = 10;
 
+const pid_t SYSMGR_PID = 2;
+const std::string SYSMGR_NAME = "sysmgr";
+const std::string SYSMGR_FILE_NAME = "sysmgr.elf";
+
 class FileSymbol {
     [[maybe_unused]] uint64_t vaddr_ = 0;
     [[maybe_unused]] uint64_t len_ = 0;
