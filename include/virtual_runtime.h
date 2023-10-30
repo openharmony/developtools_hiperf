@@ -177,7 +177,7 @@ private:
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
 #endif
     void SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
-                           perf_callchain_context context);
+                           pid_t server_pid, perf_callchain_context context);
 
     std::vector<std::string> symbolsPaths_;
 

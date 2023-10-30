@@ -354,6 +354,10 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
         } else {
             eventItem.attr.sample_type = SAMPLE_TYPE;
         }
+
+        if (isHM_) {
+            eventItem.attr.sample_type |= PERF_SAMPLE_SERVER_PID;
+        }
     }
 
     // set clock id
@@ -1286,6 +1290,11 @@ size_t PerfEvents::GetStackSizePosInSampleRecord(MmapFd &mmap)
             uint64_t reg_nr = __builtin_popcountll(mmap.attr->sample_regs_user);
             pos += reg_nr * sizeof(uint64_t);
         }
+    }
+    if (mmap.attr->sample_type & PERF_SAMPLE_SERVER_PID) {
+        uint64_t server_nr = 0;
+        GetRecordFieldFromMmap(mmap, &server_nr, mmap.mmapPage->data_tail + pos, sizeof(server_nr));
+        pos += (sizeof(server_nr) + server_nr * sizeof(uint64_t));
     }
     return pos;
 }

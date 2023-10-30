@@ -1491,14 +1491,16 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 #if USE_COLLECT_SYMBOLIC
         perf_callchain_context context = record->inKernel() ? PERF_CONTEXT_KERNEL
                                                             : PERF_CONTEXT_USER;
+        pid_t server_pid;
         // if no nr use ip
         if (sample->data_.nr == 0) {
-            if (virtualRuntime_.IsKernelThread(sample->data_.pid)) {
-                kernelThreadSymbolsHits_[sample->data_.pid].insert(sample->data_.ip);
+            server_pid = sample->GetServerPidof(0);
+            if (virtualRuntime_.IsKernelThread(server_pid)) {
+                kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ip);
             } else if (context == PERF_CONTEXT_KERNEL) {
                 kernelSymbolsHits_.insert(sample->data_.ip);
             } else {
-                userSymbolsHits_[sample->data_.pid].insert(sample->data_.ip);
+                userSymbolsHits_[server_pid].insert(sample->data_.ip);
             }
         } else {
             for (u64 i = 0; i < sample->data_.nr; i++) {
@@ -1509,12 +1511,13 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
                         context = PERF_CONTEXT_USER;
                     }
                 } else {
-                    if (virtualRuntime_.IsKernelThread(sample->data_.pid)) {
-                        kernelThreadSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
+                    server_pid = sample->GetServerPidof(i);
+                    if (virtualRuntime_.IsKernelThread(server_pid)) {
+                        kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
                     } else if (context == PERF_CONTEXT_KERNEL) {
                         kernelSymbolsHits_.insert(sample->data_.ips[i]);
                     } else {
-                        userSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
+                        userSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
                     }
                 }
             }

@@ -297,6 +297,7 @@ static std::map<int, std::string> g_sampleTypeNames = {
     {PERF_SAMPLE_IDENTIFIER, "identifier"},
     {PERF_SAMPLE_TRANSACTION, "transaction"},
     {PERF_SAMPLE_REGS_INTR, "reg_intr"},
+    {PERF_SAMPLE_SERVER_PID, "server_pid"},
 };
 
 void SubCommandDump::DumpSampleType(uint64_t sampleType, int indent)

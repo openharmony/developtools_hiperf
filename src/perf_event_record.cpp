@@ -282,6 +282,11 @@ PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
         data_.user_regs = reinterpret_cast<u64 *>(p);
         p += data_.reg_nr * sizeof(u64);
     }
+    PopFromBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr);
+    if (data_.server_nr > 0) {
+        data_.server_pids = reinterpret_cast<u64 *>(p);
+        p += data_.server_nr * sizeof(u64);
+    }
     PopFromBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size);
     if (data_.stack_size > 0) {
         data_.stack_data = p;
@@ -327,6 +332,11 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     if (data_.user_abi > 0 && data_.reg_nr > 0) {
         std::copy(data_.user_regs, data_.user_regs + data_.reg_nr, reinterpret_cast<u64 *>(p));
         p += data_.reg_nr * sizeof(u64);
+    }
+    PushToBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr);
+    if (data_.server_nr > 0) {
+        std::copy(data_.server_pids, data_.server_pids + data_.server_nr, reinterpret_cast<u64 *>(p));
+        p += data_.server_nr * sizeof(u64);
     }
     PushToBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size);
     if (data_.stack_size > 0) {
@@ -406,6 +416,12 @@ void PerfRecordSample::DumpData(int indent) const
         PrintIndent(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
         for (uint64_t i = 0; i < data_.reg_nr; ++i) {
             PrintIndent(indent + 1, "0x%llx\n", data_.user_regs[i]);
+        }
+    }
+    if (sampleType_ & PERF_SAMPLE_SERVER_PID) {
+        PrintIndent(indent, "server nr=%lld\n", data_.server_nr);
+        for (uint64_t i = 0; i < data_.server_nr; ++i) {
+            PrintIndent(indent + 1, "pid: %llu\n", data_.server_pids[i]);
         }
     }
     if (sampleType_ & PERF_SAMPLE_STACK_USER) {
@@ -896,6 +912,48 @@ void PerfRecordSwitchCpuWide::DumpData(int indent) const
 {
     PrintIndent(indent, "next_prev_pid %u, next_prev_tid %u\n", data_.next_prev_pid,
                 data_.next_prev_tid);
+}
+
+pid_t PerfRecordSample::GetServerPidof(unsigned int ip_nr)
+{
+    if (!data_.server_nr) {
+        return data_.pid;
+    }
+
+    // init serverPidMap_
+    if (!serverPidMap_.size()) {
+        size_t curr_server = 0;
+        // ip_nr == 0: server_pid of data_.ip
+        serverPidMap_.emplace_back(data_.server_pids[curr_server]);
+        // ip_nr == 1...nr: server_pid of data_.ips[nr]
+        for (size_t i = 1; i < data_.nr; i++) {
+            // context change, use next server pid
+            if (data_.ips[i] >= PERF_CONTEXT_MAX) {
+                curr_server++;
+            }
+            if (curr_server >= data_.server_nr) {
+                HLOGE("callchain server pid nr %zu out of range", curr_server);
+                break;
+            }
+            serverPidMap_.emplace_back(data_.server_pids[curr_server]);
+        }
+        // ip_nr == nr + 1: server_pid of ustack
+        curr_server++;
+        if (data_.stack_size) {
+            if (curr_server >= data_.server_nr) {
+                HLOGE("ustack server pid nr %zu out of range", curr_server);
+            } else {
+                serverPidMap_.emplace_back(data_.server_pids[curr_server]);
+            }
+        }
+    }
+
+    // return server pid
+    if (ip_nr >= serverPidMap_.size()) {
+        return data_.pid;
+    } else {
+        return serverPidMap_[ip_nr];
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

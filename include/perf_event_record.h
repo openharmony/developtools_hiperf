@@ -239,6 +239,7 @@ public:
     // used for data_.ips replace (ReplaceWithCallStack)
     std::vector<u64> ips_;
     std::vector<CallFrame> callFrames_;
+    std::vector<pid_t> serverPidMap_;
 
     // referenced input(p) in PerfRecordSample, require caller keep input(p) together
     PerfRecordSample(uint8_t *p, const perf_event_attr &attr);
@@ -261,6 +262,8 @@ public:
         data_.id = 0;
         header.size = sizeof(header) + sizeof(data_);
     };
+
+    pid_t GetServerPidof(unsigned int ip_nr);
 };
 
 class PerfRecordExit : public PerfEventRecord {
