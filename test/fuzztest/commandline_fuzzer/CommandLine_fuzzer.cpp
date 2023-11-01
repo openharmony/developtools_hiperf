@@ -73,7 +73,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::FuzzCommandLine("record", data, size);
     usleep(100000); // sleep 100000 us
     OHOS::FuzzCommandLine("report", data, size);
-    usleep(100000); // sleep 100000 us
     OHOS::FuzzCommandLine("list", data, size);
     OHOS::FuzzCommandLine("help", data, size);
     return 0;
