@@ -54,7 +54,6 @@ bool FuzzCommandLine(const char *subcommand, const uint8_t *data, size_t size)
     std::cout << " size " << argv.size() << std::endl;
 #endif
     HiperfFuzzerMain(static_cast<int>(argv.size()), argv.data());
-
     return 0;
 }
 } // namespace OHOS
@@ -72,6 +71,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::FuzzCommandLine("", data, size);
     OHOS::FuzzCommandLine("stat", data, size);
     OHOS::FuzzCommandLine("record", data, size);
+    usleep(100000); // sleep 100000 us
     OHOS::FuzzCommandLine("report", data, size);
     OHOS::FuzzCommandLine("list", data, size);
     OHOS::FuzzCommandLine("help", data, size);
