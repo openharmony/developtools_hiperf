@@ -96,7 +96,7 @@ bool SubCommand::HandleSubCommandExclude(const std::vector<pid_t> &excludeTids, 
     }
     if (selectTids.empty()) {
         printf("No thread is Monitored, while attempt to exclude some threads.\n");
-        return false;
+        return true;
     }
     if (!excludeTids.empty()) {
         ExcludeTidsFromSelectTids(excludeTids, selectTids);
