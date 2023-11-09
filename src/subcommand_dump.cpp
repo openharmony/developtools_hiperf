@@ -561,6 +561,14 @@ void SubCommandDump::SetHM()
     isHM_ = os.find(HMKERNEL) != std::string::npos;
     vr_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
+    if (isHM_) {
+        pid_t devhost = -1;
+        std::string str = reader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
+        if (str != EMPTY_STRING) {
+            devhost = std::stoll(str);
+        }
+        vr_.SetDevhostPid(devhost);
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

@@ -56,6 +56,9 @@ const int MAX_SYMBOLS_TYPE_NAME_LEN = 10;
 const pid_t SYSMGR_PID = 2;
 const std::string SYSMGR_NAME = "sysmgr";
 const std::string SYSMGR_FILE_NAME = "sysmgr.elf";
+const std::string DEVHOST_FILE_NAME = "devhost.elf";
+const std::string DEVHOST_LINUX_FILE_NAME = "/lib/libdh-linux.so";
+const std::string DEVHOST_LINUX_PREFIX = "/liblinux/";
 
 class FileSymbol {
     [[maybe_unused]] uint64_t vaddr_ = 0;
@@ -170,6 +173,8 @@ public:
     {
         return symbolsLoaded_;
     }
+
+    void AddSymbol(DfxSymbol symbol);
 
     // this means we are in recording
     // will try read some elf in runtime path

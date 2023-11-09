@@ -63,12 +63,17 @@ public:
     void UpdateKernelSpaceMaps();
     void UpdateKernelModulesSpaceMaps();
     void UpdateServiceSpaceMaps();
+    void UpdateDevhostSpaceMaps();
     // load vdso
     void LoadVdso();
 
     void UpdateKernelSymbols();
     void UpdateKernelModulesSymbols();
     void UpdateServiceSymbols();
+    void UpdateDevhostSymbols();
+
+    pid_t devhostPid_ = -1;
+    void SetDevhostPid(pid_t devhost);
 
     // set symbols path , it will send to every symobile file for search
     bool SetSymbolsPaths(const std::vector<std::string> &symbolsPaths);

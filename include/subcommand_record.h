@@ -270,6 +270,7 @@ private:
     void AddWorkloadCmdFeature();
     void AddCommandLineFeature();
     void AddCpuOffFeature();
+    void AddDevhostFeature();
     bool AddFeatureRecordFile();
 
     bool CreateInitRecordFile(bool compressData = false);

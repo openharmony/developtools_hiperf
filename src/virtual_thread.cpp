@@ -234,6 +234,8 @@ void VirtualThread::ParseMap()
 }
 #endif
 
+constexpr const int MMAP_LINE_TOKEN_INDEX_FLAG = 1;
+constexpr const int MMAP_LINE_TOKEN_INDEX_OFFSET = 2;
 constexpr const int MMAP_LINE_TOKEN_INDEX_NAME = 5;
 constexpr const int MMAP_LINE_MAX_TOKEN = 6;
 void VirtualThread::ParseServiceMap(const std::string &filename)
@@ -260,6 +262,70 @@ void VirtualThread::ParseServiceMap(const std::string &filename)
         }
     }
     CreateMapItem(filename, begin, end - begin, 0);
+}
+
+void VirtualThread::ParseDevhostMap(pid_t devhost)
+{
+    std::string mapPath = StringPrintf("/proc/%d/maps", devhost);
+    std::string mapContent = ReadFileToString(mapPath);
+    std::string filename;
+    uint64_t begin, end, offset;
+    if (mapContent.size() > 0) {
+        std::istringstream s(mapContent);
+        std::string line;
+        while (std::getline(s, line)) {
+            // 2fe40000-311e1000 r-xp 00000000 00:01 217 /lib/libdh-linux.so.5.10.97-oh
+            // 0                 1    2        3     4   5
+            std::vector<std::string> mapTokens = StringSplit(line, " ");
+            if (mapTokens.size() < MMAP_LINE_MAX_TOKEN) {
+                continue;
+            }
+            HLOGM("map line: %s", line.c_str());
+
+            // 2fe40000-311e1000
+            constexpr const int MMAP_ADDR_RANGE_TOKEN = 2;
+            std::vector<std::string> addrRanges = StringSplit(mapTokens[0], "-");
+            if (addrRanges.size() != MMAP_ADDR_RANGE_TOKEN) {
+                continue;
+            }
+            // 2fe40000 / 311e1000
+            try {
+                begin = std::stoull(addrRanges[0], nullptr, NUMBER_FORMAT_HEX_BASE);
+                end = std::stoull(addrRanges[1], nullptr, NUMBER_FORMAT_HEX_BASE);
+                offset = std::stoull(mapTokens[MMAP_LINE_TOKEN_INDEX_OFFSET],
+                                     nullptr, NUMBER_FORMAT_HEX_BASE);
+            } catch (...) {
+                continue;
+            }
+
+            constexpr const int MMAP_PROT_CHARS = 4;
+            constexpr const int MAP_PROT_EXEC_INDEX = 2;
+            // --x-
+            if (mapTokens[MMAP_LINE_TOKEN_INDEX_FLAG].size() != MMAP_PROT_CHARS ||
+                mapTokens[MMAP_LINE_TOKEN_INDEX_FLAG][MAP_PROT_EXEC_INDEX] != 'x') {
+                continue;
+            }
+
+            const std::string ANON_PREFIX = "[anon:[";
+            const std::string ANON_POSTFIX = "]]";
+            filename = mapTokens[MMAP_LINE_TOKEN_INDEX_NAME];
+            if (filename == "shmm") {
+                continue;
+            }
+            if (filename.find(ANON_PREFIX) != std::string::npos) {
+                // '[anon:[liblinux/devhost.ko]]' to '/liblinux/devhost.ko'
+                filename = filename.substr(ANON_PREFIX.size(),
+                                           filename.size() - ANON_PREFIX.size() -
+                                           ANON_POSTFIX.size());
+                filename = "/" + filename;
+            } else if (filename.find(DEVHOST_LINUX_FILE_NAME) != std::string::npos) {
+                // '/lib/libdh-linux.so.5.10.97-oh' to '/lib/libdh-linux.so'
+                filename = filename.substr(0, DEVHOST_LINUX_FILE_NAME.size());
+            }
+            CreateMapItem(filename, begin, end - begin, offset);
+        }
+    }
+    SortMemMaps();
 }
 
 void VirtualThread::SortMemMaps()

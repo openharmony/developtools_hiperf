@@ -810,6 +810,7 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     virtualRuntime_.UpdateKernelModulesSpaceMaps();
     if (isHM_) {
         virtualRuntime_.UpdateServiceSpaceMaps();
+        virtualRuntime_.UpdateDevhostSpaceMaps();
     }
     return true;
 }
@@ -1357,6 +1358,14 @@ void SubCommandRecord::AddCpuOffFeature()
     }
 }
 
+void SubCommandRecord::AddDevhostFeature()
+{
+    if (isHM_) {
+        fileWriter_->AddStringFeature(FEATURE::HIPERF_HM_DEVHOST,
+            StringPrintf("%d", virtualRuntime_.devhostPid_));
+    }
+}
+
 bool SubCommandRecord::AddFeatureRecordFile()
 {
     // VERSION
@@ -1376,6 +1385,8 @@ bool SubCommandRecord::AddFeatureRecordFile()
     AddWorkloadCmdFeature();
 
     AddCpuOffFeature();
+
+    AddDevhostFeature();
 
     return true;
 }
@@ -1543,6 +1554,7 @@ bool SubCommandRecord::FinishWriteRecordFile()
         virtualRuntime_.UpdateKernelModulesSymbols();
         if (isHM_) {
             virtualRuntime_.UpdateServiceSymbols();
+            virtualRuntime_.UpdateDevhostSymbols();
         }
 #endif
         HLOGD("Load user symbols");
@@ -1661,6 +1673,22 @@ void SubCommandRecord::SetHM()
     virtualRuntime_.SetHM(isHM_);
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
+    if (isHM_) {
+        // find devhost pid
+        const std::string basePath {"/proc/"};
+        std::vector<std::string> subDirs = GetSubDirs(basePath);
+        for (const auto &subDir : subDirs) {
+            if (!IsDigits(subDir)) {
+                continue;
+            }
+            pid_t pid = std::stoll(subDir);
+            std::string cmdline = GetProcessName(pid);
+            if (cmdline == "/bin/" + DEVHOST_FILE_NAME) {
+                virtualRuntime_.SetDevhostPid(pid);
+                break;
+            }
+        }
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

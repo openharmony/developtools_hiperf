@@ -48,6 +48,8 @@ std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
     std::string comm = "";
     if (tid == SYSMGR_PID) {
         comm = SYSMGR_NAME;
+    } else if (tid == devhostPid_) {
+        comm = DEVHOST_FILE_NAME;
     } else if (isThread) {
         comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid)).c_str();
     } else {
@@ -872,12 +874,73 @@ void VirtualRuntime::UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t l
     thread.CreateMapItem(filename, begin, len, 0u);
 }
 
+void VirtualRuntime::UpdateDevhostSpaceMaps()
+{
+    VirtualThread &kthread = GetThread(devhostPid_, devhostPid_);
+    kthread.ParseDevhostMap(devhostPid_);
+    if (recordCallBack_) {
+        for (const auto &map : kthread.GetMaps()) {
+            auto record =
+            std::make_unique<PerfRecordMmap>(false, devhostPid_, devhostPid_,
+                                             map->begin, map->end - map->begin,
+                                             0, map->name);
+            recordCallBack_(std::move(record));
+        }
+    }
+}
+
+void VirtualRuntime::UpdateDevhostSymbols()
+{
+    HLOGD("try to update kernel thread symbols for devhost");
+    auto kallsyms = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, DEVHOST_FILE_NAME);
+    // file name of devhost.ko
+    std::map<std::string_view, std::unique_ptr<SymbolsFile>> koMaps;
+    koMaps[DEVHOST_FILE_NAME] =
+        SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, DEVHOST_LINUX_FILE_NAME);
+
+    if (kallsyms->LoadSymbols()) {
+        for (auto &symbol : kallsyms->GetSymbols()) {
+            if (koMaps.find(symbol.module_) == koMaps.end()) {
+                std::string filename = std::string(symbol.module_);
+                // [devhost] to /liblinux/devhost.ko
+                filename.erase(filename.begin());
+                filename.erase(filename.end() - 1);
+                filename = DEVHOST_LINUX_PREFIX + filename + KERNEL_MODULES_EXT_NAME;
+                koMaps[symbol.module_] =
+                    SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, filename);
+            }
+            koMaps[symbol.module_]->AddSymbol(std::move(symbol));
+        }
+
+        HLOGD("devhost loaded %zu symbolfiles", koMaps.size());
+        for (auto &it : koMaps) {
+            HLOGD("Load %zu symbols to %s", it.second->GetSymbols().size(),
+                  it.second->filePath_.c_str());
+            symbolsFiles_.emplace_back(std::move(it.second));
+        }
+    } else {
+        HLOGW("symbols file for devhost parse failed.");
+    }
+
+    // update normal symbole files
+    VirtualThread &kthread = GetThread(devhostPid_, devhostPid_);
+    for (const auto &map : kthread.GetMaps()) {
+        UpdateSymbols(map->name);
+    }
+}
+
+void VirtualRuntime::SetDevhostPid(pid_t devhost)
+{
+    HLOGD("Set devhost pid: %d", devhost);
+    devhostPid_ = devhost;
+}
+
 bool VirtualRuntime::IsKernelThread(pid_t pid)
 {
     if (!isHM_) {
         return false;
     }
-    return pid == SYSMGR_PID;
+    return pid == SYSMGR_PID || pid == devhostPid_;
 }
 } // namespace HiPerf
 } // namespace Developtools
