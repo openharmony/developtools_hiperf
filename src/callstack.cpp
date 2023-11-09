@@ -29,9 +29,7 @@ extern "C" {
 }
 #endif
 
-#include "dfx_ark.h"
 #include "dfx_regs.h"
-#include "hitrace_meter.h"
 #include "register.h"
 #ifdef target_cpu_arm
 // reg size is int (unw_word_t)
@@ -443,7 +441,6 @@ bool CallStack::GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, size_t regN
 bool CallStack::DoUnwind(const VirtualThread &thread, std::vector<CallFrame> &callStack,
                          size_t maxStackLevel)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_OHOS, __PRETTY_FUNCTION__);
     unw_addr_space_t addr_space;
     UnwindInfo unwindInfo = {
         .thread = thread,
@@ -658,68 +655,33 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
 }
 
 #if HAVE_LIBUNWINDER
-#ifdef target_cpu_arm64
-namespace {
-static bool IsArkExecutableMap(const VirtualThread &thread, const uintptr_t& pc)
-{
-    auto map = thread.FindMapByAddr(pc);
-    if (map == nullptr) {
-        return false;
-    }
-
-    if ((!StringEndsWith(map->name, "[anon:ArkTS Code]")) && (!StringEndsWith(map->name, "/dev/zero"))) {
-        return false;
-    }
-
-    if ((map->flag & PROT_EXEC) == 0) {
-        return false;
-    }
-
-    return true;
-}
-}
-
-bool CallStack::CheckAndStepArkFrame(const VirtualThread &thread, uintptr_t& pc, uintptr_t& fp, uintptr_t& sp)
-{
-    if (!IsArkExecutableMap(thread, pc)) {
-        return false;
-    }
-    char buf[128] = { 0 }; // 128 : step ark frame buf size
-    if (DfxArk::StepArkManagedNativeFrame(thread.tid_, pc, fp, sp, buf, 128)) { // 128 : step ark frame buf size
-        pc = fp + sizeof(uintptr_t);
-        return true;
-    }
-    return false;
-}
-#endif
-
 bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &callStack,
                           size_t maxStackLevel)
 {
 #ifdef target_cpu_x86_64
     return false;
 #else
-    HITRACE_METER_NAME(HITRACE_TAG_OHOS, __PRETTY_FUNCTION__);
     UnwindInfo unwindInfo = {
         .thread = thread,
         .callStack = *this,
     };
 
-    if (pidUnwinder_.count(thread.tid_) == 0) {
-        pidUnwinder_.emplace(thread.tid_, std::make_shared<Unwinder>(accessor_));
+    if (pidUnwinder_.count(thread.pid_) == 0) {
+        pidUnwinder_.emplace(thread.pid_, std::make_shared<Unwinder>(accessor_));
     }
-    auto unwinder = pidUnwinder_[thread.tid_];
+    auto unwinder = pidUnwinder_[thread.pid_];
 
 #ifdef target_cpu_arm
-    std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm>();
-#else
-    std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
-#endif
+    static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm>();
     std::vector<uintptr_t> tempRegs;
     for (auto i = 0; i < regsNum_; ++i) {
         tempRegs.push_back((uintptr_t)regs_[i]);
     }
     regs->SetRegsData(tempRegs);
+#else
+    static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
+    regs->SetRegsData((uintptr_t*)regs_, regsNum_);
+#endif
     unwinder->SetRegs(regs);
 
     uintptr_t pc = regs->GetPc();
@@ -727,23 +689,11 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &c
     while (callStack.size() < maxStackLevel) {
         if (unwinder->Step(pc, sp, &unwindInfo)) {
             if (pc == callStack.back().ip_ && sp == callStack.back().sp_) {
-                HLOGW("we found a same frame, stop here");
                 break;
             }
             callStack.emplace_back(pc, sp);
             HLOGV("unwind:%zu: ip 0x%" UNW_WORD_PFLAG " sp 0x%" UNW_WORD_PFLAG "", callStack.size(), pc, sp);
         } else {
-#ifdef target_cpu_arm64
-            uintptr_t fp = regs->GetFp();
-            if (CheckAndStepArkFrame(thread, pc, fp, sp)) {
-                regs->SetSp(sp);
-                regs->SetPc(pc);
-                regs->SetFp(fp);
-                callStack.emplace_back(pc, sp);
-                continue;
-            }
-#endif
-            HLOGV("no more frame step found. error code(%d)", unwinder->GetLastErrorCode());
             break;
         }
     }

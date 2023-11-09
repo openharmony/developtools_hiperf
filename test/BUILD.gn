@@ -129,7 +129,6 @@ ohos_fuzztest("CommandLineFuzzTest") {
   external_deps = [
     "faultloggerd:libunwinder",
     "hilog:libhilog",
-    "hitrace:hitrace_meter",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [
