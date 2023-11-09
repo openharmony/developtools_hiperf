@@ -404,13 +404,13 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 #ifdef HIPERF_DEBUG_TIME
     unwindFromRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
+#endif
 
     // we will not do this in record mode
     if (recordCallBack_ == nullptr) {
         // find the symbols , reabuild frame info
         SymbolicRecord(recordSample);
     }
-#endif
 }
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
