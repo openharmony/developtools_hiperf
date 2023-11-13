@@ -103,6 +103,7 @@ protected:
     std::string help_;
     bool dumpOptions_ = false;
     bool showHelp_ = false;
+    bool isHM_ = false;
 };
 } // namespace HiPerf
 } // namespace Developtools

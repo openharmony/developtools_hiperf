@@ -270,6 +270,7 @@ private:
     void AddWorkloadCmdFeature();
     void AddCommandLineFeature();
     void AddCpuOffFeature();
+    void AddDevhostFeature();
     bool AddFeatureRecordFile();
 
     bool CreateInitRecordFile(bool compressData = false);
@@ -301,6 +302,7 @@ private:
 #if USE_COLLECT_SYMBOLIC
     std::unordered_set<uint64_t> kernelSymbolsHits_;
     std::unordered_map<pid_t, std::unordered_set<uint64_t>> userSymbolsHits_;
+    std::unordered_map<pid_t, std::unordered_set<uint64_t>> kernelThreadSymbolsHits_;
     void SymbolicHits();
 #endif
 
@@ -310,6 +312,8 @@ private:
     std::chrono::microseconds saveFeatureTimes_ = std::chrono::microseconds::zero();
 #endif
     std::chrono::time_point<std::chrono::steady_clock> startSaveFileTimes_;
+
+    void SetHM();
 };
 } // namespace HiPerf
 } // namespace Developtools

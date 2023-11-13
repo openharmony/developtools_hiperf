@@ -53,6 +53,13 @@ const std::string LINKER_PREFIX_NAME = "[linker]";
 
 const int MAX_SYMBOLS_TYPE_NAME_LEN = 10;
 
+const pid_t SYSMGR_PID = 2;
+const std::string SYSMGR_NAME = "sysmgr";
+const std::string SYSMGR_FILE_NAME = "sysmgr.elf";
+const std::string DEVHOST_FILE_NAME = "devhost.elf";
+const std::string DEVHOST_LINUX_FILE_NAME = "/lib/libdh-linux.so";
+const std::string DEVHOST_LINUX_PREFIX = "/liblinux/";
+
 class FileSymbol {
     [[maybe_unused]] uint64_t vaddr_ = 0;
     [[maybe_unused]] uint64_t len_ = 0;
@@ -67,6 +74,7 @@ class FileSymbol {
 enum SymbolsFileType {
     SYMBOL_KERNEL_FILE,
     SYMBOL_KERNEL_MODULE_FILE,
+    SYMBOL_KERNEL_THREAD_FILE,
     SYMBOL_ELF_FILE,
     SYMBOL_JAVA_FILE,
     SYMBOL_JS_FILE,
@@ -165,6 +173,8 @@ public:
     {
         return symbolsLoaded_;
     }
+
+    void AddSymbol(DfxSymbol symbol);
 
     // this means we are in recording
     // will try read some elf in runtime path

@@ -673,7 +673,10 @@ bool SubCommandRecord::TraceOffCpu()
 {
     // whether system support sched_switch event
     int enable = -1;
-    const std::string node = "/sys/kernel/tracing/events/sched/sched_switch/enable";
+    std::string node = "/sys/kernel/tracing/events/sched/sched_switch/enable";
+    if (isHM_) {
+        node = "/sys/kernel/tracing/hongmeng/events/sched/sched_switch/enable";
+    }
     const std::string nodeDebug = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
     if (!ReadIntFromProcFile(node.c_str(), enable) and
         !ReadIntFromProcFile(nodeDebug.c_str(), enable)) {
@@ -805,6 +808,10 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     // prepare from kernel and ko
     virtualRuntime_.UpdateKernelSpaceMaps();
     virtualRuntime_.UpdateKernelModulesSpaceMaps();
+    if (isHM_) {
+        virtualRuntime_.UpdateServiceSpaceMaps();
+        virtualRuntime_.UpdateDevhostSpaceMaps();
+    }
     return true;
 }
 
@@ -1068,6 +1075,8 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     } else if (isFifoClient_) {
         return true;
     }
+
+    SetHM();
 
     // prepare PerfEvents
     if (!PrepareSysKernel() or !PreparePerfEvent()) {
@@ -1349,6 +1358,14 @@ void SubCommandRecord::AddCpuOffFeature()
     }
 }
 
+void SubCommandRecord::AddDevhostFeature()
+{
+    if (isHM_) {
+        fileWriter_->AddStringFeature(FEATURE::HIPERF_HM_DEVHOST,
+            StringPrintf("%d", virtualRuntime_.devhostPid_));
+    }
+}
+
 bool SubCommandRecord::AddFeatureRecordFile()
 {
     // VERSION
@@ -1368,6 +1385,8 @@ bool SubCommandRecord::AddFeatureRecordFile()
     AddWorkloadCmdFeature();
 
     AddCpuOffFeature();
+
+    AddDevhostFeature();
 
     return true;
 }
@@ -1454,6 +1473,15 @@ bool SubCommandRecord::PostProcessRecordFile()
 #if USE_COLLECT_SYMBOLIC
 void SubCommandRecord::SymbolicHits()
 {
+    if (isHM_) {
+        for (auto &processPair : kernelThreadSymbolsHits_) {
+            for (auto &vaddr : processPair.second) {
+                virtualRuntime_.GetSymbol(vaddr, processPair.first, processPair.first,
+                                          PERF_CONTEXT_MAX);
+            }
+        }
+    }
+
     for (auto &vaddr : kernelSymbolsHits_) {
         virtualRuntime_.GetSymbol(vaddr, 0, 0, PERF_CONTEXT_KERNEL);
     }
@@ -1474,12 +1502,16 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 #if USE_COLLECT_SYMBOLIC
         perf_callchain_context context = record->inKernel() ? PERF_CONTEXT_KERNEL
                                                             : PERF_CONTEXT_USER;
+        pid_t server_pid;
         // if no nr use ip
         if (sample->data_.nr == 0) {
-            if (context == PERF_CONTEXT_KERNEL) {
+            server_pid = sample->GetServerPidof(0);
+            if (virtualRuntime_.IsKernelThread(server_pid)) {
+                kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ip);
+            } else if (context == PERF_CONTEXT_KERNEL) {
                 kernelSymbolsHits_.insert(sample->data_.ip);
             } else {
-                userSymbolsHits_[sample->data_.pid].insert(sample->data_.ip);
+                userSymbolsHits_[server_pid].insert(sample->data_.ip);
             }
         } else {
             for (u64 i = 0; i < sample->data_.nr; i++) {
@@ -1490,10 +1522,13 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
                         context = PERF_CONTEXT_USER;
                     }
                 } else {
-                    if (context == PERF_CONTEXT_KERNEL) {
+                    server_pid = sample->GetServerPidof(i);
+                    if (virtualRuntime_.IsKernelThread(server_pid)) {
+                        kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
+                    } else if (context == PERF_CONTEXT_KERNEL) {
                         kernelSymbolsHits_.insert(sample->data_.ips[i]);
                     } else {
-                        userSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
+                        userSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
                     }
                 }
             }
@@ -1517,6 +1552,10 @@ bool SubCommandRecord::FinishWriteRecordFile()
         HLOGD("Load kernel symbols");
         virtualRuntime_.UpdateKernelSymbols();
         virtualRuntime_.UpdateKernelModulesSymbols();
+        if (isHM_) {
+            virtualRuntime_.UpdateServiceSymbols();
+            virtualRuntime_.UpdateDevhostSymbols();
+        }
 #endif
         HLOGD("Load user symbols");
         fileWriter_->ReadDataSection(
@@ -1625,6 +1664,31 @@ bool SubCommandRecord::RecordCompleted()
 bool SubCommandRecord::RegisterSubCommandRecord(void)
 {
     return SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
+}
+
+void SubCommandRecord::SetHM()
+{
+    std::string version = ReadFileToString("/proc/version");
+    isHM_ = version.find(HMKERNEL) != std::string::npos;
+    virtualRuntime_.SetHM(isHM_);
+    perfEvents_.SetHM(isHM_);
+    HLOGD("Set isHM_: %d", isHM_);
+    if (isHM_) {
+        // find devhost pid
+        const std::string basePath {"/proc/"};
+        std::vector<std::string> subDirs = GetSubDirs(basePath);
+        for (const auto &subDir : subDirs) {
+            if (!IsDigits(subDir)) {
+                continue;
+            }
+            pid_t pid = std::stoll(subDir);
+            std::string cmdline = GetProcessName(pid);
+            if (cmdline == "/bin/" + DEVHOST_FILE_NAME) {
+                virtualRuntime_.SetDevhostPid(pid);
+                break;
+            }
+        }
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

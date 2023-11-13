@@ -46,7 +46,11 @@ VirtualRuntime::VirtualRuntime(bool onDevice)
 std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
 {
     std::string comm = "";
-    if (isThread) {
+    if (tid == SYSMGR_PID) {
+        comm = SYSMGR_NAME;
+    } else if (tid == devhostPid_) {
+        comm = DEVHOST_FILE_NAME;
+    } else if (isThread) {
         comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid)).c_str();
     } else {
         comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid)).c_str();
@@ -85,7 +89,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
     }
     VirtualThread &thread = userSpaceThreadMap_.at(tid);
     if (recordCallBack_) {
-        if (pid == tid) {
+        if (pid == tid && !IsKernelThread(pid)) {
 #ifdef HIPERF_DEBUG_TIME
             const auto startTime = steady_clock::now();
 #endif
@@ -101,7 +105,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
         HLOGD("create a new thread record for %u:%u:%s with %zu dso", pid, tid,
               thread.name_.c_str(), thread.GetMaps().size());
         // we need make a PerfRecordComm
-        auto commRecord = std::make_unique<PerfRecordComm>(false, pid, tid, thread.name_);
+        auto commRecord = std::make_unique<PerfRecordComm>(IsKernelThread(pid), pid, tid, thread.name_);
         recordCallBack_(std::move(commRecord));
         // only work for pid
         if (pid == tid) {
@@ -314,9 +318,14 @@ void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, CallFrame &callFrame)
 }
 
 void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
-                                       perf_callchain_context context)
+                                       pid_t server_pid, perf_callchain_context context)
 {
-    auto symbol = GetSymbol(ip, recordSample.data_.pid, recordSample.data_.tid, context);
+    pid_t pid = recordSample.data_.pid;
+    pid_t tid = recordSample.data_.tid;
+    if (server_pid != pid) {
+        pid = tid = server_pid;
+    }
+    auto symbol = GetSymbol(ip, pid, tid, context);
     MakeCallFrame(symbol, recordSample.callFrames_.emplace_back(ip, 0));
     HLOGV(" (%zu)unwind symbol: %*s%s", recordSample.callFrames_.size(),
           static_cast<int>(recordSample.callFrames_.size()), "",
@@ -331,8 +340,10 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
     // Symbolic the Call Stack
     recordSample.callFrames_.clear();
     perf_callchain_context context = PERF_CONTEXT_MAX;
+    pid_t server_pid;
     if (recordSample.data_.nr == 0) {
-        SymbolicCallFrame(recordSample, recordSample.data_.ip, PERF_CONTEXT_MAX);
+        server_pid = recordSample.GetServerPidof(0);
+        SymbolicCallFrame(recordSample, recordSample.data_.ip, server_pid, PERF_CONTEXT_MAX);
     }
     for (u64 i = 0; i < recordSample.data_.nr; i++) {
         uint64_t ip = recordSample.data_.ips[i];
@@ -344,7 +355,8 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
             // ip 0 or 1 or less than 0
             continue;
         }
-        SymbolicCallFrame(recordSample, ip, context);
+        server_pid = recordSample.GetServerPidof(i);
+        SymbolicCallFrame(recordSample, ip, server_pid, context);
     }
 #ifdef HIPERF_DEBUG_TIME
     auto usedTime = duration_cast<microseconds>(steady_clock::now() - startTime);
@@ -364,7 +376,13 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     HLOGV("unwind record (time:%llu)", recordSample.data_.time);
     // if we have userstack ?
     if (recordSample.data_.stack_size > 0) {
-        auto &thread = UpdateThread(recordSample.data_.pid, recordSample.data_.tid);
+        pid_t server_pid = recordSample.GetServerPidof(recordSample.data_.nr + 1);
+        pid_t pid = recordSample.data_.pid;
+        pid_t tid = recordSample.data_.tid;
+        if (server_pid != pid) {
+            pid = tid = server_pid;
+        }
+        auto &thread = UpdateThread(pid, tid);
         callstack_.UnwindCallStack(thread, recordSample.data_.user_abi == PERF_SAMPLE_REGS_ABI_32,
                                    recordSample.data_.user_regs, recordSample.data_.reg_nr,
                                    recordSample.data_.stack_data, recordSample.data_.dyn_size,
@@ -379,10 +397,13 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
               recordSample.callFrames_.size() - oldSize);
 
         recordSample.ReplaceWithCallStack(oldSize);
+        // callchain updated, flush server pid map
+        recordSample.serverPidMap_.clear();
     }
 
 #ifdef HIPERF_DEBUG_TIME
     unwindFromRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+#endif
 #endif
 
     // we will not do this in record mode
@@ -390,12 +411,18 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
         // find the symbols , reabuild frame info
         SymbolicRecord(recordSample);
     }
-#endif
 }
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
 {
     UpdateThread(recordSample.data_.pid, recordSample.data_.tid);
+    if (recordSample.data_.server_nr) {
+        // update all server threads
+        for (size_t i = 0; i < recordSample.data_.server_nr; i++) {
+            pid_t pid = recordSample.data_.server_pids[i];
+            UpdateThread(pid, pid);
+        }
+    }
     // unwind
     if (disableUnwind_) {
         return;
@@ -413,7 +440,10 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
           recordMmap.data_.addr + recordMmap.data_.len, recordMmap.data_.pgoff);
     // kernel mmap
     // don't overwrite the vailed mmap , so we also check the recordMmap.data_.len
-    if (recordMmap.inKernel()) {
+    if (IsKernelThread(recordMmap.data_.pid)) {
+        UpdateKernelThreadMap(recordMmap.data_.pid, recordMmap.data_.addr,
+                              recordMmap.data_.len, recordMmap.data_.filename);
+    } else if (recordMmap.inKernel()) {
         UpdatekernelMap(recordMmap.data_.addr, recordMmap.data_.addr + recordMmap.data_.len,
                         recordMmap.data_.pgoff, recordMmap.data_.filename);
     } else {
@@ -543,6 +573,53 @@ const DfxSymbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<D
     return vaddrSymbol;
 }
 
+const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const VirtualThread &thread)
+{
+    DfxSymbol vaddrSymbol(ip, thread.name_);
+    int64_t mapIndex = thread.FindMapIndexByAddr(ip);
+    if (mapIndex < 0) {
+#ifdef HIPERF_DEBUG
+        thread.ReportVaddrMapMiss(ip);
+#endif
+        return vaddrSymbol;
+    }
+
+    auto map = thread.GetMaps()[mapIndex];
+    HLOGM("found addr 0x%" PRIx64 " in kthread map 0x%" PRIx64 " - 0x%" PRIx64 " from %s",
+            ip, map->begin, map->end, map->name.c_str());
+    // found symbols by file name
+    for (auto &symbolsFile : symbolsFiles_) {
+        if (symbolsFile->filePath_ == map->name) {
+            vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
+            vaddrSymbol.module_ = map->name;
+            vaddrSymbol.fileVaddr_ =
+                symbolsFile->GetVaddrInSymbols(ip, map->begin, map->offset);
+            perf_callchain_context context = PERF_CONTEXT_MAX;
+            if (GetSymbolCache(ip, vaddrSymbol, context)) {
+                return vaddrSymbol;
+            }
+            HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
+                    vaddrSymbol.fileVaddr_, ip, map->name.c_str());
+            if (!symbolsFile->SymbolsLoaded()) {
+                symbolsFile->LoadDebugInfo();
+                symbolsFile->LoadSymbols();
+            }
+            auto foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            foundSymbols.taskVaddr_ = ip;
+            if (!foundSymbols.IsValid()) {
+                HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s",
+                        ip, vaddrSymbol.fileVaddr_, map->name.c_str());
+                return vaddrSymbol;
+            } else {
+                return foundSymbols;
+            }
+        }
+    }
+    HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip,
+            map->name.c_str());
+    return vaddrSymbol;
+}
+
 const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thread)
 {
     DfxSymbol vaddrSymbol(ip, thread.name_);
@@ -588,7 +665,15 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
 bool VirtualRuntime::GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
                                     const perf_callchain_context &context)
 {
-    if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(ip)) {
+    if (context == PERF_CONTEXT_MAX and kThreadSymbolCache_.count(ip)) {
+        if (kThreadSymbolCache_.find(symbol.fileVaddr_) == kThreadSymbolCache_.end()) {
+            return false;
+        }
+        symbol = kThreadSymbolCache_[symbol.fileVaddr_];
+        symbol.hit_++;
+        HLOGV("hit kernel thread cache 0x%" PRIx64 " %d", ip, symbol.hit_);
+        return true;
+    } else if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(ip)) {
         if (kernelSymbolCache_.find(symbol.fileVaddr_) == kernelSymbolCache_.end()) {
             return false;
         }
@@ -608,7 +693,8 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
             symbol.ToDebugString().c_str());
         return true;
     } else {
-        HLOGM("cache miss k %zu u %zu", kernelSymbolCache_.size(), userSymbolCache_.size());
+        HLOGM("cache miss k %zu u %zu kt %zu", kernelSymbolCache_.size(),
+              userSymbolCache_.size(), kThreadSymbolCache_.size());
     }
     return false;
 }
@@ -617,6 +703,19 @@ DfxSymbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid, const per
 {
     HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles\n", tid, ip, symbolsFiles_.size());
     DfxSymbol symbol;
+
+    if (IsKernelThread(pid)) {
+        VirtualThread &kthread = GetThread(pid, tid);
+        HLOGM("try found addr in kernel thread %u with %zu maps", pid,
+              kthread.GetMaps().size());
+        symbol = GetKernelThreadSymbol(ip, kthread);
+        HLOGM("add addr to kernel thread cache 0x%" PRIx64 " cache size %zu", ip,
+              kThreadSymbolCache_.size());
+        kThreadSymbolCache_[symbol.fileVaddr_] = symbol;
+        if (symbol.IsValid()) {
+            return symbol;
+        }
+    }
 
     if (context == PERF_CONTEXT_USER or (context == PERF_CONTEXT_MAX and !symbol.IsValid())) {
         // check userspace memmap
@@ -735,6 +834,113 @@ void VirtualRuntime::LoadVdso()
     }
     HLOGD("no vdso found");
 #endif
+}
+
+void VirtualRuntime::UpdateServiceSpaceMaps()
+{
+    VirtualThread &kthread = GetThread(SYSMGR_PID, SYSMGR_PID);
+    kthread.ParseServiceMap(SYSMGR_FILE_NAME);
+    if (recordCallBack_) {
+        for (const auto &map : kthread.GetMaps()) {
+            auto record =
+            std::make_unique<PerfRecordMmap>(true, SYSMGR_PID, SYSMGR_PID,
+                                             map->begin, map->end - map->begin,
+                                             0, SYSMGR_FILE_NAME);
+            recordCallBack_(std::move(record));
+        }
+    }
+}
+
+void VirtualRuntime::UpdateServiceSymbols()
+{
+    HLOGD("try to update kernel thread symbols for kernel service");
+    std::string fileName = SYSMGR_FILE_NAME;
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, fileName);
+
+    HLOGD("add kernel service symbol file: %s", fileName.c_str());
+    if (symbolsFile->LoadSymbols()) {
+        symbolsFiles_.emplace_back(std::move(symbolsFile));
+    } else {
+        HLOGW("symbols file for '%s' not found.", fileName.c_str());
+    }
+}
+
+void VirtualRuntime::UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len,
+                                           std::string filename)
+{
+    HLOGV("update kernel thread map pid %u name:'%s'", pid, filename.c_str());
+
+    VirtualThread &thread = GetThread(pid, pid);
+    thread.CreateMapItem(filename, begin, len, 0u);
+}
+
+void VirtualRuntime::UpdateDevhostSpaceMaps()
+{
+    VirtualThread &kthread = GetThread(devhostPid_, devhostPid_);
+    kthread.ParseDevhostMap(devhostPid_);
+    if (recordCallBack_) {
+        for (const auto &map : kthread.GetMaps()) {
+            auto record =
+            std::make_unique<PerfRecordMmap>(false, devhostPid_, devhostPid_,
+                                             map->begin, map->end - map->begin,
+                                             0, map->name);
+            recordCallBack_(std::move(record));
+        }
+    }
+}
+
+void VirtualRuntime::UpdateDevhostSymbols()
+{
+    HLOGD("try to update kernel thread symbols for devhost");
+    auto kallsyms = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, DEVHOST_FILE_NAME);
+    // file name of devhost.ko
+    std::map<std::string_view, std::unique_ptr<SymbolsFile>> koMaps;
+    koMaps[DEVHOST_FILE_NAME] =
+        SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, DEVHOST_LINUX_FILE_NAME);
+
+    if (kallsyms->LoadSymbols()) {
+        for (auto &symbol : kallsyms->GetSymbols()) {
+            if (koMaps.find(symbol.module_) == koMaps.end()) {
+                std::string filename = std::string(symbol.module_);
+                // [devhost] to /liblinux/devhost.ko
+                filename.erase(filename.begin());
+                filename.erase(filename.end() - 1);
+                filename = DEVHOST_LINUX_PREFIX + filename + KERNEL_MODULES_EXT_NAME;
+                koMaps[symbol.module_] =
+                    SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, filename);
+            }
+            koMaps[symbol.module_]->AddSymbol(std::move(symbol));
+        }
+
+        HLOGD("devhost loaded %zu symbolfiles", koMaps.size());
+        for (auto &it : koMaps) {
+            HLOGD("Load %zu symbols to %s", it.second->GetSymbols().size(),
+                  it.second->filePath_.c_str());
+            symbolsFiles_.emplace_back(std::move(it.second));
+        }
+    } else {
+        HLOGW("symbols file for devhost parse failed.");
+    }
+
+    // update normal symbole files
+    VirtualThread &kthread = GetThread(devhostPid_, devhostPid_);
+    for (const auto &map : kthread.GetMaps()) {
+        UpdateSymbols(map->name);
+    }
+}
+
+void VirtualRuntime::SetDevhostPid(pid_t devhost)
+{
+    HLOGD("Set devhost pid: %d", devhost);
+    devhostPid_ = devhost;
+}
+
+bool VirtualRuntime::IsKernelThread(pid_t pid)
+{
+    if (!isHM_) {
+        return false;
+    }
+    return pid == SYSMGR_PID || pid == devhostPid_;
 }
 } // namespace HiPerf
 } // namespace Developtools

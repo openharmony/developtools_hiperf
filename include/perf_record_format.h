@@ -26,6 +26,7 @@ namespace HiPerf {
 // description from https://man7.org/linux/man-pages/man2/perf_event_open.2.html
 
 #define SAMPLE_ID_ALL 0
+#define PERF_SAMPLE_SERVER_PID (1U << 31)
 
 struct sample_id {
     u32 pid;
@@ -171,6 +172,8 @@ struct PerfRecordSampleData {
     u64 intr_regs[0]; /* if PERF_SAMPLE_REGS_INTR */
     u64 phys_addr;    /* if PERF_SAMPLE_PHYS_ADDR */
     u64 cgroup;       /* if PERF_SAMPLE_CGROUP */
+    u64 server_nr;    /* if PERF_SAMPLE_SERVER_PID */
+    u64 *server_pids; /* if PERF_SAMPLE_SERVER_PID */
 };
 
 /*
