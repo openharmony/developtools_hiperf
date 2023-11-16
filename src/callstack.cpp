@@ -654,7 +654,7 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
     return expand;
 }
 
-#if HAVE_LIBUNWINDER
+#if defined(HAVE_LIBUNWINDER) && HAVE_LIBUNWINDER
 bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &callStack,
                           size_t maxStackLevel)
 {
@@ -802,7 +802,7 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
 
 CallStack::CallStack()
 {
-#if HAVE_LIBUNWINDER
+#if defined(HAVE_LIBUNWINDER) && HAVE_LIBUNWINDER
     accessor_ = std::make_shared<OHOS::HiviewDFX::UnwindAccessors>();
     accessor_->FindUnwindTable = &CallStack::FindUnwindTable;
     accessor_->AccessMem = &CallStack::AccessMem2;
