@@ -675,12 +675,12 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &c
     static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm>();
     std::vector<uintptr_t> tempRegs;
     for (auto i = 0; i < regsNum_; ++i) {
-        tempRegs.push_back((uintptr_t)regs_[i]);
+        tempRegs.push_back(static_cast<uintptr_t>(regs_[i]));
     }
     regs->SetRegsData(tempRegs);
 #else
     static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
-    regs->SetRegsData((uintptr_t*)regs_, regsNum_);
+    regs->SetRegsData(static_cast<uintptr_t*>(regs_), regsNum_);
 #endif
     unwinder->SetRegs(regs);
 
