@@ -101,7 +101,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
 #ifdef HIPERF_DEBUG_TIME
         const auto startCreateMmapTime = steady_clock::now();
 #endif
-        thread.name_ = ReadThreadName(pid, false);
+        thread.name_ = ReadThreadName(tid, pid != tid);
         HLOGD("create a new thread record for %u:%u:%s with %zu dso", pid, tid,
               thread.name_.c_str(), thread.GetMaps().size());
         // we need make a PerfRecordComm
