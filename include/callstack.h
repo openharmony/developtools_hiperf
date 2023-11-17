@@ -125,7 +125,7 @@ private:
     bool DoUnwind(const VirtualThread &thread, std::vector<CallFrame> &callStack,
                   size_t maxStackLevel);
 #endif
-#if HAVE_LIBUNWINDER
+#if defined(HAVE_LIBUNWINDER) && HAVE_LIBUNWINDER
 #ifdef target_cpu_arm64
     static bool CheckAndStepArkFrame(const VirtualThread &thread, uintptr_t& pc, uintptr_t& fp, uintptr_t& sp);
 #endif

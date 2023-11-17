@@ -320,8 +320,8 @@ void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, CallFrame &callFrame)
 void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
                                        pid_t server_pid, perf_callchain_context context)
 {
-    pid_t pid = recordSample.data_.pid;
-    pid_t tid = recordSample.data_.tid;
+    pid_t pid = static_cast<pid_t>(recordSample.data_.pid);
+    pid_t tid = static_cast<pid_t>(recordSample.data_.tid);
     if (server_pid != pid) {
         pid = tid = server_pid;
     }
@@ -377,8 +377,8 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     // if we have userstack ?
     if (recordSample.data_.stack_size > 0) {
         pid_t server_pid = recordSample.GetServerPidof(recordSample.data_.nr + 1);
-        pid_t pid = recordSample.data_.pid;
-        pid_t tid = recordSample.data_.tid;
+        pid_t pid = static_cast<pid_t>(recordSample.data_.pid);
+        pid_t tid = static_cast<pid_t>(recordSample.data_.tid);
         if (server_pid != pid) {
             pid = tid = server_pid;
         }
@@ -419,7 +419,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
     if (recordSample.data_.server_nr) {
         // update all server threads
         for (size_t i = 0; i < recordSample.data_.server_nr; i++) {
-            pid_t pid = recordSample.data_.server_pids[i];
+            pid_t pid = static_cast<pid_t>(recordSample.data_.server_pids[i]);
             UpdateThread(pid, pid);
         }
     }

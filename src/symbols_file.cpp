@@ -204,12 +204,7 @@ protected:
             return false;
         }
         elfFile_ = std::make_shared<DfxElf>(elfPath);
-        if (elfFile_ == nullptr) {
-            HLOGD("elf load failed");
-            return false;
-        } else {
-            HLOGD("loaded elf %s", elfPath.c_str());
-        }
+        HLOGD("loaded elf %s", elfPath.c_str());
 
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
@@ -359,12 +354,7 @@ private:
         const auto startTime = steady_clock::now();
 #endif
         elfFile_ = std::make_shared<DfxElf>(elfPath);
-        if (elfFile_ == nullptr) {
-            HLOGD("elf load failed");
-            return false;
-        } else {
-            HLOGD("loaded elf %s", elfPath.c_str());
-        }
+        HLOGD("loaded elf %s", elfPath.c_str());
 
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
