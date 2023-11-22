@@ -198,9 +198,6 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--app", appPackage_)) {
         return false;
     }
-    if (!IsExistDebugByApp(appPackage_)) {
-        return false;
-    }
     if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
         return false;
     }
@@ -211,9 +208,6 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
-        return false;
-    }
-    if (!IsExistDebugByPid(selectPids_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
