@@ -234,6 +234,23 @@ void VirtualThread::ParseMap()
 }
 #endif
 
+void VirtualThread::FixHMBundleMap()
+{
+    // fix bundle map in sandbox
+    for (auto &map : memMaps_) {
+        if ((map->name.find("/data/storage/el1/bundle") != std::string::npos) &&
+            (access(map->name.c_str(), F_OK) != 0)) {
+            // /proc/<pid>/root//data/storage/el1/bundle/libs/arm64/libentry.so
+            HLOGD("Find bundle map name %s", map->name.c_str());
+            std::string bundle = "/data/storage/el1/bundle";
+            map->name.replace(map->name.find(bundle), bundle.length(),
+                              "/data/app/el1/bundle/public" + name_);
+            // /proc/<pid>/root//data/app/el1/bundle/public/<procname>/libs/arm64/libentry.so
+            HLOGD("Fix sandbox bundle map name to %s", map->name.c_str());
+        }
+    }
+}
+
 constexpr const int MMAP_LINE_TOKEN_INDEX_FLAG = 1;
 constexpr const int MMAP_LINE_TOKEN_INDEX_OFFSET = 2;
 constexpr const int MMAP_LINE_TOKEN_INDEX_NAME = 5;

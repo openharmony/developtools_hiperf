@@ -78,6 +78,7 @@ public:
     }
 
     void ParseMap();
+    void FixHMBundleMap();
     void ParseServiceMap(const std::string &filename);
     void ParseDevhostMap(pid_t devhost);
     void CreateMapItem(const std::string filename, uint64_t begin, uint64_t len, uint64_t offset);
