@@ -1104,7 +1104,9 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     }
 
     // start tracking
-    if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
+    if (isDataSizeLimitStop_) {
+        // mmap record size has been larger than limit, dont start sampling.
+    } else if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
         if (!perfEvents_.StartTracking(isFifoServer_)) {
             return false;
         }
