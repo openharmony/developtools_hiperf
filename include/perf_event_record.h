@@ -263,6 +263,7 @@ public:
         header.size = sizeof(header) + sizeof(data_);
     };
 
+    pid_t GetUstackServerPid();
     pid_t GetServerPidof(unsigned int ip_nr);
 };
 
