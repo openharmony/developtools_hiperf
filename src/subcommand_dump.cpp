@@ -180,6 +180,8 @@ bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
     }
 
     if (dumpAll_ || dumpData_) {
+        // before load data section
+        SetHM();
         DumpDataPortion(indent_);
     }
 
@@ -295,6 +297,7 @@ static std::map<int, std::string> g_sampleTypeNames = {
     {PERF_SAMPLE_IDENTIFIER, "identifier"},
     {PERF_SAMPLE_TRANSACTION, "transaction"},
     {PERF_SAMPLE_REGS_INTR, "reg_intr"},
+    {PERF_SAMPLE_SERVER_PID, "server_pid"},
 };
 
 void SubCommandDump::DumpSampleType(uint64_t sampleType, int indent)
@@ -550,6 +553,22 @@ void SubCommandDump::DumpFeaturePortion(int indent)
 bool SubCommandDump::RegisterSubCommandDump()
 {
     return SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
+}
+
+void SubCommandDump::SetHM()
+{
+    std::string os = reader_->GetFeatureString(FEATURE::OSRELEASE);
+    isHM_ = os.find(HMKERNEL) != std::string::npos;
+    vr_.SetHM(isHM_);
+    HLOGD("Set isHM_: %d", isHM_);
+    if (isHM_) {
+        pid_t devhost = -1;
+        std::string str = reader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
+        if (str != EMPTY_STRING) {
+            devhost = std::stoll(str);
+        }
+        vr_.SetDevhostPid(devhost);
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

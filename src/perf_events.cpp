@@ -340,7 +340,7 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
             eventItem.attr.comm = 1;
             eventItem.attr.mmap = 1;
             eventItem.attr.mmap2 = 1;
-            eventItem.attr.mmap_data = 0;
+            eventItem.attr.mmap_data = 1;
         }
 
         if (sampleStackType_ == SampleStackType::DWARF) {
@@ -353,6 +353,10 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
             eventItem.attr.sample_type = SAMPLE_TYPE | PERF_SAMPLE_CALLCHAIN;
         } else {
             eventItem.attr.sample_type = SAMPLE_TYPE;
+        }
+
+        if (isHM_) {
+            eventItem.attr.sample_type |= PERF_SAMPLE_SERVER_PID;
         }
     }
 
@@ -686,6 +690,9 @@ void PerfEvents::LoadTracepointEventTypesFromSystem()
 {
     if (traceConfigTable.empty()) {
         std::string basePath {"/sys/kernel/tracing/events"};
+        if (isHM_) {
+            basePath = "/sys/kernel/tracing/hongmeng/events";
+        }
         if (access(basePath.c_str(), R_OK) != 0) {
             basePath = "/sys/kernel/debug/tracing/events";
         }
@@ -784,6 +791,11 @@ bool PerfEvents::PerfEventsEnable(bool enable)
         }
     }
     return true;
+}
+
+void PerfEvents::SetHM(bool isHM)
+{
+    isHM_ = isHM;
 }
 
 void PerfEvents::SetStatCallBack(StatCallBack reportCallBack)
@@ -1278,6 +1290,11 @@ size_t PerfEvents::GetStackSizePosInSampleRecord(MmapFd &mmap)
             uint64_t reg_nr = __builtin_popcountll(mmap.attr->sample_regs_user);
             pos += reg_nr * sizeof(uint64_t);
         }
+    }
+    if (mmap.attr->sample_type & PERF_SAMPLE_SERVER_PID) {
+        uint64_t server_nr = 0;
+        GetRecordFieldFromMmap(mmap, &server_nr, mmap.mmapPage->data_tail + pos, sizeof(server_nr));
+        pos += (sizeof(server_nr) + server_nr * sizeof(uint64_t));
     }
     return pos;
 }

@@ -23,6 +23,8 @@ bool SubCommandList::OnSubCommand(vector<string> &args)
 {
     vector<perf_type_id> requestEventTypes;
 
+    SetHM();
+
     if (args.empty()) {
         // all the list
         for (auto it : PERF_TYPES) {
@@ -62,6 +64,14 @@ bool SubCommandList::ShowSupportEventsTypes(vector<perf_type_id> requestEventTyp
 void SubCommandList::RegisterSubCommandList()
 {
     SubCommand::RegisterSubCommand("list", make_unique<SubCommandList>());
+}
+
+void SubCommandList::SetHM()
+{
+    std::string version = ReadFileToString("/proc/version");
+    isHM_ = version.find(HMKERNEL) != std::string::npos;
+    perfEvents_.SetHM(isHM_);
+    HLOGD("Set isHM_: %d", isHM_);
 }
 } // namespace HiPerf
 } // namespace Developtools

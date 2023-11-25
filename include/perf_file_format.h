@@ -59,7 +59,8 @@ enum class FEATURE {
     HIPERF_WORKLOAD_CMD,
     HIPERF_RECORD_TIME,
     HIPERF_CPU_OFF,
-    HIPERF_LAST_FEATURE = HIPERF_CPU_OFF,
+    HIPERF_HM_DEVHOST,
+    HIPERF_LAST_FEATURE = HIPERF_HM_DEVHOST,
 
     FEATURE_MAX_BITS = 256,
 };
@@ -75,6 +76,7 @@ const static std::vector<FEATURE> FeatureStrings = {
 
     FEATURE::HIPERF_WORKLOAD_CMD,
     FEATURE::HIPERF_RECORD_TIME,
+    FEATURE::HIPERF_HM_DEVHOST,
 };
 
 struct perf_file_section {
@@ -111,6 +113,7 @@ static const std::vector<std::string> extFeatureNames = {
     "hiperf_workloader_cmd",
     "hiperf_record_time",
     "hiperf_cpu_off",
+    "hiperf_hm_devhost",
 };
 static const std::vector<std::string> featureNames = {
     "unknown_feature", "tracing_data", "build_id",     "hostname",     "osrelease",

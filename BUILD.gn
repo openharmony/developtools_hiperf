@@ -198,7 +198,6 @@ ohos_source_set("hiperf_platform_common") {
       "c_utils:utils",
       "faultloggerd:libunwinder_static",
       "hilog:libhilog",
-      "hitrace:hitrace_meter",
       "init:libbegetutil",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
@@ -390,10 +389,7 @@ ohos_executable("hiperf") {
     static_link = true
   }
 
-  external_deps = [
-    "faultloggerd:libunwinder_static",
-    "hitrace:hitrace_meter",
-  ]
+  external_deps = [ "faultloggerd:libunwinder_static" ]
 
   subsystem_name = "developtools"
   part_name = "hiperf"
