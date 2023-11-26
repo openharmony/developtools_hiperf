@@ -137,6 +137,7 @@ public:
     // get the build if from symbols
     const std::string GetBuildId() const;
 
+    virtual void EnableMiniDebugInfo() {}
     // get the symbols vector
     const std::vector<DfxSymbol> &GetSymbols();
     const std::vector<DfxSymbol *> &GetMatchedSymbols();

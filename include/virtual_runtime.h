@@ -97,6 +97,10 @@ public:
         disableUnwind_ = disableUnwind;
     }
 
+    void EnableDebugInfoSymbolic(bool enable)
+    {
+        enableDebugInfoSymbolic_ = enable;
+    }
     bool isHM_ = false;
     void SetHM(bool isHM)
     {
@@ -137,6 +141,7 @@ public:
 
 private:
     bool disableUnwind_ = true;
+    bool enableDebugInfoSymbolic_ = false;
     size_t callstackMergeLevel_ = 1;
 #if defined(is_ohos) && is_ohos
     CallStack callstack_;

@@ -914,6 +914,27 @@ void PerfRecordSwitchCpuWide::DumpData(int indent) const
                 data_.next_prev_tid);
 }
 
+pid_t PerfRecordSample::GetUstackServerPid()
+{
+    size_t curr_server = 0;
+    // ip_nr == 1...nr: server_pid of data_.ips[nr]
+    for (size_t i = 1; i < data_.nr; i++) {
+        // context change, use next server pid
+        if (data_.ips[i] >= PERF_CONTEXT_MAX) {
+            curr_server++;
+        }
+    }
+    // ip_nr == nr + 1: server_pid of ustack
+    curr_server++;
+    if (curr_server >= data_.server_nr) {
+        HLOGE("ustack server pid nr %zu out of range", curr_server);
+        return data_.pid;
+    }
+
+    // return server pid
+    return data_.server_pids[curr_server];
+}
+
 pid_t PerfRecordSample::GetServerPidof(unsigned int ip_nr)
 {
     if (!data_.server_nr) {

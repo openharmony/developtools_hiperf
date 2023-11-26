@@ -109,6 +109,9 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
         recordCallBack_(std::move(commRecord));
         // only work for pid
         if (pid == tid) {
+            if (isHM_) {
+                thread.FixHMBundleMap();
+            }
             std::shared_ptr<DfxMap> prevMap = nullptr;
             for (auto &map : thread.GetMaps()) {
                 // so in hap is load before start perf record
@@ -410,7 +413,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     HLOGV("unwind record (time:%llu)", recordSample.data_.time);
     // if we have userstack ?
     if (recordSample.data_.stack_size > 0) {
-        pid_t server_pid = recordSample.GetServerPidof(recordSample.data_.nr + 1);
+        pid_t server_pid = recordSample.GetUstackServerPid();
         pid_t pid = static_cast<pid_t>(recordSample.data_.pid);
         pid_t tid = static_cast<pid_t>(recordSample.data_.tid);
         if (server_pid != pid) {
@@ -431,8 +434,6 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
               recordSample.callFrames_.size() - oldSize);
 
         recordSample.ReplaceWithCallStack(oldSize);
-        // callchain updated, flush server pid map
-        recordSample.serverPidMap_.clear();
     }
 
 #ifdef HIPERF_DEBUG_TIME
@@ -539,7 +540,9 @@ void VirtualRuntime::UpdateSymbols(std::string fileName)
     }
     // found it by name
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(fileName);
-
+    if (enableDebugInfoSymbolic_ && symbolsFile->symbolFileType_ == SymbolsFileType::SYMBOL_ELF_FILE) {
+        symbolsFile->EnableMiniDebugInfo();
+    }
     // set symbol path If it exists
     if (symbolsPaths_.size() > 0) {
         symbolsFile->setSymbolsFilePath(symbolsPaths_); // also load from search path
