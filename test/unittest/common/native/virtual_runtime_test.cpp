@@ -349,7 +349,7 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
     auto &symbolsFile = runtime_->symbolsFiles_.emplace_back(
         SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_DWARF_ELF));
     ASSERT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DWARF_DATA), true);
-    ASSERT_EQ(symbolsFile->LoadSymbols(TEST_DWARF_ELF), true);
+    ASSERT_EQ(symbolsFile->LoadSymbols(nullptr, TEST_DWARF_ELF), true);
     symbolsFile->filePath_ = TEST_DWARF_ELF;
 
     // thread

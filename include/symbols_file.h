@@ -119,14 +119,16 @@ public:
     bool setSymbolsFilePath(const std::vector<std::string> &);
 
     // load symbol from file
-    virtual bool LoadSymbols([[maybe_unused]] const std::string &symbolFilePath = EMPTY_STRING)
+    virtual bool LoadSymbols([[maybe_unused]] std::shared_ptr<DfxMap> map = nullptr,
+                             [[maybe_unused]] const std::string &symbolFilePath = EMPTY_STRING)
     {
         HLOGV("virtual dummy function called");
         symbolsLoaded_ = true;
         return false;
     };
     // load debug info for unwind
-    virtual bool LoadDebugInfo([[maybe_unused]] const std::string &symbolFilePath = EMPTY_STRING)
+    virtual bool LoadDebugInfo(std::shared_ptr<DfxMap> map = nullptr,
+                               [[maybe_unused]] const std::string &symbolFilePath = EMPTY_STRING)
     {
         HLOGV("virtual dummy function called");
         debugInfoLoaded_ = true;
@@ -196,6 +198,7 @@ protected:
     std::vector<DfxSymbol> symbols_ {};
     std::vector<DfxSymbol *> matchedSymbols_ {};
     std::vector<FileSymbol> fileSymbols_ {};
+    std::mutex mutex_;
 
     void AdjustSymbols();
     void SortMatchedSymbols();

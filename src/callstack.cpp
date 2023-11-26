@@ -680,7 +680,7 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &c
     regs->SetRegsData(tempRegs);
 #else
     static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
-    regs->SetRegsData(static_cast<uintptr_t*>(regs_), regsNum_);
+    regs->SetRegsData((uintptr_t*)(regs_), regsNum_);
 #endif
     unwinder->SetRegs(regs);
 

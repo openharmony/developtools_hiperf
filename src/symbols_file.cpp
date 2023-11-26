@@ -166,15 +166,15 @@ public:
     {
     }
 
-    bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         std::string findPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
-        if (findPath.empty()) {
+        if (findPath.empty() && elfFile_ == nullptr) { // elf not compressed in hap has been initialized before
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
             return false;
         }
-        if (LoadElfSymbols(findPath)) {
+        if (LoadElfSymbols(map, findPath)) {
             return true;
         } else {
             HLOGW("elf open failed with '%s'", findPath.c_str());
@@ -194,8 +194,9 @@ public:
     }
 
 protected:
-    bool LoadDebugInfo(const std::string &symbolFilePath) override
+    bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
+        std::lock_guard<std::mutex> lock(mutex_);
         if (debugInfoLoadResult_) {
             return true; // it must have been loaded
         } else if (debugInfoLoaded_) {
@@ -208,12 +209,35 @@ protected:
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
             return false;
         }
-        elfFile_ = std::make_shared<DfxElf>(elfPath);
-        HLOGD("loaded elf %s", elfPath.c_str());
+
+        if (elfFile_ == nullptr) {
+            if (StringEndsWith(elfPath, ".hap")) {
+                elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
+                HLOGD("try create elf from hap");
+            } else {
+                elfFile_ = std::make_shared<DfxElf>(elfPath);
+            }
+        }
+
+        if (elfFile_ == nullptr) {
+            HLOGD("Failed to create elf file for %s.", elfPath.c_str());
+            return false;
+        }
 
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
             return false;
+        }
+
+        HLOGD("loaded elf %s", elfPath.c_str());
+        // update path for so in hap
+        if (StringEndsWith(elfPath, ".hap")) {
+            filePath_ = elfPath + "!" + elfFile_->GetElfName();
+            HLOGD("update path for so in hap %s.", filePath_.c_str());
+            map->name = filePath_;
+            map->elf = elfFile_;
+            map->prevMap->name = filePath_;
+            map->prevMap->elf = elfFile_;
         }
 
         auto ptloads = elfFile_->GetPtLoads();
@@ -366,12 +390,19 @@ private:
         }
     }
 
-    bool LoadElfSymbols(std::string elfPath)
+    bool LoadElfSymbols(std::shared_ptr<DfxMap> map, std::string elfPath)
     {
 #ifdef HIPERF_DEBUG_TIME
         const auto startTime = steady_clock::now();
 #endif
-        elfFile_ = std::make_shared<DfxElf>(elfPath);
+        if (elfFile_ == nullptr) {
+            if (StringEndsWith(elfPath, ".hap") && map != nullptr) {
+                elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
+                map->elf = elfFile_;
+            } else {
+                elfFile_ = std::make_shared<DfxElf>(elfPath);
+            }
+        }
         HLOGD("loaded elf %s", elfPath.c_str());
 
         if (enbleMiniDebugInfo_) {
@@ -622,7 +653,7 @@ public:
             return true;
         }
     }
-    bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         HLOGV("KernelSymbols try read '%s' search paths size %zu, inDeviceRecord %d",
@@ -657,7 +688,7 @@ public:
         } // no search path
 
         // try vmlinux
-        return ElfFileSymbols::LoadSymbols(KERNEL_ELF_NAME);
+        return ElfFileSymbols::LoadSymbols(nullptr, KERNEL_ELF_NAME);
     }
     uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t) const override
     {
@@ -725,7 +756,8 @@ public:
             return true;
         }
     }
-    bool LoadSymbols(const std::string &symbolFilePath) override
+
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         HLOGV("KernelThreadSymbols try read '%s', inDeviceRecord %d",
@@ -748,7 +780,7 @@ public:
         } // no search path
 
         // try elf
-        return ElfFileSymbols::LoadSymbols(filePath_);
+        return ElfFileSymbols::LoadSymbols(nullptr, filePath_);
     }
     ~KernelThreadSymbols() override {}
 };
@@ -763,7 +795,7 @@ public:
     }
     ~KernelModuleSymbols() override {};
 
-    bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         if (module_ == filePath_ and onRecording_) {
@@ -784,7 +816,7 @@ public:
             LoadBuildId();
         } else {
             HLOGV("we have file path, load with %s", filePath_.c_str());
-            return ElfFileSymbols::LoadSymbols(filePath_);
+            return ElfFileSymbols::LoadSymbols(nullptr, filePath_);
         }
         return false;
     }
@@ -817,7 +849,7 @@ public:
     {
         symbolFileType_ = SYMBOL_KERNEL_FILE;
     }
-    bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         return false;
@@ -839,7 +871,7 @@ public:
     {
         symbolFileType_ = SYMBOL_KERNEL_FILE;
     }
-    bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         return false;
@@ -853,7 +885,7 @@ public:
         : SymbolsFile(SYMBOL_UNKNOW_FILE, symbolFilePath)
     {
     }
-    bool LoadSymbols(const std::string &symbolFilePath) override
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
         return false;
