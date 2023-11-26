@@ -506,7 +506,9 @@ void VirtualRuntime::UpdateSymbols(std::string fileName)
     }
     // found it by name
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(fileName);
-
+    if (enableDebugInfoSymbolic_ && symbolsFile->symbolFileType_ == SymbolsFileType::SYMBOL_ELF_FILE) {
+        symbolsFile->EnableMiniDebugInfo();
+    }
     // set symbol path If it exists
     if (symbolsPaths_.size() > 0) {
         symbolsFile->setSymbolsFilePath(symbolsPaths_); // also load from search path

@@ -133,6 +133,9 @@ public:
         "   --disable-callstack-expand\n"
         "         If '-s dwarf' is used, to break the 64k stack limit, callstack is merged by default\n"
         "         to build more complete call stack. that may not be correct sometimes.\n"
+        "   --enable-debuginfo-symbolic\n"
+        "         If '-s fp/dwarf' is used, symbols in .gnu_debugdata section of an elf, also called minidebuginfo\n"
+        "         will be parsed, if not use this option, we will not parse minidebuginfo by default.\n"
         "   --clockid <clock_id>\n"
         "         Set the clock id to use for the various time fields in the perf_event_type records.\n"
         "         monotonic and monotonic_raw are supported,\n"
@@ -189,6 +192,7 @@ private:
     bool delayUnwind_ = false;
     bool disableUnwind_ = false;
     bool disableCallstackExpend_ = false;
+    bool enableDebugInfoSymbolic_ = false;
     bool verboseReport_ = false;
     float timeStopSec_ = PerfEvents::DEFAULT_TIMEOUT;
     int frequency_ = 0;
