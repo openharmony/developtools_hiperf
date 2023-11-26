@@ -196,7 +196,7 @@ bool SubCommandDump::DumpElfFile()
 {
     printf("dump elf: '%s'\n", elfFileName_.c_str());
     auto elf = SymbolsFile::CreateSymbolsFile(elfFileName_);
-    if (!elf->LoadSymbols("")) {
+    if (!elf->LoadSymbols(nullptr, "")) {
         printf("load elf failed.\n");
         return false;
     } else {

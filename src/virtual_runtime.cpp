@@ -109,14 +109,27 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
         recordCallBack_(std::move(commRecord));
         // only work for pid
         if (pid == tid) {
+            std::shared_ptr<DfxMap> prevMap = nullptr;
             for (auto &map : thread.GetMaps()) {
+                // so in hap is load before start perf record
+                // dynamic load library should be treat in the same way
+                bool updateNormalSymbol = true;
+                if (map->name.find(".hap") != std::string::npos &&
+                    map->prots & PROT_EXEC) {
+                    map->prevMap = prevMap;
+                    updateNormalSymbol = !UpdateHapSymbols(map);
+                    HLOGD("UpdateHapSymbols");
+                }
                 auto mmapRecord =
                     std::make_unique<PerfRecordMmap2>(false, thread.pid_, thread.tid_, map);
                 HLOGD("make PerfRecordMmap2 %d:%d:%s:%s(0x%" PRIx64 "-0x%" PRIx64 ")@%" PRIx64 " ",
                       thread.pid_, thread.tid_, thread.name_.c_str(), map->name.c_str(),
                       map->begin, map->end, map->offset);
                 recordCallBack_(std::move(mmapRecord));
-                UpdateSymbols(map->name);
+                if (updateNormalSymbol) {
+                    UpdateSymbols(map->name);
+                }
+                prevMap = map;
             }
         }
         HLOGV("thread created");
@@ -126,6 +139,27 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
 #endif
     }
     return thread;
+}
+
+bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
+{
+    // found it by name
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(map->name);
+    if (symbolsFile == nullptr) {
+        HLOGV("Failed to load CreateSymbolsFile for exec section in hap(%s)", map->name.c_str());
+        return false;
+    }
+    // update maps name if load debuginfo successfully
+    if (!symbolsFile->LoadDebugInfo(map)) {
+        HLOGV("Failed to load debuginfo for exec section in hap(%s)", map->name.c_str());
+        return false;
+    }
+
+    if (!loadSymboleWhenNeeded_) { // todo misspelling
+        symbolsFile->LoadSymbols(map);
+    }
+    symbolsFiles_.emplace_back(std::move(symbolsFile));
+    return true;
 }
 
 VirtualThread &VirtualRuntime::GetThread(pid_t pid, pid_t tid)
@@ -602,7 +636,7 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
                     vaddrSymbol.fileVaddr_, ip, map->name.c_str());
             if (!symbolsFile->SymbolsLoaded()) {
                 symbolsFile->LoadDebugInfo();
-                symbolsFile->LoadSymbols();
+                symbolsFile->LoadSymbols(map);
             }
             auto foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
             foundSymbols.taskVaddr_ = ip;
@@ -639,7 +673,7 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
                   vaddrSymbol.fileVaddr_, ip, map->name.c_str());
             if (!symbolsFile->SymbolsLoaded()) {
-                symbolsFile->LoadSymbols();
+                symbolsFile->LoadSymbols(map);
             }
             auto foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
             foundSymbols.taskVaddr_ = ip;

@@ -77,6 +77,9 @@ int64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
         }
     }
     if (addr >= memMaps_[memMapsIndexs_[left]]->begin && addr < memMaps_[memMapsIndexs_[left]]->end) {
+        if (left > 0) {
+            memMaps_[memMapsIndexs_[left]]->prevMap = memMaps_[memMapsIndexs_[left - 1]];
+        }
         return static_cast<int64_t>(memMapsIndexs_[left]);
     }
     return illegal;
@@ -111,6 +114,9 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByAddr(uint64_t addr) const
         }
     }
     if (addr >= memMaps_[memMapsIndexs_[left]]->begin && addr < memMaps_[memMapsIndexs_[left]]->end) {
+        if (left > 0) {
+            memMaps_[memMapsIndexs_[left]]->prevMap = memMaps_[memMapsIndexs_[left - 1]];
+        }
         return memMaps_[memMapsIndexs_[left]];
     }
     return nullptr;
@@ -139,7 +145,7 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> inMap) 
     for (auto &symbolsFile : symbolsFiles_) {
         if (symbolsFile->filePath_ == inMap->name) {
             HLOGM("found symbol for map '%s'", inMap->name.c_str());
-            if (symbolsFile->LoadDebugInfo()) {
+            if (symbolsFile->LoadDebugInfo(inMap)) {
                 HLOGM("found symbol for map '%s'", inMap->name.c_str());
                 return symbolsFile.get();
             }
@@ -201,7 +207,8 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
             map->elf = symFile->GetElfFile();
         }
         if (map->elf != nullptr) {
-            uint64_t foff = vaddr - map->begin + map->offset;
+            // default base offset is zero
+            uint64_t foff = vaddr - map->begin + map->offset - map->elf->GetBaseOffset();
             if (map->elf->Read(foff, data, size)) {
                 return true;
             } else {

@@ -160,6 +160,9 @@ private:
     void MakeCallFrame(DfxSymbol &symbol, CallFrame &callFrame);
     // records
     void UpdateSymbols(std::string filename);
+    // we don't know whether hap vma mapping is stand for a so
+    // thus we need try to parse it first
+    bool UpdateHapSymbols(std::shared_ptr<DfxMap> map);
     void UpdateFromRecord(PerfRecordSample &recordSample);
     void UpdateFromRecord(PerfRecordMmap &recordMmap);
     void UpdateFromRecord(PerfRecordMmap2 &recordMmap2);
