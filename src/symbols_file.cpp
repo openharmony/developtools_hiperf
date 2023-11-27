@@ -383,11 +383,13 @@ private:
         // use elfFile_ to get symbolsTable
         DfxSymbols::ParseSymbols(symbolsTable, elf, filePath);
         DfxSymbols::AddSymbolsByPlt(symbolsTable, elf, filePath);
+#if is_ohos && !is_mingw && !is_emulator
         auto embeddedElf = elf->GetEmbeddedElf();
         if (enbleMiniDebugInfo_ && embeddedElf) {
             DfxSymbols::ParseSymbols(symbolsTable, embeddedElf, filePath);
             DfxSymbols::AddSymbolsByPlt(symbolsTable, embeddedElf, filePath);
         }
+#endif
     }
 
     bool LoadElfSymbols(std::shared_ptr<DfxMap> map, std::string elfPath)
@@ -404,11 +406,11 @@ private:
             }
         }
         HLOGD("loaded elf %s", elfPath.c_str());
-
+#if is_ohos && !is_mingw && !is_emulator
         if (enbleMiniDebugInfo_) {
             elfFile_->EnableMiniDebugInfo();
         }
-
+#endif
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
             return false;
