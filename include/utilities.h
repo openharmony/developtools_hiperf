@@ -341,8 +341,7 @@ bool IsSupportNonDebuggableApp();
 const std::string GetUserType();
 std::string GetProcessName(int pid);
 bool IsDebugableApp(const std::string& bundleName);
-// Sanbox lib path check
-std::string AdaptSandboxPath(std::string filePath, int pid);
+bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

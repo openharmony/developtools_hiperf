@@ -204,6 +204,8 @@ private:
     FRIEND_TEST(VirtualRuntimeTest, SetDisableUnwind);
     FRIEND_TEST(VirtualRuntimeTest, UnwindFromRecord);
     friend class VirtualRuntimeTest;
+
+    bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
 };
 } // namespace HiPerf
 } // namespace Developtools

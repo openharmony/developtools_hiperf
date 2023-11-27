@@ -821,12 +821,19 @@ bool IsDebugableApp(const std::string& bundleName)
 #endif
 }
 
-std::string AdaptSandboxPath(std::string filePath, int pid)
+bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize)
 {
-    if (filePath.find("/data/storage") == 0 && access(filePath.c_str(), F_OK) != 0) {
-        filePath = "/proc/" + std::to_string(pid) + "/root" + filePath;
+    std::string oldFilename = filename;
+    if (oldFilename.find("/data/storage") == 0 && access(oldFilename.c_str(), F_OK) != 0) {
+        std::string newFilename = "/proc/" + std::to_string(pid) + "/root" + oldFilename;
+        (void)memset_s(filename, KILO, '\0', KILO);
+        if (strncpy_s(filename, KILO, newFilename.c_str(), newFilename.size()) != 0) {
+            HLOGD("strncpy_s recordMmap2 failed!");
+        }
+        headerSize += newFilename.size() - oldFilename.size();
+        return true;
     }
-    return filePath;
+    return false;
 }
 
 } // namespace HiPerf

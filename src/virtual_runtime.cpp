@@ -24,7 +24,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "dfx_maps.h"
+#include "dfx_map.h"
 #include "register.h"
 #include "symbols_file.h"
 #include "utilities.h"
@@ -117,8 +117,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
                 // so in hap is load before start perf record
                 // dynamic load library should be treat in the same way
                 bool updateNormalSymbol = true;
-                if (map->name.find(".hap") != std::string::npos &&
-                    map->prots & PROT_EXEC) {
+                if (map->name.find(".hap") != std::string::npos && (map->prots & PROT_EXEC)) {
                     map->prevMap = prevMap;
                     updateNormalSymbol = !UpdateHapSymbols(map);
                     HLOGD("UpdateHapSymbols");
@@ -482,16 +481,96 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
         UpdatekernelMap(recordMmap.data_.addr, recordMmap.data_.addr + recordMmap.data_.len,
                         recordMmap.data_.pgoff, recordMmap.data_.filename);
     } else {
-        std::string libPath = AdaptSandboxPath(recordMmap.data_.filename, recordMmap.data_.pid);
-        recordMmap.header.size += libPath.size() - strlen(recordMmap.data_.filename);
-        (void)memset_s(recordMmap.data_.filename, KILO, '\0', KILO);
-        if (strncpy_s(recordMmap.data_.filename, KILO, libPath.c_str(), libPath.size()) != 0) {
-            HLOGD("strncpy_s recordMmap failed!");
-        }
+        NeedAdaptSandboxPath(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header.size);
         UpdateThreadMaps(recordMmap.data_.pid, recordMmap.data_.tid, recordMmap.data_.filename,
                          recordMmap.data_.addr, recordMmap.data_.len, recordMmap.data_.pgoff);
         UpdateSymbols(recordMmap.data_.filename);
     }
+}
+
+bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
+{
+    static std::shared_ptr<DfxMap> prevMap;
+    if ((recordMmap2.data_.prot & PROT_EXEC) != 0) {
+        // fake first segment, when second segment come.
+        auto symFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, recordMmap2.data_.filename);
+        if (symFile == nullptr) {
+            HLOGD("CheckValidSandBoxMmap Failed to create symbolFile!");
+            return false;
+        }
+
+        std::shared_ptr<DfxMap> curMap;
+        if (strstr(recordMmap2.data_.filename, ".hap") != nullptr) {
+            curMap = std::make_shared<DfxMap>(
+                recordMmap2.data_.addr,
+                recordMmap2.data_.addr + recordMmap2.data_.len,
+                recordMmap2.data_.pgoff,
+                "", // prot
+                recordMmap2.data_.filename
+            );
+            curMap->prevMap = prevMap;
+        }
+
+        if(!symFile->LoadDebugInfo(curMap)) {
+            HLOGD("CheckValidSandBoxMmap Failed to load debuginfo!");
+            return false;
+        }
+
+        if (!loadSymboleWhenNeeded_) {
+            symFile->LoadSymbols(curMap);
+        }
+
+        if (strstr(recordMmap2.data_.filename, ".hap") == nullptr) {
+            auto elfLoadInfoMap = symFile->GetPtLoads();
+            u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
+            u64 len = elfLoadInfoMap[0].mmapLen;
+            u64 pgoff = elfLoadInfoMap[0].offset & (~(elfLoadInfoMap[0].align - 1));
+            std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
+                std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+                begin, len, pgoff, 0, 0, 0, PROT_READ, 0, std::string(recordMmap2.data_.filename));
+            UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, mmap2FirstSeg->data_.filename,
+                mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
+            recordCallBack_(std::move(mmap2FirstSeg));
+        } else {
+            auto elfLoadInfoMap = symFile->GetPtLoads();
+            u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
+            u64 len = elfLoadInfoMap[0].mmapLen;
+            u64 pgoff = elfLoadInfoMap[0].offset & (~(elfLoadInfoMap[0].align - 1));
+            std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
+                std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+                begin, len, pgoff, 0, 0, 0, PROT_READ, 0, curMap->name);
+            UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, curMap->name,
+                mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
+            recordCallBack_(std::move(mmap2FirstSeg));
+
+            std::unique_ptr<PerfRecordMmap2> mmap2SecondSegment =
+                std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+                recordMmap2.data_.addr,
+                recordMmap2.data_.len,
+                recordMmap2.data_.pgoff - prevMap->offset, // minus load offset of hap
+                0, 0, 0, recordMmap2.data_.prot, 0, curMap->name);
+            UpdateThreadMaps(mmap2SecondSegment->data_.pid, mmap2SecondSegment->data_.tid, curMap->name,
+                mmap2SecondSegment->data_.addr, mmap2SecondSegment->data_.len, mmap2SecondSegment->data_.pgoff);
+            recordCallBack_(std::move(mmap2SecondSegment));
+            recordMmap2.discard_ = true;
+        }
+        symbolsFiles_.emplace_back(std::move(symFile));
+        return true;
+    } else if (recordMmap2.data_.pgoff == 0) {
+        recordMmap2.discard_ = true;
+    }
+
+    if (strstr(recordMmap2.data_.filename, ".hap") != nullptr) {
+        prevMap = std::make_shared<DfxMap>(
+            recordMmap2.data_.addr,
+            recordMmap2.data_.addr + recordMmap2.data_.len,
+            recordMmap2.data_.pgoff,
+            "", // prot
+            recordMmap2.data_.filename
+        );
+        HLOGD("CheckValidSandBoxMmap Update prev map!");
+    }
+    return !recordMmap2.discard_;
 }
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
@@ -499,16 +578,19 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
     if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(recordMmap2.data_.filename)) {
         return;
     }
+
     HLOGV("  MMAP2: size %d pid %u tid %u", recordMmap2.header.size, recordMmap2.data_.pid,
           recordMmap2.data_.tid);
-    HLOGV("  MMAP2: %s dso '%s' (0x%llx-0x%llx)@0x%llx", recordMmap2.inKernel() ? "kernel" : "user",
+    HLOGV("  MMAP2: %s dso '%s' (0x%llx-0x%llx)@0x%llx prot:%u", recordMmap2.inKernel() ? "kernel" : "user",
           recordMmap2.data_.filename, recordMmap2.data_.addr,
-          recordMmap2.data_.addr + recordMmap2.data_.len, recordMmap2.data_.pgoff);
-    std::string libPath = AdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid);
-    recordMmap2.header.size += libPath.size() - strlen(recordMmap2.data_.filename);
-    (void)memset_s(recordMmap2.data_.filename, KILO, '\0', KILO);
-    if (strncpy_s(recordMmap2.data_.filename, KILO, libPath.c_str(), libPath.size()) != 0) {
-        HLOGD("strncpy_s recordMmap2 failed!");
+          recordMmap2.data_.addr + recordMmap2.data_.len, recordMmap2.data_.pgoff, recordMmap2.data_.prot);
+
+    if (recordCallBack_) {
+        if (NeedAdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size)) {
+            if (!CheckValidSandBoxMmap(recordMmap2)) {
+                return;
+            }
+        }
     }
     UpdateThreadMaps(recordMmap2.data_.pid, recordMmap2.data_.tid, recordMmap2.data_.filename,
                      recordMmap2.data_.addr, recordMmap2.data_.len, recordMmap2.data_.pgoff);
