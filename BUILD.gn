@@ -72,6 +72,7 @@ config("hiperf_inner_config") {
   defines += [ "is_mingw=${is_mingw}" ]
   defines += [ "is_linux=${is_linux}" ]
   defines += [ "is_ohos=${is_ohos}" ]
+  defines += [ "is_emulator=${is_emulator}" ]
   defines += [ "is_double_framework=${is_double_framework}" ]
   if (hiperf_target_host) {
     defines += [ "target_cpu_${host_cpu}" ]
