@@ -219,7 +219,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
                            sizeof(module), &size, &addr, sizeof(addr));
         constexpr int numSlices {3};
         if (ret == numSlices) {
-            auto &map = koMaps.emplace_back(addr, addr + size, 0, "", std::string(module));
+            const auto &map = koMaps.emplace_back(addr, addr + size, 0, "", std::string(module));
             HLOGV("add ko map %s", map.ToString().c_str());
         } else {
             HLOGE("unknown line %d: '%s'", ret, line.c_str());
@@ -232,7 +232,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
         HLOGW("no addr found in /proc/modules. remove all the ko");
     }
     if (recordCallBack_) {
-        for (auto &map : koMaps) {
+        for (const auto &map : koMaps) {
             auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin,
                                                            map.end - map.begin, 0, map.name);
             recordCallBack_(std::move(record));
