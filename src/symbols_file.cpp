@@ -193,6 +193,16 @@ public:
         return elfFile_;
     }
 
+    const std::unordered_map<uint64_t, ElfLoadInfo> GetPtLoads() override
+    {
+        std::unordered_map<uint64_t, ElfLoadInfo> info;
+        if (elfFile_ == nullptr) {
+            return info;
+        }
+
+        return elfFile_->GetPtLoads();
+    }
+
 protected:
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
@@ -212,6 +222,10 @@ protected:
 
         if (elfFile_ == nullptr) {
             if (StringEndsWith(elfPath, ".hap")) {
+                if (map == nullptr) {
+                    HLOGW("map should not be nullptr.");
+                    return false;
+                }
                 elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
                 HLOGD("try create elf from hap");
             } else {
@@ -258,6 +272,7 @@ protected:
         }
 #endif
 
+        HLOGD("LoadDebugInfo success!");
         debugInfoLoadResult_ = true;
         return true;
     }
@@ -416,13 +431,8 @@ private:
             return false;
         }
 
-        auto ptloads = elfFile_->GetPtLoads();
-        for (const auto &ptload : ptloads) {
-            if (textExecVaddr_ != std::min(textExecVaddr_, ptload.second.tableVaddr)) {
-                textExecVaddr_ = std::min(textExecVaddr_, ptload.second.tableVaddr);
-                textExecVaddrFileOffset_ = ptload.second.offset;
-            }
-        }
+        textExecVaddr_ = elfFile_->GetStartVaddr();
+        textExecVaddrFileOffset_ = elfFile_->GetStartOffset();
         HLOGD("textExecVaddr_ 0x%016" PRIx64 " file offset 0x%016" PRIx64 "", textExecVaddr_,
               textExecVaddrFileOffset_);
 

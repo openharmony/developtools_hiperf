@@ -134,6 +134,13 @@ public:
         debugInfoLoaded_ = true;
         return false;
     };
+
+    virtual const std::unordered_map<uint64_t, ElfLoadInfo> GetPtLoads()
+    {
+        std::unordered_map<uint64_t, ElfLoadInfo> loadInfoMap;
+        return loadInfoMap;
+    }
+
     // get the build if from symbols
     const std::string GetBuildId() const;
 

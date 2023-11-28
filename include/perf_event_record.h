@@ -195,6 +195,7 @@ public:
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     void DumpData(int indent) const override;
     void DumpLog(const std::string &prefix) const override;
+    bool discard_ = false;
 };
 
 class PerfRecordLost : public PerfEventRecord {
