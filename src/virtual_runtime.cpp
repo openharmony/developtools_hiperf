@@ -232,7 +232,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
         HLOGW("no addr found in /proc/modules. remove all the ko");
     }
     if (recordCallBack_) {
-        for (auto &map : koMaps) {
+        for (const auto &map : koMaps) {
             auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin,
                                                            map.end - map.begin, 0, map.name);
             recordCallBack_(std::move(record));
