@@ -21,9 +21,11 @@
 #if defined(is_mingw) && is_mingw
 #include <io.h>
 #endif
-#if defined(is_ohos) && is_ohos
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
 #include "application_info.h"
 #include "bundle_mgr_proxy.h"
+#endif
+#if defined(is_ohos) && is_ohos
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 using namespace OHOS;
@@ -789,7 +791,7 @@ std::string GetProcessName(int pid)
 
 bool IsDebugableApp(const std::string& bundleName)
 {
-#if defined(is_ohos) && is_ohos
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     if (bundleName.empty()) {
         printf("bundleName is empty!\n");
         return false;

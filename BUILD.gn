@@ -194,8 +194,6 @@ ohos_source_set("hiperf_platform_common") {
 
   if (is_ohos) {
     external_deps = [
-      "bundle_framework:appexecfwk_base",
-      "bundle_framework:appexecfwk_core",
       "c_utils:utils",
       "faultloggerd:libunwinder_static",
       "hilog:libhilog",
@@ -203,6 +201,13 @@ ohos_source_set("hiperf_platform_common") {
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
+    if (bundle_framework_enable) {
+      external_deps += [
+        "bundle_framework:appexecfwk_base",
+        "bundle_framework:appexecfwk_core",
+      ]
+      defines += [ "BUNDLE_FRAMEWORK_ENABLE" ]
+    }
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
     defines += [ "CONFIG_NO_HILOG" ]
