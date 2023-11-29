@@ -511,7 +511,7 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
             curMap->prevMap = prevMap;
         }
 
-        if(!symFile->LoadDebugInfo(curMap)) {
+        if (!symFile->LoadDebugInfo(curMap)) {
             HLOGD("CheckValidSandBoxMmap Failed to load debuginfo!");
             return false;
         }
