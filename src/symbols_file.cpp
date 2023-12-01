@@ -35,6 +35,7 @@
 
 #include "dfx_symbols.h"
 #include "dwarf_encoding.h"
+#include "unwinder_config.h"
 #include "utilities.h"
 
 using namespace OHOS::HiviewDFX;
@@ -185,7 +186,7 @@ public:
 
     void EnableMiniDebugInfo() override
     {
-        enbleMiniDebugInfo_ = true;
+        UnwinderConfig::SetEnableMiniDebugInfo(true);
     }
 
     std::shared_ptr<DfxElf> GetElfFile() override
@@ -237,11 +238,7 @@ protected:
             HLOGD("Failed to create elf file for %s.", elfPath.c_str());
             return false;
         }
-#if is_ohos && !is_mingw && !is_emulator
-        if (enbleMiniDebugInfo_) {
-            elfFile_->EnableMiniDebugInfo();
-        }
-#endif
+
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
             return false;
@@ -278,7 +275,6 @@ protected:
 
 private:
     bool EhFrameHDRValid_ {false};
-    bool enbleMiniDebugInfo_ {false};
     uint64_t ehFrameHDRElfOffset_ {0};
     uint64_t ehFrameHDRFdeCount_ {0};
     uint64_t ehFrameHDRFdeTableItemSize_ {0};
@@ -413,11 +409,6 @@ private:
             }
         }
         HLOGD("loaded elf %s", elfPath.c_str());
-#if is_ohos && !is_mingw && !is_emulator
-        if (enbleMiniDebugInfo_) {
-            elfFile_->EnableMiniDebugInfo();
-        }
-#endif
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
             return false;
