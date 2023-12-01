@@ -308,6 +308,74 @@ void VirtualRuntime::UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offs
     }
 }
 
+void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
+{
+    u64 nr = recordSample->data_.nr;
+    if (nr == 0) {
+        collectSymbolCallBack_(recordSample);
+        return;
+    }
+
+    u32 pid = recordSample->data_.pid;
+    u64 *ips = recordSample->data_.ips;
+    StackId stackId;
+    stackId.value = 0;
+    auto entry = processStackMap_.find(pid);
+    std::shared_ptr<UniqueStackTable> table = nullptr;
+    if (entry != processStackMap_.end()) {
+        table = entry->second;
+    } else {
+        table = std::make_shared<UniqueStackTable>(pid);
+        processStackMap_[pid] = table;
+    }
+
+    while (table->PutIpsInTable(&stackId, ips, nr) == 0) {
+        // try expand hashtable if collison can not resolved
+        if (!table->Resize()) {
+            HLOGW("Hashtable size limit, ip compress failed!");
+            collectSymbolCallBack_(recordSample);
+            return;
+        }
+    }
+
+    // callstack dedup success
+    recordSample->stackId_.value = stackId.value;
+    recordSample->header.size -= (sizeof(u64) * nr - sizeof(stackId));
+    recordSample->data_.nr = 0;
+    recordSample->data_.ips = nullptr;
+    recordSample->removeStack_ = true;
+}
+
+void VirtualRuntime::CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
+                                        uSymbolsHits &userSymbolsHits)
+{
+    Node *node = nullptr;
+    Node *head = nullptr;
+    u32 pid;
+    for (const auto &tableEntry : processStackMap_) {
+        const auto &table = tableEntry.second;
+        pid = table->GetPid();
+        head = table->GetHeadNode();
+        const auto &idxes = table->GetUsedIndexes();
+        for (const auto idx : idxes) {
+            node = head + idx;
+            if (node->value != 0) {
+                if (node->section.inKernel) {
+                    uint64_t ip = node->section.ip | KERNEL_PREFIX;
+                    if (ip == PERF_CONTEXT_KERNEL || ip == PERF_CONTEXT_USER) {
+                        continue;
+                    }
+                    kernelSymbolsHits.insert(ip);
+                } else {
+                    userSymbolsHits[pid].insert(node->section.ip);
+                }
+            } else {
+                HLOGD("node value error 0x%x", idx);
+            }
+        }
+    }
+}
+
 void VirtualRuntime::UpdateFromRecord(PerfEventRecord &record)
 {
 #ifdef HIPERF_DEBUG_TIME
@@ -366,6 +434,19 @@ void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t 
     HLOGV(" (%zu)unwind symbol: %*s%s", recordSample.callFrames_.size(),
           static_cast<int>(recordSample.callFrames_.size()), "",
           recordSample.callFrames_.back().ToSymbolString().c_str());
+}
+
+bool VirtualRuntime::RecoverCallStack(PerfRecordSample &recordSample)
+{
+    auto StackTable = processStackMap_.find(recordSample.data_.pid);
+    if (StackTable == processStackMap_.end()) {
+        HLOGV("not found %" PRIu32 " pid", recordSample.data_.pid);
+        return false;
+    }
+    recordSample.ips_.clear();
+    StackTable->second->GetIpsByStackId(recordSample.stackId_, recordSample.ips_);
+    recordSample.RecoverCallStack();
+    return true;
 }
 
 void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
@@ -438,13 +519,26 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 #ifdef HIPERF_DEBUG_TIME
     unwindFromRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
+
+    // we will not do this in non record mode.
+    if (dedupStack_ && recordCallBack_) {
+        DedupFromRecord(&recordSample);
+    }
 #endif
 
     // we will not do this in record mode
     if (recordCallBack_ == nullptr) {
+        if (dedupStack_ && recordSample.stackId_.section.id > 0 && recordSample.data_.nr == 0) {
+             RecoverCallStack(recordSample);
+        }
         // find the symbols , reabuild frame info
         SymbolicRecord(recordSample);
     }
+}
+
+void VirtualRuntime::SetCollectSymbolCallBack(CollectSymbolCallBack collectSymbolCallBack)
+{
+    collectSymbolCallBack_ = collectSymbolCallBack;
 }
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
@@ -511,7 +605,7 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
             curMap->prevMap = prevMap;
         }
 
-        if(!symFile->LoadDebugInfo(curMap)) {
+        if (!symFile->LoadDebugInfo(curMap)) {
             HLOGD("CheckValidSandBoxMmap Failed to load debuginfo!");
             return false;
         }
@@ -896,6 +990,17 @@ void VirtualRuntime::UpdateFromPerfData(const std::vector<SymbolFileStruct> &sym
         }
         symbolsFile->id_ = static_cast<int32_t>(symbolsFiles_.size());
         symbolsFiles_.emplace_back(std::move(symbolsFile));
+    }
+}
+
+void VirtualRuntime::ImportUniqueStackNodes(const std::vector<UniStackTableInfo>& uniStackTableInfos)
+{
+    for (const UniStackTableInfo& item : uniStackTableInfos) {
+        auto stackTable = std::make_shared<UniqueStackTable>(item.pid, item.tableSize);
+        for (const UniStackNode& node : item.nodes) {
+            stackTable->ImportNode(node.index, node.node);
+        }
+        processStackMap_[item.pid] = std::move(stackTable);
     }
 }
 

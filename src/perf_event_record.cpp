@@ -170,6 +170,13 @@ void PerfRecordSample::DumpLog(const std::string &prefix) const
           data_.reg_nr, data_.dyn_size, data_.time);
 }
 
+void PerfRecordSample::RecoverCallStack()
+{
+    data_.ips = ips_.data();
+    data_.nr = ips_.size();
+    removeStack_ = true;
+}
+
 void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
 {
     // first we check if we have some user unwind stack need to merge ?
@@ -246,6 +253,8 @@ PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
     }
     sampleType_ = attr.sample_type;
 
+    uint8_t *start = p;
+
     p += sizeof(header);
 
     // parse record according SAMPLE_TYPE
@@ -293,6 +302,10 @@ PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
         p += data_.stack_size;
         PopFromBinary(true, p, data_.dyn_size);
     }
+    uint32_t remain = header.size - (p - start);
+    if (data_.nr == 0 && dumpRemoveStack_ && remain == sizeof(stackId_)) {
+        PopFromBinary(true, p, stackId_.value);
+    }
 }
 
 bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
@@ -314,7 +327,7 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res);
     PushToBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period);
     PushToBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr);
-    if (data_.nr > 0) {
+    if (data_.nr > 0 && !removeStack_) {
         std::copy(data_.ips, data_.ips + data_.nr, reinterpret_cast<u64 *>(p));
         p += data_.nr * sizeof(u64);
     }
@@ -344,7 +357,7 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
         p += data_.stack_size * sizeof(u8);
         PushToBinary(true, p, data_.dyn_size);
     }
-
+    PushToBinary(removeStack_, p, stackId_.value);
     return true;
 }
 
@@ -376,6 +389,9 @@ void PerfRecordSample::DumpData(int indent) const
     }
     if (sampleType_ & PERF_SAMPLE_PERIOD) {
         PrintIndent(indent, "period %" PRIu64 "\n", static_cast<uint64_t>(data_.period));
+    }
+    if (stackId_.section.id > 0) {
+        PrintIndent(indent, "stackid %" PRIu64 "\n", static_cast<uint64_t>(stackId_.section.id));
     }
     if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
         bool userContext = false;

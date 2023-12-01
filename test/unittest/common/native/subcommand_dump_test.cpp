@@ -203,6 +203,622 @@ HWTEST_F(SubCommandDumpTest, DumpElfProtoConflict, TestSize.Level1)
     TestDumpCommand("--elf elffile --proto ptotofile ", false);
 }
 #endif
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackTable, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("stackid") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableNums, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("TableNums") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfNumNodes, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("numNodes") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackTableContent, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table content") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableid") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableSize, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableSize") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelUpperBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string kernelUpperBoundary = "0xffffffffffffff80";
+    EXPECT_EQ(stringOut.find(kernelUpperBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelLowerBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string kernelLowerBoundary = "0xfffffffffffffe00";
+    EXPECT_EQ(stringOut.find(kernelLowerBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string kernelIp = "0xffffffc011605050";
+    EXPECT_EQ(stringOut.find(kernelIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfUerIpFixZero, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIpFixZero = "0x0000007f8afbd290";
+    EXPECT_EQ(stringOut.find(userIpFixZero) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfUserIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIp = "0x7f83313470";
+    EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfCallchain, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string callchain = "callchain nr=25";
+    EXPECT_EQ(stringOut.find(callchain) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfSymbol, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string symbol = "0xffffffc01160072c : __schedule";
+    EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpStackTable, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpStackid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("stackid") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpTableNums, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("TableNums") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpNumNodes, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("numNodes") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpStackTableContent, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table content") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpTableid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableid") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpTableSize, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableSize") != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelUpperBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string kernelUpperBoundary = "0xffffffffffffff80";
+    EXPECT_EQ(stringOut.find(kernelUpperBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelLowerBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string kernelLowerBoundary = "0xfffffffffffffe00";
+    EXPECT_EQ(stringOut.find(kernelLowerBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string KernelIp = "0xffffffc011605050";
+    EXPECT_EQ(stringOut.find(KernelIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpUerIpFixZero, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIpFixZero = "0xffffffc0100f9e54";
+    EXPECT_EQ(stringOut.find(userIpFixZero) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpUserIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIp = "0x7f9b9187bc";
+    EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpCallchain, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string callchain = "callchain nr=20";
+    EXPECT_EQ(stringOut.find(callchain) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpCompressFpSymbol, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string symbol = "0xffffffc011600984 : schedule";
+    EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackTable, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("stackid") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableNums, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("TableNums") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfNumNodes, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("numNodes") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackTableContent, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table content") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableid") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableSize, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableSize") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfKernelUpperBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string KernelUpperBoundary = "0xffffffffffffff80";
+    EXPECT_EQ(stringOut.find(KernelUpperBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfKernelLowerBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string kernelLowerBoundary = "0xfffffffffffffe00";
+    EXPECT_EQ(stringOut.find(kernelLowerBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfKernelIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string kernelIp = "0xffffffc011605050";
+    EXPECT_EQ(stringOut.find(kernelIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfUerIpFixZero, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIpFixZero = "0x00000000f7a70f67";
+    EXPECT_EQ(stringOut.find(userIpFixZero) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfUserIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIp = "0xf7a70f67";
+    EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfCallchain, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string callchain = "callchain nr=20";
+    EXPECT_EQ(stringOut.find(callchain) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfSymbol, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string symbol = "0xffffffc0102fafa0 : ksys_read";
+    EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackTable, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("stackid") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpTableNums, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("TableNums") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpNumNodes, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("numNodes") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackTableContent, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("hiperf_stack_table content") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpTableid, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableid") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpTableSize, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+
+    EXPECT_EQ(stringOut.find("tableSize") != std::string::npos, false);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelUpperBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string KernelUpperBoundary = "0xffffffffffffff80";
+    EXPECT_EQ(stringOut.find(KernelUpperBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelLowerBoundary, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string KernelLowerBoundary = "0xfffffffffffffe00";
+    EXPECT_EQ(stringOut.find(KernelLowerBoundary) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string KernelIp = "0xffffffc011605050";
+    EXPECT_EQ(stringOut.find(KernelIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpUerIpFixZero, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIpFixZero = "0x00000000f6ebfd24";
+    EXPECT_EQ(stringOut.find(userIpFixZero) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpUserIp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string userIp = "0xf6ebfd24";
+    EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpCallchain, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string callchain = "callchain nr=16";
+    EXPECT_EQ(stringOut.find(callchain) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpSymbol, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string symbol = "0xffffffc0100030c4 : el0_sync_compat";
+    EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

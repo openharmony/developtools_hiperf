@@ -1112,6 +1112,94 @@ HWTEST_F(SubCommandReportTest, TestVerifyDisplayOption, TestSize.Level1)
     args = {"report -i " + RESOURCE_PATH + "report_test.data --pids "};
     EXPECT_EQ(mSubCommandReport.VerifyDisplayOption(), true);
 }
+
+/**
+ * @tc.name: TestDwarfCompress
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestDwarfCompress, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(
+        Command::DispatchCommand("report -s -i " + RESOURCE_PATH + "dwarf.compress.data"),
+        true);
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+    const std::string expectStr = "--dedup_stack";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
+    const std::string expectPercentageStr = "|- 59.86% __arm64_sys_futex";
+    EXPECT_EQ(FindExpectStr(stringOut, expectPercentageStr), true);
+}
+
+/**
+ * @tc.name: TestFpCompress
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestFpCompress, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(
+        Command::DispatchCommand("report -s -i " + RESOURCE_PATH + "fp.compress.data"),
+        true);
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+    const std::string expectStr = "--dedup_stack";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
+    const std::string expectPercentageStr = "el0_sync_handler";
+    EXPECT_EQ(FindExpectStr(stringOut, expectPercentageStr), true);
+}
+
+/**
+ * @tc.name: TestDwarfUnCompress
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestDwarfUnCompress, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(
+        Command::DispatchCommand("report -s -i " + RESOURCE_PATH + "dwarf.uncompress.data"),
+        true);
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+    const std::string expectStr = "--dedup_stack";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), false);
+    const std::string expectPercentageStr = "|-  7.63% __schedule";
+    EXPECT_EQ(FindExpectStr(stringOut, expectPercentageStr), true);
+}
+
+/**
+ * @tc.name: TestFpUnCompress
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestFpUnCompress, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(
+        Command::DispatchCommand("report -s -i " + RESOURCE_PATH + "fp.uncompress.data"),
+        true);
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+    const std::string expectStr = "--dedup_stack";
+    EXPECT_EQ(FindExpectStr(stringOut, expectStr), false);
+    const std::string expectPercentageStr = "|- 53.27% __kmalloc_reserve";
+    EXPECT_EQ(FindExpectStr(stringOut, expectPercentageStr), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

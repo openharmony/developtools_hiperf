@@ -273,6 +273,11 @@ void SubCommandDump::DumpPrintFileHeader(int indent)
             const PerfFileSectionSymbolsFiles *sectionSymbolsFiles =
                 static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
             vr_.UpdateFromPerfData(sectionSymbolsFiles->symbolFileStructs_);
+        } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
+            const PerfFileSectionUniStackTable *sectionUniStackTable  =
+                static_cast<const PerfFileSectionUniStackTable *>(featureSection.get());
+            vr_.ImportUniqueStackNodes(sectionUniStackTable->uniStackTableInfos_);
+            vr_.SetDedupStack();
         }
     }
 }
@@ -544,9 +549,36 @@ void SubCommandDump::DumpFeaturePortion(int indent)
                 PrintIndent(LEVEL2, "get SymbolFiles failed\n");
             }
             continue;
+        } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
+            const PerfFileSectionUniStackTable *sectioniStackTable =
+                static_cast<PerfFileSectionUniStackTable *>(const_cast<PerfFileSection *>(featureSection.get()));
+            if (sectioniStackTable != nullptr) {
+                DumpUniqueStackTableNode(LEVEL1, *sectioniStackTable);
+            } else {
+                PrintIndent(LEVEL2, "get StackTable failed\n");
+            }
+            continue;
         } else {
             PrintIndent(LEVEL2, "not support dump this feature(%d).\n", featureSection.get()->featureId_);
         }
+    }
+}
+
+void SubCommandDump::DumpUniqueStackTableNode(int indent, const PerfFileSectionUniStackTable &uniStackTable)
+{
+    int tableid = 0;
+    PrintIndent(LEVEL1, "TableNums: %zu\n\n", uniStackTable.uniStackTableInfos_.size());
+    for (const auto& uniStackTableInfo : uniStackTable.uniStackTableInfos_) {
+        PrintIndent(LEVEL2, "tableid: %d\n", tableid);
+        PrintIndent(LEVEL2, "pid: %" PRIu32 "\n", uniStackTableInfo.pid);
+        PrintIndent(LEVEL2, "tableSize: %" PRIu32 "\n", uniStackTableInfo.tableSize);
+        PrintIndent(LEVEL2, "numNodes: %" PRIu32 "\n", uniStackTableInfo.numNodes);
+        PrintIndent(LEVEL2, "%-7s %-7s %-8s\n", "no", "index", "node");
+        for (size_t i = 0; i < uniStackTableInfo.nodes.size(); i++) {
+            UniStackNode node = uniStackTableInfo.nodes[i];
+            PrintIndent(LEVEL2, "%-7zu %-7" PRIu32 " 0x%-8" PRIx64 "\n", i, node.index, node.node.value);
+        }
+        tableid++;
     }
 }
 

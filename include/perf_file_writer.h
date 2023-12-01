@@ -53,6 +53,7 @@ public:
     bool AddU64Feature(FEATURE feature, uint64_t v);
     bool AddBoolFeature(FEATURE feature);
     bool AddSymbolsFeature(const std::vector<std::unique_ptr<SymbolsFile>> &);
+    bool AddUniStackTableFeature(const ProcessStackMap *table);
     // close file
     bool Close();
 

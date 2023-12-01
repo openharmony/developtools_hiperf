@@ -40,6 +40,8 @@ DSO)
 Then find the corresponding symbol in the corresponding elf symbol file according to the offset
 recorded in the corresponding mmap.
 */
+using kSymbolsHits = std::unordered_set<uint64_t>;
+using uSymbolsHits = std::unordered_map<pid_t, std::unordered_set<uint64_t>>;
 
 class VirtualRuntime {
 public:
@@ -50,7 +52,10 @@ public:
     // case 1. some mmap will be create when it read mmaps for each new process (from record sample)
 
     using RecordCallBack = std::function<bool(std::unique_ptr<PerfEventRecord>)>;
+    using CollectSymbolCallBack = std::function<void(PerfRecordSample*)>;
+
     void SetRecordMode(RecordCallBack recordCallBack);
+    void SetCollectSymbolCallBack(CollectSymbolCallBack collectSymboolCallBack);
 
     // this both used in report and record follow
     // it process the record, and rebuild the trhread maps
@@ -86,6 +91,11 @@ public:
         return symbolsFiles_;
     }
 
+    const ProcessStackMap* GetUniStackTable()
+    {
+        return &processStackMap_;
+    }
+
     void SetCallStackExpend(size_t mergeLevel = 0)
     {
         callstackMergeLevel_ = mergeLevel;
@@ -101,6 +111,13 @@ public:
     {
         enableDebugInfoSymbolic_ = enable;
     }
+    void SetDedupStack()
+    {
+        dedupStack_ = true;
+    }
+
+    void ImportUniqueStackNodes(const std::vector<UniStackTableInfo>&);
+
     bool isHM_ = false;
     void SetHM(bool isHM)
     {
@@ -122,7 +139,8 @@ public:
     void UnwindFromRecord(PerfRecordSample &recordSample);
     std::string ReadThreadName(pid_t tid, bool isThread);
     bool IsKernelThread(pid_t pid);
-
+    void CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
+                            uSymbolsHits &userSymbolsHits);
     // debug time
 #ifdef HIPERF_DEBUG_TIME
     std::chrono::microseconds updateSymbolsTimes_ = std::chrono::microseconds::zero();
@@ -142,6 +160,7 @@ public:
 private:
     bool disableUnwind_ = true;
     bool enableDebugInfoSymbolic_ = false;
+    bool dedupStack_ = false;
     size_t callstackMergeLevel_ = 1;
 #if defined(is_ohos) && is_ohos
     CallStack callstack_;
@@ -150,7 +169,9 @@ private:
     std::map<pid_t, VirtualThread> userSpaceThreadMap_;
     // not pid , just memmap
     std::vector<DfxMap> kernelSpaceMemMaps_;
+    ProcessStackMap processStackMap_;
     RecordCallBack recordCallBack_;
+    CollectSymbolCallBack collectSymbolCallBack_;
     std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles_;
     enum SymbolCacheLimit : std::size_t {
         KERNEL_SYMBOL_CACHE_LIMIT = 4000,
@@ -172,7 +193,7 @@ private:
     void UpdateFromRecord(PerfRecordMmap &recordMmap);
     void UpdateFromRecord(PerfRecordMmap2 &recordMmap2);
     void UpdateFromRecord(PerfRecordComm &recordComm);
-
+    void DedupFromRecord(PerfRecordSample *recordSample);
     // threads
     VirtualThread &UpdateThread(pid_t pid, pid_t tid, const std::string name = "");
     VirtualThread &CreateThread(pid_t pid, pid_t tid);
@@ -191,7 +212,7 @@ private:
 #endif
     void SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
                            pid_t server_pid, perf_callchain_context context);
-
+    bool RecoverCallStack(PerfRecordSample &recordSample);
     std::vector<std::string> symbolsPaths_;
 
     // kernel thread

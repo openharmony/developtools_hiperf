@@ -15,7 +15,7 @@ set -e
 DIR=$(dirname $(realpath ${BASH_SOURCE[0]}))
 TOP=$(realpath $DIR/../../../../../..)
 
-HOST_OUT=$TOP/out/ohos-arm-release/
+HOST_OUT=$TOP/out/rk3568/
 TEST_OUT=$HOST_OUT/tests/unittest/developtools/hiperf/coverage
 mkdir -p $TEST_OUT
 
@@ -33,6 +33,9 @@ lcov -r $TEST_OUT/hiperf_ut_coverage.info \
     '*/test/unittest/*' \
     '*.pb.h' \
     '*v1/*' \
+    '*/out/*' \
+    '*/commonlibrary/c_utils/base/include/*' \
+    '*/foundation/*' \
     -o $TEST_OUT/hiperf_ut_coverage.info
 
 # generate html report

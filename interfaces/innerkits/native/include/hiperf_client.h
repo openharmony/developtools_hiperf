@@ -69,6 +69,7 @@ static const std::string ArgAppPackage = "--app";
 static const std::string ArgClockId = "--clockid";
 static const std::string ArgVecBranchSampleTypes = "-j";
 static const std::string ArgMmapPages = "-m";
+static const std::string ArgDedupStack = "--dedup_stack";
 
 static const int DEFAULT_DURATION_TIME = 10;
 static const int DEFAULT_FREQUENCY_TIME = 100;

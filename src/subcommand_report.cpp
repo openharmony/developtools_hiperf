@@ -304,6 +304,17 @@ void SubCommandReport::ProcessSymbolsData()
     }
 }
 
+void SubCommandReport::ProcessUniStackTableData()
+{
+    auto featureSection = recordFileReader_->GetFeatureSection(FEATURE::HIPERF_FILES_UNISTACK_TABLE);
+    if (featureSection != nullptr) {
+        PerfFileSectionUniStackTable *sectioniStackTable =
+            static_cast<PerfFileSectionUniStackTable *>(const_cast<PerfFileSection *>(featureSection));
+        GetReport().virtualRuntime_.ImportUniqueStackNodes(sectioniStackTable->uniStackTableInfos_);
+        GetReport().virtualRuntime_.SetDedupStack();
+    }
+}
+
 void SubCommandReport::UpdateReportInfo()
 {
     // get some meta info for protobuf
@@ -463,7 +474,7 @@ bool SubCommandReport::LoadPerfData()
 
     ProcessFeaturesData();
     ProcessSymbolsData();
-
+    ProcessUniStackTableData();
     HLOGD("process record");
     // before load data section
     SetHM();

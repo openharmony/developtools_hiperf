@@ -264,7 +264,13 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--control", controlCmd_)) {
         return false;
     }
-
+    if (!Option::GetOptionValue(args, "--dedup_stack", dedupStack_)) {
+        return false;
+    }
+    if (targetSystemWide_ && dedupStack_) {
+        printf("-a option is conflict with --dedup_stack.\n");
+        return false;
+    }
     if (!Option::GetOptionTrackedCommand(args, trackedCommand_)) {
         return false;
     }
@@ -810,6 +816,12 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     if (isHM_) {
         virtualRuntime_.UpdateServiceSpaceMaps();
         virtualRuntime_.UpdateDevhostSpaceMaps();
+    }
+    if (dedupStack_) {
+        virtualRuntime_.SetDedupStack();
+        auto collectSymbol =
+            std::bind(&SubCommandRecord::CollectSymbol, this, std::placeholders::_1);
+        virtualRuntime_.SetCollectSymbolCallBack(collectSymbol);
     }
     return true;
 }
@@ -1501,44 +1513,49 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
     if (record->GetType() == PERF_RECORD_SAMPLE) {
         PerfRecordSample *sample = static_cast<PerfRecordSample *>(record.get());
 #if USE_COLLECT_SYMBOLIC
-        perf_callchain_context context = record->inKernel() ? PERF_CONTEXT_KERNEL
-                                                            : PERF_CONTEXT_USER;
-        pid_t server_pid;
-        // if no nr use ip
-        if (sample->data_.nr == 0) {
-            server_pid = sample->GetServerPidof(0);
-            if (virtualRuntime_.IsKernelThread(server_pid)) {
-                kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ip);
-            } else if (context == PERF_CONTEXT_KERNEL) {
-                kernelSymbolsHits_.insert(sample->data_.ip);
-            } else {
-                userSymbolsHits_[server_pid].insert(sample->data_.ip);
-            }
-        } else {
-            for (u64 i = 0; i < sample->data_.nr; i++) {
-                if (sample->data_.ips[i] >= PERF_CONTEXT_MAX) {
-                    if (sample->data_.ips[i] == PERF_CONTEXT_KERNEL) {
-                        context = PERF_CONTEXT_KERNEL;
-                    } else {
-                        context = PERF_CONTEXT_USER;
-                    }
-                } else {
-                    server_pid = sample->GetServerPidof(i);
-                    if (virtualRuntime_.IsKernelThread(server_pid)) {
-                        kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
-                    } else if (context == PERF_CONTEXT_KERNEL) {
-                        kernelSymbolsHits_.insert(sample->data_.ips[i]);
-                    } else {
-                        userSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
-                    }
-                }
-            }
-        }
+        CollectSymbol(sample);
 #else
         virtualRuntime_.SymbolicRecord(*sample);
 #endif
     }
     return true;
+}
+
+void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
+{
+    perf_callchain_context context = sample->inKernel() ? PERF_CONTEXT_KERNEL
+                                                        : PERF_CONTEXT_USER;
+    pid_t server_pid;
+    // if no nr use ip ? remove stack nr == 0?
+    if (sample->data_.nr == 0) {
+        server_pid = sample->GetServerPidof(0);
+        if (virtualRuntime_.IsKernelThread(server_pid)) {
+            kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ip);
+        } else if (context == PERF_CONTEXT_KERNEL) {
+            kernelSymbolsHits_.insert(sample->data_.ip);
+        } else {
+            userSymbolsHits_[sample->data_.pid].insert(sample->data_.ip);
+        }
+    } else {
+        for (u64 i = 0; i < sample->data_.nr; i++) {
+            if (sample->data_.ips[i] >= PERF_CONTEXT_MAX) {
+                if (sample->data_.ips[i] == PERF_CONTEXT_KERNEL) {
+                    context = PERF_CONTEXT_KERNEL;
+                } else {
+                    context = PERF_CONTEXT_USER;
+                }
+            } else {
+                server_pid = sample->GetServerPidof(i);
+                if (virtualRuntime_.IsKernelThread(server_pid)) {
+                    kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
+                } else if (context == PERF_CONTEXT_KERNEL) {
+                    kernelSymbolsHits_.insert(sample->data_.ips[i]);
+                } else {
+                    userSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
+                }
+             }
+         }
+     }
 }
 
 // finish writing data file, then close file
@@ -1559,8 +1576,12 @@ bool SubCommandRecord::FinishWriteRecordFile()
         }
 #endif
         HLOGD("Load user symbols");
-        fileWriter_->ReadDataSection(
-            std::bind(&SubCommandRecord::CollectionSymbol, this, std::placeholders::_1));
+        if (dedupStack_) {
+            virtualRuntime_.CollectDedupSymbol(kernelSymbolsHits_, userSymbolsHits_);
+        } else {
+            fileWriter_->ReadDataSection(
+                std::bind(&SubCommandRecord::CollectionSymbol, this, std::placeholders::_1));
+        }
 #if USE_COLLECT_SYMBOLIC
         SymbolicHits();
 #endif
@@ -1577,6 +1598,10 @@ bool SubCommandRecord::FinishWriteRecordFile()
     }
 #endif
 
+    if (dedupStack_ &&
+        !fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable())) {
+        return false;
+    }
     if (!fileWriter_->Close()) {
         HLOGE("Fail to close record file %s", outputFilename_.c_str());
         return false;

@@ -432,6 +432,10 @@ bool PerfFileReader::ReadFeatureSection()
         } else if (feature == FEATURE::EVENT_DESC) {
             perfFileSections_.emplace_back(
                 std::make_unique<PerfFileSectionEventDesc>(feature, (char *)&buf[0], buf.size()));
+        } else if (feature == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
+            perfFileSections_.emplace_back(
+                std::make_unique<PerfFileSectionUniStackTable>(feature, (char *)&buf[0], buf.size()));
+            PerfRecordSample::dumpRemoveStack_ = true;
         } else {
             HLOGW("still not imp how to process with feature %d", feature);
         }

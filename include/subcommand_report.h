@@ -125,6 +125,7 @@ private:
     void LoadEventDesc();
     void ProcessSymbolsData();
     void LoadPerfDataCompleted();
+    void ProcessUniStackTableData();
 
     bool OutputReport();
     bool OutputStd();
