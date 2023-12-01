@@ -258,13 +258,8 @@ protected:
             map->prevMap->elf = elfFile_;
         }
 
-        auto ptloads = elfFile_->GetPtLoads();
-        for (const auto &ptload : ptloads) {
-            if (textExecVaddr_ != std::min(textExecVaddr_, ptload.second.tableVaddr)) {
-                textExecVaddr_ = std::min(textExecVaddr_, ptload.second.tableVaddr);
-                textExecVaddrFileOffset_ = ptload.second.offset;
-            }
-        }
+        textExecVaddr_ = elfFile_->GetStartVaddr();
+        textExecVaddrFileOffset_ = elfFile_->GetStartOffset();
 
         HLOGD("textExecVaddr_ 0x%016" PRIx64 " file offset 0x%016" PRIx64 "", textExecVaddr_,
               textExecVaddrFileOffset_);
