@@ -529,7 +529,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     // we will not do this in record mode
     if (recordCallBack_ == nullptr) {
         if (dedupStack_ && recordSample.stackId_.section.id > 0 && recordSample.data_.nr == 0) {
-             RecoverCallStack(recordSample);
+            RecoverCallStack(recordSample);
         }
         // find the symbols , reabuild frame info
         SymbolicRecord(recordSample);

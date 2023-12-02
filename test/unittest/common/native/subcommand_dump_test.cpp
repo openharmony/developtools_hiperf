@@ -464,8 +464,8 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelIp, TestSize.Level1)
     std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string KernelIp = "0xffffffc011605050";
-    EXPECT_EQ(stringOut.find(KernelIp) != std::string::npos, true);
+    std::string kernelIp = "0xffffffc011605050";
+    EXPECT_EQ(stringOut.find(kernelIp) != std::string::npos, true);
 }
 
 HWTEST_F(SubCommandDumpTest, DumpCompressFpUerIpFixZero, TestSize.Level1)
@@ -596,8 +596,8 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfKernelUpperBoundary, TestSize.Le
     std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.uncompress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string KernelUpperBoundary = "0xffffffffffffff80";
-    EXPECT_EQ(stringOut.find(KernelUpperBoundary) != std::string::npos, true);
+    std::string kernelUpperBoundary = "0xffffffffffffff80";
+    EXPECT_EQ(stringOut.find(kernelUpperBoundary) != std::string::npos, true);
 }
 
 HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfKernelLowerBoundary, TestSize.Level1)
@@ -750,8 +750,8 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelUpperBoundary, TestSize.Level
     std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string KernelUpperBoundary = "0xffffffffffffff80";
-    EXPECT_EQ(stringOut.find(KernelUpperBoundary) != std::string::npos, true);
+    std::string kernelUpperBoundary = "0xffffffffffffff80";
+    EXPECT_EQ(stringOut.find(kernelUpperBoundary) != std::string::npos, true);
 }
 
 HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelLowerBoundary, TestSize.Level1)
@@ -761,8 +761,8 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelLowerBoundary, TestSize.Level
     std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string KernelLowerBoundary = "0xfffffffffffffe00";
-    EXPECT_EQ(stringOut.find(KernelLowerBoundary) != std::string::npos, true);
+    std::string kernelLowerBoundary = "0xfffffffffffffe00";
+    EXPECT_EQ(stringOut.find(kernelLowerBoundary) != std::string::npos, true);
 }
 
 HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelIp, TestSize.Level1)
@@ -772,8 +772,8 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressFpKernelIp, TestSize.Level1)
     std::string cmdString = "dump -i /data/test/resource/testdata/fp.uncompress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string KernelIp = "0xffffffc011605050";
-    EXPECT_EQ(stringOut.find(KernelIp) != std::string::npos, true);
+    std::string kernelIp = "0xffffffc011605050";
+    EXPECT_EQ(stringOut.find(kernelIp) != std::string::npos, true);
 }
 
 HWTEST_F(SubCommandDumpTest, DumpUncompressFpUerIpFixZero, TestSize.Level1)

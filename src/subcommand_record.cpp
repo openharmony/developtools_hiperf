@@ -1553,7 +1553,7 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
                 } else {
                     userSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
                 }
-             }
+            }
          }
      }
 }

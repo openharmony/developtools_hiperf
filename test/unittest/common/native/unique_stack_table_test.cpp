@@ -44,19 +44,16 @@ public:
 
 void UniqueStackTableTest::SetUpTestCase()
 {
-
 }
 
 void UniqueStackTableTest::TearDownTestCase() {}
 
 void UniqueStackTableTest::SetUp()
 {
-
 }
 
 void UniqueStackTableTest::TearDown()
 {
-
 }
 
 /**
@@ -109,7 +106,6 @@ HWTEST_F(UniqueStackTableTest, Test_Resize, TestSize.Level1)
     uint32_t maxsize = 64 * 1024 * 1024;
     std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(1, maxsize);
     EXPECT_EQ(table->Resize(), false);
-
 }
 
 HWTEST_F(UniqueStackTableTest, Test_Oversize, TestSize.Level1)
