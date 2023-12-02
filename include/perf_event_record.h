@@ -32,7 +32,7 @@
 #include "dfx_map.h"
 #include "perf_record_format.h"
 #include "utilities.h"
-#include "unique_stack_table.h"\
+#include "unique_stack_table.h"
 
 namespace OHOS {
 namespace Developtools {
