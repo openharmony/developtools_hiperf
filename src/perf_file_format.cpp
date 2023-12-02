@@ -310,6 +310,66 @@ bool PerfFileSectionSymbolsFiles::GetBinary(char *buf, size_t size)
     return true;
 }
 
+PerfFileSectionUniStackTable::PerfFileSectionUniStackTable(FEATURE id, const char *buf, size_t size)
+    : PerfFileSection(id)
+{
+    uint32_t processTableCount;
+    Init(buf, size);
+    if (!Read(processTableCount)) {
+        HLOGV("processTableCount read failed\n");
+        return;
+    } else {
+        HLOGV("processTableCount %" PRIu32 "\n", processTableCount);
+    }
+    for (uint32_t i = 0; i < processTableCount; ++i) {
+        UniStackTableInfo& stackTable = uniStackTableInfos_.emplace_back();
+        Read(stackTable.pid);
+        HLOGV("pid %" PRIu32 " ", stackTable.pid);
+        Read(stackTable.tableSize);
+        HLOGV("tableSize %" PRIu32 " ", stackTable.tableSize);
+        Read(stackTable.numNodes);
+        HLOGV("numNodes %" PRIu32 " ", stackTable.numNodes);
+        for (size_t i = 0; i < stackTable.numNodes; i++) {
+            UniStackNode& node = stackTable.nodes.emplace_back();
+            Read(node.index);
+            Read(node.node.value);
+        }
+    }
+}
+
+bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
+{
+    HLOG_ASSERT(size >= GetSize());
+    Init(buf, size);
+    Write(uint32_t(processStackTable_->size()));
+    for (auto it = processStackTable_->begin(); it != processStackTable_->end(); ++it) {
+        const auto &table = it->second;
+        Write(table->GetPid());
+        Write(table->GetTabelSize());
+        const auto &idxs = table->GetUsedIndexes();
+        Write(uint32_t(idxs.size()));
+        Node *head = table->GetHeadNode();
+        Node *node = nullptr;
+        for (const auto idx : idxs) {
+            node = head + idx;
+            Write(idx);
+            Write(node->value);
+        }
+    }
+    return true;
+}
+
+size_t PerfFileSectionUniStackTable::GetSize()
+{
+    size_t size = 0;
+    // section header info size
+    size += sizeof(uint32_t); // how many tables/process
+    for (auto it = processStackTable_->begin(); it != processStackTable_->end(); ++it) {
+        size += it->second->GetWriteSize();
+    }
+    return size;
+}
+
 PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t size)
     : PerfFileSection(id)
 {

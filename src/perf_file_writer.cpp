@@ -451,6 +451,15 @@ bool PerfFileWriter::AddU64Feature(FEATURE feature, uint64_t v)
     return true;
 }
 
+bool PerfFileWriter::AddUniStackTableFeature(const ProcessStackMap *table)
+{
+    const FEATURE feature = FEATURE::HIPERF_FILES_UNISTACK_TABLE;
+    featureSections_.emplace_back(
+        std::make_unique<PerfFileSectionUniStackTable>(feature, table));
+    header_.features[(int)feature / BITS_IN_BYTE] |= 1 << ((int)feature % BITS_IN_BYTE);
+    return true;
+}
+
 bool PerfFileWriter::AddSymbolsFeature(
     const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
 {

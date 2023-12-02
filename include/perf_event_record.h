@@ -32,6 +32,7 @@
 #include "dfx_map.h"
 #include "perf_record_format.h"
 #include "utilities.h"
+#include "unique_stack_table.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -242,12 +243,16 @@ public:
     std::vector<CallFrame> callFrames_;
     std::vector<pid_t> serverPidMap_;
 
+    StackId stackId_ {0};
+    bool removeStack_ {false};
+    inline static bool dumpRemoveStack_ {false};
     // referenced input(p) in PerfRecordSample, require caller keep input(p) together
     PerfRecordSample(uint8_t *p, const perf_event_attr &attr);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     void DumpData(int indent = 0) const override;
     void DumpLog(const std::string &prefix) const override;
 
+    void RecoverCallStack();
     // originalSize is use for expand callstack
     void ReplaceWithCallStack(size_t originalSize = 0);
     pid_t GetPid() const override;

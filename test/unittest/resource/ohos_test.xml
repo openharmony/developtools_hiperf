@@ -91,6 +91,9 @@
             <option name="push" value="testdata/report_test_tids1.txt -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/report_test_dsos.txt -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/report_test_funcs.txt -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/dwarf.uncompress.data -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/fp.compress.data -> /data/test/resource/testdata/" src="res"/>
+            <option name="push" value="testdata/fp.uncompress.data -> /data/test/resource/testdata/" src="res"/>
         </preparer>
     </target>
 </configuration>

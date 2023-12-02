@@ -60,8 +60,9 @@ enum class FEATURE {
     HIPERF_RECORD_TIME,
     HIPERF_CPU_OFF,
     HIPERF_HM_DEVHOST,
-    HIPERF_LAST_FEATURE = HIPERF_HM_DEVHOST,
-
+    // HIPERF_LAST_FEATURE = HIPERF_HM_DEVHOST,
+    HIPERF_FILES_UNISTACK_TABLE,
+    HIPERF_LAST_FEATURE = HIPERF_FILES_UNISTACK_TABLE,
     FEATURE_MAX_BITS = 256,
 };
 
@@ -114,6 +115,7 @@ static const std::vector<std::string> extFeatureNames = {
     "hiperf_record_time",
     "hiperf_cpu_off",
     "hiperf_hm_devhost",
+    "hiperf_stack_table",
 };
 static const std::vector<std::string> featureNames = {
     "unknown_feature", "tracing_data", "build_id",     "hostname",     "osrelease",
@@ -245,6 +247,19 @@ public:
     bool GetBinary(char *buf, size_t size);
     size_t GetSize();
     void GetValue(uint64_t &v) const;
+};
+
+class PerfFileSectionUniStackTable : public PerfFileSection {
+public:
+    std::vector<UniStackTableInfo> uniStackTableInfos_;
+    PerfFileSectionUniStackTable(FEATURE id,
+        const ProcessStackMap *table)
+        : PerfFileSection(id), processStackTable_(table) {}
+    PerfFileSectionUniStackTable(FEATURE id, const char *buf, size_t size);
+private:
+    const ProcessStackMap *processStackTable_;
+    size_t GetSize();
+    bool GetBinary(char *buf, size_t size);
 };
 
 struct AttrWithId;

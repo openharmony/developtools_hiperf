@@ -169,6 +169,8 @@ public:
         "           pause: pause sampling\n"
         "           resume: resume sampling\n"
         "           stop: stop sampling\n"
+        "   --dedup_stack\n"
+        "         Remove duplicated stacks in perf record, conflicts with -a, only restrain using with -p\n"
         )
     // clang-format on
     {
@@ -245,6 +247,7 @@ private:
     std::string controlCmd_ = {};
     bool isFifoServer_ = false;
     bool isFifoClient_ = false;
+    bool dedupStack_ = false;
     bool ProcessControl();
     bool CreateFifoServer();
     bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
@@ -286,7 +289,7 @@ private:
 #endif
 
     bool CollectionSymbol(std::unique_ptr<PerfEventRecord> record);
-
+    void CollectSymbol(PerfRecordSample *sample);
     bool SetPerfLimit(const std::string& file, int value, std::function<bool (int, int)> const& cmd,
         const std::string& param);
     bool SetPerfCpuMaxPercent();
@@ -304,9 +307,9 @@ private:
 
     VirtualRuntime virtualRuntime_;
 #if USE_COLLECT_SYMBOLIC
-    std::unordered_set<uint64_t> kernelSymbolsHits_;
-    std::unordered_map<pid_t, std::unordered_set<uint64_t>> userSymbolsHits_;
     std::unordered_map<pid_t, std::unordered_set<uint64_t>> kernelThreadSymbolsHits_;
+    kSymbolsHits kernelSymbolsHits_;
+    uSymbolsHits userSymbolsHits_;
     void SymbolicHits();
 #endif
 

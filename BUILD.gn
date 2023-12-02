@@ -118,6 +118,7 @@ sources_platform_common = [
   "./src/report.cpp",
   "./src/report_json_file.cpp",
   "./src/register.cpp",
+  "./src/unique_stack_table.cpp",
 ]
 
 if (is_ohos) {

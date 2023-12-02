@@ -110,6 +110,7 @@ private:
     void DumpDataPortion(int indent = 0);
     void DumpCallChain(int indent, std::unique_ptr<PerfRecordSample> &sample);
     void DumpFeaturePortion(int indent = 0);
+    void DumpUniqueStackTableNode(int indent, const PerfFileSectionUniStackTable &uniStackTable);
     void ExprotUserData(std::unique_ptr<PerfEventRecord> &record);
     void ExprotUserStack(const PerfRecordSample &recordSample);
     void PrintHeaderInfo(const int &indent);
