@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,7 +36,8 @@ constexpr uint64_t HEAD_NODE_INDEX = 0;
 // FFFFFF0000000000
 constexpr uint64_t KERNEL_PREFIX = 0xFFFFFFull << 40;
 constexpr uint8_t INIT_DECONFLICT_ALLOWED = 22;
-
+constexpr uint8_t HASH_STEP_BASE_MULTIPLE = 2;
+constexpr uint8_t HASH_STEP_BASE_NUM = 1;
 
 // align
 #pragma pack(push, 4)
