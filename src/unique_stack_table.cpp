@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,7 @@ bool UniqueStackTable::Init()
 
     availableNodes_ = totalNodes_;
     hashModulus_ = availableNodes_ - 1;
-    hashStep_ = (totalNodes_ / (deconflictTimes_ * 2 + 1));
+    hashStep_ = (totalNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM));
     tableBuf_ = std::make_unique<uint8_t[]>(tableSize_);
 
     HLOGI("Init totalNodes_: %u, availableNodes_: %u, availableIndex_: %u  hashStep_: %" PRIu64 ", hashModulus_: %u",
@@ -72,7 +72,7 @@ bool UniqueStackTable::Resize()
     totalNodes_ = ((newtableSize_ / sizeof(Node)) >> 1) << 1; // make it even.
     availableNodes_ = totalNodes_ - oldNumNodes;
     hashModulus_ = availableNodes_ - 1;
-    hashStep_ = availableNodes_ / (deconflictTimes_ * 2 + 1);
+    hashStep_ = availableNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM);
     HLOGI("After resize, totalNodes_: %u, availableNodes_: %u, availableIndex_: %u hashStep_: %" PRIu64 "",
         totalNodes_, availableNodes_, availableIndex_, hashStep_);
     return true;
