@@ -1131,7 +1131,7 @@ HWTEST_F(SubCommandReportTest, TestDwarfCompress, TestSize.Level1)
     }
     const std::string expectStr = "--dedup_stack";
     EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
-    const std::string expectPercentageStr = "|- 59.86% __arm64_sys_futex";
+    const std::string expectPercentageStr = "|- 28.67% futex_wait_queue_me";
     EXPECT_EQ(FindExpectStr(stringOut, expectPercentageStr), true);
 }
 
@@ -1153,7 +1153,7 @@ HWTEST_F(SubCommandReportTest, TestFpCompress, TestSize.Level1)
     }
     const std::string expectStr = "--dedup_stack";
     EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
-    const std::string expectPercentageStr = "el0_sync_handler";
+    const std::string expectPercentageStr = "el0_sync_compat_handler";
     EXPECT_EQ(FindExpectStr(stringOut, expectPercentageStr), true);
 }
 

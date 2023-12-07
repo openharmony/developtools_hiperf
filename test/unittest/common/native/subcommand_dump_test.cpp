@@ -321,7 +321,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfUerIpFixZero, TestSize.Level1)
     std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string userIpFixZero = "0x0000007f8afbd290";
+    std::string userIpFixZero = "0xffffffc0100fa3b0";
     EXPECT_EQ(stringOut.find(userIpFixZero) != std::string::npos, true);
 }
 
@@ -332,7 +332,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfUserIp, TestSize.Level1)
     std::string cmdString = "dump -i /data/test/resource/testdata/dwarf.compress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string userIp = "0x7f83313470";
+    std::string userIp = "0xf7b43f50";
     EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
 }
 
@@ -475,7 +475,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpUerIpFixZero, TestSize.Level1)
     std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string userIpFixZero = "0xffffffc0100f9e54";
+    std::string userIpFixZero = "0xffffffc0100fa3b0";
     EXPECT_EQ(stringOut.find(userIpFixZero) != std::string::npos, true);
 }
 
@@ -486,7 +486,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpUserIp, TestSize.Level1)
     std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string userIp = "0x7f9b9187bc";
+    std::string userIp = "0xf7b43f50";
     EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
 }
 
@@ -497,7 +497,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpCallchain, TestSize.Level1)
     std::string cmdString = "dump -i /data/test/resource/testdata/fp.compress.data";
     EXPECT_EQ(Command::DispatchCommand(cmdString), true);
     std::string stringOut = stdoutRecord.Stop();
-    std::string callchain = "callchain nr=20";
+    std::string callchain = "callchain nr=21";
     EXPECT_EQ(stringOut.find(callchain) != std::string::npos, true);
 }
 
