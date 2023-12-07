@@ -251,7 +251,7 @@ void VirtualThread::FixHMBundleMap()
             HLOGD("Find bundle map name %s", map->name.c_str());
             std::string bundle = "/data/storage/el1/bundle";
             map->name.replace(map->name.find(bundle), bundle.length(),
-                              "/data/app/el1/bundle/public" + name_);
+                              "/data/app/el1/bundle/public/" + name_);
             // /proc/<pid>/root//data/app/el1/bundle/public/<procname>/libs/arm64/libentry.so
             HLOGD("Fix sandbox bundle map name to %s", map->name.c_str());
         }
