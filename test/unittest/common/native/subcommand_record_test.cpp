@@ -1255,6 +1255,55 @@ HWTEST_F(SubCommandRecordTest, ExcludeTidConflict, TestSize.Level1)
     ForkAndRunTest("--exclude-tid 5 --exclude-thread test ", false , true);
 }
 
+/**
+ * @tc.name: CmdLinesSizeSucess
+ * @tc.desc: Test --cmdline-size option
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CmdLinesSizeSucess, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 --cmdline-size 1024 ", true);
+}
+
+/**
+ * @tc.name: CmdLinesSizeOutRange
+ * @tc.desc: Test --cmdline-size option
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CmdLinesSizeOutRange, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 --cmdline-size 8192 ", false);
+}
+
+/**
+ * @tc.name: CmdLinesSizeNotPowerOf2
+ * @tc.desc: Test --cmdline-size option
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CmdLinesSizeNotPowerOf2, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 --cmdline-size 1000 ", false);
+}
+
+/**
+ * @tc.name: EnableDebugInfoSymbolicFp
+ * @tc.desc: Test --enable-debuginfo-symbolic option with -s fp
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, EnableDebugInfoSymbolicFp, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 -s fp --enable-debuginfo-symbolic ", true);
+}
+
+/**
+ * @tc.name: EnableDebugInfoSymbolicDwarf
+ * @tc.desc: Test --enable-debuginfo-symbolic option with -s dwarf
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, EnableDebugInfoSymbolicDwarf, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 -s dwarf --enable-debuginfo-symbolic ", true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

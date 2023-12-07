@@ -52,6 +52,11 @@ const std::string CONTROL_FIFO_FILE_S2C = "/data/local/tmp/.hiperf_record_contro
 const std::string PERF_CPU_TIME_MAX_PERCENT = "/proc/sys/kernel/perf_cpu_time_max_percent";
 const std::string PERF_EVENT_MAX_SAMPLE_RATE = "/proc/sys/kernel/perf_event_max_sample_rate";
 const std::string PERF_EVENT_MLOCK_KB = "/proc/sys/kernel/perf_event_mlock_kb";
+const std::string SCHED_SWITCH = "/sys/kernel/tracing/events/sched/sched_switch/enable";
+const std::string SCHED_SWITCH_DEBUG = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
+const std::string SCHED_SWITCH_HM = "/sys/kernel/tracing/hongmeng/events/sched/sched_switch/enable";
+const std::string PROC_VERSION = "/proc/version";
+const std::string SAVED_CMDLINES_SIZE = "/sys/kernel/tracing/saved_cmdlines_size";
 
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2000ms;
@@ -142,6 +147,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" trackedCommand:\t%s\n", VectorToString(trackedCommand_).c_str());
     printf(" pipe_input:\t%d\n", clientPipeInput_);
     printf(" pipe_output:\t%d\n", clientPipeOutput_);
+    printf(" cmdlinesSize_:\t%d\n", cmdlinesSize_);
 }
 
 bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
@@ -239,16 +245,13 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--call-stack", callStackType)) {
         return false;
     }
-    if (!callStackType_.empty()) {
-        if (!callStackType.empty()) {
-            printf("'-s %s --call-stack %s' option usage error, please check usage.\n",
-                   VectorToString(callStackType_).c_str(), VectorToString(callStackType).c_str());
-            return false;
-        }
+    if (!callStackType_.empty() && !callStackType.empty()) {
+        printf("'-s %s --call-stack %s' option usage error, please check usage.\n",
+               VectorToString(callStackType_).c_str(), VectorToString(callStackType).c_str());
+        return false;
     } else {
         callStackType_ = callStackType;
     }
-
     if (!Option::GetOptionValue(args, "--data-limit", strLimit_)) {
         return false;
     }
@@ -265,6 +268,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--dedup_stack", dedupStack_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--cmdline-size", cmdlinesSize_)) {
         return false;
     }
     if (targetSystemWide_ && dedupStack_) {
@@ -351,7 +357,7 @@ bool SubCommandRecord::CheckSelectCpuPidOption()
     return true;
 }
 
-bool SubCommandRecord::CheckOptions()
+bool SubCommandRecord::CheckArgsRange()
 {
     if (timeStopSec_ < MIN_STOP_SECONDS || timeStopSec_ > MAX_STOP_SECONDS) {
         printf("Invalid -d value '%.3f', the seconds should be in %.3f~%.3f  \n", timeStopSec_,
@@ -374,12 +380,26 @@ bool SubCommandRecord::CheckOptions()
                mmapPages_, MIN_PERF_MMAP_PAGE, MAX_PERF_MMAP_PAGE);
         return false;
     }
+    if (cmdlinesSize_ < MIN_SAVED_CMDLINES_SIZE || cmdlinesSize_ > MAX_SAVED_CMDLINES_SIZE ||
+        !PowerOfTwo(cmdlinesSize_)) {
+        printf("Invalid --cmdline-size value '%d', value should be in %d~%d and must be a power of two \n",
+               cmdlinesSize_, MIN_SAVED_CMDLINES_SIZE, MAX_SAVED_CMDLINES_SIZE);
+        return false;
+    }
     if (!clockId_.empty() && GetClockId(clockId_) == -1) {
         printf("Invalid --clockid value %s\n", clockId_.c_str());
         return false;
     }
     if (!targetSystemWide_ && excludeHiperf_) {
         printf("--exclude-hiperf must be used with -a\n");
+        return false;
+    }
+    return true;
+}
+
+bool SubCommandRecord::CheckOptions()
+{
+    if (!CheckArgsRange()) {
         return false;
     }
     if (!CheckDataLimitOption()) {
@@ -640,7 +660,7 @@ bool SubCommandRecord::SetPerfCpuMaxPercent()
 
 bool SubCommandRecord::SetPerfMaxSampleRate()
 {
-    auto cmp = [](int oldValue, int newValue) { return oldValue >= newValue; };
+    auto cmp = [](int oldValue, int newValue) { return oldValue == newValue; };
     int frequency = frequency_ != 0 ? frequency_ : PerfEvents::DEFAULT_SAMPLE_FREQUNCY;
     return SetPerfLimit(PERF_EVENT_MAX_SAMPLE_RATE, frequency, cmp, "hiviewdfx.hiperf.perf_event_max_sample_rate");
 }
@@ -660,13 +680,13 @@ bool SubCommandRecord::SetPerfHarden()
 
     std::string perfHarden = OHOS::system::GetParameter(PERF_DISABLE_PARAM, "1");
     if (perfHarden == "1") {
-        if (!OHOS::system::SetParameter("security.perf_harden", "0")) {
+        if (!OHOS::system::SetParameter(PERF_DISABLE_PARAM, "0")) {
             printf("set parameter security.perf_harden to 0 fail.");
             return false;
         }
     }
 
-    if (!OHOS::system::SetParameter("security.perf_harden", "1")) {
+    if (!OHOS::system::SetParameter(PERF_DISABLE_PARAM, "1")) {
         printf("set parameter security.perf_harden to 1 fail.");
         return false;
     }
@@ -677,11 +697,11 @@ bool SubCommandRecord::TraceOffCpu()
 {
     // whether system support sched_switch event
     int enable = -1;
-    std::string node = "/sys/kernel/tracing/events/sched/sched_switch/enable";
+    std::string node = SCHED_SWITCH;
     if (isHM_) {
-        node = "/sys/kernel/tracing/hongmeng/events/sched/sched_switch/enable";
+        node = SCHED_SWITCH_HM;
     }
-    const std::string nodeDebug = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
+    const std::string nodeDebug = SCHED_SWITCH_DEBUG;
     if (!ReadIntFromProcFile(node.c_str(), enable) and
         !ReadIntFromProcFile(nodeDebug.c_str(), enable)) {
         printf("Cannot trace off CPU, event sched:sched_switch is not available (%s or %s)\n",
@@ -690,6 +710,26 @@ bool SubCommandRecord::TraceOffCpu()
     }
 
     return true;
+}
+
+void SubCommandRecord::SetSavedCmdlinesSize()
+{
+    if (!ReadIntFromProcFile(SAVED_CMDLINES_SIZE, oldCmdlinesSize_)) {
+        printf("Failed to read from %s.\n", SAVED_CMDLINES_SIZE.c_str());
+    }
+    if (!WriteIntToProcFile(SAVED_CMDLINES_SIZE, cmdlinesSize_)) {
+        printf("Failed to write size:%d ot file:%s", cmdlinesSize_, SAVED_CMDLINES_SIZE.c_str());
+    }
+}
+
+void SubCommandRecord::RecoverSavedCmdlinesSize()
+{
+    if (oldCmdlinesSize_ == 0) {
+        return;
+    }
+    if (!WriteIntToProcFile(SAVED_CMDLINES_SIZE, oldCmdlinesSize_)) {
+        printf("Failed to recover value of %s", SAVED_CMDLINES_SIZE.c_str());
+    }
 }
 
 bool SubCommandRecord::PreparePerfEvent()
@@ -763,6 +803,8 @@ bool SubCommandRecord::PreparePerfEvent()
 
 bool SubCommandRecord::PrepareSysKernel()
 {
+    SetHM();
+    SetSavedCmdlinesSize();
     if (!SetPerfMaxSampleRate()) {
         HLOGE("Fail to call SetPerfMaxSampleRate(%d)", frequency_);
         return false;
@@ -1087,8 +1129,6 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
         return true;
     }
 
-    SetHM();
-
     // prepare PerfEvents
     if (!PrepareSysKernel() or !PreparePerfEvent()) {
         return false;
@@ -1138,7 +1178,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
 
     // finial report
     RecordCompleted();
-
+    RecoverSavedCmdlinesSize();
     CloseClientThread();
     return true;
 }
@@ -1694,7 +1734,7 @@ bool SubCommandRecord::RegisterSubCommandRecord(void)
 
 void SubCommandRecord::SetHM()
 {
-    std::string version = ReadFileToString("/proc/version");
+    std::string version = ReadFileToString(PROC_VERSION);
     isHM_ = version.find(HMKERNEL) != std::string::npos;
     virtualRuntime_.SetHM(isHM_);
     perfEvents_.SetHM(isHM_);

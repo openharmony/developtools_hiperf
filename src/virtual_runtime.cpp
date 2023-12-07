@@ -43,6 +43,31 @@ VirtualRuntime::VirtualRuntime(bool onDevice)
     UpdateThread(0, 0, "swapper");
 }
 
+VirtualRuntime::~VirtualRuntime()
+{
+    if (savedCmdLines_.is_open()) {
+        savedCmdLines_.close();
+    }
+}
+
+std::string VirtualRuntime::ReadFromSavedCmdLines(pid_t tid)
+{
+    if (!savedCmdLines_.is_open()) {
+        savedCmdLines_.open(SAVED_CMDLINES, std::ios::in);
+    }
+
+    if (savedCmdLines_.is_open()) {
+        std::string line;
+        std::string threadid = std::to_string(tid);
+        while (getline(savedCmdLines_, line)) {
+            if (line.find(threadid) != std::string::npos) {
+                return StringSplit(line, " ")[1];
+            }
+        }
+    }
+    return EMPTY_STRING;
+}
+
 std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
 {
     std::string comm = "";
@@ -52,6 +77,9 @@ std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
         comm = DEVHOST_FILE_NAME;
     } else if (isThread) {
         comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid)).c_str();
+        if (comm == EMPTY_STRING) {
+            comm = ReadFromSavedCmdLines(tid);
+        }
     } else {
         comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid)).c_str();
     }
