@@ -55,6 +55,7 @@ public:
     static constexpr float MIN_STOP_SECONDS = 0.100;
     static constexpr float MAX_STOP_SECONDS = 10000.0;
     static constexpr int MIN_SAVED_CMDLINES_SIZE = 512;
+    static constexpr int DEFAULT_SAVED_CMDLINES_SIZE = 2048;
     static constexpr int MAX_SAVED_CMDLINES_SIZE = 4096;
 
     SubCommandRecord()
@@ -126,6 +127,8 @@ public:
         "             dwarf: DWARF's CFI - Call Frame Information\n"
         "               'dwarf,size' set sample stack size, size should be in 8~65528 and 8 byte aligned. \n"
         "           as the method to collect the information used to show the call stacks.\n"
+        "   --kernel-callchain\n"
+        "         collect kernel callchain, must used with -s fp/dwarf simultaneously.\n"
         "   --delay-unwind\n"
         "         If '-s dwarf' used, stack will be unwind while recording, use this option to switch\n"
         "         to unwind after recording.\n"
@@ -201,12 +204,13 @@ private:
     bool disableCallstackExpend_ = false;
     bool enableDebugInfoSymbolic_ = false;
     bool verboseReport_ = false;
+    bool kernelCallChain_ = false;
     float timeStopSec_ = PerfEvents::DEFAULT_TIMEOUT;
     int frequency_ = 0;
     int period_ = 0;
     int cpuPercent_ = DEFAULT_CPU_PERCENT;
     int mmapPages_ = MAX_PERF_MMAP_PAGE;
-    int cmdlinesSize_ = MIN_SAVED_CMDLINES_SIZE;
+    int cmdlinesSize_ = DEFAULT_SAVED_CMDLINES_SIZE;
     int oldCmdlinesSize_ = 0;
     std::vector<std::string> symbolDir_ = {};
     std::string outputFilename_ = "/data/local/tmp/perf.data";

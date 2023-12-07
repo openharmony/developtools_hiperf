@@ -328,7 +328,8 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     PushToBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period);
     PushToBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr);
     if (data_.nr > 0 && !removeStack_) {
-        std::copy(data_.ips, data_.ips + data_.nr, reinterpret_cast<u64 *>(p));
+        std::copy(data_.ips + skipKernel_, data_.ips + data_.nr + skipKernel_,
+                  reinterpret_cast<u64 *>(p));
         p += data_.nr * sizeof(u64);
     }
     PushToBinary(sampleType_ & PERF_SAMPLE_RAW, p, data_.raw_size);

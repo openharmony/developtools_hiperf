@@ -512,6 +512,26 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
 #endif
 }
 
+void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
+{
+    // only do this in record mode.
+    if (recordCallBack_ == nullptr || needkernelCallChain_ ||
+        !sample.inKernel() || sample.data_.nr == 0) {
+        return;
+    }
+
+    u64 skip = 0;
+    u64 *ips = sample.data_.ips;
+    for (; skip < sample.data_.nr; skip++) {
+        if (ips[skip] == PERF_CONTEXT_USER) {
+            break;
+        }
+    }
+    sample.skipKernel_ = skip;
+    sample.data_.nr -= skip;
+    sample.header.size -= sizeof(u64) * skip;
+}
+
 void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 {
 #if defined(is_ohos) && is_ohos
@@ -548,6 +568,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     unwindFromRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
 
+    NeedDropKernelCallChain(recordSample);
     // we will not do this in non record mode.
     if (dedupStack_ && recordCallBack_) {
         DedupFromRecord(&recordSample);

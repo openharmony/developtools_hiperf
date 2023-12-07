@@ -1304,6 +1304,36 @@ HWTEST_F(SubCommandRecordTest, EnableDebugInfoSymbolicDwarf, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 -s dwarf --enable-debuginfo-symbolic ", true);
 }
+
+/**
+ * @tc.name: KernelCallChainFp
+ * @tc.desc: Test --kernel-callchain option with fp
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, KernelCallChainFp, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 -s fp --kernel-callchain", true, true);
+}
+
+/**
+ * @tc.name: KernelCallChainDwarf
+ * @tc.desc: Test --kernel-callchain option with dwarf
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, KernelCallChainDwarf, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 -s dwarf --kernel-callchain", true, true);
+}
+
+/**
+ * @tc.name: KernelCallChainError
+ * @tc.desc: Test --kernel-callchain option without fp/dwarf
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, KernelCallChainError, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 --kernel-callchain", false, true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

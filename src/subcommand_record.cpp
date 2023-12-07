@@ -126,6 +126,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" selectTids:\t%s\n", VectorToString(selectTids_).c_str());
     printf(" excludeTids:\t%s\n", VectorToString(excludeTids_).c_str());
     printf(" excludeThreads:\t%s\n", VectorToString(excludeThreadNames_).c_str());
+    printf(" kernelCallChain:\t%s\n", kernelCallChain_ ? "true" : "false");
     printf(" restart:\t%s\n", restart_ ? "true" : "false");
     printf(" verbose:\t%s\n", verboseReport_ ? "true" : "false");
     printf(" excludePerf:\t%d\n", excludeHiperf_);
@@ -232,6 +233,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-s", callStackType_)) {
         return false;
     }
+    if (!Option::GetOptionValue(args, "--kernel-callchain", kernelCallChain_)) {
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--exclude-tid", excludeTids_)) {
         return false;
     }
@@ -245,10 +249,12 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--call-stack", callStackType)) {
         return false;
     }
-    if (!callStackType_.empty() && !callStackType.empty()) {
-        printf("'-s %s --call-stack %s' option usage error, please check usage.\n",
-               VectorToString(callStackType_).c_str(), VectorToString(callStackType).c_str());
-        return false;
+    if (!callStackType_.empty()) {
+        if (!callStackType.empty()) {
+            printf("'-s %s --call-stack %s' option usage error, please check usage.\n",
+                VectorToString(callStackType_).c_str(), VectorToString(callStackType).c_str());
+            return false;
+        }
     } else {
         callStackType_ = callStackType;
     }
@@ -392,6 +398,10 @@ bool SubCommandRecord::CheckArgsRange()
     }
     if (!targetSystemWide_ && excludeHiperf_) {
         printf("--exclude-hiperf must be used with -a\n");
+        return false;
+    }
+    if (kernelCallChain_ && (!isCallStackFp_ && !isCallStackDwarf_)) {
+        printf("--kernel-callchain must be used with -s fp/dwarf simultaneously.\n");
         return false;
     }
     return true;
@@ -852,9 +862,13 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     // load vsdo first
     virtualRuntime_.LoadVdso();
 
-    // prepare from kernel and ko
-    virtualRuntime_.UpdateKernelSpaceMaps();
-    virtualRuntime_.UpdateKernelModulesSpaceMaps();
+    if (kernelCallChain_) {
+        // prepare from kernel and ko
+        virtualRuntime_.SetNeedKernelCallChain(kernelCallChain_);
+        virtualRuntime_.UpdateKernelSpaceMaps();
+        virtualRuntime_.UpdateKernelModulesSpaceMaps();
+    }
+
     if (isHM_) {
         virtualRuntime_.UpdateServiceSpaceMaps();
         virtualRuntime_.UpdateDevhostSpaceMaps();
