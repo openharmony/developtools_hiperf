@@ -99,6 +99,7 @@ const std::set<int> ALLOW_UIDS = {1201};
 
 static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";
+static const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
 static FILE *outputDump_ = nullptr;
 const uint64_t waitAppRunCheckTimeOut = 10;
 

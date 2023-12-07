@@ -16,7 +16,7 @@
 #define HIPERF_VIRTUAL_RUNTIME_H
 
 #include <functional>
-
+#include <fstream>
 #if defined(is_ohos) && is_ohos
 #include "callstack.h"
 #endif
@@ -46,7 +46,7 @@ using uSymbolsHits = std::unordered_map<pid_t, std::unordered_set<uint64_t>>;
 class VirtualRuntime {
 public:
     VirtualRuntime(bool onDevice = true);
-
+    ~VirtualRuntime();
     // thread need hook the record
     // from the record , it will call back to write some Simulated Record
     // case 1. some mmap will be create when it read mmaps for each new process (from record sample)
@@ -138,6 +138,7 @@ public:
     void UpdateFromPerfData(const std::vector<SymbolFileStruct> &);
     void UnwindFromRecord(PerfRecordSample &recordSample);
     std::string ReadThreadName(pid_t tid, bool isThread);
+    std::string ReadFromSavedCmdLines(pid_t tid);
     bool IsKernelThread(pid_t pid);
     void CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
                             uSymbolsHits &userSymbolsHits);
@@ -162,6 +163,7 @@ private:
     bool enableDebugInfoSymbolic_ = false;
     bool dedupStack_ = false;
     size_t callstackMergeLevel_ = 1;
+    std::ifstream savedCmdLines_;
 #if defined(is_ohos) && is_ohos
     CallStack callstack_;
 #endif

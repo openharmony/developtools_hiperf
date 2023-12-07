@@ -54,6 +54,8 @@ public:
     static constexpr int MAX_CHECK_APP_MS = 200;
     static constexpr float MIN_STOP_SECONDS = 0.100;
     static constexpr float MAX_STOP_SECONDS = 10000.0;
+    static constexpr int MIN_SAVED_CMDLINES_SIZE = 512;
+    static constexpr int MAX_SAVED_CMDLINES_SIZE = 4096;
 
     SubCommandRecord()
         // clang-format off
@@ -171,6 +173,9 @@ public:
         "           stop: stop sampling\n"
         "   --dedup_stack\n"
         "         Remove duplicated stacks in perf record, conflicts with -a, only restrain using with -p\n"
+        "   --cmdline-size <size>\n"
+        "         set value to /sys/kernel/tracing/saved_cmdlines_size\n"
+        "         the value should be between 512 and 4096\n"
         )
     // clang-format on
     {
@@ -201,6 +206,8 @@ private:
     int period_ = 0;
     int cpuPercent_ = DEFAULT_CPU_PERCENT;
     int mmapPages_ = MAX_PERF_MMAP_PAGE;
+    int cmdlinesSize_ = MIN_SAVED_CMDLINES_SIZE;
+    int oldCmdlinesSize_ = 0;
     std::vector<std::string> symbolDir_ = {};
     std::string outputFilename_ = "/data/local/tmp/perf.data";
     std::string appPackage_ = {};
@@ -220,6 +227,7 @@ private:
     std::vector<std::string> excludeThreadNames_ = {};
 
     bool GetOptions(std::vector<std::string> &args);
+    bool CheckArgsRange();
     bool CheckOptions();
     bool CheckDataLimitOption();
     bool CheckSelectCpuPidOption();
@@ -321,6 +329,8 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> startSaveFileTimes_;
 
     void SetHM();
+    void SetSavedCmdlinesSize();
+    void RecoverSavedCmdlinesSize();
 };
 } // namespace HiPerf
 } // namespace Developtools
