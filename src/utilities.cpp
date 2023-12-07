@@ -469,7 +469,11 @@ std::string &StringTrim(std::string &string)
 std::vector<std::string> GetEntriesInDir(const std::string &basePath)
 {
     std::vector<std::string> result;
-    DIR *dir = opendir(basePath.c_str());
+    std::string resolvedPath = CanonicalizeSpecPath(basePath.c_str());
+    if (resolvedPath.empty()) {
+        return result;
+    }
+    DIR *dir = opendir(resolvedPath.c_str());
     if (dir == nullptr) {
         return result;
     }
