@@ -62,7 +62,7 @@ public:
     // It internally determines whether to go to the Record process (which will generate virtual
     // events) or the Report process by judging whether SetRecordMode has been passed.
     void UpdateFromRecord(PerfEventRecord &reocrd);
-
+    void NeedDropKernelCallChain(PerfRecordSample &sample);
     // in reocrd mode
     // we make a kernel symbols from some proc file
     void UpdateKernelSpaceMaps();
@@ -124,6 +124,10 @@ public:
         isHM_ = isHM;
     }
 
+    void SetNeedKernelCallChain(bool kernelCallChain)
+    {
+        needkernelCallChain_ = kernelCallChain;
+    }
     DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
 
@@ -159,6 +163,7 @@ public:
     const bool loadSymboleWhenNeeded_ = true; // this is a feature config
 
 private:
+    bool needkernelCallChain_ = false;
     bool disableUnwind_ = true;
     bool enableDebugInfoSymbolic_ = false;
     bool dedupStack_ = false;
