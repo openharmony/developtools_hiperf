@@ -83,7 +83,7 @@
         <svg class='icon' id='icon' aria-hidden="true" viewBox="0 0 ${this.view} ${this.view}">
              ${this.path ? '<path id="path"></path>' : '<use id="use"></use>'}
         </svg>
-        `
+        `;
         }
 
         get view() {
@@ -128,7 +128,7 @@
 
         set spin(value) {
             if (value) {
-                this.setAttribute('spin','')
+                this.setAttribute('spin','');
             } else {
                 this.removeAttribute('spin');
             }
@@ -137,7 +137,7 @@
         // 当 custom element首次被插入文档DOM时，被调用。
         connectedCallback() {
             this.icon = this.shadowRoot.getElementById('icon');
-            this.use = this.shadowRoot.querySelector('use')
+            this.use = this.shadowRoot.querySelector('use');
             this.d = this.shadowRoot.querySelector('path');
             this.size && (this.size = this.size);
             this.color && (this.color = this.color);
@@ -190,7 +190,7 @@
                 'error-text',//错误提示文字
                 'error-placement',//错误提示文字方向
                 'required',//是否开始验证
-                'value',//值
+                'value'//值
             ];
         }
         get value() {
@@ -222,13 +222,13 @@
             return this.getAttribute('error-text')||'该项为必填项';
         }
         set errorText(value) {
-            this.setAttribute('error-text',value)
+            this.setAttribute('error-text',value);
         }
         get errorPlacement() {
             return this.getAttribute('error-placement')||'top';
         }
         set errorPlacement(value) {
-            this.setAttribute('error-placement',value)
+            this.setAttribute('error-placement',value);
         }
         get type() {
             return this.getAttribute('type');
@@ -269,7 +269,7 @@
             if (value) {
                 this.setAttribute('bordered', 'true');
             } else {
-                this.setAttribute('bordered', 'false')
+                this.setAttribute('bordered', 'false');
             }
         }
 
@@ -278,18 +278,18 @@
         }
 
         set icon(value) {
-            this.setAttribute('icon', value)
+            this.setAttribute('icon', value);
         }
 
         get block() {
-            return this.hasAttribute('block')
+            return this.hasAttribute('block');
         }
 
         set block(value) {
             if (value) {
                 this.setAttribute('block', '');
             } else {
-                this.removeAttribute('block')
+                this.removeAttribute('block');
             }
         }
 
@@ -436,7 +436,7 @@ input[type='number'] {
     <lit-icon class="pwd-btn" name="eye-fill"></lit-icon>
 </lit-tips>
 <slot name="suffix" ></slot>
-        `
+        `;
         }
 
         // 当 custom element首次被插入文档DOM时，被调用。
@@ -520,7 +520,7 @@ input[type='number'] {
                     this.value=this.inputElement.value;
                     this.dispatchEvent(new CustomEvent('onClear',e));
                     this.clearError();
-                }
+                };
                 this.inputElement.oninput=e=>{
                     if (this.allowClear) {
                         if (this.inputElement.value.length>0) {
@@ -582,10 +582,8 @@ input[type='number'] {
         // 当 custom element增加、删除、修改自身属性时，被调用。
         attributeChangedCallback(name, oldValue, newValue) {
             if (name === 'value') {
-                // console.log(name,oldValue,newValue);
-                // console.log(this.inputElement);
                 if (this.inputElement) {
-                    this.inputElement.value=newValue
+                    this.inputElement.value=newValue;
                 } else if (this.areaElement) {
                     this.areaElement.value=newValue;
                 }
@@ -600,9 +598,9 @@ input[type='number'] {
                     result= this.reg.test(this.inputElement.value);
                 }
                 if (result) {
-                    this.shadowRoot.querySelector('lit-tips').show='false'
+                    this.shadowRoot.querySelector('lit-tips').show='false';
                 } else {
-                    this.shadowRoot.querySelector('lit-tips').show='true'
+                    this.shadowRoot.querySelector('lit-tips').show='true';
                 }
                 return result;
             } else {
@@ -610,7 +608,7 @@ input[type='number'] {
             }
         }
         clearError() {
-            this.shadowRoot.querySelector('lit-tips').show='false'
+            this.shadowRoot.querySelector('lit-tips').show='false';
         }
     }
     if (!customElements.get('lit-input')) {
@@ -618,7 +616,7 @@ input[type='number'] {
     }
 
     class LitLoading extends HTMLElement {
-        static get observedAttributes() { return ['color','size'] }
+        static get observedAttributes() { return ['color','size']; }
 
         constructor() {
             super();
@@ -671,7 +669,7 @@ input[type='number'] {
         </style>
         <svg class="loading" id="loading" viewBox="22 22 44 44"><circle class="circle" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6"></circle></svg>
         <slot></slot>
-        `
+        `;
         }
 
         get size() {
@@ -719,8 +717,8 @@ input[type='number'] {
                 'show-size-changer',// 显示每页条目数select
                 'show-quick-jumper',// 显示跳至多少页
                 'page-size-options',// 指定每页可以显示多少条 默认 [10,20,50,100]
-                'simple',// 简洁模式
-            ]
+                'simple'// 简洁模式
+            ];
         }
         get pageSizeOptions() {
             return this.getAttribute('page-size-options');
@@ -766,7 +764,7 @@ input[type='number'] {
         }
 
         get showSizeChanger() {
-            return this.hasAttribute('show-size-changer')
+            return this.hasAttribute('show-size-changer');
         }
 
         set showSizeChanger(value) {
@@ -917,7 +915,7 @@ input[type='number'] {
 
 </div>
 
-        `
+        `;
         }
 
         // 当 custom element首次被插入文档DOM时，被调用。
@@ -951,7 +949,7 @@ input[type='number'] {
             this.rightArrow = this.shadowRoot.querySelector('.right-arrow');
             this.pagesChange = this.shadowRoot.querySelector('.pages-change');
             this.jump = this.shadowRoot.querySelector('.jump');
-            this.nodes = [this.one, this.two, this.three, this.four, this.five]
+            this.nodes = [this.one, this.two, this.three, this.four, this.five];
 
             let jsonArray = JSON.parse(this.pageSizeOptions);
             if (jsonArray) {
@@ -992,17 +990,17 @@ input[type='number'] {
                         size:parseInt(this.pageSize)
                     }
                 }));
-            }
+            };
 
             this.leftArrow.onclick = (e) => {
                 if (this._current > 1) {
-                    this.current = `${this._current - 1}`
+                    this.current = `${this._current - 1}`;
                     this.match();
                 }
             };
             this.rightArrow.onclick = (e) => {
                 if (this._current < this._pages) {
-                    this.current = `${this._current + 1}`
+                    this.current = `${this._current + 1}`;
                     this.match();
                 }
             };
@@ -1093,8 +1091,8 @@ input[type='number'] {
                     this.item(this.five, this._current + 2);
                 } else if (this._current - 3 === 1 && this._current + 3 < this._pages) {//左边刚好 右边溢出
                     this.displayNode(this.first, this.last, this.doubleRight);
-                    this.item(this.first, 1)
-                    this.item(this.last, this._pages)
+                    this.item(this.first, 1);
+                    this.item(this.last, this._pages);
                     for (let i = 0; i < this.nodes.length; i++) {
                         this.item(this.nodes[i], i + 2);
                     }
@@ -1192,7 +1190,7 @@ input[type='number'] {
                         pageSize: this._pageSize
                     }
                 }));
-                this.match()
+                this.match();
             }
 
         }
@@ -1237,7 +1235,7 @@ input[type='number'] {
             </div>
         </div>
         <slot></slot>
-        `
+        `;
         }
 
         get dataSource() {
@@ -1270,7 +1268,7 @@ input[type='number'] {
         }
 
         get title() {
-            return this.ct || ''
+            return this.ct || '';
         }
 
         set title(value) {
@@ -1344,7 +1342,7 @@ input[type='number'] {
         // 判断鼠标在 canvas 的位置
         getMousePost(event) {
             // 获取鼠标的位置
-            const { clientX, clientY } = event
+            const { clientX, clientY } = event;
             //  获取 canvas 的边界位置
             const { top, left } = this.chartView.getBoundingClientRect();
             //  计算鼠标在 canvas 在位置
@@ -1393,7 +1391,7 @@ input[type='number'] {
                     }
                 }
             }
-            return selector
+            return selector;
         }
 
         renderChart() {
@@ -1441,7 +1439,7 @@ input[type='number'] {
                             context.fillText(text,labelX - textWidth / 2,labelY);
                         }
                     }
-                    context.closePath()
+                    context.closePath();
                 })
             }
         }
@@ -1844,7 +1842,7 @@ input{
     <slot></slot>
     <slot name="footer"></slot>
 </div>
-        `
+        `;
         }
 
         isMultiple() {
@@ -1883,7 +1881,7 @@ input{
             this.tabIndex = 0;// 设置当前组件为可以获取焦点
             this.focused = false;
             this.inputElement = this.shadowRoot.querySelector('input');
-            this.inputElement.style.width = '100%'
+            this.inputElement.style.width = '100%';
             this.clearElement = this.shadowRoot.querySelector('.clear');
             this.iconElement = this.shadowRoot.querySelector('.icon');
             this.searchElement = this.shadowRoot.querySelector('.search');
@@ -1897,7 +1895,7 @@ input{
                         if (a.tagName === 'DIV') {
                             delNodes.push(a);
                         }
-                    })
+                    });
                     for (let i = 0; i < delNodes.length; i++) {
                         delNodes[i].remove();
                     }
@@ -1953,7 +1951,7 @@ input{
                 if (this.hasAttribute('disabled')) return;// 如果控件处于disabled状态 直接忽略
                 if (this.inputElement.value.length > 0) {
                     this.inputElement.placeholder = this.inputElement.value;
-                    this.inputElement.value = ''
+                    this.inputElement.value = '';
                 }
                 if (this.hasAttribute('show-search')) {// 如果有show-search属性 需要显示放大镜，隐藏向下的箭头
                     this.searchElement.style.display = 'flex';
@@ -2053,7 +2051,6 @@ input{
                         this.inputElement.style.width = '1px';
                         a.setAttribute('selected', '');
                     }
-                    // this.inputElement.focus();
                 } else {
                     if (a.getAttribute('value') === this.defaultValue) {
                         this.inputElement.value = a.textContent;
@@ -2081,7 +2078,7 @@ input{
                         }
                         this.inputElement.focus();
                     } else {// 单选
-                        [...this.querySelectorAll('lit-select-option')].forEach(a => a.removeAttribute('selected'))
+                        [...this.querySelectorAll('lit-select-option')].forEach(a => a.removeAttribute('selected'));
                         this.blur();// 失去焦点，隐藏选择栏目列表
                         this.inputElement.value = e.detail.text;
                     }
@@ -2094,7 +2091,7 @@ input{
                     // 设置input的值为当前选择的文本
                     // 向外层派发change事件，返回当前选中项
                     this.dispatchEvent(new CustomEvent('change', {detail: e.detail}));
-                })
+                });
             });
         }
 
@@ -2108,12 +2105,12 @@ input{
         reset() {
             this.querySelectorAll('lit-select-option').forEach(a => {
                 // 如果节点的值为 当前控件的默认值 defalut-value则 显示该值对应的option文本
-                [...this.querySelectorAll('lit-select-option')].forEach(a => a.removeAttribute('selected'))
+                [...this.querySelectorAll('lit-select-option')].forEach(a => a.removeAttribute('selected'));
                 if (a.getAttribute('value') === this.defaultValue) {
                     this.inputElement.value = a.textContent;
                     a.setAttribute('selected', '');
                 }
-            })
+            });
         }
 
         // 当 custom element从文档DOM中删除时，被调用。
@@ -2137,7 +2134,7 @@ input{
                         } else {
                             a.removeAttribute('selected');
                         }
-                    })
+                    });
                 } else {
                     this.clear();
                 }
@@ -2193,7 +2190,7 @@ input{
         </style>
         <div class='lab'>${this.label}</div>
         <slot></slot>
-        `
+        `;
         }
 
         // 当 custom element首次被插入文档DOM时，被调用。
@@ -2263,7 +2260,7 @@ input{
         </style>
         <slot></slot>
         <lit-icon class='check' name='check'></lit-icon>
-        `
+        `;
         }
 
         // 当 custom element首次被插入文档DOM时，被调用。
@@ -2276,7 +2273,7 @@ input{
                             value: this.getAttribute('value'),
                             text: this.textContent
                             }
-                        }))
+                        }));
                 };
             }
         }
@@ -2406,7 +2403,7 @@ input{
     background-color: #42b983;
     z-index: 1;
 }
-/*配置有 noheader 表示不限时表头，tbody上添加 border-top*/
+/*配置有 noheader 表示不限时表头,tbody上添加 border-top*/
 :host([noheader]) .thead{
     display: none;
     position: sticky;
@@ -2477,7 +2474,7 @@ input{
     <div class="thead"></div>
     <div class="tbody"></div>
 </div>
-        `
+        `;
         }
 
         /*根据column[]嵌套结构得到 grid css布局描述*/
@@ -2514,7 +2511,7 @@ input{
                             } else {
                                 this.shadowRoot.querySelectorAll('.tr').forEach(a => a.removeAttribute('checked'));
                             }
-                        }
+                        };
 
                         box.appendChild(checkbox);
                         rowElement.appendChild(box);
@@ -2523,8 +2520,8 @@ input{
                     let area = [], gridTemplateColumns = [];
                     let resolvingArea = (columns, x, y) => {
                         columns.forEach((a, i) => {
-                            if (!area[y]) area[y] = []
-                            let key = a.getAttribute('key') || a.getAttribute('title')
+                            if (!area[y]) area[y] = [];
+                            let key = a.getAttribute('key') || a.getAttribute('title');
                             if (a.tagName === 'LIT-TABLE-GROUP') {
                                 let len = a.querySelectorAll('lit-table-column').length;
                                 let children = [...a.children].filter(a => a.tagName !== 'TEMPLATE');
@@ -2537,12 +2534,12 @@ input{
                                 }
                                 let h = document.createElement('div');
                                 h.classList.add('td');
-                                h.style.justifyContent = a.getAttribute('align')
-                                h.style.borderBottom = '1px solid #f0f0f0'
+                                h.style.justifyContent = a.getAttribute('align');
+                                h.style.borderBottom = '1px solid #f0f0f0';
                                 h.style.gridArea = key;
                                 h.innerText = a.title;
                                 if (a.hasAttribute('fixed')) {
-                                    this.fixed(h, a.getAttribute('fixed'), '#42b983')
+                                    this.fixed(h, a.getAttribute('fixed'), '#42b983');
                                 }
                                 rowElement.append(h);
                             } else if (a.tagName === 'LIT-TABLE-COLUMN') {
@@ -2553,7 +2550,7 @@ input{
                                 if (a.hasAttribute('order')) {
                                     h.sortType = 0;
                                     h.classList.add('td-order');
-                                    h.style.position = 'relative'
+                                    h.style.position = 'relative';
                                     let NS = 'http://www.w3.org/2000/svg';
                                     let upSvg = document.createElementNS(NS,'svg');
                                     let upPath = document.createElementNS(NS,'path');
@@ -2571,7 +2568,7 @@ input{
                                     downSvg.setAttribute('stroke', '#efefef');
                                     downSvg.classList.add('down-svg');
                                     downPath.setAttribute('d', 'M840.4 300H183.6c-19.7 0-30.7 20.8-18.5 35l328.4 380.8c9.4 10.9 27.5 10.9 37 0L858.9 335c12.2-14.2 1.2-35-18.5-35z');
-                                    downSvg.appendChild(downPath)
+                                    downSvg.appendChild(downPath);
                                     if (i === 0) {
                                         h.sortType = 2; // 默认以第一列 降序排序 作为默认排序
                                         upSvg.setAttribute('fill', '#efefef');
@@ -2611,9 +2608,9 @@ input{
                                                 sort: h.sortType, key: key
                                             }, composed: true
                                         }));
-                                    }
+                                    };
                                 }
-                                h.style.justifyContent = a.getAttribute('align')
+                                h.style.justifyContent = a.getAttribute('align');
                                 gridTemplateColumns.push(a.getAttribute('width') || '1fr');
                                 h.style.gridArea = key;
                                 let titleLabel = document.createElement('label');
@@ -2624,8 +2621,8 @@ input{
                                 }
                                 rowElement.append(h);
                             }
-                        })
-                    }
+                        });
+                    };
                     resolvingArea(this.columns, 0, 0);
                     area.forEach((rows, j, array) => {
                         for (let i = 0; i < this.colCount; i++) {
@@ -2638,14 +2635,14 @@ input{
                         let s = area.map(a => '"_checkbox_ ' + (a.map(aa => aa.t).join(' ')) + '"').join(' ');
                         // `repeat(${this.colCount},1fr)`
                         rowElement.style.gridTemplateColumns = '60px ' + gridTemplateColumns.join(' ');
-                        rowElement.style.gridTemplateRows = `repeat(${area.length},1fr)`
-                        rowElement.style.gridTemplateAreas = s
+                        rowElement.style.gridTemplateRows = `repeat(${area.length},1fr)`;
+                        rowElement.style.gridTemplateAreas = s;
                     } else {
                         let s = area.map(a => '"' + (a.map(aa => aa.t).join(' ')) + '"').join(' ');
                         // `repeat(${this.colCount},1fr)`
                         rowElement.style.gridTemplateColumns = gridTemplateColumns.join(' ');
-                        rowElement.style.gridTemplateRows = `repeat(${area.length},1fr)`
-                        rowElement.style.gridTemplateAreas = s
+                        rowElement.style.gridTemplateRows = `repeat(${area.length},1fr)`;
+                        rowElement.style.gridTemplateAreas = s;
                     }
                     this.theadElement.append(rowElement);
                     if (this.hasAttribute('tree')) {
@@ -2677,10 +2674,10 @@ input{
             td.style.position = 'sticky';
             if (placement === 'left') {
                 td.style.left = '0px';
-                td.style.boxShadow = '3px 0px 5px #33333333'
+                td.style.boxShadow = '3px 0px 5px #33333333';
             } else if (placement === 'right') {
                 td.style.right = '0px';
-                td.style.boxShadow = '-3px 0px 5px #33333333'
+                td.style.boxShadow = '-3px 0px 5px #33333333';
             }
         }
 
@@ -2716,14 +2713,14 @@ input{
                 }
                 this.tableColumns.forEach(cl => {
                     let dataIndex = cl.getAttribute('data-index');
-                    gridTemplateColumns.push(cl.getAttribute('width') || '1fr')
+                    gridTemplateColumns.push(cl.getAttribute('width') || '1fr');
                     if (cl.template) {// 如果自定义渲染,从模版中渲染得到节点
                         let cloneNode = cl.template.render(rowData).content.cloneNode(true);
                         let d = document.createElement('div');
                         d.classList.add('td');
-                        d.style.justifyContent = cl.getAttribute('align')
+                        d.style.justifyContent = cl.getAttribute('align');
                         if (cl.hasAttribute('fixed')) {
-                            this.fixed(d, cl.getAttribute('fixed'), '#ffffff')
+                            this.fixed(d, cl.getAttribute('fixed'), '#ffffff');
                         }
                         d.append(cloneNode);
                         rowElement.append(d);
@@ -2750,9 +2747,9 @@ input{
                 }
                 rowElement.onclick = e => {
                     this.dispatchEvent(new CustomEvent('onRowClick', {detail: rowData, composed: true}));
-                }
+                };
                 this.tbodyElement.append(rowElement);
-            })
+            });
         }
 
         /*渲染树表结构*/
@@ -2769,7 +2766,7 @@ input{
                     branchArr.length > 0 ? father['children'] = branchArr : '';
                     return !father[pid];
                 });
-            }
+            };
             let treeData = toTreeData(this.ds, ids[0], ids[1]);
             let offset = 30;
             let offsetVal = offset;
@@ -2813,15 +2810,15 @@ input{
                     }
                     this.tableColumns.forEach((cl, index) => {
                         let dataIndex = cl.getAttribute('data-index');
-                        gridTemplateColumns.push(cl.getAttribute('width') || '1fr')
+                        gridTemplateColumns.push(cl.getAttribute('width') || '1fr');
                         let td;
                         if (cl.template) {
                             let cloneNode = cl.template.render(rowData).content.cloneNode(true);
                             td = document.createElement('div');
                             td.classList.add('td');
-                            td.style.justifyContent = cl.getAttribute('align')
+                            td.style.justifyContent = cl.getAttribute('align');
                             if (cl.hasAttribute('fixed')) {
-                                this.fixed(td, cl.getAttribute('fixed'), '#ffffff')
+                                this.fixed(td, cl.getAttribute('fixed'), '#ffffff');
                             }
                             td.append(cloneNode);
                         } else {
@@ -2867,7 +2864,7 @@ input{
                                             rowElement.querySelector('.tree-icon').name = 'minus-square';
                                         }
                                         rowElement.setAttribute('expand', '');
-                                    }
+                                    };
                                     if (rowElement.hasAttribute('expand')) {
                                         foldNode(rowElement);
                                     } else {
@@ -2889,7 +2886,7 @@ input{
                         rowElement.style.gridTemplateColumns = gridTemplateColumns.join(' ');
                     }
                     rowElement.onclick = e => {
-                    }
+                    };
                     parentNode.append(rowElement);
                     rowElement.setAttribute('id', rowData[ids[0]]);
                     rowElement.setAttribute('pid', rowData[ids[1]]);
@@ -2938,7 +2935,7 @@ input{
 :host{ }
 </style>
 <slot id='slot'></slot>
-        `
+        `;
         }
         // 当 custom element首次被插入文档DOM时，被调用。
         connectedCallback() {
@@ -2992,7 +2989,7 @@ input{
         :host{ }
         </style>
         <slot id='sl'></slot>
-        `
+        `;
         }
 
         // 当 custom element首次被插入文档DOM时，被调用。
@@ -3034,7 +3031,7 @@ input{
 }
 </style>
 <slot></slot>
-`
+`;
         }
 
         get tab() {
@@ -3124,7 +3121,7 @@ input{
         static get observedAttributes() {
             //mode = flat(default) | card
             //position = top | top-left | top-center | top-right | left | left-top | left-center | left-bottom | right | bottom
-            return ['activekey', 'mode', 'position']
+            return ['activekey', 'mode', 'position'];
         }
 
         constructor() {
@@ -3526,7 +3523,7 @@ input{
                 <slot id="slot">NEED CONTENT</slot>
             </div>
         </div>
-        `
+        `;
         }
 
         get position() {
@@ -3558,7 +3555,7 @@ input{
                 let item = this.nav.querySelector(`.nav-item[data-key='${key}']`);
                 if (item) {
                     item.querySelector('span').innerHTML=value;
-                    this.initTabPos()
+                    this.initTabPos();
                 }
             }
         }
@@ -3581,7 +3578,7 @@ input{
                 let item = this.nav.querySelector(`.nav-item[data-key='${key}']`);
                 if (item) {
                     if (value) {
-                        item.setAttribute('data-closeable','')
+                        item.setAttribute('data-closeable','');
                     } else {
                         item.removeAttribute('data-closeable');
                     }
@@ -3594,7 +3591,7 @@ input{
                 let item = this.nav.querySelector(`.nav-item[data-key='${key}']`);
                 if (item) {
                     if (value) {
-                        item.setAttribute('data-hide','')
+                        item.setAttribute('data-hide','');
                     } else {
                         item.removeAttribute('data-hide');
                     }
@@ -3614,7 +3611,7 @@ input{
                     top: a.offsetTop,
                     label: a.textContent
                 };
-            })
+            });
             if (this.activekey) {
                 if (this.position.startsWith('left')) {
                     this.line.style =
@@ -3689,7 +3686,7 @@ input{
                     }
                 });
                 this.nav.innerHTML = navHtml;
-                this.initTabPos()
+                this.initTabPos();
                 this.nav.querySelectorAll('.close-icon').forEach(a => {
                     a.onclick = (e) => {
                         e.stopPropagation();
@@ -3931,7 +3928,7 @@ input{
                 const pos = e.currentTarget.getBoundingClientRect();
                 this.mouseX = e.clientX - pos.left;
                 this.mouseY = e.clientY - pos.top;
-                requestAnimationFrame(this.draw)
+                requestAnimationFrame(this.draw);
             };
         }
 
@@ -3953,7 +3950,8 @@ input{
             }
             if (value.tid) {
                 this.eventCountCurrentThread =
-                    data.recordSampleInfo[window.eventIndex].processes.filter(it => it.pid === value.pid)[0].threads.filter(it => it.tid === value.tid)[0].eventCount;
+                    data.recordSampleInfo[window.eventIndex].processes.filter(
+                        it => it.pid === value.pid)[0].threads.filter(it => it.tid === value.tid)[0].eventCount;
                 this.tid.textContent = value.tid;
             }
             if (value.sampleCount) {
@@ -4043,7 +4041,7 @@ input{
                         });
                 }
             }
-        }
+        };
 
         getStatistics(c) {
             let statistics;// 鼠标hover展示的百分比
@@ -4065,7 +4063,7 @@ input{
                     break;
                 case 4: // event count
                     statistics = c.subEvents;
-                    statistics = `${statistics}`
+                    statistics = `${statistics}`;
                     break;
                 case 5: // event count in milliseconds
                     statistics = c.subEvents / 1000000;
@@ -4098,7 +4096,7 @@ input{
                 let f = c[i].symbol;
                 console.log(`processId:${this.pid.textContent} processName:${this.processName.textContent}
                              threadId:${this.tid.textContent} threadName:${this.threadName.textContent}`,
-                            c[i], "SymbolMap中没有对应的值")
+                            c[i], "SymbolMap中没有对应的值");
             }
             return this.htmlDecode(funName);
         }
@@ -4341,7 +4339,7 @@ input{
                 '#2db4e2', // amber #ffc105
                 '#ffd44a', // brown
                 '#7a84cc', // teal
-                '#ffe593', // yellow 0xffec3d
+                '#ffe593'  // yellow 0xffec3d
             ];
             shadowRoot.innerHTML = `
         <style>
@@ -4367,7 +4365,7 @@ input{
             <lit-pie-chart id="chart" style="height: auto;width: 100%"></lit-pie-chart>
         </div>
         <slot></slot>
-        `
+        `;
         }
 
         set data(json) {
@@ -4403,7 +4401,7 @@ input{
         getSampleWeight(count) {
             if (this.eventInfo.eventConfigName.includes('task-clock') ||
                 this.eventInfo.eventConfigName.includes('cpu-clock')) {
-                return (count / 1000000.0).toFixed(3) + ' ms'
+                return (count / 1000000.0).toFixed(3) + ' ms';
             } else {
                 return ''+count;
             }
@@ -4411,7 +4409,7 @@ input{
 
         getProcessName(pid) {
             let name = this.processNameMap[pid];
-            return name ? `Process: ${pid} (${name})` : 'Process: '+pid.toString();;
+            return name ? `Process: ${pid} (${name})` : 'Process: '+pid.toString();
         }
 
         getThreadName(tid) {
@@ -4432,13 +4430,13 @@ input{
             this.chart = this.shadowRoot.getElementById('chart');
             this.backBt = this.shadowRoot.getElementById('back');
             this.backBt.addEventListener('mouseover',e=>{
-                this.backBt.style.borderColor = '#42b983'
-                this.backBt.style.color = '#42b983'
-            })
+                this.backBt.style.borderColor = '#42b983';
+                this.backBt.style.color = '#42b983';
+            });
             this.backBt.addEventListener('mouseout',e=>{
-                this.backBt.style.borderColor = '#aaa'
-                this.backBt.style.color = '#555'
-            })
+                this.backBt.style.borderColor = '#aaa';
+                this.backBt.style.color = '#555';
+            });
             this.chartMaxCount = 126;
             this.backBt.addEventListener('click',this.back.bind(this));
             this.chart.chartClickListener = (item) => {
@@ -4451,7 +4449,7 @@ input{
                         }
                         this.chart.title = 'Threads in process ' + pName;
                         let find = this.eventInfo.processes.find(process => item.id === process.pid);
-                        this.clickProcess(find)
+                        this.clickProcess(find);
                     } else if (item.name.startsWith('Thread')) {
                         let tName = item.name.slice(7);
                         if (!ds.find(item => item.key === 'Thread')) {
@@ -4471,7 +4469,7 @@ input{
                     }
                     this.table.dataSource = ds;
                 }
-            }
+            };
         }
 
         initChartData() {
@@ -4481,7 +4479,7 @@ input{
                         return b[property] - a[property];
                     }
                 }
-                this.eventInfo.processes.sort(compare('eventCount'))
+                this.eventInfo.processes.sort(compare('eventCount'));
                 let chartSource = [];
                 let otherValue = 0;
                 this.eventInfo.processes.forEach((process,index) => {
@@ -4496,7 +4494,7 @@ input{
                     } else {
                         otherValue += process.eventCount;
                     }
-                })
+                });
                 if (otherValue > 0) {
                     chartSource.push({
                         id : -1,
@@ -4506,7 +4504,7 @@ input{
                         time: this.getSampleWeight(otherValue)
                     });
                 }
-                    chartSource.sort((a, b) => { return b.time - a.time })
+                chartSource.sort((a, b) => { return b.time - a.time });
                 this.processDs = chartSource;
                 this.chart.dataSource = chartSource;
                 this.chart.title = 'Processes in event type ' + this.eventInfo.eventConfigName;
@@ -4543,7 +4541,7 @@ input{
         {
             if (process && process.threads) {
                 this.backBt.style.display = 'flex';
-                this.currentLevel = 'Thread in Process'
+                this.currentLevel = 'Thread in Process';
                 this.clickProcessData = process;
                 let chartSource = [];
                 let chartTotal = 0;
@@ -4577,9 +4575,9 @@ input{
                         time: this.getSampleWeight(process.eventCount - chartTotal)
                     });
                 } else {
-                    this.addOtherItem(count, total, chartTotal, chartSource)
+                    this.addOtherItem(count, total, chartTotal, chartSource);
                 }
-                chartSource.sort((a, b) => { return b.time - a.time })
+                chartSource.sort((a, b) => { return b.time - a.time });
                 this.threadDs = chartSource;
                 this.chart.dataSource = chartSource;
             }
@@ -4592,7 +4590,7 @@ input{
         clickThread(thread)
         {
             if (thread && thread.libs) {
-                this.currentLevel = 'Library in Thread'
+                this.currentLevel = 'Library in Thread';
                 let chartSource = [];
                 let chartTotal = 0;
                 let count = 0;
@@ -4734,7 +4732,7 @@ input{
             <div id="panel" style="width: 100%"></div>
         </div>
         <slot></slot>
-        `
+        `;
         }
 
         get data() {
@@ -4833,7 +4831,7 @@ input{
             <app-chart-flame id="flame2"></app-chart-flame>
         </div>
         <slot></slot>
-        `
+        `;
         }
 
         getNodesMatchingFuncId(root, funcId) {
@@ -4868,9 +4866,10 @@ input{
                 {key: 'Process', value: val.process},
                 {key: 'Thread', value: val.thread},
                 {key: 'Library', value: val.library},
-                {key: 'Function', value: val.fun},
+                {key: 'Function', value: val.fun}
             ];
-            let filterProcess = data.recordSampleInfo[window.eventIndex].processes.filter(it => it.pid === val.processId);
+            let filterProcess =
+                data.recordSampleInfo[window.eventIndex].processes.filter(it => it.pid === val.processId);
             let filterThread = filterProcess[0].threads.filter(it => it.tid === val.threadId);
             let filterG = filterThread[0].CallOrder;
             let filterRG = filterThread[0].CalledOrder;
@@ -4892,7 +4891,7 @@ input{
                     findF(obj.callStack);
                 }
             };
-            //合并倒树结构
+            // 合并倒树结构
             let mergeRc = () => {
                 let rc = {};
                 let _rc = this.getNodesMatchingFuncId(filterRG, val.funId);// 将rg树中 为funId值的节点 形成一个数组
@@ -5060,7 +5059,7 @@ input{
 
         </div>
         <slot></slot>
-        `
+        `;
         }
 
         set data(json) {
@@ -5075,7 +5074,7 @@ input{
                     this.pagination.current = 1;
                     this.pagination.total = this.source.length;
                     this.table.dataSource = this.paginationHandler(1,this.pagination.pageSize);
-                })
+                });
             }
         }
 
@@ -5180,9 +5179,9 @@ input{
             this.eventType = this.shadowRoot.getElementById('typeSelect');
             this.pagination = this.shadowRoot.getElementById('pagination');
             this.table = this.shadowRoot.getElementById('table');
-            this.eventType.addEventListener('change',this.updateTableSource.bind(this))
-            this.pagination.addEventListener('onChange',this.updateTableSource.bind(this))
-            this.pagination.addEventListener('onShowSizeChange',this.updateTableSource.bind(this))
+            this.eventType.addEventListener('change',this.updateTableSource.bind(this));
+            this.pagination.addEventListener('onChange',this.updateTableSource.bind(this));
+            this.pagination.addEventListener('onShowSizeChange',this.updateTableSource.bind(this));
             this.size && (this.size = this.size);
             this.color && (this.color = this.color);
             this.keyword.addEventListener('input',e=>{
@@ -5308,16 +5307,16 @@ input{
                 chart.data = json;
                 table.data = json;
                 table.addEventListener('onRowClick', e => {
-                    pane4.hide = false
-                    tabs.activePane('4')
+                    pane4.hide = false;
+                    tabs.activePane('4');
                     appFunc.dataSource = e.detail;
-                })
+                });
                 tabs.onTabClick = (e) => {
                     if (e.detail.key === 3) {
                         flame.isFinished = false;
                         flame.data = json;
                     }
-                }
+                };
                 eventSelector.addEventListener('change',(e)=>{
                     loading.style.display = 'flex';
                     pane4.hide = true;
@@ -5330,8 +5329,8 @@ input{
                         tabs.activePane('1');
                     }
                     loading.style.display = 'none';
-                })
-            })
+                });
+            });
     }())
 </script>
 <div style="width: 100%;height: 100%">
