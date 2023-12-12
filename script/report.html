@@ -1379,7 +1379,7 @@ input[type='number'] {
                     if (pa > 0) {
                         pa = pa - Math.PI / 2;
                     }
-                    for(let item of this.ds) {
+                    for (let item of this.ds) {
                         if (pa >= item.startAngel && pa < item.endAngel) {
                             selector = item;
                             if (item !== this.selectItem) {
@@ -1453,7 +1453,7 @@ input[type='number'] {
                 });
             } else {
                 this.pageOptionDiv.style.display = 'flex';
-                for(let i = this.page * this.pageSize; i < (this.page + 1) * this.pageSize; i++) {
+                for (let i = this.page * this.pageSize; i < (this.page + 1) * this.pageSize; i++) {
                     if (i < this.ds.length) {
                         this.labelDiv.appendChild(this.createChartLegend(this.ds[i]));
                     } else {
@@ -1542,14 +1542,14 @@ input[type='number'] {
             if (sColor && reg.test(sColor)) {
                 if (sColor.length === 4) {
                     let sColorNew = '#';
-                    for(let i=1; i<4; i+=1) {
+                    for (let i=1; i<4; i+=1) {
                         sColorNew += sColor.slice(i,i+1).concat(sColor.slice(i,i+1));
                     }
                     sColor = sColorNew;
                 }
                 // 处理六位的颜色值
                 let sColorChange = [];
-                for(let i=1; i<7; i+=2) {
+                for (let i=1; i<7; i+=2) {
                     sColorChange.push(parseInt('0x'+sColor.slice(i,i+2)));
                 }
                 sColorChange.push(0.6);
@@ -4646,7 +4646,7 @@ input{
                 let total = lib.eventCount;
                 let countTotal = 0;
                 filter.forEach(item=>{ countTotal += item.counts[1]});
-                for(let item of filter) {
+                for (let item of filter) {
                     if (count < this.chartMaxCount) {
                         chartSource.push({
                             id:item.symbol,
@@ -5312,7 +5312,7 @@ input{
                     appFunc.dataSource = e.detail;
                 });
                 tabs.onTabClick = (e) => {
-                    if (e.detail.key === 3) {
+                    if (e.detail.key === '3') {
                         flame.isFinished = false;
                         flame.data = json;
                     }
