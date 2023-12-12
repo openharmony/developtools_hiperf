@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <fstream>
 
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 #include <memoryapi.h>
 #else
 #include <sys/mman.h>

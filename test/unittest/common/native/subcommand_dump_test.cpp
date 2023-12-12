@@ -182,7 +182,7 @@ HWTEST_F(SubCommandDumpTest, DumpInputElfConflict, TestSize.Level1)
     TestDumpCommand("perf.data --elf elffile ", false);
 }
 
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
 HWTEST_F(SubCommandDumpTest, DumpProtofile, TestSize.Level1)
 {
     TestDumpCommand("--proto /data/test/resource/testdata/proto_test ");

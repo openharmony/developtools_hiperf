@@ -85,7 +85,7 @@ bool SubCommandDump::ParseOption(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-i", dumpFileName_)) {
         return false;
     }
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     if (!Option::GetOptionValue(args, "--proto", protobufDumpFileName_)) {
         HLOGD("get option --proto failed");
         return false;
@@ -143,7 +143,7 @@ bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
         return DumpElfFile();
     }
 
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     if (!protobufDumpFileName_.empty()) {
         return DumpProtoFile();
     }
@@ -204,7 +204,7 @@ bool SubCommandDump::DumpElfFile()
     }
     return true;
 }
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
 bool SubCommandDump::DumpProtoFile()
 {
     printf("dump protobuf file: '%s'\n", protobufDumpFileName_.c_str());

@@ -17,7 +17,7 @@
 #include <set>
 #include "report_json_file.h"
 
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 #include <windows.h>
 #else
 #include <sys/ioctl.h>

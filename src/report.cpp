@@ -20,7 +20,7 @@
 #include <set>
 #include <sstream>
 
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 #include <windows.h>
 #else
 #include <sys/ioctl.h>
@@ -428,7 +428,7 @@ bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, ui
 
 void Report::PrepareConsole()
 {
-#if is_mingw
+#if defined(is_mingw) && is_mingw
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
     consoleWidth_ = static_cast<unsigned int>(csbi.srWindow.Right - csbi.srWindow.Left + 1);

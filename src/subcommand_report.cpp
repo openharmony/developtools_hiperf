@@ -20,7 +20,7 @@
 #include <set>
 #include <sstream>
 
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 #include <windows.h>
 #else
 #include <sys/ioctl.h>
@@ -206,7 +206,7 @@ void SubCommandReport::ProcessSample(std::unique_ptr<PerfRecordSample> &sample)
                                                sample->data_.tid, sample->data_.period,
                                                sample->callFrames_);
     } else if (protobufFormat_) {
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
         // make some cook
         // redesgin here
         protobufOutputFileWriter_->ProcessSampleRecord(
@@ -261,7 +261,7 @@ bool SubCommandReport::RecordCallBack(std::unique_ptr<PerfEventRecord> record)
             ProcessSample(sample);
         }
     } else {
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
         if (protobufFormat_) {
             protobufOutputFileWriter_->ProcessRecord(*record);
         }
@@ -291,7 +291,7 @@ void SubCommandReport::ProcessSymbolsData()
             static_cast<const PerfFileSectionSymbolsFiles *>(featureSection);
         GetReport().virtualRuntime_.UpdateFromPerfData(sectionSymbolsFiles->symbolFileStructs_);
     }
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     // we have load the elf
     // write it to proto first
     if (protobufFormat_) {
@@ -428,7 +428,7 @@ void SubCommandReport::ProcessFeaturesData()
     // update device arch from feature
     SetDeviceArch(GetArchTypeFromUname(recordFileReader_->GetFeatureString(FEATURE::ARCH)));
 
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     UpdateReportInfo();
 #endif
 }
@@ -542,7 +542,7 @@ bool SubCommandReport::OutputReport()
 bool SubCommandReport::PrepareOutput()
 {
     if (protobufFormat_) {
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
         printf("save to protobuf file: '%s'\n", reportFile_.c_str());
         protobufOutputFileWriter_ = std::make_unique<ReportProtobufFileWriter>();
         protobufOutputFileWriter_->Create(reportFile_);
@@ -568,7 +568,7 @@ bool SubCommandReport::PrepareOutput()
 
 SubCommandReport::~SubCommandReport()
 {
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     if (protobufOutputFileWriter_ != nullptr) {
         protobufOutputFileWriter_->Close();
     }
