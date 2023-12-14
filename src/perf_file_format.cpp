@@ -329,7 +329,7 @@ PerfFileSectionUniStackTable::PerfFileSectionUniStackTable(FEATURE id, const cha
         HLOGV("tableSize %" PRIu32 " ", stackTable.tableSize);
         Read(stackTable.numNodes);
         HLOGV("numNodes %" PRIu32 " ", stackTable.numNodes);
-        for (size_t i = 0; i < stackTable.numNodes; i++) {
+        for (size_t j = 0; j < stackTable.numNodes; j++) {
             UniStackNode& node = stackTable.nodes.emplace_back();
             Read(node.index);
             Read(node.node.value);

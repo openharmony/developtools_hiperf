@@ -89,7 +89,7 @@ uint64_t UniqueStackTable::PutIpInSlot(uint64_t thisIp, uint64_t prevIdx)
     node.section.prevIdx = prevIdx;
     node.section.inKernel = !!(thisIp & IP_IN_KERNEL);
     while (currentDeconflictTimes_--) {
-        Node* tableNode = (Node*)tableHead_ + curIpIdx;
+        Node* tableNode = reinterpret_cast<Node *>(tableHead_) + curIpIdx;
 
         // empty case
         if (tableNode->value == 0) {

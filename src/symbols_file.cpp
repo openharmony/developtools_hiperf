@@ -196,11 +196,9 @@ public:
 
     const std::unordered_map<uint64_t, ElfLoadInfo> GetPtLoads() override
     {
-        std::unordered_map<uint64_t, ElfLoadInfo> info;
         if (elfFile_ == nullptr) {
-            return info;
+            return info_;
         }
-
         return elfFile_->GetPtLoads();
     }
 
@@ -280,6 +278,7 @@ private:
     uint64_t ehFrameHDRFdeTableItemSize_ {0};
     uint64_t ehFrameHDRFdeTableElfOffset_ {0};
     std::shared_ptr<DfxElf> elfFile_;
+    std::unordered_map<uint64_t, ElfLoadInfo> info_;
 
     bool GetSectionInfo(const std::string &name, uint64_t &sectionVaddr, uint64_t &sectionSize,
                         uint64_t &sectionFileOffset) const override
