@@ -50,9 +50,9 @@ class GetLibFiles(object):
         lib_hiperf_report = get_lib()
         lib_hiperf_report.ReportGetSymbolFiles.restype = c_char_p
         lib_hiperf_report.ReportGetSymbolFiles.argtypes = [c_char_p]
-        ret = lib_hiperf_report.ReportGetSymbolFiles(perf_data.encode())
+        ret = lib_hiperf_report.ReportGetSymbolFiles(perf_data.encode("utf-8"))
 
-        dso_build_id = str(ret, encoding="utf-8")
+        dso_build_id = str(ret, encoding="utf-8", errors='ignore')
         dso_list = dso_build_id.split('],[')
         dso_list[0] = dso_list[0][1:]
         dso_list[-1] = dso_list[-1][0:-1]
