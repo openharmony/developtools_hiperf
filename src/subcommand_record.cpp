@@ -400,10 +400,6 @@ bool SubCommandRecord::CheckArgsRange()
         printf("--exclude-hiperf must be used with -a\n");
         return false;
     }
-    if (kernelCallChain_ && (!isCallStackFp_ && !isCallStackDwarf_)) {
-        printf("--kernel-callchain must be used with -s fp/dwarf simultaneously.\n");
-        return false;
-    }
     return true;
 }
 
@@ -597,6 +593,10 @@ bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &call
         printf("Invalid -s value '%s'.\n", callStackType.at(0).c_str());
         return false;
     }
+    if (kernelCallChain_ && (!isCallStackFp_ && !isCallStackDwarf_)) {
+        printf("--kernel-callchain must be used with -s fp or dwarf simultaneously.\n");
+        return false;
+    }
     return true;
 }
 
@@ -728,7 +728,7 @@ void SubCommandRecord::SetSavedCmdlinesSize()
         printf("Failed to read from %s.\n", SAVED_CMDLINES_SIZE.c_str());
     }
     if (!WriteIntToProcFile(SAVED_CMDLINES_SIZE, cmdlinesSize_)) {
-        printf("Failed to write size:%d ot file:%s", cmdlinesSize_, SAVED_CMDLINES_SIZE.c_str());
+        printf("Failed to write size:%d to %s.\n", cmdlinesSize_, SAVED_CMDLINES_SIZE.c_str());
     }
 }
 
@@ -738,7 +738,7 @@ void SubCommandRecord::RecoverSavedCmdlinesSize()
         return;
     }
     if (!WriteIntToProcFile(SAVED_CMDLINES_SIZE, oldCmdlinesSize_)) {
-        printf("Failed to recover value of %s", SAVED_CMDLINES_SIZE.c_str());
+        printf("Failed to recover value of %s.\n", SAVED_CMDLINES_SIZE.c_str());
     }
 }
 
