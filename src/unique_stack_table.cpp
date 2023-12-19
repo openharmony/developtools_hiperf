@@ -177,13 +177,14 @@ bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
     uint64_t tailIdx = stackId.section.id;
 
     Node *node = GetFrame(tailIdx);
-    while (node != nullptr && nr--) {
+    while (node != nullptr && nr > 0) {
         ips.push_back(
             node->section.inKernel ? (node->section.ip | KERNEL_PREFIX) : node->section.ip);
         if (node->section.prevIdx == HEAD_NODE_INDEX) {
             break;
         }
         node = GetFrame(node->section.prevIdx);
+        nr--;
     }
     return true;
 }
