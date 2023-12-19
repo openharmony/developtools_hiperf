@@ -27,7 +27,7 @@
 #include <linux/perf_event.h>
 
 #include "perf_file_reader.h"
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
 #include "report_protobuf_file.h"
 #endif
 #include "debug_logger.h"
@@ -173,7 +173,7 @@ private:
     std::unique_ptr<ReportJsonFile> reportJsonFile_ = nullptr;
 
     bool protobufFormat_ = false;
-#if HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     std::unique_ptr<ReportProtobufFileWriter> protobufOutputFileWriter_ = nullptr;
     void UpdateReportInfo();
 #endif

@@ -125,14 +125,14 @@ private:
     uint32_t tableSize_ = INITIAL_TABLE_SIZE;
     std::unique_ptr<uint8_t[]> tableBuf_ = nullptr;
     std::vector<uint32_t> usedSlots_;
-    uint32_t totalNodes_;
+    uint32_t totalNodes_ = 0;
     // current available node count, include index 0
-    uint32_t availableNodes_;
-    uint32_t hashModulus_;
+    uint32_t availableNodes_ = 0;
+    uint32_t hashModulus_ = 0;
     // 0 for reserved, start from 1
     uint32_t availableIndex_ = 1;
     // for de-conflict
-    uint64_t hashStep_;
+    uint64_t hashStep_ = 0;
     uint8_t deconflictTimes_ = INIT_DECONFLICT_ALLOWED;
 };
 

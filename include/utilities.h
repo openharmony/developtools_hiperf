@@ -223,7 +223,7 @@ bool IsPath(const std::string &fileName);
 
 bool LittleMemory();
 
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 const char PATH_SEPARATOR = '\\';
 #else
 const char PATH_SEPARATOR = '/';
@@ -348,7 +348,7 @@ bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 } // namespace OHOS
 
 // this will also used for libunwind head (out of namespace)
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 #if !is_double_framework
 #define HAVE_MMAP   1
 #define MAP_PRIVATE 0x02

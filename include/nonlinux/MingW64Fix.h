@@ -14,7 +14,7 @@
  */
 #ifndef NONLINUX_MINGW64FIX_H
 #define NONLINUX_MINGW64FIX_H
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 // in mingw 64 _pid_t define to int64
 // but in linux it always int
 

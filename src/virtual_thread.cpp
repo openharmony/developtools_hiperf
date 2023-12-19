@@ -225,7 +225,7 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
     return false;
 }
 
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 void VirtualThread::ParseMap()
 {
     // only linux support read maps in runtime

@@ -235,7 +235,7 @@ ArchType SetDeviceArch(ArchType arch)
 
 ArchType GetDeviceArch()
 {
-#if is_mingw
+#if defined(is_mingw) && is_mingw
     return deviceArchType;
 #else
     if (deviceArchType != ArchType::ARCH_UNKNOWN) {

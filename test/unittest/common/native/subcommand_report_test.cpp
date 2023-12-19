@@ -25,9 +25,11 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+
+constexpr int DEFAULT_RUN_TIMEOUT_MS = 10000;
+
 class SubCommandReportTest : public testing::Test {
 public:
-    const int DEFAULT_RUN_TIMEOUT_MS = 10000;
 #if is_ohos
     const std::string RESOURCE_PATH = "/data/test/resource/testdata/";
 #else

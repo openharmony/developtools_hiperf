@@ -15,7 +15,7 @@
 #ifndef HIPERF_LIBREPORT_H
 #define HIPERF_LIBREPORT_H
 
-#if is_mingw
+#if defined(is_mingw) && is_mingw
 #define DLL_EXPORT __declspec(dllexport)
 #else
 #define DLL_EXPORT __attribute__((visibility("default")))
