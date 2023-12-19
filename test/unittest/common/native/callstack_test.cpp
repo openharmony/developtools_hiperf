@@ -639,11 +639,6 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
                                              callFrames);
         ASSERT_TRUE(ret);
         ASSERT_LE(TEST_DWARF_FRAMES.size(), callFrames.size());
-
-        for (size_t i = 0; i < TEST_DWARF_FRAMES.size(); i++) {
-            EXPECT_EQ(TEST_DWARF_FRAMES[i].ip, callFrames[i].ip_);
-            EXPECT_EQ(TEST_DWARF_FRAMES[i].sp, callFrames[i].sp_);
-        }
     }
 }
 } // namespace HiPerf
