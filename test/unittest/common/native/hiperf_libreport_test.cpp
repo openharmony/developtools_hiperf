@@ -120,15 +120,14 @@ void HiperfLibReportTest::DefaultJsonContentCheck(const std::string &content) co
     /*
         json must have { xxx  } format
     */
-
-    ASSERT_TRUE(content.size() >= 2);
+    ASSERT_TRUE(content.size() >= 2); // 2: args size
     ASSERT_EQ(content.front(), '{');
     ASSERT_EQ(content.back(), '}');
 }
 
 void HiperfLibReportTest::UnwindJsonContentCheck(const std::string &content, bool haveUnwind) const
 {
-    ASSERT_TRUE(content.size() >= 2);
+    ASSERT_TRUE(content.size() >= 2); // 2: args size
     ASSERT_EQ(content.front(), '{');
     ASSERT_EQ(content.back(), '}');
 #ifdef __arm__

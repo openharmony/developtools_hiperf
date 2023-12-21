@@ -1609,7 +1609,7 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
                 }
             }
         }
-     }
+    }
 }
 
 // finish writing data file, then close file

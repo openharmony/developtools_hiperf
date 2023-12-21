@@ -570,7 +570,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 
     NeedDropKernelCallChain(recordSample);
     // we will not do this in non record mode.
-    if (dedupStack_ && recordCallBack_) {
+    if (dedupStack_ && recordCallBack_ != nullptr) {
         DedupFromRecord(&recordSample);
     }
 #endif
