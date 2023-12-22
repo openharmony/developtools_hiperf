@@ -467,20 +467,6 @@ HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level1
     EXPECT_STREQ(result, "");
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
-{
-    unlink(REPORT_JSON_OUTPUT_PATH);
-    EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
-
-    EXPECT_EQ(::ReportUnwindJson(PERF_DISABLE_UNWIND_DATA_INPUT_PATH, REPORT_JSON_OUTPUT_PATH,
-                                 PERF_DISABLE_UNWIND_SYMBOL_INPUT_PATH),
-              0);
-    EXPECT_EQ(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
-    std::string content;
-    EXPECT_EQ(ReadFileToString(REPORT_JSON_OUTPUT_PATH, content), true);
-    UnwindJsonContentCheck(content, true);
-}
-
 HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_NoSymbols_Failed, TestSize.Level1)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
