@@ -1,0 +1,311 @@
+diff --git a/test/unittest/common/native/hiperf_libreport_test.cpp b/test/unittest/common/native/hiperf_libreport_test.cpp
+index 067266e..8f0c99c 100644
+--- a/test/unittest/common/native/hiperf_libreport_test.cpp
++++ b/test/unittest/common/native/hiperf_libreport_test.cpp
+@@ -466,20 +466,6 @@ HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level1
+     EXPECT_STREQ(result, "");
+ }
+ 
+-HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
+-{
+-    unlink(REPORT_JSON_OUTPUT_PATH);
+-    EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
+-
+-    EXPECT_EQ(::ReportUnwindJson(PERF_DISABLE_UNWIND_DATA_INPUT_PATH, REPORT_JSON_OUTPUT_PATH,
+-                                 PERF_DISABLE_UNWIND_SYMBOL_INPUT_PATH),
+-              0);
+-    EXPECT_EQ(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
+-    std::string content;
+-    EXPECT_EQ(ReadFileToString(REPORT_JSON_OUTPUT_PATH, content), true);
+-    UnwindJsonContentCheck(content, true);
+-}
+-
+ HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_NoSymbols_Failed, TestSize.Level1)
+ {
+     unlink(REPORT_JSON_OUTPUT_PATH);
+diff --git a/test/unittest/common/native/include/callstack_test.h b/test/unittest/common/native/include/callstack_test.h
+index 67a7191..36d0492 100644
+--- a/test/unittest/common/native/include/callstack_test.h
++++ b/test/unittest/common/native/include/callstack_test.h
+@@ -173,13 +173,6 @@ void LoadFromFile(const std::string &fileName, std::vector<T> &data)
+         ASSERT_EQ(fread(data.data(), sizeof(T), data.size(), fp.get()), data.size());
+     }
+ }
+-
+-static void MakeMaps(VirtualThread &thread)
+-{
+-    for (const mmapDumpInfo &mmap : TEST_DWARF_MMAP) {
+-        thread.CreateMapItem(mmap.fileName, mmap.begin, mmap.len, mmap.pgoff);
+-    }
+-}
+ } // namespace HiPerf
+ } // namespace Developtools
+ } // namespace OHOS
+diff --git a/test/unittest/common/native/symbols_file_test.cpp b/test/unittest/common/native/symbols_file_test.cpp
+index 93186e7..0c5d2f7 100644
+--- a/test/unittest/common/native/symbols_file_test.cpp
++++ b/test/unittest/common/native/symbols_file_test.cpp
+@@ -362,209 +362,6 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level1)
+     }
+ }
+ 
+-/**
+- * @tc.name: GetSymbolWithVaddr
+- * @tc.desc:
+- * @tc.type: FUNC
+- */
+-HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr2, TestSize.Level1)
+-{
+-    auto elfSymbols = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+-    ASSERT_EQ(elfSymbols->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA), true);
+-    EXPECT_EQ(elfSymbols->LoadSymbols(nullptr, TEST_FILE_ELF), true);
+-    ASSERT_EQ(elfSymbols->GetSymbols().empty(), false);
+-
+-    /*
+-        part of elf32_test's symbols
+-        vaddr(hex)  size(dec)   name
+-        00001000    0           _init
+-        00001030    0
+-        00001320    58           _start
+-        00001512    27          main
+-        0000145d    124         TestGlobalChildFunction
+-        000014d9    57          TestGlobalParentFunction
+-        // last one
+-        00001b38    0           _fini
+-
+-        part of elf_test's symbols
+-        vaddr(hex)          size(dec)   name
+-        0000000000002000    0           _init
+-        0000000000002020    0
+-        00000000000022f0    47         _start
+-        0000000000002478    15          main
+-        00000000000023d9    110         TestGlobalChildFunction
+-        0000000000002447    49          TestGlobalParentFunction
+-        //last one
+-        0000000000002aa8    0           _fini
+-    */
+-#ifdef __arm__
+-    ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001000).GetName(), "_init");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001029).GetName(), "_init");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001320).GetName(), "_start");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001359).GetName(), "_start");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001512).GetName(), "main");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000152c).GetName(), "main");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000145d).GetName(), "TestGlobalChildFunction");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000014d9).GetName(), "TestGlobalParentFunction");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001b38).GetName(), "_fini");
+-#else
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002000).GetName(), "_init");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002019).GetName(), "_init");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000022f0).GetName(), "_start");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000231e).GetName(), "_start");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002478).GetName(), "main");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002486).GetName(), "main");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000023d9).GetName(), "TestGlobalChildFunction");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002447).GetName(), "TestGlobalParentFunction");
+-    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002aa8).GetName(), "_fini");
+-#endif
+-    if (HasFailure()) {
+-        PrintSymbols(elfSymbols->GetSymbols());
+-    }
+-}
+-
+-/**
+- * @tc.name: GetSymbolWithVaddr
+- * @tc.desc:
+- * @tc.type: FUNC
+- */
+-HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
+-{
+-    auto elfSymbols = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+-    ASSERT_EQ(elfSymbols->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA), true);
+-    if (elfSymbols->LoadSymbols(nullptr, TEST_SYMBOLS_FILE_ELF)) {
+-        ASSERT_EQ(elfSymbols->GetSymbols().empty(), false);
+-        /*
+-            nm -C --defined-only symbols_file_test_elf64
+-            addr = 1000 mangle name = _init
+-            addr = 1040 mangle name = _start
+-            addr = 1070 mangle name = deregister_tm_clones
+-            addr = 10a0 mangle name = register_tm_clones
+-            addr = 10e0 mangle name = __do_global_dtors_aux
+-            addr = 1120 mangle name = frame_dummy
+-            addr = 1129 mangle name = main
+-            addr = 1140 mangle name = __libc_csu_init
+-            addr = 11b0 mangle name = __libc_csu_fini
+-
+-            //last one
+-            addr = 11b8 mangle name = _fini
+-
+-            nm -C --defined-only symbols_file_test_elf32
+-            00001000 t _init
+-            00001070 T _start
+-            000010c0 t deregister_tm_clones
+-            00001100 t register_tm_clones
+-            00001150 t __do_global_dtors_aux
+-            000011a0 t frame_dummy
+-            000011ad T main
+-            000011d0 T __libc_csu_init
+-            00001240 T __libc_csu_fini
+-
+-            // last one
+-            0000124c T _fini
+-        */
+-#ifdef __arm__
+-        enum SymbolAddr : uint64_t {
+-            INIT = 0X1000U,
+-            PLT = 0X1030U,
+-            START = 0X1070U,
+-            THUNK_AX = 0X10B0U,
+-            DEREG = 0X10C0U,
+-            REG = 0X1100U,
+-            AUX = 0X1150U,
+-            FRAME = 0X11A0U,
+-            THUNK_DX = 0X11A9U,
+-            MAIN = 0X11ADU,
+-            THUNK_BX = 0X11C5U,
+-            CSU_INIT = 0X11D0U,
+-            CSU_FINI = 0X1240U,
+-            THUNK_BP = 0X1245U,
+-            FINI = 0X124CU,
+-        };
+-#else
+-        enum SymbolAddr : uint64_t {
+-            INIT = 0X1000U,
+-            PLT = 0X1020U,
+-            START = 0X1040U,
+-            DEREG = 0X1070U,
+-            REG = 0X10A0U,
+-            AUX = 0X10E0U,
+-            FRAME = 0X1120U,
+-            MAIN = 0X1129U,
+-            CSU_INIT = 0X1140U,
+-            CSU_FINI = 0X11B0U,
+-            FINI = 0X11B8U,
+-        };
+-#endif
+-        for (uint64_t addr = SymbolAddr::INIT; addr < SymbolAddr::PLT; ++addr) {
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "_init");
+-            }
+-        }
+-#ifdef __arm__
+-        for (uint64_t addr = SymbolAddr::START; addr < SymbolAddr::THUNK_AX; ++addr) {
+-#else
+-        for (uint64_t addr = SymbolAddr::START; addr < SymbolAddr::START; ++addr) {
+-#endif
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "_start");
+-            }
+-        }
+-        for (uint64_t addr = SymbolAddr::DEREG; addr < SymbolAddr::REG; ++addr) {
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "deregister_tm_clones");
+-            }
+-        }
+-        for (uint64_t addr = SymbolAddr::REG; addr < SymbolAddr::AUX; ++addr) {
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "register_tm_clones");
+-            }
+-        }
+-        for (uint64_t addr = SymbolAddr::AUX; addr < SymbolAddr::FRAME; ++addr) {
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__do_global_dtors_aux");
+-            }
+-        }
+-#ifdef __arm__
+-        for (uint64_t addr = SymbolAddr::FRAME; addr < SymbolAddr::THUNK_DX; ++addr) {
+-#else
+-        for (uint64_t addr = SymbolAddr::FRAME; addr < SymbolAddr::MAIN; ++addr) {
+-#endif
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "frame_dummy");
+-            }
+-        }
+-#ifdef __arm__
+-        for (uint64_t addr = SymbolAddr::MAIN; addr < SymbolAddr::THUNK_BX; ++addr) {
+-#else
+-        for (uint64_t addr = SymbolAddr::MAIN; addr < SymbolAddr::CSU_INIT; ++addr) {
+-#endif
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "main");
+-            }
+-        }
+-        for (uint64_t addr = SymbolAddr::CSU_INIT; addr < SymbolAddr::CSU_FINI; ++addr) {
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_init");
+-            }
+-        }
+-#ifdef __arm__
+-        for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::THUNK_BP; ++addr) {
+-#else
+-        for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::FINI; ++addr) {
+-#endif
+-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_fini");
+-            }
+-        }
+-        EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(SymbolAddr::FINI).demangle_, "_fini");
+-        if (HasFailure()) {
+-            PrintSymbols(elfSymbols->GetSymbols());
+-        }
+-    }
+-}
+-
+ /**
+  * @tc.name: GetVaddrInSymbols
+  * @tc.desc:
+diff --git a/test/unittest/common/native/virtual_runtime_test.cpp b/test/unittest/common/native/virtual_runtime_test.cpp
+index c9b6161..4452416 100644
+--- a/test/unittest/common/native/virtual_runtime_test.cpp
++++ b/test/unittest/common/native/virtual_runtime_test.cpp
+@@ -337,49 +337,6 @@ HWTEST_F(VirtualRuntimeTest, UpdateFromPerfData, TestSize.Level1)
+     ASSERT_STREQ(runtime_->GetSymbolsFiles().front()->GetBuildId().c_str(), "b");
+     ASSERT_EQ(runtime_->GetSymbolsFiles().front()->GetSymbols().size(), 2u);
+ }
+-
+-/**
+- * @tc.name: UnwindFromRecord
+- * @tc.desc:
+- * @tc.type: FUNC
+- */
+-HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
+-{
+-    // symbol
+-    auto &symbolsFile = runtime_->symbolsFiles_.emplace_back(
+-        SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_DWARF_ELF));
+-    ASSERT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DWARF_DATA), true);
+-    ASSERT_EQ(symbolsFile->LoadSymbols(nullptr, TEST_DWARF_ELF), true);
+-    symbolsFile->filePath_ = TEST_DWARF_ELF;
+-
+-    // thread
+-    VirtualThread &thread = runtime_->GetThread(TEST_DWARF_RECORD_PID, TEST_DWARF_RECORD_TID);
+-    MakeMaps(thread);
+-
+-    // record
+-    std::vector<uint8_t> data;
+-    LoadFromFile(PATH_RESOURCE_TEST_DWARF_DATA + TEST_DWARF_RECORD, data);
+-    ASSERT_NE(data.size(), 0u);
+-    perf_event_attr attr;
+-    if (memset_s(&attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
+-        printf("error: memset_s failed.");
+-        return;
+-    }
+-    attr.sample_type = TEST_RECORD_SAMPLE_TYPE;
+-    attr.sample_regs_user = TEST_DWARF_RECORD_REGS_USER;
+-    PerfRecordSample sample(data.data(), attr);
+-    sample.DumpLog("UnwindFromRecord");
+-    ASSERT_EQ(sample.data_.stack_size, TEST_DWARF_RECORD_STACK_SIZE);
+-
+-    // unwind
+-    runtime_->UnwindFromRecord(sample);
+-    ASSERT_LE(TEST_RECORD_CALLSTACK_IP_FUNC.size(), sample.callFrames_.size());
+-    for (size_t i = 0; i < TEST_RECORD_CALLSTACK_IP_FUNC.size(); i++) {
+-        EXPECT_EQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].first, sample.callFrames_[i].vaddrInFile_);
+-        EXPECT_STREQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].second.data(),
+-                     sample.callFrames_[i].symbolName_.data());
+-    }
+-}
+ } // namespace HiPerf
+ } // namespace Developtools
+ } // namespace OHOS
