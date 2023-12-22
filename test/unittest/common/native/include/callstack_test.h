@@ -173,13 +173,6 @@ void LoadFromFile(const std::string &fileName, std::vector<T> &data)
         ASSERT_EQ(fread(data.data(), sizeof(T), data.size(), fp.get()), data.size());
     }
 }
-
-static void MakeMaps(VirtualThread &thread)
-{
-    for (const mmapDumpInfo &mmap : TEST_DWARF_MMAP) {
-        thread.CreateMapItem(mmap.fileName, mmap.begin, mmap.len, mmap.pgoff);
-    }
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
