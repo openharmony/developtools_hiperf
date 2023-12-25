@@ -68,18 +68,28 @@ static constexpr OHOS::HiviewDFX::HiLogLabel HIPERF_HILOG_LABLE[] = {
     {LOG_CORE, BASE_HIPERF_DOMAIN_ID, "HiperfCPPAPI"},
 };
 
+#ifdef LOG_DOMAIN
+#undef LOG_DOMAIN
+#endif
+#define LOG_DOMAIN 0xD002D0D
+
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
+#define LOG_TAG "hiperf"
+
 // In order to improve performance, do not check the module range
 
 #define HIPERF_HILOGF(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Fatal(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
+    HILOG_FATAL(LOG_CORE, __VA_ARGS__)
 #define HIPERF_HILOGE(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Error(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
+    HILOG_ERROR(LOG_CORE, __VA_ARGS__)
 #define HIPERF_HILOGW(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Warn(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
+    HILOG_WARN(LOG_CORE, __VA_ARGS__)
 #define HIPERF_HILOGI(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Info(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
+    HILOG_INFO(LOG_CORE, __VA_ARGS__)
 #define HIPERF_HILOGD(module, ...)                                                                 \
-    (void)OHOS::HiviewDFX::HiLog::Debug(HIPERF_HILOG_LABLE[module], FORMATTED(__VA_ARGS__))
+    HILOG_DEBUG(LOG_CORE, __VA_ARGS__)
 #else
 
 #define HIPERF_HILOGF(module, ...) printf(FORMATTED(__VA_ARGS__))
