@@ -1621,7 +1621,7 @@ bool SubCommandRecord::FinishWriteRecordFile()
 #if !HIDEBUG_SKIP_PROCESS_SYMBOLS
     if (!delayUnwind_) {
 #if !HIDEBUG_SKIP_LOAD_KERNEL_SYMBOLS
-        if(kernelCallChain_) {
+        if (kernelCallChain_) {
             HLOGD("Load kernel symbols");
             virtualRuntime_.UpdateKernelSymbols();
             virtualRuntime_.UpdateKernelModulesSymbols();
