@@ -1621,12 +1621,14 @@ bool SubCommandRecord::FinishWriteRecordFile()
 #if !HIDEBUG_SKIP_PROCESS_SYMBOLS
     if (!delayUnwind_) {
 #if !HIDEBUG_SKIP_LOAD_KERNEL_SYMBOLS
-        HLOGD("Load kernel symbols");
-        virtualRuntime_.UpdateKernelSymbols();
-        virtualRuntime_.UpdateKernelModulesSymbols();
-        if (isHM_) {
-            virtualRuntime_.UpdateServiceSymbols();
-            virtualRuntime_.UpdateDevhostSymbols();
+        if(kernelCallChain_) {
+            HLOGD("Load kernel symbols");
+            virtualRuntime_.UpdateKernelSymbols();
+            virtualRuntime_.UpdateKernelModulesSymbols();
+            if (isHM_) {
+                virtualRuntime_.UpdateServiceSymbols();
+                virtualRuntime_.UpdateDevhostSymbols();
+            }
         }
 #endif
         HLOGD("Load user symbols");
