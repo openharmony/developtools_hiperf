@@ -1625,10 +1625,10 @@ bool SubCommandRecord::FinishWriteRecordFile()
             HLOGD("Load kernel symbols");
             virtualRuntime_.UpdateKernelSymbols();
             virtualRuntime_.UpdateKernelModulesSymbols();
-            if (isHM_) {
-                virtualRuntime_.UpdateServiceSymbols();
-                virtualRuntime_.UpdateDevhostSymbols();
-            }
+        }
+        if (isHM_) {
+            virtualRuntime_.UpdateServiceSymbols();
+            virtualRuntime_.UpdateDevhostSymbols();
         }
 #endif
         HLOGD("Load user symbols");
