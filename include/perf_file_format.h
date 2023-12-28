@@ -251,7 +251,7 @@ public:
 
 class PerfFileSectionUniStackTable : public PerfFileSection {
 public:
-    std::vector<UniStackTableInfo> uniStackTableInfos_;
+    std::vector<UniStackTableInfo> uniStackTableInfos_ = {};
     PerfFileSectionUniStackTable(FEATURE id,
         const ProcessStackMap *table)
         : PerfFileSection(id), processStackTable_(table) {}
