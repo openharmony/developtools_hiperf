@@ -1621,9 +1621,10 @@ bool SubCommandRecord::FinishWriteRecordFile()
 #if !HIDEBUG_SKIP_PROCESS_SYMBOLS
     if (!delayUnwind_) {
 #if !HIDEBUG_SKIP_LOAD_KERNEL_SYMBOLS
-        HLOGD("Load kernel symbols");
-        virtualRuntime_.UpdateKernelSymbols();
-        virtualRuntime_.UpdateKernelModulesSymbols();
+        if (kernelCallChain_) {
+            virtualRuntime_.UpdateKernelSymbols();
+            virtualRuntime_.UpdateKernelModulesSymbols();
+        }
         if (isHM_) {
             virtualRuntime_.UpdateServiceSymbols();
             virtualRuntime_.UpdateDevhostSymbols();
@@ -1639,7 +1640,6 @@ bool SubCommandRecord::FinishWriteRecordFile()
 #if USE_COLLECT_SYMBOLIC
         SymbolicHits();
 #endif
-        HLOGD("Write the symbols to perf.data");
 #if HIDEBUG_SKIP_MATCH_SYMBOLS
         disableUnwind_ = true;
 #endif
