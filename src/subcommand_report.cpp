@@ -543,6 +543,11 @@ bool SubCommandReport::PrepareOutput()
 {
     if (protobufFormat_) {
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+        // check if file exist
+        if (access(recordFile_[index_].c_str(), F_OK) != 0) {
+            printf("Can not access data file %s\n", recordFile_[index_].c_str());
+            return false;
+        }
         printf("save to protobuf file: '%s'\n", reportFile_.c_str());
         protobufOutputFileWriter_ = std::make_unique<ReportProtobufFileWriter>();
         protobufOutputFileWriter_->Create(reportFile_);
