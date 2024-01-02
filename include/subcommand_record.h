@@ -277,7 +277,7 @@ private:
 
     // callback to process record
     bool ProcessRecord(std::unique_ptr<PerfEventRecord>);
-    bool SaveRecord(std::unique_ptr<PerfEventRecord>);
+    bool SaveRecord(std::unique_ptr<PerfEventRecord>, bool ptrReleaseFlag = false);
 
     // file format like as 0,1-3,4-6,7,8
     uint32_t GetCountFromFile(const std::string &fileName);

@@ -74,6 +74,12 @@ uint64_t PerfEventsTest::g_statCount = 0;
 bool PerfEventsTest::RecordCount(std::unique_ptr<PerfEventRecord> record)
 {
     g_recordCount++;
+    if (record->GetType() == PERF_RECORD_SAMPLE) {
+        if (record->GetType() == PERF_RECORD_SAMPLE) {
+            // the record is allowed from a cache memory, does not free memory after use
+            record.release();
+        }
+    }
     return true;
 }
 

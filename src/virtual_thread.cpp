@@ -168,6 +168,9 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> inMap) 
 void VirtualThread::ReportVaddrMapMiss(uint64_t vaddr) const
 {
 #ifdef HIPERF_DEBUG
+    if (DebugLogger::logDisabled_) {
+        return;
+    }
     if (DebugLogger::GetInstance()->GetLogLevel() <= LEVEL_VERBOSE) {
         if (missedRuntimeVaddr_.find(vaddr) == missedRuntimeVaddr_.end()) {
             missedRuntimeVaddr_.insert(vaddr);

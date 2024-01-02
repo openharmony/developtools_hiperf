@@ -24,6 +24,11 @@ using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+
+void *g_SampleMemCache = nullptr; // for read record from buf thread
+void *g_SampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
+constexpr size_t SAMPLE_CACHE_SIZE = 4 * 1024;
+
 std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
                                                     const perf_event_attr &attr)
 {
@@ -66,6 +71,44 @@ std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
             HLOGE("unknown record type %d\n", type);
             return nullptr;
     }
+}
+
+std::unique_ptr<PerfEventRecord> GetPerfSampleFromCache(const int type, uint8_t *p,
+                                                    const perf_event_attr &attr)
+{
+    HLOG_ASSERT(p);
+    uint8_t *data = p;
+
+    if (type == PERF_RECORD_SAMPLE) {
+        if (g_SampleMemCache != nullptr) {
+            memset_s(g_SampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCache) PerfRecordSample(data, attr));
+        } else {
+            g_SampleMemCache = std::malloc(SAMPLE_CACHE_SIZE);
+            memset_s(g_SampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCache) PerfRecordSample(data, attr));
+        }
+    }
+    return GetPerfEventRecord(type, p, attr);
+}
+
+std::unique_ptr<PerfEventRecord> GetPerfSampleFromCacheMain(const int type, uint8_t *p,
+                                                    const perf_event_attr &attr)
+{
+    HLOG_ASSERT(p);
+    uint8_t *data = p;
+
+    if (type == PERF_RECORD_SAMPLE) {
+        if (g_SampleMemCacheMain != nullptr) {
+            memset_s(g_SampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCacheMain) PerfRecordSample(data, attr));
+        } else {
+            g_SampleMemCacheMain = std::malloc(SAMPLE_CACHE_SIZE);
+            memset_s(g_SampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCacheMain) PerfRecordSample(data, attr));
+        }
+    }
+    return GetPerfEventRecord(type, p, attr);
 }
 
 template<typename T>
@@ -163,6 +206,10 @@ void PerfEventRecord::DumpLog(const std::string &prefix) const
           GetType(), GetMisc(), GetSize());
 }
 
+std::vector<u64> PerfRecordSample::ips_ = {};
+std::vector<CallFrame> PerfRecordSample::callFrames_ = {};
+std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
+
 void PerfRecordSample::DumpLog(const std::string &prefix) const
 {
     HLOGV("%s: SAMPLE: id= %llu size %d pid %u tid %u ips %llu regs %llu, stacks %llu time %llu",
@@ -251,6 +298,8 @@ PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
         HLOG_ASSERT(p);
         return;
     }
+    // clear the static vector data
+    Clean();
     sampleType_ = attr.sample_type;
 
     uint8_t *start = p;
@@ -450,6 +499,13 @@ void PerfRecordSample::DumpData(int indent) const
 inline pid_t PerfRecordSample::GetPid() const
 {
     return data_.pid;
+}
+
+void PerfRecordSample::Clean()
+{
+    ips_.clear();
+    callFrames_.clear();
+    serverPidMap_.clear();
 }
 
 PerfRecordMmap::PerfRecordMmap(uint8_t *p) : PerfEventRecord(p, "mmap")
