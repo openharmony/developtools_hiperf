@@ -182,7 +182,7 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
                     uint8_t *data = buf;
                     // the record is allowed from a cache memory, does not free memory after use
                     auto record = GetPerfSampleFromCacheMain(static_cast<perf_event_type>(header->type),
-                                                     data, defaultEventAttr_);
+                                                             data, defaultEventAttr_);
                     // skip unknown record
                     if (record == nullptr)
                         return true;

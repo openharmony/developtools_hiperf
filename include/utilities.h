@@ -347,9 +347,10 @@ bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 template <typename Func>
 class ScopeGuard {
 public:
-    ScopeGuard(Func&& fn):
-        fn_(fn) {}
-    ~ScopeGuard() {
+    ScopeGuard(Func&& fn)
+        : fn_(fn) {}
+    ~ScopeGuard()
+    {
         fn_();
     }
 private:
@@ -359,7 +360,8 @@ private:
 // tag dispatch
 struct ScopeGuardOnExit {};
 template <typename Func>
-static inline ScopeGuard<Func> operator+(ScopeGuardOnExit, Func&& fn) {
+static inline ScopeGuard<Func> operator+(ScopeGuardOnExit, Func&& fn)
+{
     return ScopeGuard<Func>(std::forward<Func>(fn));
 }
 

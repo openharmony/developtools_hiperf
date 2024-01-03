@@ -432,9 +432,9 @@ public:
 std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
                                                     const perf_event_attr &attr);
 std::unique_ptr<PerfEventRecord> GetPerfSampleFromCache(const int type, uint8_t *p,
-                                                    const perf_event_attr &attr);
+                                                        const perf_event_attr &attr);
 std::unique_ptr<PerfEventRecord> GetPerfSampleFromCacheMain(const int type, uint8_t *p,
-                                                    const perf_event_attr &attr);
+                                                            const perf_event_attr &attr);
 
 template<typename T>
 void PushToBinary(bool condition, uint8_t *&p, const T &v);

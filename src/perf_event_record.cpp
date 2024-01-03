@@ -25,8 +25,8 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
-void *g_SampleMemCache = nullptr; // for read record from buf thread
-void *g_SampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
+void * g_SampleMemCache = nullptr; // for read record from buf thread
+void * g_SampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
 constexpr size_t SAMPLE_CACHE_SIZE = 4 * 1024;
 
 std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
@@ -74,7 +74,7 @@ std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
 }
 
 std::unique_ptr<PerfEventRecord> GetPerfSampleFromCache(const int type, uint8_t *p,
-                                                    const perf_event_attr &attr)
+                                                        const perf_event_attr &attr)
 {
     HLOG_ASSERT(p);
     uint8_t *data = p;
@@ -93,7 +93,7 @@ std::unique_ptr<PerfEventRecord> GetPerfSampleFromCache(const int type, uint8_t 
 }
 
 std::unique_ptr<PerfEventRecord> GetPerfSampleFromCacheMain(const int type, uint8_t *p,
-                                                    const perf_event_attr &attr)
+                                                            const perf_event_attr &attr)
 {
     HLOG_ASSERT(p);
     uint8_t *data = p;
