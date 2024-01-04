@@ -357,7 +357,6 @@ private:
     Func fn_;
 };
 
-// tag dispatch
 struct ScopeGuardOnExit {};
 template <typename Func>
 static inline ScopeGuard<Func> operator+(ScopeGuardOnExit, Func&& fn)
