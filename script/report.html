@@ -4151,9 +4151,10 @@ input{
                         ctx.lineWidth = 2;
                         ctx.strokeStyle = `#000000`;
                         ctx.strokeRect(_x, rect.y + 1, w - 1, rect.h);
+                        let statisticNum = this.getStatistics(c[i]);
                         this.funcNameSpan.textContent = funName;
-                        this.panel.title = funName;
-                        this.percentSpan.textContent = this.getStatistics(c[i]);
+                        this.panel.title = funName + ': [' + statisticNum + ']';
+                        this.percentSpan.textContent = statisticNum;
                     } else {
                         if (this.mouseState === 'mouseUp') {
                             this.mouseState = null;
@@ -4213,9 +4214,10 @@ input{
                         ctx.lineWidth = 2;
                         ctx.strokeStyle = `#000000`;
                         ctx.strokeRect(_x, rect.y + 1, w - 1, rect.h);
+                        let statisticNum = this.getStatistics(c[i]);
                         this.funcNameSpan.textContent = funName;
-                        this.panel.title = funName;
-                        this.percentSpan.textContent = this.getStatistics(c[i]);
+                        this.panel.title = funName + ': [' + statisticNum + ']';
+                        this.percentSpan.textContent = statisticNum;
                     } else {
                         if (this.mouseState === 'mouseUp') {
                             this.mouseState = null;
@@ -4498,7 +4500,7 @@ input{
                 if (otherValue > 0) {
                     chartSource.push({
                         id : -1,
-                        name: 'Other',
+                        name: 'Other: Represents a collection of items which proporiton of count ranked very low',
                         value: (otherValue / this.eventInfo.eventCount).toFixed(3),
                         color: '#888888',
                         time: this.getSampleWeight(otherValue)
@@ -4551,25 +4553,23 @@ input{
                 filter.forEach(item=>{ total += item.eventCount });
                 total = process.eventCount;
                 for (let item of filter) {
-                    if (count < this.chartMaxCount) {
-                        chartSource.push({
-                            id:item.tid,
-                            name: this.getThreadName(item.tid),
-                            value: (item.eventCount / total).toFixed(6),
-                            color: this.color[count % this.color.length],
-                            time: this.getSampleWeight(item.eventCount)
-                        });
-                        chartTotal += item.eventCount;
-                        count ++;
-                    }
                     if (count >= this.chartMaxCount) {
                         break;
                     }
+                    chartSource.push({
+                        id:item.tid,
+                        name: this.getThreadName(item.tid),
+                        value: (item.eventCount / total).toFixed(6),
+                        color: this.color[count % this.color.length],
+                        time: this.getSampleWeight(item.eventCount)
+                    });
+                    chartTotal += item.eventCount;
+                    count++;
                 }
                 if (count < this.chartMaxCount && chartTotal < process.eventCount) {
                     chartSource.push({
                         id : -1,
-                        name: 'Other',
+                        name: 'Other: Represents a collection of items which proporiton of count less than 1% or ranked very low',
                         value: ((process.eventCount - chartTotal) / process.eventCount).toFixed(6),
                         color: '#888888',
                         time: this.getSampleWeight(process.eventCount - chartTotal)
@@ -4618,7 +4618,7 @@ input{
                 if (count < this.chartMaxCount && chartTotal < thread.eventCount) {
                     chartSource.push({
                         id : -1,
-                        name: 'Other',
+                        name: 'Other: Represents a collection of items which proporiton of count less than 1% or ranked very low',
                         value: ((thread.eventCount - chartTotal) / thread.eventCount).toFixed(6),
                         color: '#888888',
                         time: this.getSampleWeight(thread.eventCount - chartTotal)
@@ -4656,7 +4656,7 @@ input{
                             time: this.getSampleWeight(item.counts[1])
                         });
                         chartTotal += item.counts[1];
-                        count ++;
+                        count++;
                     }
                     if (count >= this.chartMaxCount) {
                         break;
@@ -4665,7 +4665,7 @@ input{
                 if (count < this.chartMaxCount && countTotal < lib.eventCount) {
                     chartSource.push({
                         id : -1,
-                        name: 'Other',
+                        name: 'Other: Represents a collection of items which proporiton of count less than 1% or ranked very low',
                         value: ((lib.eventCount - countTotal) / lib.eventCount).toFixed(6),
                         color: '#888888',
                         time: this.getSampleWeight(lib.eventCount - countTotal)
@@ -4679,10 +4679,10 @@ input{
         }
 
         addOtherItem(count,total,chartTotal,chartSource) {
-            if (count >= this.chartMaxCount && total - chartTotal > 0) {
+            if (count >= this.chartMaxCount && total > chartTotal) {
                 chartSource.push({
                     id : -1,
-                    name: 'Other',
+                    name: 'Other: Represents a collection of items which proporiton of count less than 1% or ranked very low',
                     value: ((total - chartTotal) / total).toFixed(6),
                     color: '#888888',
                     time: this.getSampleWeight(total - chartTotal)
