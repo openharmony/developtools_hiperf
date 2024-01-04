@@ -25,8 +25,8 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
-void * g_SampleMemCache = nullptr; // for read record from buf thread
-void * g_SampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
+void *g_SampleMemCache = nullptr; // for read record from buf thread
+void *g_SampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
 constexpr size_t SAMPLE_CACHE_SIZE = 4 * 1024;
 
 std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
