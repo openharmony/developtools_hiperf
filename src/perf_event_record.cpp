@@ -25,8 +25,8 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
-void *g_SampleMemCache = nullptr; // for read record from buf thread
-void *g_SampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
+void *g_sampleMemCache = nullptr; // for read record from buf thread
+void *g_sampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
 constexpr size_t SAMPLE_CACHE_SIZE = 4 * 1024;
 
 std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
@@ -80,13 +80,13 @@ std::unique_ptr<PerfEventRecord> GetPerfSampleFromCache(const int type, uint8_t 
     uint8_t *data = p;
 
     if (type == PERF_RECORD_SAMPLE) {
-        if (g_SampleMemCache != nullptr) {
-            memset_s(g_SampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCache) PerfRecordSample(data, attr));
+        if (g_sampleMemCache != nullptr) {
+            memset_s(g_sampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCache) PerfRecordSample(data, attr));
         } else {
-            g_SampleMemCache = std::malloc(SAMPLE_CACHE_SIZE);
-            memset_s(g_SampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCache) PerfRecordSample(data, attr));
+            g_sampleMemCache = std::malloc(SAMPLE_CACHE_SIZE);
+            memset_s(g_sampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCache) PerfRecordSample(data, attr));
         }
     }
     return GetPerfEventRecord(type, p, attr);
@@ -99,13 +99,13 @@ std::unique_ptr<PerfEventRecord> GetPerfSampleFromCacheMain(const int type, uint
     uint8_t *data = p;
 
     if (type == PERF_RECORD_SAMPLE) {
-        if (g_SampleMemCacheMain != nullptr) {
-            memset_s(g_SampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCacheMain) PerfRecordSample(data, attr));
+        if (g_sampleMemCacheMain != nullptr) {
+            memset_s(g_sampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCacheMain) PerfRecordSample(data, attr));
         } else {
-            g_SampleMemCacheMain = std::malloc(SAMPLE_CACHE_SIZE);
-            memset_s(g_SampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_SampleMemCacheMain) PerfRecordSample(data, attr));
+            g_sampleMemCacheMain = std::malloc(SAMPLE_CACHE_SIZE);
+            memset_s(g_sampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
+            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCacheMain) PerfRecordSample(data, attr));
         }
     }
     return GetPerfEventRecord(type, p, attr);
