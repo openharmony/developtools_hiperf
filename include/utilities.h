@@ -343,6 +343,29 @@ const std::string GetUserType();
 std::string GetProcessName(int pid);
 bool IsDebugableApp(const std::string& bundleName);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
+
+template <typename Func>
+class ScopeGuard {
+public:
+    ScopeGuard(Func&& fn)
+        : fn_(fn) {}
+    ~ScopeGuard()
+    {
+        fn_();
+    }
+private:
+    Func fn_;
+};
+
+struct ScopeGuardOnExit {};
+template <typename Func>
+static inline ScopeGuard<Func> operator+(ScopeGuardOnExit, Func&& fn)
+{
+    return ScopeGuard<Func>(std::forward<Func>(fn));
+}
+
+#define ON_SCOPE_EXIT \
+        auto __onGuardExit__ = ScopeGuardOnExit{} + [&]
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

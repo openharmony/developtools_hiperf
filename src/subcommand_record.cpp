@@ -844,7 +844,7 @@ bool SubCommandRecord::PrepareSysKernel()
 
 bool SubCommandRecord::PrepareVirtualRuntime()
 {
-    auto saveRecord = std::bind(&SubCommandRecord::SaveRecord, this, std::placeholders::_1);
+    auto saveRecord = std::bind(&SubCommandRecord::SaveRecord, this, std::placeholders::_1, false);
     virtualRuntime_.SetRecordMode(saveRecord);
 
     // do some config for virtualRuntime_
@@ -1229,6 +1229,10 @@ bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
     } else {
         recordNoSamples_++;
     }
+    if (record->GetType() == PERF_RECORD_SAMPLE) {
+        // when the record is allowed from a cache memory, does not free memory after use
+        record.release();
+    }
     return true;
 #else
 #ifdef HIPERF_DEBUG_TIME
@@ -1237,6 +1241,10 @@ bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
     if (excludeHiperf_) {
         static pid_t pid = getpid();
         if (record->GetPid() == pid) {
+            if (record->GetType() == PERF_RECORD_SAMPLE) {
+                // when the record is allowed from a cache memory, does not free memory after use
+                record.release();
+            }
             // discard record
             return true;
         }
@@ -1250,12 +1258,18 @@ bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
 #ifdef HIPERF_DEBUG_TIME
     prcessRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
-    return SaveRecord(std::move(record));
+    return SaveRecord(std::move(record), true);
 #endif
 }
 
-bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record)
+bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record, bool ptrReleaseFlag)
 {
+    ON_SCOPE_EXIT {
+        if (ptrReleaseFlag && record->GetType() == PERF_RECORD_SAMPLE) {
+            // when the record is allowed from a cache memory, does not free memory after use
+            record.release();
+        }
+    };
 #if HIDEBUG_RECORD_NOT_SAVE
     return true;
 #endif
@@ -1571,6 +1585,8 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 #else
         virtualRuntime_.SymbolicRecord(*sample);
 #endif
+        // the record is allowed from a cache memory, does not free memory after use
+        record.release();
     }
     return true;
 }

@@ -239,9 +239,9 @@ public:
     // extend
     // hold the new ips memory (after unwind)
     // used for data_.ips replace (ReplaceWithCallStack)
-    std::vector<u64> ips_;
-    std::vector<CallFrame> callFrames_;
-    std::vector<pid_t> serverPidMap_;
+    static std::vector<u64> ips_;
+    static std::vector<CallFrame> callFrames_;
+    static std::vector<pid_t> serverPidMap_;
 
     StackId stackId_ {0};
     bool removeStack_ {false};
@@ -256,11 +256,13 @@ public:
     // originalSize is use for expand callstack
     void ReplaceWithCallStack(size_t originalSize = 0);
     pid_t GetPid() const override;
+    void Clean();
 
     // only for UT
     PerfRecordSample(bool inKernel, u32 pid, u32 tid, u64 period = 0, u64 time = 0, u64 id = 0)
         : PerfEventRecord(PERF_RECORD_SAMPLE, inKernel, "sample")
     {
+        Clean();
         data_.pid = pid;
         data_.tid = tid;
         data_.period = period;
@@ -427,8 +429,12 @@ public:
     void DumpData(int indent) const override;
 };
 
-std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *data,
+std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
                                                     const perf_event_attr &attr);
+std::unique_ptr<PerfEventRecord> GetPerfSampleFromCache(const int type, uint8_t *p,
+                                                        const perf_event_attr &attr);
+std::unique_ptr<PerfEventRecord> GetPerfSampleFromCacheMain(const int type, uint8_t *p,
+                                                            const perf_event_attr &attr);
 
 template<typename T>
 void PushToBinary(bool condition, uint8_t *&p, const T &v);

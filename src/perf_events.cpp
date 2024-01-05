@@ -1413,7 +1413,7 @@ void PerfEvents::ReadRecordFromBuf()
             const auto readingStartTime_ = steady_clock::now();
 #endif
 #if !HIDEBUG_SKIP_CALLBACK
-            recordCallBack_(GetPerfEventRecord(*type, p, *attr));
+            recordCallBack_(GetPerfSampleFromCache(*type, p, *attr));
 #endif
             recordEventCount_++;
 #ifdef HIPERF_DEBUG_TIME
@@ -1432,7 +1432,7 @@ void PerfEvents::ReadRecordFromBuf()
         const auto readingStartTime_ = steady_clock::now();
 #endif
 #if !HIDEBUG_SKIP_CALLBACK
-        recordCallBack_(GetPerfEventRecord(*type, p, *attr));
+        recordCallBack_(GetPerfSampleFromCache(*type, p, *attr));
 #endif
         recordEventCount_++;
 #ifdef HIPERF_DEBUG_TIME
