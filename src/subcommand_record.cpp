@@ -127,6 +127,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" excludeTids:\t%s\n", VectorToString(excludeTids_).c_str());
     printf(" excludeThreads:\t%s\n", VectorToString(excludeThreadNames_).c_str());
     printf(" kernelCallChain:\t%s\n", kernelCallChain_ ? "true" : "false");
+    printf(" callChainUserOnly_:\t%s\n", callChainUserOnly_ ? "true" : "false");
     printf(" restart:\t%s\n", restart_ ? "true" : "false");
     printf(" verbose:\t%s\n", verboseReport_ ? "true" : "false");
     printf(" excludePerf:\t%d\n", excludeHiperf_);
@@ -234,6 +235,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--kernel-callchain", kernelCallChain_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--callchain_useronly", callChainUserOnly_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--exclude-tid", excludeTids_)) {
@@ -593,10 +597,6 @@ bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &call
         printf("Invalid -s value '%s'.\n", callStackType.at(0).c_str());
         return false;
     }
-    if (kernelCallChain_ && (!isCallStackFp_ && !isCallStackDwarf_)) {
-        printf("--kernel-callchain must be used with -s fp or dwarf simultaneously.\n");
-        return false;
-    }
     return true;
 }
 
@@ -862,9 +862,9 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     // load vsdo first
     virtualRuntime_.LoadVdso();
 
-    if (kernelCallChain_) {
+    if (!callChainUserOnly_) {
         // prepare from kernel and ko
-        virtualRuntime_.SetNeedKernelCallChain(kernelCallChain_);
+        virtualRuntime_.SetNeedKernelCallChain(!callChainUserOnly_);
         virtualRuntime_.UpdateKernelSpaceMaps();
         virtualRuntime_.UpdateKernelModulesSpaceMaps();
     }
@@ -1637,7 +1637,7 @@ bool SubCommandRecord::FinishWriteRecordFile()
 #if !HIDEBUG_SKIP_PROCESS_SYMBOLS
     if (!delayUnwind_) {
 #if !HIDEBUG_SKIP_LOAD_KERNEL_SYMBOLS
-        if (kernelCallChain_) {
+        if (!callChainUserOnly_) {
             virtualRuntime_.UpdateKernelSymbols();
             virtualRuntime_.UpdateKernelModulesSymbols();
         }
