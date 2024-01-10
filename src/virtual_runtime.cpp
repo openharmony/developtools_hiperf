@@ -521,8 +521,12 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
     }
 
     u64 skip = 0;
+    u64 skip_pid = 0;
     u64 *ips = sample.data_.ips;
     for (; skip < sample.data_.nr; skip++) {
+        if (ips[skip] == PERF_CONTEXT_KERNEL) {
+            skip_pid++;
+        }
         if (ips[skip] == PERF_CONTEXT_USER) {
             break;
         }
@@ -530,6 +534,11 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
     sample.skipKernel_ = skip;
     sample.data_.nr -= skip;
     sample.header.size -= sizeof(u64) * skip;
+    if (sample.data_.server_nr > 0) {
+        sample.skipPid_ = skip_pid;
+        sample.data_.server_nr -= skip_pid;
+        sample.header.size -= sizeof(u64) * skip_pid;
+    }
 }
 
 void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)

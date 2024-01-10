@@ -867,10 +867,12 @@ bool SubCommandRecord::PrepareVirtualRuntime()
         virtualRuntime_.SetNeedKernelCallChain(!callChainUserOnly_);
         virtualRuntime_.UpdateKernelSpaceMaps();
         virtualRuntime_.UpdateKernelModulesSpaceMaps();
+        if (isHM_) {
+            virtualRuntime_.UpdateServiceSpaceMaps();
+        }
     }
 
     if (isHM_) {
-        virtualRuntime_.UpdateServiceSpaceMaps();
         virtualRuntime_.UpdateDevhostSpaceMaps();
     }
     if (dedupStack_) {
@@ -1640,9 +1642,11 @@ bool SubCommandRecord::FinishWriteRecordFile()
         if (!callChainUserOnly_) {
             virtualRuntime_.UpdateKernelSymbols();
             virtualRuntime_.UpdateKernelModulesSymbols();
+            if (isHM_) {
+                virtualRuntime_.UpdateServiceSymbols();
+            }
         }
         if (isHM_) {
-            virtualRuntime_.UpdateServiceSymbols();
             virtualRuntime_.UpdateDevhostSymbols();
         }
 #endif
