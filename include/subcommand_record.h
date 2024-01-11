@@ -129,7 +129,7 @@ public:
         "           as the method to collect the information used to show the call stacks.\n"
         "   --kernel-callchain\n"
         "         collect kernel callchain, must used with -s fp/dwarf simultaneously.\n"
-        "   --callchain_useronly\n"
+        "   --callchain-useronly\n"
         "         collect only user callchain.\n"
         "   --delay-unwind\n"
         "         If '-s dwarf' used, stack will be unwind while recording, use this option to switch\n"
