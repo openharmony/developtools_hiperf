@@ -237,7 +237,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--kernel-callchain", kernelCallChain_)) {
         return false;
     }
-    if (!Option::GetOptionValue(args, "--callchain_useronly", callChainUserOnly_)) {
+    if (!Option::GetOptionValue(args, "--callchain-useronly", callChainUserOnly_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--exclude-tid", excludeTids_)) {

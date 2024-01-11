@@ -1307,32 +1307,32 @@ HWTEST_F(SubCommandRecordTest, EnableDebugInfoSymbolicDwarf, TestSize.Level1)
 
 /**
  * @tc.name: CallChainUserOnlyFp
- * @tc.desc: Test --callchain_useronly option with fp
+ * @tc.desc: Test --callchain-useronly option with fp
  * @tc.type: FUNC
  */
 HWTEST_F(SubCommandRecordTest, CallChainUserOnlyFp, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 -s fp --callchain_useronly", true, true);
+    ForkAndRunTest("-d 2 -s fp --callchain-useronly", true, true);
 }
 
 /**
  * @tc.name: CallChainUserOnlyDwarf
- * @tc.desc: Test --callchain_useronly option with dwarf
+ * @tc.desc: Test --callchain-useronly option with dwarf
  * @tc.type: FUNC
  */
 HWTEST_F(SubCommandRecordTest, CallChainUserOnlyDwarf, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 -s dwarf --callchain_useronly", true, true);
+    ForkAndRunTest("-d 2 -s dwarf --callchain-useronly", true, true);
 }
 
 /**
  * @tc.name: CallChainUserOnlyError
- * @tc.desc: Test --callchain_useronly option without fp/dwarf
+ * @tc.desc: Test --callchain-useronly option without fp/dwarf
  * @tc.type: FUNC
  */
 HWTEST_F(SubCommandRecordTest, CallChainUserOnlyError, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 --callchain_useronly", false, true);
+    ForkAndRunTest("-d 2 --callchain-useronly", false, true);
 }
 
 /**
