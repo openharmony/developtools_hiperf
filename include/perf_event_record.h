@@ -236,6 +236,7 @@ public:
     PerfRecordSampleData data_ = {};
     uint64_t sampleType_ = SAMPLE_TYPE;
     uint64_t skipKernel_ = 0;
+    uint64_t skipPid_ = 0;
     // extend
     // hold the new ips memory (after unwind)
     // used for data_.ips replace (ReplaceWithCallStack)

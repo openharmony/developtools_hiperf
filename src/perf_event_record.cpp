@@ -398,7 +398,8 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     }
     PushToBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr);
     if (data_.server_nr > 0) {
-        std::copy(data_.server_pids, data_.server_pids + data_.server_nr, reinterpret_cast<u64 *>(p));
+        std::copy(data_.server_pids + skipPid_, data_.server_pids + data_.server_nr + skipPid_,
+                  reinterpret_cast<u64 *>(p));
         p += data_.server_nr * sizeof(u64);
     }
     PushToBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size);
@@ -989,6 +990,10 @@ void PerfRecordSwitchCpuWide::DumpData(int indent) const
 
 pid_t PerfRecordSample::GetUstackServerPid()
 {
+    if (!data_.server_nr) {
+        return data_.pid;
+    }
+
     size_t curr_server = 0;
     // ip_nr == 1...nr: server_pid of data_.ips[nr]
     for (size_t i = 1; i < data_.nr; i++) {
@@ -998,7 +1003,9 @@ pid_t PerfRecordSample::GetUstackServerPid()
         }
     }
     // ip_nr == nr + 1: server_pid of ustack
-    curr_server++;
+    if (curr_server > 0) {
+        curr_server++;
+    }
     if (curr_server >= data_.server_nr) {
         HLOGE("ustack server pid nr %zu out of range", curr_server);
         return data_.pid;
@@ -1030,15 +1037,6 @@ pid_t PerfRecordSample::GetServerPidof(unsigned int ip_nr)
                 break;
             }
             serverPidMap_.emplace_back(data_.server_pids[curr_server]);
-        }
-        // ip_nr == nr + 1: server_pid of ustack
-        curr_server++;
-        if (data_.stack_size) {
-            if (curr_server >= data_.server_nr) {
-                HLOGE("ustack server pid nr %zu out of range", curr_server);
-            } else {
-                serverPidMap_.emplace_back(data_.server_pids[curr_server]);
-            }
         }
     }
 
