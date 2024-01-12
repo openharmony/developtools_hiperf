@@ -644,7 +644,7 @@ HWTEST_F(UtilitiesTest, CanonicalizeSpecPath, TestSize.Level1)
     EXPECT_EQ(CanonicalizeSpecPath("/data/local/tmp/test/../test.txt"), "");
     EXPECT_EQ(CanonicalizeSpecPath("/data/local/tmp/nonexistent.txt"), "/data/local/tmp/nonexistent.txt");
     string largePath = "./";
-    for (int i = 0; i < 512; i++) {
+    for (int i = 0; i < 512; i++) { // 512: loop size
         largePath += "testpath";
     }
     largePath += ".txt";
