@@ -193,12 +193,14 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
     std::string strEventCount = std::to_string(reportSum->eventCountSum);
     for (size_t i = strEventCount.size() - 1, j = 1; i > 0; --i, ++j) {
         if (j == THOUSNADS_SEPARATOR) {
-            strEventCount.insert(strEventCount.begin() + i, ',');
             j = 0;
+            strEventCount.insert(strEventCount.begin() + i, ',');
         }
     }
+
     std::string commentStr;
-    FormatComments(reportSum, commentStr);
+    MakeComments(reportSum, commentStr);
+
     if (g_reportCpuFlag && g_reportThreadFlag) {
         printf(" %24s  %-30s | %-30s %10d %10d %10d | %-32s | (%.0lf%%)\n", strEventCount.c_str(), configName.c_str(),
                reportSum->threadName.c_str(), reportSum->pid, reportSum->tid, reportSum->cpu, commentStr.c_str(),
@@ -347,7 +349,7 @@ std::string SubCommandStat::GetCommentConfigName(
     return commentConfigName;
 }
 
-void SubCommandStat::FormatComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
+void SubCommandStat::MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
 {
     if (reportSum->commentSum == 0) {
         return;

@@ -627,6 +627,16 @@ HWTEST_F(UtilitiesTest, GetSubthreadIDs, TestSize.Level1)
     }
     ExitThreads();
 }
+
+/**
+ * @tc.name: IsBeta
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsBeta, TestSize.Level1)
+{
+    EXPECT_EQ(IsBeta(), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
