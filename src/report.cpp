@@ -606,18 +606,6 @@ void Report::OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfig
     }
 }
 
-void Report::OutputStdContentDiffOneSide(bool leftOnly, ReportItem &reportItem)
-{
-    if (reportItem.heat > option_.heatLimit_) {
-        if (leftOnly) {
-            OutputStdItemHeating(reportItem.heat, 0.0f);
-        } else {
-            OutputStdItemHeating(0.0f, reportItem.heat);
-        }
-        OutputStdContentItem(reportItem);
-    }
-}
-
 void Report::OutputStd(FILE *output)
 {
     output_ = output;

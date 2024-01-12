@@ -637,6 +637,19 @@ HWTEST_F(UtilitiesTest, IsBeta, TestSize.Level1)
 {
     EXPECT_EQ(IsBeta(), true);
 }
+
+HWTEST_F(UtilitiesTest, CanonicalizeSpecPath, TestSize.Level1)
+{
+    EXPECT_EQ(CanonicalizeSpecPath(nullptr), "");
+    EXPECT_EQ(CanonicalizeSpecPath("/data/local/tmp/test/../test.txt"), "");
+    EXPECT_EQ(CanonicalizeSpecPath("/data/local/tmp/nonexistent.txt"), "/data/local/tmp/nonexistent.txt");
+    string largePath = "./";
+    for (int i = 0; i < 512; i++) {
+        largePath += "testpath";
+    }
+    largePath += ".txt";
+    EXPECT_EQ(CanonicalizeSpecPath(largePath.c_str()), "");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

@@ -114,7 +114,6 @@ public:
     {
         Clean();
     }
-    const char *HoldStringView(std::string_view view);
     // only use in UT
     void Clean()
     {
