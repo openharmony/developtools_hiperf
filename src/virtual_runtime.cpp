@@ -214,6 +214,9 @@ void VirtualRuntime::UpdateThreadMaps(pid_t pid, pid_t tid, const std::string fi
 {
     VirtualThread &thread = GetThread(pid, tid);
     thread.CreateMapItem(filename, begin, len, offset);
+    if (isHM_) {
+        thread.FixHMBundleMap();
+    }
 }
 
 void VirtualRuntime::UpdateKernelModulesSpaceMaps()
