@@ -214,9 +214,6 @@ void VirtualRuntime::UpdateThreadMaps(pid_t pid, pid_t tid, const std::string fi
 {
     VirtualThread &thread = GetThread(pid, tid);
     thread.CreateMapItem(filename, begin, len, offset);
-    if (isHM_) {
-        thread.FixHMBundleMap();
-    }
 }
 
 void VirtualRuntime::UpdateKernelModulesSpaceMaps()
@@ -637,6 +634,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
                         recordMmap.data_.pgoff, recordMmap.data_.filename);
     } else {
         NeedAdaptSandboxPath(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header.size);
+        FixHMBundleMmap(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header.size);
         UpdateThreadMaps(recordMmap.data_.pid, recordMmap.data_.tid, recordMmap.data_.filename,
                          recordMmap.data_.addr, recordMmap.data_.len, recordMmap.data_.pgoff);
         UpdateSymbols(recordMmap.data_.filename);
@@ -742,6 +740,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
 
     if (recordCallBack_) {
         if (NeedAdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size)) {
+            FixHMBundleMmap(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size);
             if (!CheckValidSandBoxMmap(recordMmap2)) {
                 return;
             }
@@ -1211,6 +1210,23 @@ void VirtualRuntime::UpdateDevhostSymbols()
     VirtualThread &kthread = GetThread(devhostPid_, devhostPid_);
     for (const auto &map : kthread.GetMaps()) {
         UpdateSymbols(map->name);
+    }
+}
+
+void VirtualRuntime::FixHMBundleMmap(char *filename, int pid, u16 &headerSize)
+{
+    if (!isHM_) {
+        return;
+    }
+    // fix bundle path in mmap
+    std::string newFilename = filename;
+    VirtualThread &thread = GetThread(pid, pid);
+    if (NeedAdaptHMBundlePath(newFilename, thread.name_)) {
+        (void)memset_s(filename, KILO, '\0', KILO);
+        if (strncpy_s(filename, KILO, newFilename.c_str(), newFilename.size()) != 0) {
+            HLOGD("strncpy_s recordMmap2 failed!");
+        }
+        headerSize += newFilename.size() - strlen(filename);
     }
 }
 

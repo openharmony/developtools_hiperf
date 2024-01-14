@@ -79,6 +79,7 @@ public:
 
     pid_t devhostPid_ = -1;
     void SetDevhostPid(pid_t devhost);
+    void FixHMBundleMmap(char *filename, int pid, u16 &headerSize);
 
     // set symbols path , it will send to every symobile file for search
     bool SetSymbolsPaths(const std::vector<std::string> &symbolsPaths);

@@ -343,6 +343,7 @@ const std::string GetUserType();
 std::string GetProcessName(int pid);
 bool IsDebugableApp(const std::string& bundleName);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
+bool NeedAdaptHMBundlePath(std::string& filename, std::string threadname);
 
 template <typename Func>
 class ScopeGuard {
