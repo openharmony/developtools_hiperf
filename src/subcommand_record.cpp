@@ -513,6 +513,7 @@ bool SubCommandRecord::CheckTargetPids()
             auto tids = GetSubthreadIDs(pid);
             if (!tids.empty()) {
                 selectTids_.insert(selectTids_.end(), tids.begin(), tids.end());
+                mapPids_[pid] = tids;
             }
         }
     }
@@ -884,6 +885,16 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     return true;
 }
 
+void SubCommandRecord::WriteCommEventBeforeSampling()
+{
+    for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
+        virtualRuntime_.GetThread(it->first, it->first);
+        for(auto tid : it->second) {
+            virtualRuntime_.GetThread(it->first, tid);
+        }
+    }
+}
+
 bool SubCommandRecord::ClientCommandResponse(bool OK)
 {
     using namespace HiperfClient;
@@ -1164,6 +1175,9 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     if (!PrepareVirtualRuntime()) {
         return false;
     }
+
+    //write comm event
+    WriteCommEventBeforeSampling();
 
     // make a thread wait the other command
     if (clientPipeOutput_ != -1) {

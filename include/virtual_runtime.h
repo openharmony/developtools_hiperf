@@ -131,7 +131,7 @@ public:
     DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
 
-    VirtualThread &GetThread(pid_t pid, pid_t tid);
+    VirtualThread &GetThread(pid_t pid, pid_t tid, const std::string name = "");
     const std::map<pid_t, VirtualThread> &GetThreads() const
     {
         return userSpaceThreadMap_;
@@ -203,7 +203,7 @@ private:
     void DedupFromRecord(PerfRecordSample *recordSample);
     // threads
     VirtualThread &UpdateThread(pid_t pid, pid_t tid, const std::string name = "");
-    VirtualThread &CreateThread(pid_t pid, pid_t tid);
+    VirtualThread &CreateThread(pid_t pid, pid_t tid, const std::string name = "");
 
     // maps
     void UpdateThreadMaps(pid_t pid, pid_t tid, const std::string filename, uint64_t begin,
