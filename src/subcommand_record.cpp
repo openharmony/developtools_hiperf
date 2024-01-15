@@ -889,7 +889,7 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
 {
     for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
         virtualRuntime_.GetThread(it->first, it->first);
-        for(auto tid : it->second) {
+        for (auto tid : it->second) {
             virtualRuntime_.GetThread(it->first, tid);
         }
     }
