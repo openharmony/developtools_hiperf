@@ -263,6 +263,7 @@ private:
     bool isFifoServer_ = false;
     bool isFifoClient_ = false;
     bool dedupStack_ = false;
+    std::map<pid_t, std::vector<pid_t>> mapPids_;
     bool ProcessControl();
     bool CreateFifoServer();
     bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
@@ -319,6 +320,7 @@ private:
     bool ParseControlCmd(const std::string cmd);
     bool CheckTargetProcessOptions();
     bool CheckTargetPids();
+    void WriteCommEventBeforeSampling();
 
     VirtualRuntime virtualRuntime_;
 #if USE_COLLECT_SYMBOLIC

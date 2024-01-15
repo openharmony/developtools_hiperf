@@ -77,11 +77,11 @@ std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
         comm = DEVHOST_FILE_NAME;
     } else if (isThread) {
         comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid)).c_str();
-        if (comm == EMPTY_STRING) {
-            comm = ReadFromSavedCmdLines(tid);
-        }
     } else {
         comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid)).c_str();
+    }
+    if (comm == EMPTY_STRING) {
+        comm = ReadFromSavedCmdLines(tid);
     }
     comm.erase(std::remove(comm.begin(), comm.end(), '\r'), comm.end());
     comm.erase(std::remove(comm.begin(), comm.end(), '\n'), comm.end());
@@ -93,7 +93,7 @@ VirtualThread &VirtualRuntime::UpdateThread(pid_t pid, pid_t tid, const std::str
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
-    VirtualThread &thread = GetThread(pid, tid);
+    VirtualThread &thread = GetThread(pid, tid, name);
     if (!name.empty()) {
         thread.name_ = name;
     }
@@ -103,7 +103,7 @@ VirtualThread &VirtualRuntime::UpdateThread(pid_t pid, pid_t tid, const std::str
     return thread;
 }
 
-VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
+VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid, const std::string name)
 {
     // make a new one
     if (pid == tid) {
@@ -129,7 +129,10 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid)
 #ifdef HIPERF_DEBUG_TIME
         const auto startCreateMmapTime = steady_clock::now();
 #endif
-        thread.name_ = ReadThreadName(tid, pid != tid);
+        thread.name_ = name;
+        if (thread.name_.empty()) {
+            thread.name_ = ReadThreadName(tid, pid != tid);
+        }
         HLOGD("create a new thread record for %u:%u:%s with %zu dso", pid, tid,
               thread.name_.c_str(), thread.GetMaps().size());
         // we need make a PerfRecordComm
@@ -192,18 +195,18 @@ bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
     return true;
 }
 
-VirtualThread &VirtualRuntime::GetThread(pid_t pid, pid_t tid)
+VirtualThread &VirtualRuntime::GetThread(pid_t pid, pid_t tid, const std::string name)
 {
     if (userSpaceThreadMap_.find(pid) == userSpaceThreadMap_.end()) {
         // no pid found
         // create process first
-        CreateThread(pid, pid);
+        CreateThread(pid, pid, name);
     }
 
     auto it = userSpaceThreadMap_.find(tid);
     if (it == userSpaceThreadMap_.end()) {
         // we also need thread
-        return CreateThread(pid, tid);
+        return CreateThread(pid, tid, name);
     } else {
         return it->second;
     }
