@@ -1225,11 +1225,12 @@ void VirtualRuntime::FixHMBundleMmap(char *filename, int pid, u16 &headerSize)
     std::string newFilename = filename;
     VirtualThread &thread = GetThread(pid, pid);
     if (NeedAdaptHMBundlePath(newFilename, thread.name_)) {
+        size_t oldSize = strlen(filename);
         (void)memset_s(filename, KILO, '\0', KILO);
         if (strncpy_s(filename, KILO, newFilename.c_str(), newFilename.size()) != 0) {
             HLOGD("strncpy_s recordMmap2 failed!");
         }
-        headerSize += newFilename.size() - strlen(filename);
+        headerSize += newFilename.size() - oldSize;
     }
 }
 
