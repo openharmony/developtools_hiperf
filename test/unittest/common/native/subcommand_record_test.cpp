@@ -412,7 +412,7 @@ HWTEST_F(SubCommandRecordTest, PeriodAndFrequncyConflict, TestSize.Level1)
     TestRecordCommand("-d 2 -f 2000 --period 10 ", false);
 }
 
-void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk, bool ifFork)
+void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk, bool isFork)
 {
     PerfEvents perfEvents;
     for (auto type : TYPE_CONFIGS) {
@@ -434,7 +434,7 @@ void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk, bool if
             testEventCount--;
         }
         cmdline.pop_back(); // remove the last ','
-        if (ifFork) {
+        if (isFork) {
             ForkAndRunTest(cmdline);
         } else {
             TestRecordCommand(cmdline);
