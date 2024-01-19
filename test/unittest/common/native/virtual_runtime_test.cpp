@@ -155,7 +155,7 @@ HWTEST_F(VirtualRuntimeTest, UpdateKernelModulesSymbols, TestSize.Level1)
             hasBuildId++;
         }
     }
-    printf("no BuildId: %d hasBuildId: %d\n", noBuildId,hasBuildId);
+    printf("no BuildId: %d hasBuildId: %d\n", noBuildId, hasBuildId);
 }
 
 /**
