@@ -46,7 +46,7 @@ public:
     void SetUp();
     void TearDown();
 
-    void TestEvents(std::string &opt, std::string &uk);
+    void TestEvents(std::string &opt, std::string &uk, bool isFork = true);
 
     static void ForkAndRunTest(const std::string& cmd, bool expect = true, bool fixPid = true);
 
@@ -60,7 +60,7 @@ public:
     static constexpr size_t TEST_SIZE_F2000_DWARF_SYSTEM = 8.3E4 * 1024;
     static constexpr size_t TEST_SIZE_F4000_DWARF_SYSTEM = 1.7E5 * 1024;
     static constexpr size_t TEST_SIZE_F8000_DWARF_SYSTEM = 3.5E5 * 1024;
-    static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 8E3 * 1024;
+    static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 10E3 * 1024;
     static constexpr size_t TEST_SIZE_F500_FP_SYSTEM = 2E4 * 1024;
     static constexpr size_t TEST_SIZE_F1000_FP_SYSTEM = 3E4 * 1024;
     static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 4E4 * 1024;
@@ -412,7 +412,7 @@ HWTEST_F(SubCommandRecordTest, PeriodAndFrequncyConflict, TestSize.Level1)
     TestRecordCommand("-d 2 -f 2000 --period 10 ", false);
 }
 
-void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk)
+void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk, bool isFork)
 {
     PerfEvents perfEvents;
     for (auto type : TYPE_CONFIGS) {
@@ -434,7 +434,11 @@ void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk)
             testEventCount--;
         }
         cmdline.pop_back(); // remove the last ','
-        ForkAndRunTest(cmdline);
+        if (isFork) {
+            ForkAndRunTest(cmdline);
+        } else {
+            TestRecordCommand(cmdline);
+        }
         TearDown();
         SetUp();
     }
@@ -460,6 +464,13 @@ HWTEST_F(SubCommandRecordTest, SelectEventsKernel, TestSize.Level1)
     std::string opt = "-d 2 -c 0 -e ";
     std::string uk = ":k";
     TestEvents(opt, uk);
+}
+
+HWTEST_F(SubCommandRecordTest, SelectEventsKernel_2, TestSize.Level1)
+{
+    std::string opt = "-d 2 -c 0 -e ";
+    std::string uk = ":k";
+    TestEvents(opt, uk, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectEventsErr, TestSize.Level1)
@@ -503,6 +514,11 @@ HWTEST_F(SubCommandRecordTest, NoInherit, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, SelectPid, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 -p 1 ", true, false);
+}
+
+HWTEST_F(SubCommandRecordTest, KernelSymbols, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -p 2 -s dwarf ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidMulti, TestSize.Level1)

@@ -128,7 +128,7 @@ private:
     static void Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
     static void PrintPerHead();
     static void GetPerKey(std::string &perKey, const PerfEvents::Summary &summary);
-    static void FormatComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr);
+    static void MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr);
     static void ReportNormal(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
     static void ReportDetailInfos(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
     static void PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,

@@ -549,7 +549,6 @@ private:
     void OutputStdContentDiff(ReportEventConfigItem &, ReportEventConfigItem &);
 
     void OutputStdContentItem(const ReportItem &reportItem);
-    void OutputStdContentDiffOneSide(bool leftOnly, ReportItem &reportItem);
 
     void OutputStdCallFrames(int indent, const ReportItemCallFrame &callFrames,
                              uint64_t totalEventCount);

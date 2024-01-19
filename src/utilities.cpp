@@ -37,27 +37,6 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
-const char *MemoryHold::HoldStringView(std::string_view view)
-{
-    if (view.size() == 0) {
-        return "";
-    }
-    try {
-        // for null end
-        char *p = new (std::nothrow) char[view.size() + 1];
-        if (p == nullptr) {
-            return "";
-        }
-        p[view.size()] = '\0';
-        std::copy(view.data(), view.data() + view.size(), p);
-        holder_.emplace_back(p);
-        return p;
-    } catch (...) {
-        return "";
-    }
-    return "";
-}
-
 std::string CanonicalizeSpecPath(const char* src)
 {
     if (src == nullptr) {
@@ -679,37 +658,6 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
     return true;
 }
 
-bool IsExistDebugByApp(const std::string& bundleName)
-{
-    if (!IsSupportNonDebuggableApp() && !bundleName.empty() && !IsDebugableApp(bundleName)) {
-        HLOGE("--app option only support debug aplication.");
-        printf("--app option only support debug aplication\n");
-        return false;
-    }
-    return true;
-}
-
-bool IsExistDebugByPid(const std::vector<pid_t> pids)
-{
-    if (pids.empty()) {
-        HLOGE("IsExistDebugByPid: pids is empty.");
-        return true;
-    }
-    for (auto pid : pids) {
-        if (pid <= 0) {
-            printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
-            return false;
-        }
-        std::string bundleName = GetProcessName(pid);
-        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
-            HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
-            printf("-p option only support debug aplication\n");
-            return false;
-        }
-    }
-    return true;
-}
-
 bool IsSupportNonDebuggableApp()
 {
     // root first
@@ -790,40 +738,6 @@ std::string GetProcessName(int pid)
     return bundleName.substr(0, strlen(bundleName.c_str()));
 #else
     return "";
-#endif
-}
-
-bool IsDebugableApp(const std::string& bundleName)
-{
-#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    if (bundleName.empty()) {
-        printf("bundleName is empty!\n");
-        return false;
-    }
-    sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (sam == nullptr) {
-        printf("GetSystemAbilityManager failed!\n");
-        return false;
-    }
-    sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (remoteObject == nullptr) {
-        printf("Get BundleMgr SA failed!\n");
-        return false;
-    }
-    sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
-    if (proxy == nullptr) {
-        printf("iface_cast failed!\n");
-        return false;
-    }
-
-    int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
-    if (uid < 0) {
-        HLOGE("Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
-        return false;
-    }
-    return true;
-#else
-    return false;
 #endif
 }
 
