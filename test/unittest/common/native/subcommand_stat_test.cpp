@@ -393,7 +393,9 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
     EXPECT_GE(EffectiveCounter(stringOut, defaultConfigNames_, effectiveHeadCounter),
               (defaultConfigNames_.size() - 1));
 
-    EXPECT_NE(stringOut.find("Timeout exit"), std::string::npos);
+    if (stringOut.find("event not support") == std::string::npos) {
+        EXPECT_NE(stringOut.find("Timeout exit"), std::string::npos);
+    }
 
     sched_setaffinity(0, sizeof(cpu_set_t), &oldMask);
     sched_getaffinity(0, sizeof(cpu_set_t), &mask);
@@ -944,7 +946,9 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
     EXPECT_GE(EffectiveCounter(stringOut, defaultConfigNames_, effectiveHeadCounter),
               (defaultConfigNames_.size() - 1));
 
-    EXPECT_GE(effectiveHeadCounter, 3u);
+    if (stringOut.find("event not support") == std::string::npos) {
+        EXPECT_GE(effectiveHeadCounter, 3u);
+    }
     t1.join();
 }
 
@@ -1780,7 +1784,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_cmd, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_ni, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
-    const std::string configName {"sw-cpu-clock"};
+    const std::string configName {"sw-page-faults"};
     const std::string cmdPath {" ls"};
 
     stdoutRecord.Start();
