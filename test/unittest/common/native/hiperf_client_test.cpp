@@ -248,7 +248,7 @@ HWTEST_F(HiperfClientTest, SetSelectEvents, TestSize.Level1)
     HiperfClient::RecordOption opt;
     vector<pid_t> selectPids = {getpid()};
     opt.SetSelectPids(selectPids);
-    vector<string> selectEvents = {"sw-cpu-clock:k"};
+    vector<string> selectEvents = {"hw-cpu-cycles:k"};
     opt.SetSelectEvents(selectEvents);
 
     TestCaseOption(opt);

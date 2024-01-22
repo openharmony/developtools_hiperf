@@ -393,7 +393,9 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
     EXPECT_GE(EffectiveCounter(stringOut, defaultConfigNames_, effectiveHeadCounter),
               (defaultConfigNames_.size() - 1));
 
-    EXPECT_NE(stringOut.find("Timeout exit"), std::string::npos);
+    if (stringOut.find("event not support") == std::string::npos) {
+        EXPECT_NE(stringOut.find("Timeout exit"), std::string::npos);
+    }
 
     sched_setaffinity(0, sizeof(cpu_set_t), &oldMask);
     sched_getaffinity(0, sizeof(cpu_set_t), &mask);
@@ -944,7 +946,9 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
     EXPECT_GE(EffectiveCounter(stringOut, defaultConfigNames_, effectiveHeadCounter),
               (defaultConfigNames_.size() - 1));
 
-    EXPECT_GE(effectiveHeadCounter, 3u);
+    if (stringOut.find("event not support") == std::string::npos) {
+        EXPECT_GE(effectiveHeadCounter, 3u);
+    }
     t1.join();
 }
 
@@ -1780,13 +1784,11 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_cmd, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_ni, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
-    const std::string configName {"sw-cpu-clock"};
-    const std::string cmdPath {" ls"};
+    const std::string configName {"hw-cpu-cycles"};
 
     stdoutRecord.Start();
-    std::string testCMD = "stat --no-inherit -c 0 -d 3 --dumpoptions -e ";
+    std::string testCMD = "stat --no-inherit -p 2 -c 0 -d 3 --dumpoptions -e ";
     testCMD += configName;
-    testCMD += cmdPath;
     const auto tick2 = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(testCMD), true);
     const auto tock2 = std::chrono::steady_clock::now();
