@@ -1784,13 +1784,11 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_cmd, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_ni, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
-    const std::string configName {"sw-page-faults"};
-    const std::string cmdPath {" ls"};
+    const std::string configName {"hw-cpu-cycles"};
 
     stdoutRecord.Start();
-    std::string testCMD = "stat --no-inherit -c 0 -d 3 --dumpoptions -e ";
+    std::string testCMD = "stat --no-inherit -p 2 -c 0 -d 3 --dumpoptions -e ";
     testCMD += configName;
-    testCMD += cmdPath;
     const auto tick2 = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(testCMD), true);
     const auto tock2 = std::chrono::steady_clock::now();
