@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <sys/utsname.h>
 #include "subcommand_list.h"
 
 using namespace std;
@@ -68,8 +69,11 @@ void SubCommandList::RegisterSubCommandList()
 
 void SubCommandList::SetHM()
 {
-    std::string version = ReadFileToString("/proc/version");
-    isHM_ = version.find(HMKERNEL) != std::string::npos;
+    utsname unameBuf;
+    if ((uname(&unameBuf)) == 0) {
+        std::string osrelease = unameBuf.release;
+        isHM_ = osrelease.find(HMKERNEL) != std::string::npos;
+    }
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
 }
