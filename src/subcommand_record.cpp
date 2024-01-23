@@ -1782,8 +1782,11 @@ bool SubCommandRecord::RegisterSubCommandRecord(void)
 
 void SubCommandRecord::SetHM()
 {
-    std::string version = ReadFileToString(PROC_VERSION);
-    isHM_ = version.find(HMKERNEL) != std::string::npos;
+    utsname unameBuf;
+    if ((uname(&unameBuf)) == 0) {
+        std::string osrelease = unameBuf.release;
+        isHM_ = osrelease.find(HMKERNEL) != std::string::npos;
+    }
     virtualRuntime_.SetHM(isHM_);
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
