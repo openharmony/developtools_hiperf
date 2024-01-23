@@ -347,7 +347,7 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
                 filename = "/" + filename;
             } else if (filename.find(DEVHOST_LINUX_FILE_NAME) != std::string::npos) {
                 // '/lib/libdh-linux.so.5.10.97-oh' to '/lib/libdh-linux.so'
-                filename = filename.substr(0, DEVHOST_LINUX_FILE_NAME.size());
+                filename = DEVHOST_LINUX_FILE_NAME;
             }
             CreateMapItem(filename, begin, end - begin, offset);
         }
