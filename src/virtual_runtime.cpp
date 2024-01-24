@@ -55,22 +55,23 @@ std::string VirtualRuntime::ReadFromSavedCmdLines(pid_t tid)
     if (!savedCmdLines_.is_open()) {
         savedCmdLines_.open(SAVED_CMDLINES, std::ios::in);
     }
+    if (!savedCmdLines_.is_open()) {
+        return EMPTY_STRING;
+    }
     savedCmdLines_.seekg(0, std::ios::beg);
-    if (savedCmdLines_.is_open()) {
-        std::string line;
-        std::string threadid = std::to_string(tid);
-        while (getline(savedCmdLines_, line)) {
-            if (line.find(threadid) != std::string::npos) {
-                constexpr size_t sizeLimit {2};
-                std::vector<std::string> linesToken = StringSplit(line, " ");
-                if (linesToken.size() < sizeLimit) {
-                    return EMPTY_STRING;
-                }
-                if (threadid != linesToken[0]) {
-                    continue;
-                }
-                return linesToken[1];
+    std::string line;
+    std::string threadid = std::to_string(tid);
+    while (getline(savedCmdLines_, line)) {
+        if (line.find(threadid) != std::string::npos) {
+            constexpr size_t sizeLimit {2};
+            std::vector<std::string> linesToken = StringSplit(line, " ");
+            if (linesToken.size() < sizeLimit) {
+                return EMPTY_STRING;
             }
+            if (threadid != linesToken[0]) {
+                continue;
+            }
+            return linesToken[1];
         }
     }
     return EMPTY_STRING;
