@@ -344,6 +344,49 @@ HWTEST_F(VirtualRuntimeTest, UpdateFromPerfData, TestSize.Level1)
     ASSERT_STREQ(runtime_->GetSymbolsFiles().front()->GetBuildId().c_str(), "b");
     ASSERT_EQ(runtime_->GetSymbolsFiles().front()->GetSymbols().size(), 2u);
 }
+
+/**
+ * @tc.name: UnwindFromRecord
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
+{
+    // symbol
+    auto &symbolsFile = runtime_->symbolsFiles_.emplace_back(
+        SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, TEST_DWARF_ELF));
+    ASSERT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DWARF_DATA), true);
+    ASSERT_EQ(symbolsFile->LoadSymbols(nullptr, TEST_DWARF_ELF), true);
+    symbolsFile->filePath_ = TEST_DWARF_ELF;
+
+    // thread
+    VirtualThread &thread = runtime_->GetThread(TEST_DWARF_RECORD_PID, TEST_DWARF_RECORD_TID);
+    MakeMaps(thread);
+
+    // record
+    std::vector<uint8_t> data;
+    LoadFromFile(PATH_RESOURCE_TEST_DWARF_DATA + TEST_DWARF_RECORD, data);
+    ASSERT_NE(data.size(), 0u);
+    perf_event_attr attr;
+    if (memset_s(&attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
+        printf("error: memset_s failed.");
+        return;
+    }
+    attr.sample_type = TEST_RECORD_SAMPLE_TYPE;
+    attr.sample_regs_user = TEST_DWARF_RECORD_REGS_USER;
+    PerfRecordSample sample(data.data(), attr);
+    sample.DumpLog("UnwindFromRecord");
+    ASSERT_EQ(sample.data_.stack_size, TEST_DWARF_RECORD_STACK_SIZE);
+
+    // unwind
+    runtime_->UnwindFromRecord(sample);
+    ASSERT_LE(TEST_RECORD_CALLSTACK_IP_FUNC.size(), sample.callFrames_.size());
+    for (size_t i = 0; i < TEST_RECORD_CALLSTACK_IP_FUNC.size(); i++) {
+        EXPECT_EQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].first, sample.callFrames_[i].vaddrInFile_);
+        EXPECT_STREQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].second.data(),
+                     sample.callFrames_[i].symbolName_.data());
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
