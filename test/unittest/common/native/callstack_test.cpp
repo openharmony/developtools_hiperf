@@ -46,13 +46,6 @@ void CallStackTest::SetUp() {}
 
 void CallStackTest::TearDown() {}
 
-static void MakeMaps(VirtualThread &thread)
-{
-    for (const mmapDumpInfo &mmap : TEST_DWARF_MMAP) {
-        thread.CreateMapItem(mmap.fileName, mmap.begin, mmap.len, mmap.pgoff);
-    }
-}
-
 /**
  * @tc.name: ExpandCallStack
  * @tc.desc:
