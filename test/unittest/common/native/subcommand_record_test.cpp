@@ -1393,8 +1393,8 @@ HWTEST_F(SubCommandRecordTest, TestAllNoFork, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestAllNoFork
- * @tc.desc: Test no fork with -a
+ * @tc.name: ClientCommandResponse
+ * @tc.desc: Test client command response
  * @tc.type: FUNC
  */
 HWTEST_F(SubCommandRecordTest, ClientCommandResponse, TestSize.Level1)
@@ -1405,12 +1405,22 @@ HWTEST_F(SubCommandRecordTest, ClientCommandResponse, TestSize.Level1)
     EXPECT_EQ(cmd.ClientCommandResponse(false), false);
 }
 
+/**
+ * @tc.name: CreateFifoServer
+ * @tc.desc: Test create Fipo server
+ * @tc.type: FUNC
+ */
 HWTEST_F(SubCommandRecordTest, CreateFifoServer, TestSize.Level1)
 {
     SubCommandRecord cmd;
     EXPECT_EQ(cmd.CreateFifoServer(), false);
 }
 
+/**
+ * @tc.name: SendFifoAndWaitReply
+ * @tc.desc: Test send Fifo and wait reply
+ * @tc.type: FUNC
+ */
 HWTEST_F(SubCommandRecordTest, SendFifoAndWaitReply, TestSize.Level1)
 {
     SubCommandRecord cmd;
@@ -1418,6 +1428,11 @@ HWTEST_F(SubCommandRecordTest, SendFifoAndWaitReply, TestSize.Level1)
     EXPECT_EQ(cmd.SendFifoAndWaitReply(test, CONTROL_WAITREPY_TOMEOUT), false);
 }
 
+/**
+ * @tc.name: WaitFifoReply
+ * @tc.desc: Test wait Fifo reply
+ * @tc.type: FUNC
+ */
 HWTEST_F(SubCommandRecordTest, WaitFifoReply, TestSize.Level1)
 {
     SubCommandRecord cmd;
