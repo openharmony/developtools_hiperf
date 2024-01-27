@@ -1965,10 +1965,10 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level1)
 
 HWTEST_F(SubCommandStatTest, HandleOtherConfig, TestSize.Level1)
 {
-    PerfEvents::Summary summary;
+    PerfEvents::Summary summary(1, 1, 1, 1, 1);
     double comment = 0;
     constexpr int testNum = 100;
-    EXPECT_EQ(SubCommandStat::HandleOtherConfig(&comment, summary, testNum, testNum, true), "");
+    EXPECT_EQ(SubCommandStat::HandleOtherConfig(comment, summary, testNum, testNum, true), "");
 }
 } // namespace HiPerf
 } // namespace Developtools
