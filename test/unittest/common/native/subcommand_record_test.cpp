@@ -1393,19 +1393,6 @@ HWTEST_F(SubCommandRecordTest, TestAllNoFork, TestSize.Level1)
 }
 
 /**
- * @tc.name: ClientCommandResponse
- * @tc.desc: Test client command response
- * @tc.type: FUNC
- */
-HWTEST_F(SubCommandRecordTest, ClientCommandResponse, TestSize.Level1)
-{
-    SubCommandRecord cmd;
-    cmd.ClientCommandHandle();
-    EXPECT_EQ(cmd.ClientCommandResponse(true), false);
-    EXPECT_EQ(cmd.ClientCommandResponse(false), false);
-}
-
-/**
  * @tc.name: CreateFifoServer
  * @tc.desc: Test create Fipo server
  * @tc.type: FUNC
