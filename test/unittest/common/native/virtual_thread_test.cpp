@@ -368,6 +368,8 @@ HWTEST_F(VirtualThreadTest, ReadRoMemory, TestSize.Level1)
         }
 
         thread.CreateMapItem(TEST_FILE_ELF_FULL_PATH, 0u, sb.st_size, 0u);
+        thread.ParseServiceMap(TEST_FILE_ELF_FULL_PATH);
+        thread.ParseDevhostMap(getpid());
         ASSERT_EQ(thread.GetMaps().size(), 1u);
 
         std::unique_ptr<SymbolsFile> symbolsFile =

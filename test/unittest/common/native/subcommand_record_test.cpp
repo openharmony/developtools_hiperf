@@ -1390,6 +1390,45 @@ HWTEST_F(SubCommandRecordTest, TestAllNoFork, TestSize.Level1)
 {
     TestRecordCommand("-d 2 -a -s dwarf --clockid monotonic --exclude-hiperf", true, false);
 }
+
+/**
+ * @tc.name: TestAllNoFork
+ * @tc.desc: Test no fork with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ClientCommandResponse, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    cmd.ClientCommandHandle();
+    EXPECT_EQ(cmd.ClientCommandResponse(true), false);
+    EXPECT_EQ(cmd.ClientCommandResponse(false), false);
+}
+
+HWTEST_F(SubCommandRecordTest, CreateFifoServer, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    EXPECT_EQ(cmd.CreateFifoServer(), false);
+}
+
+HWTEST_F(SubCommandRecordTest, CreateFifoServer, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    EXPECT_EQ(cmd.CreateFifoServer(), false);
+}
+
+HWTEST_F(SubCommandRecordTest, SendFifoAndWaitReply, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    std::string test = "test";
+    EXPECT_EQ(cmd.CreateFifoServer(test, 1), false);
+}
+
+HWTEST_F(SubCommandRecordTest, WaitFifoReply, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    std::string test = "test";
+    EXPECT_EQ(cmd.WaitFifoReply(1, 1), false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
