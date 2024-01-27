@@ -1089,7 +1089,7 @@ HWTEST_F(SubCommandReportTest, TestVerifyOption, TestSize.Level1)
     ASSERT_EQ(Option::GetOptionValue(args, "-i", recordFile), true);
 
     EXPECT_EQ(mSubCommandReport.VerifyOption(), true);
-    
+
     mSubCommandReport.FlushCacheRecord();
 
     mSubCommandReport.reportOption_.heatLimit_ = 101.0;
