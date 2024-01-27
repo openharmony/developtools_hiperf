@@ -38,6 +38,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 static const std::string TEST_FILE = "/data/local/tmp/perf.data";
+static const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2ms;
 
 class SubCommandRecordTest : public testing::Test {
 public:
@@ -1410,24 +1411,17 @@ HWTEST_F(SubCommandRecordTest, CreateFifoServer, TestSize.Level1)
     EXPECT_EQ(cmd.CreateFifoServer(), false);
 }
 
-HWTEST_F(SubCommandRecordTest, CreateFifoServer, TestSize.Level1)
-{
-    SubCommandRecord cmd;
-    EXPECT_EQ(cmd.CreateFifoServer(), false);
-}
-
 HWTEST_F(SubCommandRecordTest, SendFifoAndWaitReply, TestSize.Level1)
 {
     SubCommandRecord cmd;
     std::string test = "test";
-    EXPECT_EQ(cmd.CreateFifoServer(test, 1), false);
+    EXPECT_EQ(cmd.SendFifoAndWaitReply(test, CONTROL_WAITREPY_TOMEOUT), false);
 }
 
 HWTEST_F(SubCommandRecordTest, WaitFifoReply, TestSize.Level1)
 {
     SubCommandRecord cmd;
-    std::string test = "test";
-    EXPECT_EQ(cmd.WaitFifoReply(1, 1), false);
+    EXPECT_EQ(cmd.WaitFifoReply(1, CONTROL_WAITREPY_TOMEOUT), false);
 }
 } // namespace HiPerf
 } // namespace Developtools
