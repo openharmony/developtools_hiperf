@@ -1090,6 +1090,8 @@ HWTEST_F(SubCommandReportTest, TestVerifyOption, TestSize.Level1)
 
     EXPECT_EQ(mSubCommandReport.VerifyOption(), true);
 
+    mSubCommandReport.FlushCacheRecord();
+
     mSubCommandReport.reportOption_.heatLimit_ = 101.0;
     EXPECT_EQ(mSubCommandReport.VerifyOption(), false);
 }

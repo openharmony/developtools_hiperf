@@ -387,6 +387,20 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
                      sample.callFrames_[i].symbolName_.data());
     }
 }
+
+/**
+ * @tc.name: Update
+ * @tc.desc: Test update maps and symbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, Update, TestSize.Level1)
+{
+    EXPECT_EQ(runtime_->IsKernelThread(0), false);
+    runtime_->UpdateServiceSpaceMaps();
+    runtime_->UpdateDevhostSpaceMaps();
+    runtime_->UpdateServiceSymbols();
+    runtime_->UpdateDevhostSymbols();
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

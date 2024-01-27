@@ -1962,6 +1962,19 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level1)
     EXPECT_EQ(FindExpectStr(stringOut, "K/sec"), true);
     EXPECT_EQ(FindExpectStr(stringOut, "/sec"), true);
 }
+
+/**
+ * @tc.name: HandleOtherConfig
+ * @tc.desc: Test handle other config
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, HandleOtherConfig, TestSize.Level1)
+{
+    PerfEvents::Summary summary(1, 1, 1, 1, 1);
+    double comment = 0;
+    constexpr int testNum = 100;
+    EXPECT_EQ(SubCommandStat::HandleOtherConfig(comment, summary, testNum, testNum, true), "");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
