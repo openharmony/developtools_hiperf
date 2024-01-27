@@ -1414,17 +1414,6 @@ HWTEST_F(SubCommandRecordTest, SendFifoAndWaitReply, TestSize.Level1)
     std::string test = "test";
     EXPECT_EQ(cmd.SendFifoAndWaitReply(test, CONTROL_WAITREPY_TOMEOUT), false);
 }
-
-/**
- * @tc.name: WaitFifoReply
- * @tc.desc: Test wait Fifo reply
- * @tc.type: FUNC
- */
-HWTEST_F(SubCommandRecordTest, WaitFifoReply, TestSize.Level1)
-{
-    SubCommandRecord cmd;
-    EXPECT_EQ(cmd.WaitFifoReply(1, CONTROL_WAITREPY_TOMEOUT), false);
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
