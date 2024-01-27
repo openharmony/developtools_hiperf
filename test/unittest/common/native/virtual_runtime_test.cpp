@@ -388,6 +388,11 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
     }
 }
 
+/**
+ * @tc.name: Update
+ * @tc.desc: Test update maps and symbols
+ * @tc.type: FUNC
+ */
 HWTEST_F(VirtualRuntimeTest, Update, TestSize.Level1)
 {
     EXPECT_EQ(runtime_->IsKernelThread(0), false);
