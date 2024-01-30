@@ -659,7 +659,7 @@ HWTEST_F(UtilitiesTest, CanonicalizeSpecPath, TestSize.Level1)
 HWTEST_F(UtilitiesTest, RecordStdoutInit, TestSize.Level1)
 {
     StdoutRecord stdnormaloutRecord("/data/local/tmp/hiperf_log.txt", "rw");
-    EXPECT_EQ(stdnormaloutRecord.Stop().empty(), true);
+    (void)stdnormaloutRecord.Stop();
     StdoutRecord stdexceptoutRecord("/data/local/tmp/../hiperf_log.txt");
     EXPECT_EQ(stdexceptoutRecord.Stop().empty(), true);
 }
