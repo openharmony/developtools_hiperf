@@ -678,8 +678,7 @@ bool SubCommandRecord::SetPerfMaxSampleRate()
         printf("read %s fail.\n", PERF_EVENT_MAX_SAMPLE_RATE.c_str());
         return false;
     }
-    if (maxRate > frequency)
-    {
+    if (maxRate > frequency) {
         return true;
     }
     int newRate = frequency > PerfEvents::DEFAULT_EVENT_MAX_SAMPLE_RATE ? frequency :
