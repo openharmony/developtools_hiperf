@@ -650,6 +650,19 @@ HWTEST_F(UtilitiesTest, CanonicalizeSpecPath, TestSize.Level1)
     largePath += ".txt";
     EXPECT_EQ(CanonicalizeSpecPath(largePath.c_str()), "");
 }
+
+/**
+ * @tc.name: RecordStdoutInit
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, RecordStdoutInit, TestSize.Level1)
+{
+    StdoutRecord stdnormaloutRecord("/data/local/tmp/hiperf_log.txt", "rw");
+    EXPECT_EQ(stdnormaloutRecord.Stop().empty(), true);
+    StdoutRecord stdexceptoutRecord("/data/local/tmp/../hiperf_log.txt");
+    EXPECT_EQ(stdexceptoutRecord.Stop().empty(), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
