@@ -330,6 +330,7 @@ public:
     static constexpr size_t BUFFER_CRITICAL_LEVEL = 5 * 1024 * 1024;
     static constexpr size_t MAX_BUFFER_SIZE_LITTLE = 128 * 1024 * 1024;
     static constexpr size_t MAX_BUFFER_SIZE_LARGE = 256 * 1024 * 1024;
+    static constexpr uint64_t DEFAULT_EVENT_MAX_SAMPLE_RATE = 8000;
 
     PerfEvents();
     ~PerfEvents();

@@ -673,7 +673,19 @@ bool SubCommandRecord::SetPerfMaxSampleRate()
 {
     auto cmp = [](int oldValue, int newValue) { return oldValue == newValue; };
     int frequency = frequency_ != 0 ? frequency_ : PerfEvents::DEFAULT_SAMPLE_FREQUNCY;
-    return SetPerfLimit(PERF_EVENT_MAX_SAMPLE_RATE, frequency, cmp, "hiviewdfx.hiperf.perf_event_max_sample_rate");
+    int maxRate = 0;
+    if (!ReadIntFromProcFile(PERF_EVENT_MAX_SAMPLE_RATE, maxRate)) {
+        printf("read %s fail.\n", PERF_EVENT_MAX_SAMPLE_RATE.c_str());
+        return false;
+    }
+    if (maxRate > frequency)
+    {
+        return true;
+    }
+    int newRate = frequency > PerfEvents::DEFAULT_EVENT_MAX_SAMPLE_RATE ? frequency :
+                  PerfEvents::DEFAULT_EVENT_MAX_SAMPLE_RATE;
+    return SetPerfLimit(PERF_EVENT_MAX_SAMPLE_RATE, newRate, cmp,
+                        "hiviewdfx.hiperf.perf_event_max_sample_rate");
 }
 
 bool SubCommandRecord::SetPerfEventMlock()
