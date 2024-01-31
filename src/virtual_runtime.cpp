@@ -209,7 +209,7 @@ VirtualThread &VirtualRuntime::GetThread(pid_t pid, pid_t tid, const std::string
     if (userSpaceThreadMap_.find(pid) == userSpaceThreadMap_.end()) {
         // no pid found
         // create process first
-        CreateThread(pid, pid, name);
+        CreateThread(pid, pid);
     }
 
     auto it = userSpaceThreadMap_.find(tid);
