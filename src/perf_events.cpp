@@ -748,6 +748,19 @@ void PerfEvents::SetSampleFrequency(unsigned int frequency)
     if (frequency > 0) {
         sampleFreq_ = frequency;
     }
+    int maxRate = 0;
+    static bool printFlag = false;
+    if (!ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", maxRate)) {
+        printf("read perf_event_max_sample_rate fail.\n");
+        return;
+    }
+    if (sampleFreq_ > maxRate) {
+        sampleFreq_ = maxRate;
+        if (!printFlag) {
+            printf("Adjust sampling frequency to maximum allowed frequency %d.\n", maxRate);
+            printFlag = true;
+        }
+    }
 }
 
 void PerfEvents::SetSamplePeriod(unsigned int period)
