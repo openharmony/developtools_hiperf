@@ -1962,6 +1962,23 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level1)
     EXPECT_EQ(FindExpectStr(stringOut, "K/sec"), true);
     EXPECT_EQ(FindExpectStr(stringOut, "/sec"), true);
 }
+
+/**
+ * @tc.name: CheckOptionPidAndApp
+ * @tc.desc: Test handle other config
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckOptionPidAndApp, TestSize.Level1)
+{
+    SubCommandStat stat;
+    std::vector<pid_t> pids;
+    EXPECT_EQ(stat.CheckOptionPidAndApp(pids), true);
+    pids.push_back(1);
+    pids.push_back(2); // 2: pid
+    EXPECT_EQ(stat.CheckOptionPidAndApp(pids), true);
+    pids.push_back(700011); // 700011: invalid pid
+    EXPECT_EQ(stat.CheckOptionPidAndApp(pids), false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
