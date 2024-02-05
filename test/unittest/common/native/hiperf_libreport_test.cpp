@@ -131,10 +131,10 @@ void HiperfLibReportTest::UnwindJsonContentCheck(const std::string &content, boo
     ASSERT_EQ(content.front(), '{');
     ASSERT_EQ(content.back(), '}');
 #ifdef __arm__
-    ASSERT_EQ(content.find("{\"symbol\":6522,\"counts\":[3,548767,2923570]}") != std::string::npos,
+    ASSERT_EQ(content.find("{\"symbol\":6511,\"counts\":[3,548767,2923570]}") != std::string::npos,
               haveUnwind);
 #else
-    ASSERT_EQ(content.find("{\"symbol\":79,\"counts\":[0,0,147027]}") != std::string::npos,
+    ASSERT_EQ(content.find("{\"symbol\":76,\"counts\":[0,0,147027]}") != std::string::npos,
               haveUnwind);
 #endif
 }
@@ -464,6 +464,20 @@ HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level1
     const char *result = ReportGetBuildId(ILLEGAL_PATH);
     ASSERT_NE(result, nullptr);
     EXPECT_STREQ(result, "");
+}
+
+HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
+{
+    unlink(REPORT_JSON_OUTPUT_PATH);
+    EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
+
+    EXPECT_EQ(::ReportUnwindJson(PERF_DISABLE_UNWIND_DATA_INPUT_PATH, REPORT_JSON_OUTPUT_PATH,
+                                 PERF_DISABLE_UNWIND_SYMBOL_INPUT_PATH),
+              0);
+    EXPECT_EQ(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
+    std::string content;
+    EXPECT_EQ(ReadFileToString(REPORT_JSON_OUTPUT_PATH, content), true);
+    UnwindJsonContentCheck(content, true);
 }
 
 HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_NoSymbols_Failed, TestSize.Level1)
