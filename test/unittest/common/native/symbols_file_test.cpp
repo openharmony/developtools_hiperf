@@ -365,6 +365,193 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetSymbolWithVaddr
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr2, TestSize.Level1)
+{
+    auto elfSymbols = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    ASSERT_EQ(elfSymbols->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA), true);
+    EXPECT_EQ(elfSymbols->LoadSymbols(nullptr, TEST_FILE_ELF), true);
+    ASSERT_EQ(elfSymbols->GetSymbols().empty(), false);
+
+    /*
+        part of elf32_test's symbols
+        vaddr(hex)  size(dec)   name
+        00001000    0           _init
+        00001030    0
+        00001320    58           _start
+        00001512    27          main
+        0000145d    124         TestGlobalChildFunction
+        000014d9    57          TestGlobalParentFunction
+        // last one
+        00001b38    0           _fini
+
+        part of elf_test's symbols
+        vaddr(hex)          size(dec)   name
+        0000000000002000    0           _init
+        0000000000002020    0
+        00000000000022f0    47         _start
+        0000000000002478    15          main
+        00000000000023d9    110         TestGlobalChildFunction
+        0000000000002447    49          TestGlobalParentFunction
+        //last one
+        0000000000002aa8    0           _fini
+    */
+#ifdef __arm__
+    ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001320).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001359).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00001512).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000152c).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000145d).GetName(), "TestGlobalChildFunction");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000014d9).GetName(), "TestGlobalParentFunction");
+#else
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000022f0).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x0000231e).GetName(), "_start");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002478).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002486).GetName(), "main");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x000023d9).GetName(), "TestGlobalChildFunction");
+    EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(0x00002447).GetName(), "TestGlobalParentFunction");
+#endif
+    if (HasFailure()) {
+        PrintSymbols(elfSymbols->GetSymbols());
+    }
+}
+
+/**
+ * @tc.name: GetSymbolWithVaddr
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
+{
+    auto elfSymbols = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    ASSERT_EQ(elfSymbols->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA), true);
+    if (elfSymbols->LoadSymbols(nullptr, TEST_SYMBOLS_FILE_ELF)) {
+        ASSERT_EQ(elfSymbols->GetSymbols().empty(), false);
+        /*
+            nm -C --defined-only symbols_file_test_elf64
+            addr = 1000 mangle name = _init
+            addr = 1040 mangle name = _start
+            addr = 1070 mangle name = deregister_tm_clones
+            addr = 10a0 mangle name = register_tm_clones
+            addr = 10e0 mangle name = __do_global_dtors_aux
+            addr = 1120 mangle name = frame_dummy
+            addr = 1129 mangle name = main
+            addr = 1140 mangle name = __libc_csu_init
+            addr = 11b0 mangle name = __libc_csu_fini
+
+            //last one
+            addr = 11b8 mangle name = _fini
+
+            nm -C --defined-only symbols_file_test_elf32
+            00001000 t _init
+            00001070 T _start
+            000010c0 t deregister_tm_clones
+            00001100 t register_tm_clones
+            00001150 t __do_global_dtors_aux
+            000011a0 t frame_dummy
+            000011ad T main
+            000011d0 T __libc_csu_init
+            00001240 T __libc_csu_fini
+
+            // last one
+            0000124c T _fini
+        */
+#ifdef __arm__
+        enum SymbolAddr : uint64_t {
+            PLT = 0X1030U,
+            START = 0X1070U,
+            THUNK_AX = 0X10B0U,
+            DEREG = 0X10C0U,
+            REG = 0X1100U,
+            AUX = 0X1150U,
+            FRAME = 0X11A0U,
+            THUNK_DX = 0X11A9U,
+            MAIN = 0X11ADU,
+            THUNK_BX = 0X11C5U,
+            CSU_INIT = 0X11D0U,
+            CSU_FINI = 0X1240U,
+            THUNK_BP = 0X1245U,
+        };
+#else
+        enum SymbolAddr : uint64_t {
+            PLT = 0X1020U,
+            START = 0X1040U,
+            DEREG = 0X1070U,
+            REG = 0X10A0U,
+            AUX = 0X10E0U,
+            FRAME = 0X1120U,
+            MAIN = 0X1129U,
+            CSU_INIT = 0X1140U,
+            CSU_FINI = 0X11B0U,
+        };
+#endif
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::START; addr < SymbolAddr::THUNK_AX; ++addr) {
+#else
+        for (uint64_t addr = SymbolAddr::START; addr < SymbolAddr::START; ++addr) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "_start");
+            }
+        }
+        for (uint64_t addr = SymbolAddr::DEREG; addr < SymbolAddr::REG; ++addr) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "deregister_tm_clones");
+            }
+        }
+        for (uint64_t addr = SymbolAddr::REG; addr < SymbolAddr::AUX; ++addr) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "register_tm_clones");
+            }
+        }
+        for (uint64_t addr = SymbolAddr::AUX; addr < SymbolAddr::FRAME; ++addr) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__do_global_dtors_aux");
+            }
+        }
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::FRAME; addr < SymbolAddr::THUNK_DX; ++addr) {
+#else
+        for (uint64_t addr = SymbolAddr::FRAME; addr < SymbolAddr::MAIN; ++addr) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "frame_dummy");
+            }
+        }
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::MAIN; addr < SymbolAddr::THUNK_BX; ++addr) {
+#else
+        for (uint64_t addr = SymbolAddr::MAIN; addr < SymbolAddr::CSU_INIT; ++addr) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "main");
+            }
+        }
+        for (uint64_t addr = SymbolAddr::CSU_INIT; addr < SymbolAddr::CSU_FINI; ++addr) {
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_init");
+            }
+        }
+#ifdef __arm__
+        for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::THUNK_BP; ++addr) {
+#else
+        for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::FINI; ++addr) {
+#endif
+            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
+                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_fini");
+            }
+        }
+        if (HasFailure()) {
+            PrintSymbols(elfSymbols->GetSymbols());
+        }
+    }
+}
+
+/**
  * @tc.name: GetVaddrInSymbols
  * @tc.desc:
  * @tc.type: FUNC
