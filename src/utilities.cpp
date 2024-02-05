@@ -756,7 +756,7 @@ bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize)
     return false;
 }
 
-bool NeedAdaptHMBundlePath(std::string& filename, std::string threadname)
+bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
 {
     std::string path = "/data/storage/el1/bundle";
     std::string newpath = "/data/app/el1/bundle/public/";
