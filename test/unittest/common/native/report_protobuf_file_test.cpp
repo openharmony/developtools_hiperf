@@ -297,12 +297,12 @@ HWTEST_F(ReportProtobufFileTest, ProcessSampleRecord, TestSize.Level1)
     sample.callFrames_.emplace_back(0x2, 0x1234, "first_user2_func", "user_symbol2");
     sample.callFrames_.emplace_back(0x3, 0x1234, "second_user2_func", "user_symbol2");
 
-    sample.callFrames_.at(0).symbolFileIndex_ = 0;
-    sample.callFrames_.at(1).symbolFileIndex_ = 1;
-    sample.callFrames_.at(2).symbolFileIndex_ = 1;
-    sample.callFrames_.at(0).symbolIndex_ = 0;
-    sample.callFrames_.at(1).symbolIndex_ = 0;
-    sample.callFrames_.at(2).symbolIndex_ = 1;
+    sample.callFrames_.at(0).symbolFileIndex = 0;
+    sample.callFrames_.at(1).symbolFileIndex = 1;
+    sample.callFrames_.at(2).symbolFileIndex = 1;
+    sample.callFrames_.at(0).index = 0;
+    sample.callFrames_.at(1).index = 0;
+    sample.callFrames_.at(2).index = 1;
 
     ASSERT_EQ(protobufOutputFileWriter_->Create(fileName), true);
     protobufOutputFileWriter_->ProcessSampleRecord(sample, 0u, symbolsFiles_);
@@ -328,7 +328,7 @@ HWTEST_F(ReportProtobufFileTest, ProcessSampleRecord, TestSize.Level1)
             for (int i = 0; i < message.callstackframe_size(); i++) {
                 auto &callframe = message.callstackframe(i);
                 ASSERT_EQ(callframe.has_symbols_vaddr(), true);
-                ASSERT_EQ(callframe.symbols_vaddr(), sample.callFrames_.at(i).vaddrInFile_);
+                ASSERT_EQ(callframe.symbols_vaddr(), sample.callFrames_.at(i).funcOffset);
 
                 ASSERT_EQ(callframe.has_symbols_file_id(), true);
                 printf("symbols file id %d\n", callframe.symbols_file_id());
@@ -341,7 +341,7 @@ HWTEST_F(ReportProtobufFileTest, ProcessSampleRecord, TestSize.Level1)
                 ASSERT_EQ(callframe.function_name_id() >= 0, true);
                 int funcNameId = callframe.function_name_id();
                 ASSERT_EQ(static_cast<size_t>(funcNameId) < symbolsFile->GetSymbols().size(), true);
-                ASSERT_STREQ(sample.callFrames_.at(i).symbolName_.data(),
+                ASSERT_STREQ(sample.callFrames_.at(i).funcName.data(),
                              symbolsFile->GetSymbols().at(funcNameId).name_.data());
             }
             ASSERT_EQ(message.has_event_count(), true);

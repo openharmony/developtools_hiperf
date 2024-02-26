@@ -57,9 +57,9 @@ public:
     CallStack();
     ~CallStack();
     bool UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *regs, u64 regsNum,
-                         const u8 *stack, u64 stackSize, std::vector<CallFrame> &,
+                         const u8 *stack, u64 stackSize, std::vector<DfxFrame> &,
                          size_t maxStackLevel = MAX_CALL_FRAME_UNWIND_SIZE);
-    size_t ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames, size_t expandLimit = 1u);
+    size_t ExpandCallStack(pid_t tid, std::vector<DfxFrame> &callFrames, size_t expandLimit = 1u);
 
 private:
     pid_t lastPid_ = -1;
@@ -72,12 +72,12 @@ private:
     const u8 *stack_ = nullptr;
     u64 stackSize_ = 0;
 
-    void LogFrame(const std::string msg, const std::vector<CallFrame> &frames);
-    size_t DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
-                           const std::vector<CallFrame> &cachedCallFrames, size_t expandLimit);
+    void LogFrame(const std::string msg, const std::vector<DfxFrame> &frames);
+    size_t DoExpandCallStack(std::vector<DfxFrame> &newCallFrames,
+                           const std::vector<DfxFrame> &cachedCallFrames, size_t expandLimit);
 
     // we have a cache for all thread
-    std::map<pid_t, HashList<uint64_t, std::vector<CallFrame>>> cachedCallFramesMap_;
+    std::map<pid_t, HashList<uint64_t, std::vector<DfxFrame>>> cachedCallFramesMap_;
     bool GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, size_t regNum) const;
     ArchType arch_ = ArchType::ARCH_UNKNOWN;
 
@@ -103,7 +103,7 @@ private:
     static int FindUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap> map,
                                UnwindInfo *unwindInfoPtr, unw_addr_space_t as, unw_word_t ip,
                                unw_proc_info_t *pi, int need_unwind_info, void *arg);
-    void UnwindStep(unw_cursor_t &c, std::vector<CallFrame> &callFrames, size_t maxStackLevel);
+    void UnwindStep(unw_cursor_t &c, std::vector<DfxFrame> &callFrames, size_t maxStackLevel);
     std::unordered_map<pid_t, unw_addr_space_t> unwindAddrSpaceMap_;
 
     using dsoUnwDynInfoMap = std::unordered_map<std::string, std::optional<unw_dyn_info_t>>;
@@ -122,19 +122,17 @@ private:
         .resume = Resume,
         .get_proc_name = getProcName,
     };
-    bool DoUnwind(const VirtualThread &thread, std::vector<CallFrame> &callStack,
+    bool DoUnwind(const VirtualThread &thread, std::vector<DfxFrame> &callStack,
                   size_t maxStackLevel);
 #endif
 #if defined(HAVE_LIBUNWINDER) && HAVE_LIBUNWINDER
-#ifdef target_cpu_arm64
-    static bool CheckAndStepArkFrame(const VirtualThread &thread, uintptr_t& pc, uintptr_t& fp, uintptr_t& sp);
-#endif
-    bool DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &callStack, size_t maxStackLevel);
+    bool DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &callStack, size_t maxStackLevel);
     static void DumpTableInfo(UnwindTableInfo &outTableInfo);
     static int FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap> map, UnwindInfo *unwindInfoPtr,
                                uintptr_t pc, UnwindTableInfo& outTableInfo);
     static int FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void *arg);
     static int AccessMem2(uintptr_t addr, uintptr_t *val, void *arg);
+    static int GetMapByPc(uintptr_t pc, std::shared_ptr<DfxMap>& map, void *arg);
 
     // pid->unwinder(acc/regs/maps) cache
     std::unordered_map<pid_t, std::shared_ptr<Unwinder>> pidUnwinder_;

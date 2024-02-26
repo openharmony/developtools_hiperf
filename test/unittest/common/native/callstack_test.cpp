@@ -62,12 +62,12 @@ HWTEST_F(CallStackTest, ExpendCallStackEmpty, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {};
+    std::vector<DfxFrame> stack2 = {};
 
     ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
     ASSERT_EQ(callStack.ExpandCallStack(0, stack2), 0u);
@@ -90,12 +90,12 @@ HWTEST_F(CallStackTest, ExpendCallStackC, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x1u, 0x1u},
     };
 
@@ -120,12 +120,12 @@ HWTEST_F(CallStackTest, ExpendCallStackBC, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
     };
@@ -151,12 +151,12 @@ HWTEST_F(CallStackTest, ExpendCallStackABC, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
@@ -183,12 +183,12 @@ HWTEST_F(CallStackTest, ExpendCallStackAB, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
@@ -214,12 +214,12 @@ HWTEST_F(CallStackTest, ExpendCallStackA, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x3u, 0x3u},
     };
 
@@ -244,15 +244,15 @@ HWTEST_F(CallStackTest, ExpendCallStackB, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x2u, 0x2u},
     };
-    std::vector<CallFrame> stack3 = {
+    std::vector<DfxFrame> stack3 = {
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
@@ -278,15 +278,15 @@ HWTEST_F(CallStackTest, ExpendCallStackB2, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x2u, 0x2u},
     };
-    std::vector<CallFrame> stack3 = {
+    std::vector<DfxFrame> stack3 = {
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
@@ -312,15 +312,15 @@ HWTEST_F(CallStackTest, ExpendCallStackB0, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x2u, 0x2u},
     };
-    std::vector<CallFrame> stack3 = {
+    std::vector<DfxFrame> stack3 = {
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
@@ -346,12 +346,12 @@ HWTEST_F(CallStackTest, ExpendCallStackBC2, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
     };
@@ -378,24 +378,24 @@ HWTEST_F(CallStackTest, ExpendCallStackABCDE, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stackFull = {
+    std::vector<DfxFrame> stackFull = {
         {0xE, 0xE}, {0xD, 0xD}, {0xC, 0xC}, {0xB, 0xB}, {0xA, 0xA},
     };
-    std::vector<CallFrame> stackBC = {
+    std::vector<DfxFrame> stackBC = {
         {0xC, 0xC},
         {0xB, 0xB},
     };
-    std::vector<CallFrame> stackABC = {
+    std::vector<DfxFrame> stackABC = {
         {0xC, 0xC},
         {0xB, 0xB},
         {0xA, 0xA},
     };
-    std::vector<CallFrame> stackBFF = {
+    std::vector<DfxFrame> stackBFF = {
         {0xF, 0xF},
         {0xF, 0xF},
         {0xB, 0xB},
     };
-    std::vector<CallFrame> stackBFF2 = {
+    std::vector<DfxFrame> stackBFF2 = {
         {0xF, 0xF},
         {0xF, 0xF},
         {0xB, 0xB},
@@ -427,12 +427,12 @@ HWTEST_F(CallStackTest, ExpendCallStackFailure, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stackFull = {
+    std::vector<DfxFrame> stackFull = {
         {0xC, 0xC},
         {0xB, 0xB},
         {0xA, 0xA},
     };
-    std::vector<CallFrame> stackDE = {
+    std::vector<DfxFrame> stackDE = {
         {0xE, 0xE},
         {0xD, 0xD},
     };
@@ -456,19 +456,19 @@ HWTEST_F(CallStackTest, ExpendCallStackTwoChance, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH);
     CallStack callStack;
 
-    std::vector<CallFrame> stack0 = {
+    std::vector<DfxFrame> stack0 = {
         {0xE, 0xE}, {0xD, 0xD}, {0xC, 0xC}, {0xB, 0xB}, {0xA, 0xA},
     };
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0xE, 0xE},
         {0xD, 0xD},
         {0xC, 0xC},
         {0x2, 0x2},
     };
-    std::vector<CallFrame> stackC = {
+    std::vector<DfxFrame> stackC = {
         {0xC, 0xC},
     };
-    std::vector<CallFrame> stackC2 = {
+    std::vector<DfxFrame> stackC2 = {
         {0xC, 0xC},
         {0x2, 0x2},
     };
@@ -486,11 +486,11 @@ HWTEST_F(CallStackTest, ExpendCallStackFullCache, TestSize.Level1)
 {
     CallStack callStack;
     for (size_t i = 0; i < MAX_CALL_FRAME_EXPAND_CACHE_SIZE; i++) {
-        std::vector<CallFrame> stack = {{rnd_(), rnd_()}};
+        std::vector<DfxFrame> stack = {{rnd_(), rnd_()}};
         callStack.ExpandCallStack(0, stack);
     }
     for (size_t i = 0; i < MAX_CALL_FRAME_EXPAND_CACHE_SIZE; i++) {
-        std::vector<CallFrame> stack = {{rnd_(), rnd_()}};
+        std::vector<DfxFrame> stack = {{rnd_(), rnd_()}};
         callStack.ExpandCallStack(0, stack);
     }
     EXPECT_EQ(callStack.cachedCallFramesMap_[0].size(), MAX_CALL_FRAME_EXPAND_CACHE_SIZE);
@@ -504,9 +504,9 @@ HWTEST_F(CallStackTest, ExpendCallStackFullCache, TestSize.Level1)
 HWTEST_F(CallStackTest, ExpendCallStackSmall, TestSize.Level1)
 {
     CallStack callStack;
-    std::vector<CallFrame> stack0 = {};
-    std::vector<CallFrame> stack1 = {{0x1, 0x1}};
-    std::vector<CallFrame> stack2 = {{0x1, 0x1}, {0x2, 0x2}};
+    std::vector<DfxFrame> stack0 = {};
+    std::vector<DfxFrame> stack1 = {{0x1, 0x1}};
+    std::vector<DfxFrame> stack2 = {{0x1, 0x1}, {0x2, 0x2}};
     ASSERT_EQ(callStack.ExpandCallStack(0, stack0), 0u);
     ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
     ASSERT_EQ(callStack.ExpandCallStack(0, stack1), 0u);
@@ -535,19 +535,19 @@ HWTEST_F(CallStackTest, ExpendCallStackLimit, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
         {0x3u, 0x3u},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0x1u, 0x1u},
     };
-    std::vector<CallFrame> stack3 = {
+    std::vector<DfxFrame> stack3 = {
         {0x1u, 0x1u},
         {0x2u, 0x2u},
     };
-    std::vector<CallFrame> stack4 = {
+    std::vector<DfxFrame> stack4 = {
         {0x0u, 0x0u},
         {0x1u, 0x1u},
     };
@@ -581,18 +581,18 @@ HWTEST_F(CallStackTest, ExpendCallStackABABAB, TestSize.Level1)
     ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
     CallStack callStack;
 
-    std::vector<CallFrame> stack1 = {
+    std::vector<DfxFrame> stack1 = {
         {0xb, 0xb}, {0xa, 0xa}, {0xc, 0xc}, {0xb, 0xb},
         {0xa, 0xa}, {0xc, 0xc}, {0xb, 0xb}, {0xa, 0xa},
     };
-    std::vector<CallFrame> stack2 = {
+    std::vector<DfxFrame> stack2 = {
         {0xc, 0xc},
     };
-    std::vector<CallFrame> stack3 = {
+    std::vector<DfxFrame> stack3 = {
         {0xc, 0xc},
         {0xb, 0xb},
     };
-    std::vector<CallFrame> stack4 = {
+    std::vector<DfxFrame> stack4 = {
         {0xd, 0xd},
         {0xc, 0xc},
     };
@@ -632,7 +632,7 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
 
         VirtualThread thread(getpid(), symbolsFiles);
         MakeMaps(thread);
-        std::vector<CallFrame> callFrames;
+        std::vector<DfxFrame> callFrames;
         CallStack callStack;
 
         bool ret = callStack.UnwindCallStack(thread, false, regs.data(), regs.size(), data.data(), data.size(),

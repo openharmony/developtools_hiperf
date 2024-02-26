@@ -76,16 +76,17 @@ public:
     {
         return memMaps_;
     }
-
     void ParseMap();
     void FixHMBundleMap();
     void ParseServiceMap(const std::string &filename);
     void ParseDevhostMap(pid_t devhost);
-    void CreateMapItem(const std::string filename, uint64_t begin, uint64_t len, uint64_t offset);
+    std::shared_ptr<DfxMap> CreateMapItem(const std::string filename, uint64_t begin,
+                                          uint64_t len, uint64_t offset, uint32_t prot = 0);
     std::shared_ptr<DfxMap> FindMapByAddr(uint64_t addr) const;
     std::shared_ptr<DfxMap> FindMapByFileInfo(const std::string name, uint64_t offset) const;
+    std::shared_ptr<DfxMap> FindFirstMapByFileInfo(const std::string name) const;
     int64_t FindMapIndexByAddr(uint64_t addr) const;
-    SymbolsFile *FindSymbolsFileByMap(std::shared_ptr<DfxMap> inMap) const;
+    SymbolsFile *FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) const;
     bool ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) const;
 #ifdef HIPERF_DEBUG
     void ReportVaddrMapMiss(uint64_t vaddr) const;

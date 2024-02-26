@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 bool ReportJsonFile::debug_ = false;
-void ReportJsonFile::addNewFunction(int libId, std::string_view name)
+void ReportJsonFile::addNewFunction(int libId, std::string name)
 {
     functionList_.emplace_back(functionKey(libId, name));
     functionMap_.emplace(functionMap_.size(), ReportFuncMapItem(libId, name));
@@ -43,7 +43,7 @@ void ReportJsonFile::ProcessSymbolsFiles(
         const auto &symbols = symbolsFileIt->get()->GetSymbols();
         auto symbolIt = symbols.begin();
         while (symbolIt != symbols.end()) {
-            addNewFunction(libId, symbolIt->GetName());
+            addNewFunction(libId, std::string(symbolIt->GetName()));
             symbolIt++;
         }
         symbolsFileIt++;
@@ -75,7 +75,7 @@ ReportConfigItem &ReportJsonFile::GetConfig(uint64_t id)
     return reportConfigItems_.begin()->second;
 }
 
-int ReportJsonFile::GetFunctionID(int libId, std::string_view function)
+int ReportJsonFile::GetFunctionID(int libId, const std::string &function)
 {
     auto it = find(functionList_.begin(), functionList_.end(), functionKey(libId, function));
     if (it != functionList_.end()) {
@@ -103,14 +103,14 @@ void ReportJsonFile::UpdateReportSample(uint64_t id, pid_t pid, pid_t tid, uint6
 }
 
 void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem &callNode,
-                                        const std::vector<CallFrame> &frames)
+                                        const std::vector<DfxFrame> &frames)
 {
     std::map<int, ReportCallNodeItem> *child = &callNode.childrenMap;
     auto it = frames.begin();
     while (it != frames.end()) {
-        int libId = GetLibID(it->filePath_);
+        int libId = GetLibID(it->mapName);
         if (libId >= 0) {
-            int funcId = GetFunctionID(libId, it->symbolName_);
+            int funcId = GetFunctionID(libId, it->funcName);
             // new children funid
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
@@ -126,7 +126,7 @@ void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem 
             child = &grandchildren.childrenMap;
 
             HLOGV("add child %*s %d-%d %s @%d %s", static_cast<int>(it - frames.begin()), "", libId,
-                  funcId, it->symbolName_.data(), grandchildren.nodeIndex_, it->filePath_.data());
+                  funcId, it->funcName.data(), grandchildren.nodeIndex_, it->mapName.data());
         } else {
             HLOGV("add child failed at %s", it->ToSymbolString().c_str());
         }
@@ -135,14 +135,14 @@ void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem 
 }
 
 void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNodeItem &callNode,
-                                               const std::vector<CallFrame> &frames)
+                                               const std::vector<DfxFrame> &frames)
 {
     std::map<int, ReportCallNodeItem> *child = &callNode.childrenMap;
     auto it = frames.rbegin();
     while (it != frames.rend()) {
-        int libId = GetLibID(it->filePath_);
+        int libId = GetLibID(it->mapName);
         if (libId >= 0) {
-            int funcId = GetFunctionID(libId, it->symbolName_);
+            int funcId = GetFunctionID(libId, it->funcName);
             // new children funid
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
@@ -157,8 +157,8 @@ void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNo
             child = &grandchildren.childrenMap;
 
             HLOGV("add child %*s %d-%d %s @%d %s", static_cast<int>(it - frames.rbegin()), "",
-                  libId, funcId, it->symbolName_.data(), grandchildren.nodeIndex_,
-                  it->filePath_.data());
+                  libId, funcId, it->funcName.data(), grandchildren.nodeIndex_,
+                  it->mapName.data());
         } else {
             HLOGV("add child failed at %s", it->ToSymbolString().c_str());
         }
@@ -189,7 +189,7 @@ int ReportJsonFile::GetLibID(std::string_view filepath)
 }
 
 void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, uint64_t eventCount,
-                                           std::vector<CallFrame> &frames)
+                                           std::vector<DfxFrame> &frames)
 {
     auto &config = GetConfig(id);
     std::set<int> RepeatFunctionId;
@@ -199,16 +199,18 @@ void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, ui
     auto &process = GetOrCreateMapItem(config.processes_, pid);
     auto &thread = GetOrCreateMapItem(process.threads_, tid);
     auto it = frames.begin();
+    bool jsFrame = StringEndsWith(it->mapName, "stub.an");
+    size_t skipFrame = 0;
     while (it != frames.end()) {
-        int libId = GetLibID(it->filePath_);
+        int libId = GetLibID(it->mapName);
         if (libId < 0) {
-            HLOGW("not found lib path %s", it->filePath_.data());
+            HLOGW("not found lib path %s", it->mapName.data());
             it++;
             continue;
         }
         ReportLibItem &lib = thread.libs_[libId];
         lib.libId_ = libId;
-        int funcId = GetFunctionID(libId, it->symbolName_);
+        int funcId = GetFunctionID(libId, it->funcName);
         // we will always have a funId, it will create a new one if not found
         // so that we can see abc+0x123 in the html
         HLOG_ASSERT(funcId >= 0);
@@ -225,7 +227,10 @@ void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, ui
         func.subTreeEventCount_ += eventCount;
 
         // only calc the first frame event count
-        if (it == frames.begin()) {
+        if (jsFrame) {
+            skipFrame = 1; // 1:for arkjs frame,skip the stub.an frame
+        }
+        if (it == frames.begin() + skipFrame) {
             func.eventCount_ += eventCount;
             func.sampleCount_ += 1;
             lib.eventCount_ += eventCount;

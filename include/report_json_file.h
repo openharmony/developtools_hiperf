@@ -96,7 +96,9 @@ void OutputJsonPair(FILE *output, const K &key, const T &value, bool first = fal
             return;
         }
     }
+    // for id, symbol
     OutputJsonKey(output, key);
+    // ReportFuncMapItem funcName.
     OutputJsonValue(output, value);
 }
 
@@ -177,15 +179,13 @@ V &GetOrCreateMapItem(std::map<K, V> &map, const K &key)
 {
     if (map.count(key) == 0) {
         map.emplace(key, (key));
-        return map.at(key);
-    } else {
-        return map.at(key);
     }
+    return map.at(key);
 }
 
 struct ReportFuncMapItem {
     int libId_ = -1;
-    std::string_view funcName_;
+    std::string funcName_;
     void OutputJson(FILE *output) const
     {
         if (fprintf(output, "{") < 0) {
@@ -197,7 +197,7 @@ struct ReportFuncMapItem {
             return;
         }
     }
-    ReportFuncMapItem(int libId, std::string_view funcName) : libId_(libId), funcName_(funcName) {}
+    ReportFuncMapItem(int libId, std::string &funcName) : libId_(libId), funcName_(funcName) {}
 };
 
 struct ReportFuncItem {
@@ -351,7 +351,7 @@ struct ReportConfigItem {
     ReportConfigItem(int index, std::string eventName) : index_(index), eventName_(eventName) {}
 };
 
-using functionKey = std::tuple<int, std::string_view>;
+using functionKey = std::tuple<int, std::string>;
 static constexpr const int keyLibId = 0;
 static constexpr const int keyfuncName = 1;
 
@@ -368,7 +368,7 @@ public:
 
     void UpdateReportSample(uint64_t configid, pid_t pid, pid_t tid, uint64_t eventCount);
     void UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, uint64_t eventCount,
-                               std::vector<CallFrame> &frames);
+                               std::vector<DfxFrame> &frames);
     void UpdateCallNodeEventCount();
     void ProcessSymbolsFiles(const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles);
 
@@ -383,22 +383,22 @@ private:
     std::vector<std::string_view> libList_;
     std::vector<functionKey> functionList_;
     std::map<int, ReportFuncMapItem> functionMap_;
-    void addNewFunction(int libId, std::string_view name);
+    void addNewFunction(int libId, std::string name);
 
     ReportConfigItem &GetConfig(uint64_t id);
     std::string GetConfigName(uint64_t id);
     uint32_t GetConfigIndex(uint64_t id);
 
-    int GetFunctionID(int libId, std::string_view function);
+    int GetFunctionID(int libId, const std::string &function);
     int GetLibID(std::string_view filepath);
 
     void OutputJsonFeatureString();
     void OutputJsonRuntimeInfo();
 
     void AddReportCallStack(uint64_t eventCount, ReportCallNodeItem &callNode,
-                            const std::vector<CallFrame> &frames);
+                            const std::vector<DfxFrame> &frames);
     void AddReportCallStackReverse(uint64_t eventCount, ReportCallNodeItem &callNode,
-                                   const std::vector<CallFrame> &frames);
+                                   const std::vector<DfxFrame> &frames);
     uint64_t sampleCount_ = 0;
 
     FRIEND_TEST(ReportJsonFileTest, UpdateReportSample);

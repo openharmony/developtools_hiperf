@@ -67,12 +67,12 @@ std::unique_ptr<ReportJsonFile> ReportJsonFileTest::PrepairReportJson(
 {
     std::unique_ptr<ReportJsonFile> json =
         std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
-    std::vector<CallFrame> frames = {
+    std::vector<DfxFrame> frames = {
         {0x1u, 0x1u, "funca1", "liba"},
         {0x2u, 0x1u, "funca2", "liba"},
         {0x3u, 0x1u, "funcb1", "libb"},
     };
-    std::vector<CallFrame> frames2 = {
+    std::vector<DfxFrame> frames2 = {
         {0x1u, 0x1u, "funcc1", "libc"},
         {0x2u, 0x1u, "funcb1", "libb"},
     };

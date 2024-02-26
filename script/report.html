@@ -4106,7 +4106,7 @@ input{
             if (this.keyword && this.keyword.length > 0 && funName.indexOf(this.keyword) !== -1) {
                 heatColor = {r: 0x66, g: 0xad, b: 0xff};
             } else {
-                heatColor = this.getHeatColor(percent2);
+                heatColor = funName.includes("url:") ? this.getJsHeatColor(percent2) : this.getHeatColor(percent2);
             }
             return heatColor;
         }
@@ -4308,6 +4308,13 @@ input{
             };
         }
 
+        getJsHeatColor(widthPercentage) {
+            return {
+                r: Math.floor(20 + 120 * (1 - widthPercentage * 0.01)),
+                g: 200,
+                b: Math.floor(0 + 120 * (1 - widthPercentage * 0.01)),
+            };
+        }
         attributeChangedCallback(name, oldValue, newValue) {
         }
     }

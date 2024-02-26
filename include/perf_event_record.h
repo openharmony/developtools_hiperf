@@ -33,6 +33,7 @@
 #include "perf_record_format.h"
 #include "utilities.h"
 #include "unique_stack_table.h"
+#include "dfx_frame.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -46,14 +47,14 @@ enum perf_event_hiperf_ext_type {
 };
 
 struct CallFrame {
-    uint64_t ip_ = 0;
-    uint64_t sp_ = 0;
-    int32_t symbolFileIndex_ = -1; // symbols file index, used to report protobuf file
-    uint64_t vaddrInFile_ = 0; // vaddr of symbol in file
-    uint64_t offsetToVaddr_ = 0; // offset of ip to vaddr
-    int32_t symbolIndex_ = -1; // symbols index , should update after sort
-    std::string_view symbolName_;
-    std::string_view filePath_; // lib path , elf path
+    uint64_t ip_ = 0;               // pc
+    uint64_t sp_ = 0;               // sp
+    int32_t symbolFileIndex_ = -1;  // symbolFileIndex_, symbols file index, used to report protobuf file
+    uint64_t vaddrInFile_ = 0;      // funcOffset, vaddr of symbol in file
+    uint64_t offsetToVaddr_ = 0;    // mapOffset, offset of ip to vaddr
+    int32_t symbolIndex_ = -1;      // index, symbols index , should update after sort
+    std::string_view symbolName_;   // funcName
+    std::string_view filePath_;     // mapName, lib path , elf path
 
     CallFrame(uint64_t ip, uint64_t sp = 0) : ip_(ip), sp_(sp) {}
 
@@ -241,7 +242,7 @@ public:
     // hold the new ips memory (after unwind)
     // used for data_.ips replace (ReplaceWithCallStack)
     static std::vector<u64> ips_;
-    static std::vector<CallFrame> callFrames_;
+    static std::vector<DfxFrame> callFrames_;
     static std::vector<pid_t> serverPidMap_;
 
     StackId stackId_ {0};

@@ -122,13 +122,13 @@ bool ReportProtobufFileWriter::ProcessSampleRecord(
     CallStackSample *sample = record.mutable_sample();
     sample->set_time(recordSample.data_.time);
     sample->set_tid(recordSample.data_.tid);
-    for (const CallFrame &frame : recordSample.callFrames_) {
+    for (const DfxFrame &frame : recordSample.callFrames_) {
         auto callframe = sample->add_callstackframe();
-        callframe->set_symbols_vaddr(frame.vaddrInFile_);
-        callframe->set_loaded_vaddr(frame.ip_ - frame.offsetToVaddr_);
-        if (frame.symbolFileIndex_ >= 0) {
-            callframe->set_symbols_file_id(frame.symbolFileIndex_);
-            callframe->set_function_name_id(frame.symbolIndex_);
+        callframe->set_symbols_vaddr(frame.funcOffset);
+        callframe->set_loaded_vaddr(frame.pc - frame.mapOffset);
+        if (frame.symbolFileIndex >= 0) {
+            callframe->set_symbols_file_id(frame.symbolFileIndex);
+            callframe->set_function_name_id(frame.index);
         }
     }
     sample->set_event_count(recordSample.data_.period);

@@ -207,7 +207,7 @@ void PerfEventRecord::DumpLog(const std::string &prefix) const
 }
 
 std::vector<u64> PerfRecordSample::ips_ = {};
-std::vector<CallFrame> PerfRecordSample::callFrames_ = {};
+std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
 std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
 
 void PerfRecordSample::DumpLog(const std::string &prefix) const
@@ -240,8 +240,8 @@ void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
         ips_.emplace_back(PERF_CONTEXT_USER);
         // we also need make a expand mark just for debug only
         const size_t beginIpsSize = ips_.size();
-        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const CallFrame &frame) {
-            ips_.emplace_back(frame.ip_);
+        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const DfxFrame &frame) {
+            ips_.emplace_back(frame.pc);
             if (originalSize != 0 and (originalSize != callFrames_.size()) and
                 ips_.size() == (originalSize + beginIpsSize)) {
                 // just for debug
@@ -604,6 +604,8 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_pt
     data_.min = item->minor;
     data_.ino = item->inode;
     data_.ino_generation = 0;
+    // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
+    // why prot get from this is 7. rwxp
     DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
     if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
         HLOGE("strncpy_s failed");

@@ -169,7 +169,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid, const std::str
                       map->begin, map->end, map->offset);
                 recordCallBack_(std::move(mmapRecord));
                 if (updateNormalSymbol) {
-                    UpdateSymbols(map->name);
+                    UpdateSymbols(map, pid);
                 }
                 prevMap = map;
             }
@@ -221,11 +221,15 @@ VirtualThread &VirtualRuntime::GetThread(pid_t pid, pid_t tid, const std::string
     }
 }
 
-void VirtualRuntime::UpdateThreadMaps(pid_t pid, pid_t tid, const std::string filename,
-                                      uint64_t begin, uint64_t len, uint64_t offset)
+std::shared_ptr<DfxMap> VirtualRuntime::UpdateThreadMaps(pid_t pid, pid_t tid, const std::string filename,
+                                                         uint64_t begin, uint64_t len, uint64_t offset, uint32_t prot)
 {
     VirtualThread &thread = GetThread(pid, tid);
-    thread.CreateMapItem(filename, begin, len, offset);
+    std::shared_ptr<DfxMap> map = thread.CreateMapItem(filename, begin, len, offset, prot);
+    if (isHM_) {
+        thread.FixHMBundleMap();
+    }
+    return map;
 }
 
 void VirtualRuntime::UpdateKernelModulesSpaceMaps()
@@ -450,15 +454,19 @@ void VirtualRuntime::UpdateFromRecord(PerfEventRecord &record)
     }
 }
 
-void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, CallFrame &callFrame)
+void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, DfxFrame &callFrame)
 {
-    callFrame.vaddrInFile_ = symbol.funcVaddr_;
-    callFrame.offsetToVaddr_ = symbol.offsetToVaddr_;
-    callFrame.symbolFileIndex_ = symbol.symbolFileIndex_;
-    callFrame.symbolName_ = symbol.GetName();
-    callFrame.symbolIndex_ = symbol.index_;
-    callFrame.filePath_ = symbol.module_.empty() ? symbol.comm_ : symbol.module_;
-    HLOG_ASSERT_MESSAGE(!callFrame.symbolName_.empty(), "%s", symbol.ToDebugString().c_str());
+    callFrame.funcOffset = symbol.funcVaddr_;
+    callFrame.mapOffset = symbol.offsetToVaddr_;
+    callFrame.symbolFileIndex = symbol.symbolFileIndex_;
+    callFrame.funcName = symbol.GetName();
+    if (callFrame.funcName.empty()) {
+        HLOGD("callFrame.funcName:%s, GetName:%s\n", callFrame.funcName.c_str(), symbol.GetName().data());
+    }
+
+    callFrame.index = symbol.index_;
+    callFrame.mapName = symbol.module_.empty() ? symbol.comm_ : symbol.module_;
+    HLOG_ASSERT_MESSAGE(!callFrame.funcName.empty(), "%s", symbol.ToDebugString().c_str());
 }
 
 void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
@@ -597,7 +605,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 #endif
 
     // we will not do this in record mode
-    if (recordCallBack_ == nullptr) {
+    if (!SymbolsFile::onRecording_) {
         if (dedupStack_ && recordSample.stackId_.section.id > 0 && recordSample.data_.nr == 0) {
             RecoverCallStack(recordSample);
         }
@@ -647,9 +655,9 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
     } else {
         NeedAdaptSandboxPath(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header.size);
         FixHMBundleMmap(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header.size);
-        UpdateThreadMaps(recordMmap.data_.pid, recordMmap.data_.tid, recordMmap.data_.filename,
-                         recordMmap.data_.addr, recordMmap.data_.len, recordMmap.data_.pgoff);
-        UpdateSymbols(recordMmap.data_.filename);
+        auto map = UpdateThreadMaps(recordMmap.data_.pid, recordMmap.data_.tid, recordMmap.data_.filename,
+                                    recordMmap.data_.addr, recordMmap.data_.len, recordMmap.data_.pgoff);
+        UpdateSymbols(map, recordMmap.data_.pid);
     }
 }
 
@@ -758,9 +766,10 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
             }
         }
     }
-    UpdateThreadMaps(recordMmap2.data_.pid, recordMmap2.data_.tid, recordMmap2.data_.filename,
-                     recordMmap2.data_.addr, recordMmap2.data_.len, recordMmap2.data_.pgoff);
-    UpdateSymbols(recordMmap2.data_.filename);
+    auto map = UpdateThreadMaps(recordMmap2.data_.pid, recordMmap2.data_.tid, recordMmap2.data_.filename,
+                                recordMmap2.data_.addr, recordMmap2.data_.len, recordMmap2.data_.pgoff,
+                                recordMmap2.data_.prot);
+    UpdateSymbols(map, recordMmap2.data_.pid);
 }
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordComm &recordComm)
@@ -774,26 +783,56 @@ void VirtualRuntime::SetRecordMode(RecordCallBack recordCallBack)
     recordCallBack_ = recordCallBack;
 }
 
-void VirtualRuntime::UpdateSymbols(std::string fileName)
+void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
 {
-    HLOGD("try to find symbols for file: %s", fileName.c_str());
-#ifdef HIPERF_DEBUG_TIME
-    const auto startTime = steady_clock::now();
-#endif
-    for (const auto &symbolsFile : symbolsFiles_) {
-        if (symbolsFile->filePath_ == fileName) {
-            HLOGV("already have '%s'", fileName.c_str());
+    if (map == nullptr) {
+        return;
+    }
+    if (map->symbolFileIndex != -1) {
+        // in cache
+        return;
+    }
+    HLOGD("try to find symbols for file: %s", map->name.c_str());
+    for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
+        if (symbolsFiles_[i]->filePath_ == map->name) {
+            map->symbolFileIndex = i;
+            HLOGV("already have '%s'", map->name.c_str());
             return;
         }
     }
-    // found it by name
-    auto symbolsFile = SymbolsFile::CreateSymbolsFile(fileName);
+
+#ifdef HIPERF_DEBUG_TIME
+    const auto startTime = steady_clock::now();
+#endif
+    /**
+     * map[]     map.name = SymbolsFile.filePath_         prot    SymbolsFileType
+     * seg1      /data/storage/el1/bundle/entry.hap       r--p    ABC
+     * seg2      /data/storage/el1/bundle/entry.hap       r-xp    ELF
+     * seg3      /data/storage/el1/bundle/entry.hap       r--p    ABC
+     * seg4      /data/storage/el1/bundle/entry.hap       r--p    ABC
+     * seg1      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
+     * seg2      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
+     * seg3      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
+     * segN      .hap                                     r--p    .an/jit/etc
+     * 通过 map -> SymbolsFile FindSymbolsByMap 通过filePath_ = map.name 来查找，这在一对一的情况下没有问题
+     * 但是在一对多的情况就会产生问题。比如在runtime，判断了seg1为ABC，则需要将hap.name修正 .hap!abc，且filePath_也一并修正
+     * 并在Load时修正filePath_为LoadPath_，但这时候的判断ABC的过程在recording中，会影响性能。
+     * 仅有map信息能否找到对应的symbolsFile
+     * 1.map.name == symbolsFile.filePath_
+     * 2.map.FileType == symbolsFiles_[map.symbolFileIndex]
+     * 3.cache pc->map->symbolsFiles[map.symbolFileIndex]
+     * 4.must ensure map.mapType assigned with SymbolsFile constructions at the same time.
+    */
+    std::unique_ptr<SymbolsFile> symbolsFile =
+        SymbolsFile::CreateSymbolsFile(IsArkJsMap(map)? SYMBOL_HAP_FILE : SYMBOL_ELF_FILE, map->name, pid);
+    symbolsFile->SetMapsInfo(map);
     if (enableDebugInfoSymbolic_ && symbolsFile->symbolFileType_ == SymbolsFileType::SYMBOL_ELF_FILE) {
         symbolsFile->EnableMiniDebugInfo();
     }
     // set symbol path If it exists
     if (symbolsPaths_.size() > 0) {
-        symbolsFile->setSymbolsFilePath(symbolsPaths_); // also load from search path
+        // also load from search path
+        symbolsFile->setSymbolsFilePath(symbolsPaths_);
     }
     if (loadSymboleWhenNeeded_) {
         // load it when we need it
@@ -801,12 +840,12 @@ void VirtualRuntime::UpdateSymbols(std::string fileName)
     } else if (symbolsFile->LoadSymbols()) {
         symbolsFiles_.emplace_back(std::move(symbolsFile));
     } else {
-        HLOGW("symbols file for '%s' not found.", fileName.c_str());
+        HLOGW("symbols file for '%s' not found.", map->name.c_str());
     }
 #ifdef HIPERF_DEBUG_TIME
     auto usedTime = duration_cast<microseconds>(steady_clock::now() - startTime);
     if (usedTime.count() != 0) {
-        HLOGV("cost %0.3f ms to load '%s'", usedTime.count() / MS_DURATION, fileName.c_str());
+        HLOGV("cost %0.3f ms to load '%s'", usedTime.count() / MS_DURATION, map->name.c_str());
     }
     updateSymbolsTimes_ += usedTime;
 #endif
@@ -828,7 +867,7 @@ const DfxSymbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<D
                     vaddrSymbol.fileVaddr_ =
                         symbolsFile->GetVaddrInSymbols(ip, map.begin, map.offset);
                     perf_callchain_context context = PERF_CONTEXT_KERNEL;
-                    if (GetSymbolCache(ip, vaddrSymbol, context)) {
+                    if (GetSymbolCache(vaddrSymbol.fileVaddr_, vaddrSymbol, context)) {
                         return vaddrSymbol;
                     }
                     HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64
@@ -880,7 +919,7 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
             vaddrSymbol.fileVaddr_ =
                 symbolsFile->GetVaddrInSymbols(ip, map->begin, map->offset);
             perf_callchain_context context = PERF_CONTEXT_MAX;
-            if (GetSymbolCache(ip, vaddrSymbol, context)) {
+            if (GetSymbolCache(vaddrSymbol.fileVaddr_, vaddrSymbol, context)) {
                 return vaddrSymbol;
             }
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
@@ -915,29 +954,37 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
         if (symbolsFile != nullptr) {
             vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
             vaddrSymbol.module_ = map->name;
-            vaddrSymbol.fileVaddr_ =
-                symbolsFile->GetVaddrInSymbols(ip, map->begin, map->offset);
+            vaddrSymbol.fileVaddr_ = symbolsFile->GetVaddrInSymbols(ip, map->begin, map->offset);
             perf_callchain_context context = PERF_CONTEXT_USER;
-            if (GetSymbolCache(ip, vaddrSymbol, context)) {
+            if (GetSymbolCache(vaddrSymbol.fileVaddr_, vaddrSymbol, context)) {
                 return vaddrSymbol;
             }
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
                   vaddrSymbol.fileVaddr_, ip, map->name.c_str());
             if (!symbolsFile->SymbolsLoaded()) {
+                symbolsFile->LoadDebugInfo(map);
                 symbolsFile->LoadSymbols(map);
             }
-            auto foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
-            foundSymbols.taskVaddr_ = ip;
-            if (!foundSymbols.IsValid()) {
+            DfxSymbol foundSymbols;
+            if (!symbolsFile->IsAbc()) {
+                foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            } else {
+                HLOGD("symbolsFile:%s is ABC :%d", symbolsFile->filePath_.c_str(), symbolsFile->IsAbc());
+                foundSymbols = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+            }
+
+            if (foundSymbols.IsValid()) {
+                return foundSymbols;
+            } else {
                 HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s", ip,
                       vaddrSymbol.fileVaddr_, map->name.c_str());
+                if (symbolsFile->IsAbc()) {
+                    symbolsFile->symbolsMap_.insert(std::make_pair(ip, vaddrSymbol));
+                }
                 return vaddrSymbol;
-            } else {
-                return foundSymbols;
             }
         } else {
-            HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip,
-                  map->name.c_str());
+            HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip, map->name.c_str());
         }
     } else {
 #ifdef HIPERF_DEBUG
@@ -947,24 +994,24 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
     return vaddrSymbol;
 }
 
-bool VirtualRuntime::GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
+bool VirtualRuntime::GetSymbolCache(uint64_t fileVaddr, DfxSymbol &symbol,
                                     const perf_callchain_context &context)
 {
-    if (context == PERF_CONTEXT_MAX and kThreadSymbolCache_.count(ip)) {
+    if (context == PERF_CONTEXT_MAX and kThreadSymbolCache_.count(fileVaddr)) {
         if (kThreadSymbolCache_.find(symbol.fileVaddr_) == kThreadSymbolCache_.end()) {
             return false;
         }
         symbol = kThreadSymbolCache_[symbol.fileVaddr_];
         symbol.hit_++;
-        HLOGV("hit kernel thread cache 0x%" PRIx64 " %d", ip, symbol.hit_);
+        HLOGV("hit kernel thread cache 0x%" PRIx64 " %d", fileVaddr, symbol.hit_);
         return true;
-    } else if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(ip)) {
+    } else if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(fileVaddr)) {
         if (kernelSymbolCache_.find(symbol.fileVaddr_) == kernelSymbolCache_.end()) {
             return false;
         }
         symbol = kernelSymbolCache_[symbol.fileVaddr_];
         symbol.hit_++;
-        HLOGV("hit kernel cache 0x%" PRIx64 " %d", ip, symbol.hit_);
+        HLOGV("hit kernel cache 0x%" PRIx64 " %d", fileVaddr, symbol.hit_);
         return true;
     } else if (userSymbolCache_.count(symbol.fileVaddr_) != 0) {
         const DfxSymbol &cachedSymbol = userSymbolCache_[symbol.fileVaddr_];
@@ -974,7 +1021,7 @@ bool VirtualRuntime::GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
         }
         symbol = cachedSymbol;
         symbol.hit_++;
-        HLOGV("hit user cache 0x%" PRIx64 " %d %s", ip, symbol.hit_,
+        HLOGV("hit user cache 0x%" PRIx64 " %d %s", fileVaddr, symbol.hit_,
             symbol.ToDebugString().c_str());
         return true;
     } else {
@@ -1221,7 +1268,7 @@ void VirtualRuntime::UpdateDevhostSymbols()
     // update normal symbole files
     VirtualThread &kthread = GetThread(devhostPid_, devhostPid_);
     for (const auto &map : kthread.GetMaps()) {
-        UpdateSymbols(map->name);
+        UpdateSymbols(map, devhostPid_);
     }
 }
 
@@ -1255,6 +1302,12 @@ bool VirtualRuntime::IsKernelThread(pid_t pid)
         return false;
     }
     return pid == SYSMGR_PID || pid == devhostPid_;
+}
+
+bool VirtualRuntime::IsArkJsMap(std::shared_ptr<DfxMap> map)
+{
+    return (StringEndsWith(map->name, ".hap") || StringEndsWith(map->name, ".hsp") ||
+            StringEndsWith(map->name, ".js]") || StringStartsWith(map->name, "[anon:ArkTs Code"));
 }
 } // namespace HiPerf
 } // namespace Developtools

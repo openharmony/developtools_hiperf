@@ -147,6 +147,7 @@ public:
     bool IsKernelThread(pid_t pid);
     void CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
                             uSymbolsHits &userSymbolsHits);
+    bool IsArkJsMap(std::shared_ptr<DfxMap> map);
     // debug time
 #ifdef HIPERF_DEBUG_TIME
     std::chrono::microseconds updateSymbolsTimes_ = std::chrono::microseconds::zero();
@@ -188,12 +189,11 @@ private:
     HashList<uint64_t, DfxSymbol> userSymbolCache_;
     HashList<uint64_t, DfxSymbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
     HashList<uint64_t, DfxSymbol> kThreadSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
-    bool GetSymbolCache(uint64_t ip, DfxSymbol &symbol,
+    bool GetSymbolCache(uint64_t fileVaddr, DfxSymbol &symbol,
                         const perf_callchain_context &context);
     // find synbols function name
-    void MakeCallFrame(DfxSymbol &symbol, CallFrame &callFrame);
-    // records
-    void UpdateSymbols(std::string filename);
+    void MakeCallFrame(DfxSymbol &symbol, DfxFrame &callFrame);
+    void UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid);
     // we don't know whether hap vma mapping is stand for a so
     // thus we need try to parse it first
     bool UpdateHapSymbols(std::shared_ptr<DfxMap> map);
@@ -207,8 +207,8 @@ private:
     VirtualThread &CreateThread(pid_t pid, pid_t tid, const std::string name = "");
 
     // maps
-    void UpdateThreadMaps(pid_t pid, pid_t tid, const std::string filename, uint64_t begin,
-                          uint64_t len, uint64_t offset);
+    std::shared_ptr<DfxMap> UpdateThreadMaps(pid_t pid, pid_t tid, const std::string filename, uint64_t begin,
+                          uint64_t len, uint64_t offset, uint32_t prot = 0);
     void UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offset, std::string filename);
 
     const DfxSymbol GetKernelSymbol(uint64_t ip, const std::vector<DfxMap> &memMaps,

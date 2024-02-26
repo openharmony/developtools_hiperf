@@ -26,7 +26,8 @@
         "c_utils",
         "bundle_framework",
         "faultloggerd",
-        "init"
+        "init",
+        "ability_base"
       ],
       "third_party": [
         "zlib",

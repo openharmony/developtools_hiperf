@@ -140,16 +140,36 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByFileInfo(const std::string name,
     return nullptr;
 }
 
-SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> inMap) const
+std::shared_ptr<DfxMap> VirtualThread::FindFirstMapByFileInfo(const std::string name) const
 {
-    for (auto &symbolsFile : symbolsFiles_) {
-        if (symbolsFile->filePath_ == inMap->name) {
-            HLOGM("found symbol for map '%s'", inMap->name.c_str());
-            if (symbolsFile->LoadDebugInfo(inMap)) {
-                HLOGM("found symbol for map '%s'", inMap->name.c_str());
-                return symbolsFile.get();
+    for (auto &map : memMaps_) {
+        if (name != map->name) {
+            continue;
+        }
+        return map;
+    }
+    HLOGM("not found map for %s ", name.c_str());
+    return nullptr;
+}
+
+SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) const
+{
+    if (map->symbolFileIndex != -1) {
+        // no need further operation
+        if (symbolsFiles_[map->symbolFileIndex]->LoadDebugInfo(map)) {
+            return symbolsFiles_[map->symbolFileIndex].get();
+        }
+    } else {
+        // add it to cache
+        for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
+            if (symbolsFiles_[i]->filePath_ == map->name) {
+                HLOGD("found symbol for map '%s'", map->name.c_str());
+                if (symbolsFiles_[i]->LoadDebugInfo(map)) {
+                    HLOGD("found symbol for map '%s'", map->name.c_str());
+                    map->symbolFileIndex = i;
+                    return symbolsFiles_[i].get();
+                }
             }
-            break;
         }
     }
 
@@ -363,18 +383,19 @@ void VirtualThread::SortMemMaps()
     }
 }
 
-void VirtualThread::CreateMapItem(const std::string filename, uint64_t begin, uint64_t len,
-                                  uint64_t offset)
+std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string filename, uint64_t begin, uint64_t len,
+                                                     uint64_t offset, uint32_t prot)
 {
     if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(filename)) {
-        return; // skip some memmap
+        return nullptr; // skip some memmap
     }
     std::shared_ptr<DfxMap> map = memMaps_.emplace_back(std::make_shared<DfxMap>(begin, begin + len, offset,
-        "", filename));
+        prot, filename));
     memMapsIndexs_.emplace_back(memMaps_.size() - 1);
     HLOGD(" %u:%u create a new map(total %zu) at '%s' (0x%" PRIx64 "-0x%" PRIx64 ")@0x%" PRIx64 " ",
           pid_, tid_, memMaps_.size(), map->name.c_str(), map->begin, map->end, map->offset);
     SortMemMaps();
+    return map;
 }
 } // namespace HiPerf
 } // namespace Developtools
