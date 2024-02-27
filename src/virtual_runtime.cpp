@@ -605,7 +605,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 #endif
 
     // we will not do this in record mode
-    if (!SymbolsFile::onRecording_) {
+    if (recordCallBack_ == nullptr) {
         if (dedupStack_ && recordSample.stackId_.section.id > 0 && recordSample.data_.nr == 0) {
             RecoverCallStack(recordSample);
         }
