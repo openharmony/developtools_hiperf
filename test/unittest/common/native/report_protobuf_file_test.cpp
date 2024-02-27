@@ -293,9 +293,9 @@ HWTEST_F(ReportProtobufFileTest, ProcessSampleRecord, TestSize.Level1)
     int expectRecord = 0;
     std::string fileName = "perf.proto";
     PerfRecordSample sample(false, 1, 2, 100, 200u);
-    sample.callFrames_.emplace_back(0x1, 0x1234, "first_user_func", "user_symbol");
-    sample.callFrames_.emplace_back(0x2, 0x1234, "first_user2_func", "user_symbol2");
-    sample.callFrames_.emplace_back(0x3, 0x1234, "second_user2_func", "user_symbol2");
+    sample.callFrames_.emplace_back(0x1, 0x1234, "user_symbol", "first_user_func");
+    sample.callFrames_.emplace_back(0x2, 0x1234, "user_symbol2", "first_user2_func");
+    sample.callFrames_.emplace_back(0x3, 0x1234, "user_symbol2", "second_user2_func");
 
     sample.callFrames_.at(0).symbolFileIndex = 0;
     sample.callFrames_.at(1).symbolFileIndex = 1;

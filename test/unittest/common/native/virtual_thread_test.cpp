@@ -340,10 +340,12 @@ HWTEST_F(VirtualThreadTest, FindSymbolsFileByMap, TestSize.Level1)
     EXPECT_STREQ(thread.FindSymbolsFileByMap(inMap)->filePath_.c_str(), inMap->name.c_str());
 
     inMap->name = "2.elf";
+    inMap->symbolFileIndex = -1;
     ASSERT_NE(thread.FindSymbolsFileByMap(inMap), nullptr);
     EXPECT_STREQ(thread.FindSymbolsFileByMap(inMap)->filePath_.c_str(), inMap->name.c_str());
 
     inMap->name = "3.elf";
+    inMap->symbolFileIndex = -1;
     ASSERT_NE(thread.FindSymbolsFileByMap(inMap), nullptr);
     EXPECT_STREQ(thread.FindSymbolsFileByMap(inMap)->filePath_.c_str(), inMap->name.c_str());
 }

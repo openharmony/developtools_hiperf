@@ -930,7 +930,7 @@ public:
             loadOffSet_ = map_->offset;
             abcDataSize_ = map_->end - map_->begin;
             abcDataPtr_ = std::make_unique<uint8_t[]>(abcDataSize_);
-            auto size = DfxMemory::ProcessVmRead(pid_, map_->begin, abcDataPtr_.get(), map_->end - map_->begin);
+            auto size = DfxMemory::ReadProcMemByPid(pid_, map_->begin, abcDataPtr_.get(), map_->end - map_->begin);
             if (size != abcDataSize_) {
                 HLOGD("return size is small abcDataPtr : %s, isAbc: %d", abcDataPtr_.get(), isHapAbc_);
                 return false;
