@@ -415,6 +415,10 @@ private:
                 elfFile_ = std::make_shared<DfxElf>(elfPath);
             }
         }
+        if (elfFile_ == nullptr) {
+            HLOGD("Failed to create elf file for %s.", elfPath.c_str());
+            return false;
+        }
         HLOGD("loaded elf %s", elfPath.c_str());
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
@@ -1066,7 +1070,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
     }
 }
 
-std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &symbolFilePath)
+std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &symbolFilePath, pid_t pid)
 {
     // we need check file name here
     if (symbolFilePath == KERNEL_MMAP_NAME) {
@@ -1077,6 +1081,8 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &s
         return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, symbolFilePath);
     } else if (StringEndsWith(symbolFilePath, KERNEL_MODULES_EXT_NAME)) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE, symbolFilePath);
+    } else if (IsArkJsFile(symbolFilePath)) {
+        return SymbolsFile::CreateSymbolsFile(SYMBOL_HAP_FILE, symbolFilePath, pid);
     } else {
         // default is elf, this may be problematic in the future.
         return SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, symbolFilePath);
@@ -1232,9 +1238,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
 {
     bool isHapSymbolFile = (SymbolsFileType)symbolFileStruct.symbolType_ == SYMBOL_HAP_FILE;
     HLOGD("isHapSymbolFile : %d", isHapSymbolFile);
-    auto symbolsFile = CreateSymbolsFile(
-        isHapSymbolFile ? SYMBOL_HAP_FILE : SYMBOL_ELF_FILE,
-        symbolFileStruct.filePath_);
+    auto symbolsFile = CreateSymbolsFile(symbolFileStruct.filePath_);
 
     // default create elf file. but hap file need special operation.
     symbolsFile->filePath_ = symbolFileStruct.filePath_;
@@ -1255,8 +1259,8 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
         }
         symbolsFile->symbols_.emplace_back(symbolStruct.vaddr_, symbolStruct.len_,
                                            symbolStruct.symbolName_, symbolFileStruct.filePath_);
-        symbolsFile->AdjustSymbols(); // reorder
     }
+    symbolsFile->AdjustSymbols(); // reorder
     symbolsFile->debugInfoLoadResult_ = true;
     symbolsFile->symbolsLoaded_ = true; // all ready LoadFrom perf.data
     HLOGV("load %zu symbol from SymbolFileStruct for file '%s'", symbolsFile->symbols_.size(),

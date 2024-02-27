@@ -340,6 +340,7 @@ const std::string GetUserType();
 std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname);
+bool IsArkJsFile(std::string filepath);
 
 template <typename Func>
 class ScopeGuard {

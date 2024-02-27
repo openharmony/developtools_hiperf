@@ -228,7 +228,7 @@ void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, ui
 
         // only calc the first frame event count
         if (jsFrame) {
-            skipFrame = 1; // 1:for arkjs frame,skip the stub.an frame
+            skipFrame = 1; // 1 : for arkjs frame,skip the stub.an frame
         }
         if (it == frames.begin() + skipFrame) {
             func.eventCount_ += eventCount;

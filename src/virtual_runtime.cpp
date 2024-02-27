@@ -823,8 +823,7 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
      * 3.cache pc->map->symbolsFiles[map.symbolFileIndex]
      * 4.must ensure map.mapType assigned with SymbolsFile constructions at the same time.
     */
-    std::unique_ptr<SymbolsFile> symbolsFile =
-        SymbolsFile::CreateSymbolsFile(IsArkJsMap(map)? SYMBOL_HAP_FILE : SYMBOL_ELF_FILE, map->name, pid);
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(map->name, pid);
     symbolsFile->SetMapsInfo(map);
     if (enableDebugInfoSymbolic_ && symbolsFile->symbolFileType_ == SymbolsFileType::SYMBOL_ELF_FILE) {
         symbolsFile->EnableMiniDebugInfo();
@@ -1304,11 +1303,6 @@ bool VirtualRuntime::IsKernelThread(pid_t pid)
     return pid == SYSMGR_PID || pid == devhostPid_;
 }
 
-bool VirtualRuntime::IsArkJsMap(std::shared_ptr<DfxMap> map)
-{
-    return (StringEndsWith(map->name, ".hap") || StringEndsWith(map->name, ".hsp") ||
-            StringEndsWith(map->name, ".js]") || StringStartsWith(map->name, "[anon:ArkTs Code"));
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

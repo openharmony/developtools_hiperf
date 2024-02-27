@@ -111,7 +111,7 @@ public:
     // create the symbols file object
     static std::unique_ptr<SymbolsFile> CreateSymbolsFile(
         SymbolsFileType = SYMBOL_UNKNOW_FILE, const std::string symbolFilePath = EMPTY_STRING, pid_t pid = 0);
-    static std::unique_ptr<SymbolsFile> CreateSymbolsFile(const std::string &symbolFilePath);
+    static std::unique_ptr<SymbolsFile> CreateSymbolsFile(const std::string &symbolFilePath, pid_t pid = 0);
 
     // set symbols path
     bool setSymbolsFilePath(const std::string &symbolsSearchPath)

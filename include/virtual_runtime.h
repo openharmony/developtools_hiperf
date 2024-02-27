@@ -147,7 +147,6 @@ public:
     bool IsKernelThread(pid_t pid);
     void CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
                             uSymbolsHits &userSymbolsHits);
-    bool IsArkJsMap(std::shared_ptr<DfxMap> map);
     // debug time
 #ifdef HIPERF_DEBUG_TIME
     std::chrono::microseconds updateSymbolsTimes_ = std::chrono::microseconds::zero();
