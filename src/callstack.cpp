@@ -747,12 +747,6 @@ int CallStack::FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void
     if (mapIndex >= 0) {
         auto map = unwindInfoPtr->thread.GetMaps()[mapIndex];
         if (map != nullptr) {
-            if (map->IsArkExecutable()) {
-                HLOGD("StepArkFrame");
-                // arkFrame
-                return 1;
-            }
-
             SymbolsFile *symbolsFile = unwindInfoPtr->thread.FindSymbolsFileByMap(map);
             if (symbolsFile != nullptr) {
                 return FillUnwindTable(symbolsFile, map, unwindInfoPtr, pc, outTableInfo);
