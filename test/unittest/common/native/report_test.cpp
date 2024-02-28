@@ -714,10 +714,10 @@ HWTEST_F(ReportTest, MultiLevelCompare, TestSize.Level1)
 HWTEST_F(ReportTest, AddReportItem, TestSize.Level1)
 {
     PerfRecordSample sample(false, 0, 0, 1);
-    sample.callFrames_.emplace_back(0x1, 0x1234, "frame1", "dummy");
-    sample.callFrames_.emplace_back(0x2, 0x1234, "frame2", "dummy");
-    sample.callFrames_.emplace_back(0x3, 0x1234, "frame3", "dummy");
-    sample.callFrames_.emplace_back(0x3, 0x1234, "frame4", "dummy");
+    sample.callFrames_.emplace_back(0x1, 0x1234, "dummy", "frame1");
+    sample.callFrames_.emplace_back(0x2, 0x1234, "dummy", "frame2");
+    sample.callFrames_.emplace_back(0x3, 0x1234, "dummy", "frame3");
+    sample.callFrames_.emplace_back(0x3, 0x1234, "dummy", "frame4");
 
     // caller order should be
     // 4
@@ -782,11 +782,11 @@ HWTEST_F(ReportTest, AddReportItemBranch, TestSize.Level1)
     sample.data_.lbr[2].to = 0x123402;
     sample.data_.lbr[2].from = 0x432102;
 
-    sample.callFrames_.emplace_back(0x1, 0x1234, "frame1", "dummy");
-    sample.callFrames_.emplace_back(0x2, 0x1234, "frame2", "dummy");
-    sample.callFrames_.emplace_back(0x3, 0x1234, "frame3", "dummy");
+    sample.callFrames_.emplace_back(0x1, 0x1234, "dummy", "frame1");
+    sample.callFrames_.emplace_back(0x2, 0x1234, "dummy", "frame2");
+    sample.callFrames_.emplace_back(0x3, 0x1234, "dummy", "frame3");
     // vaddr is 0 , will not added
-    sample.callFrames_.emplace_back(0x3, 0, "frame4", "dummy");
+    sample.callFrames_.emplace_back(0x3, 0, "dummy", "frame4");
 
     report_->AddReportItemBranch(sample);
     // == nbr size

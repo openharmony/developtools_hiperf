@@ -771,6 +771,11 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
     return false;
 }
 
+bool IsArkJsFile(const std::string& filepath)
+{
+    return (StringEndsWith(filepath, ".hap") || StringEndsWith(filepath, ".hsp") ||
+            StringStartsWith(filepath, "[anon:ArkTS Code"));
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

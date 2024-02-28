@@ -458,7 +458,7 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack1, TestSize.Level1)
     ASSERT_EQ(record.callFrames_.size() + 1, record.data_.nr);
     ASSERT_EQ(record.data_.ips[0], PERF_CONTEXT_USER);
     for (size_t i = 1; i < record.data_.nr; i++) {
-        ASSERT_EQ(record.data_.ips[i], record.callFrames_.at(i - 1).ip_);
+        ASSERT_EQ(record.data_.ips[i], record.callFrames_.at(i - 1).pc);
     }
     // result is 1 - 9
 }
@@ -484,7 +484,7 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack2, TestSize.Level1)
     ASSERT_EQ(record.callFrames_.size() + 1, record.data_.nr);
     ASSERT_EQ(record.data_.ips[0], PERF_CONTEXT_USER);
     for (size_t i = 1; i < record.data_.nr; i++) {
-        ASSERT_EQ(record.data_.ips[i], record.callFrames_.at(i - 1).ip_);
+        ASSERT_EQ(record.data_.ips[i], record.callFrames_.at(i - 1).pc);
     }
     // result is 1 - 9
 }
@@ -513,7 +513,7 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack3, TestSize.Level1)
     }
     ASSERT_EQ(record.data_.ips[ips.size()], PERF_CONTEXT_USER);
     for (size_t i = 0; i < record.callFrames_.size(); i++) {
-        ASSERT_EQ(record.data_.ips[i + ips.size() + 1], record.callFrames_.at(i).ip_);
+        ASSERT_EQ(record.data_.ips[i + ips.size() + 1], record.callFrames_.at(i).pc);
     }
     // result is 0 - 3 , PERF_CONTEXT_USER , 4 - 9
 }

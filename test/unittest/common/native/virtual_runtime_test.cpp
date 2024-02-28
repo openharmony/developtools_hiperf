@@ -382,9 +382,9 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
     runtime_->UnwindFromRecord(sample);
     ASSERT_LE(TEST_RECORD_CALLSTACK_IP_FUNC.size(), sample.callFrames_.size());
     for (size_t i = 0; i < TEST_RECORD_CALLSTACK_IP_FUNC.size(); i++) {
-        EXPECT_EQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].first, sample.callFrames_[i].vaddrInFile_);
+        EXPECT_EQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].first, sample.callFrames_[i].funcOffset);
         EXPECT_STREQ(TEST_RECORD_CALLSTACK_IP_FUNC[i].second.data(),
-                     sample.callFrames_[i].symbolName_.data());
+                     sample.callFrames_[i].funcName.data());
     }
 }
 

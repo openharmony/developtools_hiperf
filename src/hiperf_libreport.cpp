@@ -129,7 +129,7 @@ const char *ReportGetSymbolFiles(const char *perfFile)
     // found symbols in file
     reader->ReadFeatureSection();
     for (auto &featureSection : reader->GetFeatureSections()) {
-        if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_SYMBOL) {
+        if (featureSection->featureId_ == FEATURE::HIPERF_FILES_SYMBOL) {
             const PerfFileSectionSymbolsFiles *sectionSymbolsFiles =
                 static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
             auto it = sectionSymbolsFiles->symbolFileStructs_.begin();

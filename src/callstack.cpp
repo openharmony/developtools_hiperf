@@ -376,7 +376,7 @@ int CallStack::getProcName([[maybe_unused]] unw_addr_space_t as, [[maybe_unused]
     return -UNW_EINVAL;
 }
 
-void CallStack::UnwindStep(unw_cursor_t &c, std::vector<CallFrame> &callStack, size_t maxStackLevel)
+void CallStack::UnwindStep(unw_cursor_t &c, std::vector<DfxFrame> &callStack, size_t maxStackLevel)
 {
     while (callStack.size() < maxStackLevel) {
         int ret = unw_step(&c);
@@ -403,7 +403,7 @@ void CallStack::UnwindStep(unw_cursor_t &c, std::vector<CallFrame> &callStack, s
             }
             HLOGV("unwind:%zu: ip 0x%" UNW_WORD_PFLAG " sp 0x%" UNW_WORD_PFLAG "", callStack.size(),
                   ip, sp);
-            if (callStack.back().ip_ == ip && callStack.back().sp_ == sp) {
+            if (callStack.back().pc == ip && callStack.back().sp == sp) {
                 HLOGW("we found a same frame, stop here");
                 break;
             }
@@ -438,7 +438,7 @@ bool CallStack::GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, size_t regN
 }
 
 #if HAVE_LIBUNWIND
-bool CallStack::DoUnwind(const VirtualThread &thread, std::vector<CallFrame> &callStack,
+bool CallStack::DoUnwind(const VirtualThread &thread, std::vector<DfxFrame> &callStack,
                          size_t maxStackLevel)
 {
     unw_addr_space_t addr_space;
@@ -472,7 +472,7 @@ bool CallStack::DoUnwind(const VirtualThread &thread, std::vector<CallFrame> &ca
 #endif
 
 bool CallStack::UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *regs, u64 regsNum,
-                                const u8 *stack, u64 stackSize, std::vector<CallFrame> &callStack,
+                                const u8 *stack, u64 stackSize, std::vector<DfxFrame> &callStack,
                                 size_t maxStackLevel)
 {
     regs_ = regs;
@@ -515,7 +515,7 @@ bool CallStack::UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *re
     return true;
 }
 
-void CallStack::LogFrame(const std::string msg, const std::vector<CallFrame> &frames)
+void CallStack::LogFrame(const std::string msg, const std::vector<DfxFrame> &frames)
 {
     HLOGM("%s", msg.c_str());
     int level = 0;
@@ -540,8 +540,8 @@ end                    begin
 use expandLimit to setup how may frame match is needs
 
 */
-size_t CallStack::DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
-                                    const std::vector<CallFrame> &cachedCallFrames,
+size_t CallStack::DoExpandCallStack(std::vector<DfxFrame> &newCallFrames,
+                                    const std::vector<DfxFrame> &cachedCallFrames,
                                     size_t expandLimit)
 {
     int maxCycle = 0;
@@ -605,7 +605,7 @@ size_t CallStack::DoExpandCallStack(std::vector<CallFrame> &newCallFrames,
     return 0u; // nothing expand
 }
 
-size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames, size_t expandLimit)
+size_t CallStack::ExpandCallStack(pid_t tid, std::vector<DfxFrame> &callFrames, size_t expandLimit)
 {
     size_t expand = 0u;
     if (expandLimit == 0) {
@@ -619,7 +619,7 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
     }
     if (callFrames.size() >= 1u) {
         // get top  (Earliest caller)
-        HashList<uint64_t, std::vector<CallFrame>> &cachedCallFrames = cachedCallFramesMap_[tid];
+        HashList<uint64_t, std::vector<DfxFrame>> &cachedCallFrames = cachedCallFramesMap_[tid];
         HLOGV("find call stack frames in cache size %zu", cachedCallFrames.size());
         // compare
         using namespace std::rel_ops; // enable complement comparing operators
@@ -635,7 +635,7 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
                 3 if new C == new C (if limit > 0)
                 4 insert A after B in new stack
             */
-            const std::vector<CallFrame> &cachedCallStack = *itr;
+            const std::vector<DfxFrame> &cachedCallStack = *itr;
             if (cachedCallStack.size() < expandLimit) {
                 HLOGM("cache callstack is too small, skip it");
                 continue; // check next
@@ -648,14 +648,14 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<CallFrame> &callFrames,
         // add new one in to cache cachedCallFrames.
         // further optimization can be done by caching pointer which avoids copying
         // vector
-        cachedCallFrames[callFrames[0].ip_] = callFrames;
+        cachedCallFrames[callFrames[0].pc] = callFrames;
     }
     HLOGM("expand %zu", expand);
     return expand;
 }
 
 #if defined(HAVE_LIBUNWINDER) && HAVE_LIBUNWINDER
-bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &callStack,
+bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &callStack,
                           size_t maxStackLevel)
 {
 #ifdef target_cpu_x86_64
@@ -683,19 +683,11 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<CallFrame> &c
     regs->SetRegsData((uintptr_t*)(regs_), regsNum_);
 #endif
     unwinder->SetRegs(regs);
-
-    uintptr_t pc = regs->GetPc();
-    uintptr_t sp = regs->GetSp();
-    while (callStack.size() < maxStackLevel) {
-        if (unwinder->Step(pc, sp, &unwindInfo)) {
-            if (pc == callStack.back().ip_ && sp == callStack.back().sp_) {
-                break;
-            }
-            callStack.emplace_back(pc, sp);
-            HLOGV("unwind:%zu: ip 0x%" UNW_WORD_PFLAG " sp 0x%" UNW_WORD_PFLAG "", callStack.size(), pc, sp);
-        } else {
-            break;
-        }
+    unwinder->Unwind(&unwindInfo);
+    callStack = unwinder->GetFrames();
+    HLOGD("callStack size:%zu", callStack.size());
+    for (auto frame: callStack) {
+        HLOGD("pc 0x%" PRIx64 " sp 0x%" PRIx64 "", frame.pc, frame.sp);
     }
     return true;
 #endif
@@ -751,18 +743,23 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
 int CallStack::FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void *arg)
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
-    auto map = unwindInfoPtr->thread.FindMapByAddr(pc);
-    if (map != nullptr) {
-        SymbolsFile *symbolsFile = unwindInfoPtr->thread.FindSymbolsFileByMap(map);
-        if (symbolsFile != nullptr) {
-            return FillUnwindTable(symbolsFile, map, unwindInfoPtr, pc, outTableInfo);
+    int64_t mapIndex = unwindInfoPtr->thread.FindMapIndexByAddr(pc);
+    if (mapIndex >= 0) {
+        auto map = unwindInfoPtr->thread.GetMaps()[mapIndex];
+        if (map != nullptr) {
+            SymbolsFile *symbolsFile = unwindInfoPtr->thread.FindSymbolsFileByMap(map);
+            if (symbolsFile != nullptr) {
+                return FillUnwindTable(symbolsFile, map, unwindInfoPtr, pc, outTableInfo);
+            } else {
+                HLOGD("no symbols file found for thread %d:%s", unwindInfoPtr->thread.tid_,
+                    unwindInfoPtr->thread.name_.c_str());
+            }
         } else {
-            HLOGW("no symbols file found for thread %d:%s", unwindInfoPtr->thread.tid_,
-                  unwindInfoPtr->thread.name_.c_str());
+            HLOGD("pc 0x%016" UNW_WORD_PFLAG " not found in thread %d:%s", pc,
+                unwindInfoPtr->thread.tid_, unwindInfoPtr->thread.name_.c_str());
         }
     } else {
-        HLOGE("pc 0x%016" UNW_WORD_PFLAG " not found in thread %d:%s", pc,
-              unwindInfoPtr->thread.tid_, unwindInfoPtr->thread.name_.c_str());
+        HLOGD("map index is -1");
     }
     return -1;
 }
@@ -798,6 +795,20 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
 
     return 0;
 }
+int CallStack::GetMapByPc(uintptr_t pc, std::shared_ptr<DfxMap>& map, void *arg)
+{
+    UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
+    int64_t mapIndex = unwindInfoPtr->thread.FindMapIndexByAddr(pc);
+    if (mapIndex >= 0) {
+        map = unwindInfoPtr->thread.GetMaps()[mapIndex];
+        if (map != nullptr) {
+            return 0;
+        }
+    }
+    HLOGD("pc 0x%016" UNW_WORD_PFLAG " not found in thread %d:%s", pc,
+          unwindInfoPtr->thread.tid_, unwindInfoPtr->thread.name_.c_str());
+    return -1;
+}
 #endif
 
 CallStack::CallStack()
@@ -807,6 +818,7 @@ CallStack::CallStack()
     accessor_->FindUnwindTable = &CallStack::FindUnwindTable;
     accessor_->AccessMem = &CallStack::AccessMem2;
     accessor_->AccessReg = nullptr;
+    accessor_->GetMapByPc = &CallStack::GetMapByPc;
 #endif
 }
 

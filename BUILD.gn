@@ -195,6 +195,7 @@ ohos_source_set("hiperf_platform_common") {
 
   if (is_ohos) {
     external_deps = [
+      "ability_base:extractortool",
       "c_utils:utils",
       "faultloggerd:libunwinder_static",
       "hilog:libhilog",

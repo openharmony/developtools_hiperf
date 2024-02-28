@@ -33,13 +33,13 @@ namespace Developtools {
 namespace HiPerf {
 class ReportItemCallFrame {
 public:
-    std::string_view func_;
+    std::string func_;
     uint64_t vaddr_;
-    std::string_view dso_;
+    std::string dso_;
     uint64_t eventCount_ = 0;     // call chain event
     uint64_t selfEventCount_ = 0; // call chain event end in this function
     std::vector<ReportItemCallFrame> childs;
-    ReportItemCallFrame(std::string_view func, uint64_t vaddr, std::string_view dso,
+    ReportItemCallFrame(std::string func, uint64_t vaddr, std::string dso,
                         uint64_t eventCount, uint64_t selfEventCount)
         : func_(func),
           vaddr_(vaddr),
@@ -144,8 +144,8 @@ public:
         : pid_(pid),
           tid_(tid),
           comm_(comm),
-          dso_(dso),
-          func_(func),
+          dso_(StringViewHold::Get().Hold(dso)),
+          func_(StringViewHold::Get().Hold(func)),
           vaddr_(vaddr),
           eventCount_(eventCount)
     {

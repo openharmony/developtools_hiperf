@@ -45,19 +45,19 @@ void Report::AddReportItem(const PerfRecordSample &sample, bool includeCallStack
             // we will use caller mode , from last to first
             auto frameIt = sample.callFrames_.rbegin();
             ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-                sample.data_.pid, sample.data_.tid, thread.name_, frameIt->filePath_,
-                frameIt->symbolName_, frameIt->vaddrInFile_, sample.data_.period);
-            HLOGV("%s", item.ToDebugString().c_str());
+                sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
+                frameIt->funcName, frameIt->funcOffset, sample.data_.period);
+            HLOGD("ReportItem: %s", item.ToDebugString().c_str());
             HLOG_ASSERT(!item.func_.empty());
 
             std::vector<ReportItemCallFrame> *currentCallFrames = &item.callStacks_;
             for (frameIt = sample.callFrames_.rbegin(); frameIt != sample.callFrames_.rend();
                  frameIt++) {
-                HLOG_ASSERT(frameIt->ip_ < PERF_CONTEXT_MAX);
+                HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
                 // in add items case , right one should only have 1 callstack
                 // so just new callfames and move to next level
                 ReportItemCallFrame &nextCallFrame = currentCallFrames->emplace_back(
-                    frameIt->symbolName_, frameIt->vaddrInFile_, frameIt->filePath_,
+                    frameIt->funcName, frameIt->funcOffset, frameIt->mapName,
                     sample.data_.period,
                     (std::next(frameIt) == sample.callFrames_.rend()) ? sample.data_.period : 0);
                 HLOGV("add callframe %s", nextCallFrame.ToDebugString().c_str());
@@ -69,10 +69,10 @@ void Report::AddReportItem(const PerfRecordSample &sample, bool includeCallStack
             }
         } else {
             auto frameIt = sample.callFrames_.begin();
-            HLOG_ASSERT(frameIt->ip_ < PERF_CONTEXT_MAX);
+            HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
             ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-                sample.data_.pid, sample.data_.tid, thread.name_, frameIt->filePath_,
-                frameIt->symbolName_, frameIt->vaddrInFile_, sample.data_.period);
+                sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
+                frameIt->funcName, frameIt->funcOffset, sample.data_.period);
             HLOGV("%s", item.ToDebugString().c_str());
             HLOG_ASSERT(!item.func_.empty());
         }
