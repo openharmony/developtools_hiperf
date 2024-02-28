@@ -755,7 +755,7 @@ void PerfEvents::SetSampleFrequency(unsigned int frequency)
         return;
     }
     if (sampleFreq_ > static_cast<unsigned int>(maxRate)) {
-        sampleFreq_ = maxRate;
+        sampleFreq_ = static_cast<unsigned int>(maxRate);
         if (!printFlag) {
             printf("Adjust sampling frequency to maximum allowed frequency %d.\n", maxRate);
             printFlag = true;
