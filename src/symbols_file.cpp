@@ -16,6 +16,7 @@
 #define HILOG_TAG "Symbols"
 
 #include "symbols_file.h"
+
 #include <algorithm>
 #include <chrono>
 #include <cxxabi.h>
