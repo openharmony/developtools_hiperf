@@ -29,11 +29,11 @@
 #include <linux/types.h>
 
 #include "debug_logger.h"
+#include "dfx_frame.h"
 #include "dfx_map.h"
 #include "perf_record_format.h"
-#include "utilities.h"
 #include "unique_stack_table.h"
-#include "dfx_frame.h"
+#include "utilities.h"
 
 namespace OHOS {
 namespace Developtools {

@@ -14,15 +14,16 @@
  */
 
 #define HILOG_TAG "Symbols"
-#include <type_traits>
-#include <string_view>
+
 #include "symbols_file.h"
-#include "dfx_ark.h"
 #include <algorithm>
 #include <chrono>
 #include <cxxabi.h>
+#include <cstdlib>
 #include <fcntl.h>
 #include <fstream>
+#include <string_view>
+#include <type_traits>
 
 #if defined(is_mingw) && is_mingw
 #include <memoryapi.h>
@@ -30,11 +31,10 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #endif
-#include "dfx_extractor_utils.h"
-
-#include <cstdlib>
 #include <unistd.h>
 
+#include "dfx_ark.h"
+#include "dfx_extractor_utils.h"
 #include "dfx_symbols.h"
 #include "dwarf_encoding.h"
 #include "unwinder_config.h"

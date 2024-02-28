@@ -814,10 +814,6 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
      * seg2      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
      * seg3      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
      * segN      .hap                                     r--p    .an/jit/etc
-     * 通过 map -> SymbolsFile FindSymbolsByMap 通过filePath_ = map.name 来查找，这在一对一的情况下没有问题
-     * 但是在一对多的情况就会产生问题。比如在runtime，判断了seg1为ABC，则需要将hap.name修正 .hap!abc，且filePath_也一并修正
-     * 并在Load时修正filePath_为LoadPath_，但这时候的判断ABC的过程在recording中，会影响性能。
-     * 仅有map信息能否找到对应的symbolsFile
      * 1.map.name == symbolsFile.filePath_
      * 2.map.FileType == symbolsFiles_[map.symbolFileIndex]
      * 3.cache pc->map->symbolsFiles[map.symbolFileIndex]
