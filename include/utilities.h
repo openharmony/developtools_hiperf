@@ -337,10 +337,10 @@ void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage);
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsSupportNonDebuggableApp();
 const std::string GetUserType();
+bool IsArkJsFile(const std::string& filepath);
 std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname);
-bool IsArkJsFile(std::string filepath);
 
 template <typename Func>
 class ScopeGuard {
