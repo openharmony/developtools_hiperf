@@ -436,7 +436,7 @@ private:
         // or both drop if build id is not same
         std::string buildIdFound = elfFile_->GetBuildId();
         std::vector<DfxSymbol> symbolsTable;
-        AddSymbols(symbolsTable, elfFile_, elfPath);
+        AddSymbols(symbolsTable, elfFile_, filePath_);
         if (UpdateBuildIdIfMatch(buildIdFound)) {
             UpdateSymbols(symbolsTable, elfPath);
         } else {

@@ -367,15 +367,4 @@ static inline ScopeGuard<Func> operator+(ScopeGuardOnExit, Func&& fn)
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-
-// this will also used for libunwind head (out of namespace)
-#if defined(is_mingw) && is_mingw
-#if !is_double_framework
-#define HAVE_MMAP   1
-#define MAP_PRIVATE 0x02
-void *mmap(void *addr, size_t length, int prot, int flags, int fd, size_t offset);
-int munmap(void *addr, size_t);
-#endif
-#endif
-
 #endif // HIPERF_UTILITIES_H_
