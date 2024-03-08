@@ -37,6 +37,9 @@ size_t RingBuffer::GetFreeSize() const
 
 uint8_t *RingBuffer::AllocForWrite(size_t writeSize)
 {
+    if (buf_ == nullptr || buf_.get() == nullptr) {
+        return nullptr;
+    }
     size_t writeHead = head_.load(std::memory_order_relaxed);
     size_t readHead = tail_.load(std::memory_order_acquire);
     size_t writePos = writeHead % size_;
@@ -77,6 +80,9 @@ void RingBuffer::EndWrite()
 
 uint8_t *RingBuffer::GetReadData()
 {
+    if (buf_ == nullptr || buf_.get() == nullptr) {
+        return nullptr;
+    }
     size_t writeHead = head_.load(std::memory_order_acquire);
     size_t readHead = tail_.load(std::memory_order_relaxed);
     if (writeHead == readHead) {
