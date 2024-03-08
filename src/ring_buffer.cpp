@@ -77,7 +77,7 @@ void RingBuffer::EndWrite()
 
 uint8_t *RingBuffer::GetReadData()
 {
-    if (buf_.get() == nullptr) {
+    if (buf_ == nullptr || buf_.get() == nullptr) {
         return nullptr;
     }
     size_t writeHead = head_.load(std::memory_order_acquire);
