@@ -551,6 +551,10 @@ bool PerfEvents::StartTracking(bool immediately)
     if (!PerfEventsEnable(false)) {
         HLOGE("PerfEvents::PerfEventsEnable() failed");
     }
+    if (recordCallBack_) {
+        // read left samples after disable events
+        ReadRecordsFromMmaps();
+    }
     trackingEndTime_ = steady_clock::now();
 
     RecoverCaptureSig();
@@ -1146,10 +1150,10 @@ size_t PerfEvents::CalcBufferSize()
     return bufferSize;
 }
 
-inline bool PerfEvents::IsRecordInMmap()
+inline bool PerfEvents::IsRecordInMmap(int timeout)
 {
     if (pollFds_.size() > 0) {
-        if (poll(static_cast<struct pollfd*>(pollFds_.data()), pollFds_.size(), pollTimeOut_) <= 0) {
+        if (poll(static_cast<struct pollfd*>(pollFds_.data()), pollFds_.size(), timeout) <= 0) {
             // time out try again
             return false;
         }
@@ -1488,13 +1492,8 @@ void PerfEvents::RecordLoop()
     while (g_trackRunning) {
         // time check point
         const auto thisTime = steady_clock::now();
-
-        if (IsRecordInMmap()) {
-            ReadRecordsFromMmaps();
-        }
-
-        if ((uint64_t)std::chrono::duration_cast<milliseconds>(thisTime - startTime).count() >
-            (uint64_t)(count * THOUSANDS)) {
+        usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
+        if ((uint64_t)usedTimeMsTick.count() > (uint64_t)(count * THOUSANDS)) {
             if (HaveTargetsExit(startTime)) {
                 break;
             }
@@ -1502,15 +1501,18 @@ void PerfEvents::RecordLoop()
         }
 
         if (thisTime >= endTime) {
-            usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
             printf("Timeout exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
             if (trackedCommand_) {
                 trackedCommand_->Stop();
             }
             break;
         }
+
+        int timeLeft = duration_cast<milliseconds>(endTime - thisTime).count();
+        if (IsRecordInMmap(std::min(timeLeft, pollTimeOut_))) {
+            ReadRecordsFromMmaps();
+        }
     }
-    ReadRecordsFromMmaps();
 
     if (!g_trackRunning) {
         // for user interrupt situation, print time statistic

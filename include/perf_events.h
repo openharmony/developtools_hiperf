@@ -514,7 +514,7 @@ private:
     bool isLowPriorityThread_ = false;
     void RecordLoop();
     void StatLoop();
-    bool IsRecordInMmap();
+    bool IsRecordInMmap(int timeout);
     void ReadRecordsFromMmaps();
     bool GetRecordFromMmap(MmapFd &mmap);
     void GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size);
