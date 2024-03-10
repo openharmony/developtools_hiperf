@@ -397,7 +397,10 @@ ohos_executable("hiperf") {
     static_link = true
   }
 
-  external_deps = [ "faultloggerd:libunwinder_static" ]
+  external_deps = [
+    "faultloggerd:libunwinder_static",
+    "hilog:libhilog",
+  ]
 
   subsystem_name = "developtools"
   part_name = "hiperf"
