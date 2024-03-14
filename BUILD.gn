@@ -231,6 +231,7 @@ ohos_source_set("hiperf_platform_linux") {
   if (is_ohos) {
     external_deps = [
       "faultloggerd:libunwinder_static",
+      "hilog:libhilog",
       "init:libbegetutil",
     ]
   } else {
@@ -295,7 +296,10 @@ ohos_source_set("support_protobuf") {
   ]
 
   if (is_ohos) {
-    external_deps = [ "faultloggerd:libunwinder_static" ]
+    external_deps = [
+      "faultloggerd:libunwinder_static",
+      "hilog:libhilog",
+    ]
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }

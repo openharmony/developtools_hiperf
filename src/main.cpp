@@ -39,6 +39,9 @@ using namespace OHOS::Developtools::HiPerf;
 
 int main(const int argc, const char *argv[])
 {
+#if is_ohos
+    HIPERF_HILOGI(MODULE_DEFAULT, "normal start.");
+#endif
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 

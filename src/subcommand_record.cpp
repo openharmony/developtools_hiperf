@@ -1161,6 +1161,7 @@ bool SubCommandRecord::WaitFifoReply(int fd, const std::chrono::milliseconds &ti
 
 bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
 {
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord OnSubCommand start");
     if (!ProcessControl()) {
         return false;
     } else if (isFifoClient_) {
