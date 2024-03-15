@@ -39,9 +39,6 @@ using namespace OHOS::Developtools::HiPerf;
 
 int main(const int argc, const char *argv[])
 {
-#if is_ohos
-    HIPERF_HILOGI(MODULE_DEFAULT, "normal start.");
-#endif
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
@@ -49,6 +46,7 @@ int main(const int argc, const char *argv[])
     if (IsRoot() && setgid(2000) != 0) { // 2000 is shell group
         printf("setgid failed errno: %d.\n", errno);
     }
+    HIPERF_HILOGI(MODULE_DEFAULT, "hiperf start.");
 #endif
 
     // pass the argv to next
