@@ -344,6 +344,9 @@ bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
     Write(uint32_t(processStackTable_->size()));
     for (auto it = processStackTable_->begin(); it != processStackTable_->end(); ++it) {
         const auto &table = it->second;
+        if (table == nullptr) {
+            continue;
+        }
         Write(table->GetPid());
         Write(table->GetTabelSize());
         const auto &idxs = table->GetUsedIndexes();
@@ -352,6 +355,9 @@ bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
         Node *node = nullptr;
         for (const auto idx : idxs) {
             node = head + idx;
+            if (node == nullptr) {
+                continue;
+            }
             Write(idx);
             Write(node->value);
         }

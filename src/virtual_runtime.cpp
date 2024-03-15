@@ -372,7 +372,9 @@ void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
         table = std::make_shared<UniqueStackTable>(pid);
         processStackMap_[pid] = table;
     }
-
+    if (table == nullptr) {
+        return;
+    }
     while (table->PutIpsInTable(&stackId, ips, nr) == 0) {
         // try expand hashtable if collison can not resolved
         if (!table->Resize()) {
@@ -398,11 +400,17 @@ void VirtualRuntime::CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
     u32 pid;
     for (const auto &tableEntry : processStackMap_) {
         const auto &table = tableEntry.second;
+        if (table == nullptr) {
+            continue;
+        }
         pid = table->GetPid();
         head = table->GetHeadNode();
         const auto &idxes = table->GetUsedIndexes();
         for (const auto idx : idxes) {
             node = head + idx;
+            if (node == nullptr) {
+                continue;
+            }
             if (node->value != 0) {
                 if (node->section.inKernel) {
                     uint64_t ip = node->section.ip | KERNEL_PREFIX;
@@ -492,7 +500,9 @@ bool VirtualRuntime::RecoverCallStack(PerfRecordSample &recordSample)
         return false;
     }
     recordSample.ips_.clear();
-    StackTable->second->GetIpsByStackId(recordSample.stackId_, recordSample.ips_);
+    if (StackTable->second != nullptr) {
+        StackTable->second->GetIpsByStackId(recordSample.stackId_, recordSample.ips_);
+    }
     recordSample.RecoverCallStack();
     return true;
 }
@@ -904,6 +914,9 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
     }
 
     auto map = thread.GetMaps()[mapIndex];
+    if (map == nullptr) {
+        return vaddrSymbol;
+    }
     HLOGM("found addr 0x%" PRIx64 " in kthread map 0x%" PRIx64 " - 0x%" PRIx64 " from %s",
             ip, map->begin, map->end, map->name.c_str());
     // found symbols by file name
@@ -1069,6 +1082,9 @@ DfxSymbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid, const per
 bool VirtualRuntime::SetSymbolsPaths(const std::vector<std::string> &symbolsPaths)
 {
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    if (symbolsFile == nullptr) {
+        return false;
+    }
     // we need check if the path is accessible
     bool accessible = symbolsFile->setSymbolsFilePath(symbolsPaths);
     if (accessible) {
@@ -1247,11 +1263,17 @@ void VirtualRuntime::UpdateDevhostSymbols()
                 koMaps[symbol.module_] =
                     SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE, filename);
             }
+            if (koMaps[symbol.module_] == nullptr) {
+                continue;
+            }
             koMaps[symbol.module_]->AddSymbol(std::move(symbol));
         }
 
         HLOGD("devhost loaded %zu symbolfiles", koMaps.size());
         for (auto &it : koMaps) {
+            if (it.second == nullptr) {
+                continue;
+            }
             HLOGD("Load %zu symbols to %s", it.second->GetSymbols().size(),
                   it.second->filePath_.c_str());
             symbolsFiles_.emplace_back(std::move(it.second));

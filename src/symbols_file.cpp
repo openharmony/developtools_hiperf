@@ -256,6 +256,10 @@ protected:
         if (StringEndsWith(elfPath, ".hap")) {
             filePath_ = elfPath + "!" + elfFile_->GetElfName();
             HLOGD("update path for so in hap %s.", filePath_.c_str());
+            if (map == nullptr) {
+                HLOGW("map should not be nullptr.");
+                return false;
+            }
             map->name = filePath_;
             map->elf = elfFile_;
             map->prevMap->name = filePath_;
@@ -344,6 +348,9 @@ private:
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
         eh_frame_hdr *ehFrameHdr = (eh_frame_hdr *)buffer;
+        if (ehFrameHdr == nullptr) {
+            return false;
+        }
         const uint8_t *dataPtr = ehFrameHdr->encode_data;
         DwarfEncoding dwEhFramePtr(ehFrameHdr->eh_frame_ptr_enc, dataPtr);
         DwarfEncoding dwFdeCount(ehFrameHdr->fde_count_enc, dataPtr);

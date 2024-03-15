@@ -682,6 +682,9 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
     static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
     regs->SetRegsData((uintptr_t*)(regs_), regsNum_);
 #endif
+    if (unwinder == nullptr) {
+        return false;
+    }
     unwinder->SetRegs(regs);
     unwinder->Unwind(&unwindInfo);
     callStack = unwinder->GetFrames();
@@ -712,6 +715,9 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
                                uintptr_t pc, UnwindTableInfo& outTableInfo)
 {
     HLOGM("try search debug info at %s", symbolsFile->filePath_.c_str());
+    if (unwindInfoPtr == nullptr) {
+        return -1;
+    }
     auto &tableInfoMap = unwindInfoPtr->callStack.unwindTableInfoMap_;
     // all the thread in same process have same mmap and symbols
     if (tableInfoMap.find(unwindInfoPtr->thread.pid_) == tableInfoMap.end()) {
@@ -748,6 +754,9 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
 int CallStack::FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void *arg)
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
+    if (unwindInfoPtr == nullptr) {
+        return -1;
+    }
     int64_t mapIndex = unwindInfoPtr->thread.FindMapIndexByAddr(pc);
     if (mapIndex >= 0) {
         auto map = unwindInfoPtr->thread.GetMaps()[mapIndex];
@@ -775,8 +784,9 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
     *val = 0;
 
     /* Check overflow. */
-    if (addr + sizeof(uintptr_t) < addr) {
-        HLOGE("address overflow at 0x%" UNW_WORD_PFLAG " increase 0x%zu", addr, sizeof(uintptr_t));
+    if (unwindInfoPtr == nullptr || addr + sizeof(uintptr_t) < addr) {
+        HLOGE("unwindInfoPtr is null or address overflow at 0x%" UNW_WORD_PFLAG " increase 0x%zu",
+              addr, sizeof(uintptr_t));
         return -1;
     }
 

@@ -391,7 +391,7 @@ void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
         if (remainingWidth == 0) {
             key.maxLen_ = 0;
         }
-        if (fprintf(output_, "%-*s ", (remainingWidth > 0) ? static_cast<int>(key.maxLen_) : 0,
+        if (fprintf(output_, "%-*s ", (remainingWidth > 0) ? static_cast<unsigned int>(key.maxLen_) : 0,
             key.keyName_.c_str()) < 0) {
             return;
         }

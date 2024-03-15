@@ -82,6 +82,9 @@ auto LinkNode<Key, Val>::GetLinkNode(Link *plink)
 {
     if (plink) {
         LinkNode<Key, Val> *pnode {nullptr};
+        if (pnode == nullptr) {
+            return nullptr;
+        }
         Link* offset = &pnode->link_;
         auto  nodeAddr = reinterpret_cast<char*>(plink) - reinterpret_cast<char*>(offset);
         return reinterpret_cast<LinkNode<Key, Val>*>(nodeAddr);

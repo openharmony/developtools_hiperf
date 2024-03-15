@@ -312,6 +312,9 @@ bool PerfFileWriter::WriteAttrAndId(const std::vector<AttrWithId> &attrIds)
 static bool LeftLessRight(const std::unique_ptr<PerfFileSection> &l,
                           const std::unique_ptr<PerfFileSection> &r)
 {
+    if (l == nullptr || r == nullptr) {
+        return false;
+    }
     return l->featureId_ < r->featureId_;
 }
 // to write perf_file_header to file

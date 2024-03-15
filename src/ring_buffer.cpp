@@ -104,6 +104,9 @@ uint8_t *RingBuffer::GetReadData()
     }
     // else |---readPos<---data--->writePos---|
     perf_event_header *header = reinterpret_cast<perf_event_header *>(buf_.get() + readPos);
+    if (header == nullptr) {
+        return nullptr;
+    }
     readSize_ += header->size;
     return buf_.get() + readPos;
 }

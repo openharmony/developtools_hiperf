@@ -143,7 +143,7 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByFileInfo(const std::string name,
 std::shared_ptr<DfxMap> VirtualThread::FindFirstMapByFileInfo(const std::string name) const
 {
     for (auto &map : memMaps_) {
-        if (name != map->name) {
+        if (map == nullptr || name != map->name) {
             continue;
         }
         return map;
@@ -196,6 +196,9 @@ void VirtualThread::ReportVaddrMapMiss(uint64_t vaddr) const
             missedRuntimeVaddr_.insert(vaddr);
             HLOGV("vaddr %" PRIx64 " not found in any map", vaddr);
             for (auto &map : memMaps_) {
+                if (map == nullptr) {
+                    return;
+                }
                 HLOGV("map %s ", map->ToString().c_str());
             }
         }

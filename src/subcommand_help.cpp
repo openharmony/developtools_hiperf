@@ -50,6 +50,9 @@ bool SubCommandHelp::OnHelp(std::vector<std::string> &args)
         HLOGD("%zu cmds found:", commands.size());
         printf("command:\n");
         for (const auto &command : commands) {
+            if (command.second == nullptr) {
+                continue;
+            }
             printf("\t%s:\t%s\n", command.second->Name().c_str(), command.second->Brief().c_str());
         }
         printf("\nSee 'hiperf help [command]' for more information on a specific command.\n\n");

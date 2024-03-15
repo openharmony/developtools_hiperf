@@ -705,7 +705,8 @@ void PerfEvents::LoadTracepointEventTypesFromSystem()
             for (const auto &concreteEvent : GetSubDirs(eventPath)) {
                 std::string idPath = eventPath + "/" + concreteEvent + "/id";
                 {
-                    std::ifstream ifs {idPath};
+                    std::string resolvedPath = CanonicalizeSpecPath(idPath.c_str());
+                    std::ifstream ifs {resolvedPath};
                     // clang-format off
                     const std::string idStr = {
                         std::istream_iterator<char>(ifs),
