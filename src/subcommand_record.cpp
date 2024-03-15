@@ -1161,7 +1161,7 @@ bool SubCommandRecord::WaitFifoReply(int fd, const std::chrono::milliseconds &ti
 
 bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
 {
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord OnSubCommand start");
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord onSubCommand start");
     if (!ProcessControl()) {
         return false;
     } else if (isFifoClient_) {
@@ -1178,7 +1178,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
         HIPERF_HILOGE(MODULE_DEFAULT, "Fail to prepare tracking ");
         return false;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord PerfEvents prepared");
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents prepared");
 
     if (!CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         HIPERF_HILOGE(MODULE_DEFAULT, "Fail to create record file %s", outputFilename_.c_str());
@@ -1188,7 +1188,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     if (!PrepareVirtualRuntime()) {
         return false;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord VirtualRuntime prepared");
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord virtualRuntime prepared");
 
     //write comm event
     WriteCommEventBeforeSampling();
@@ -1210,7 +1210,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
             return false;
         }
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents Tracking finish");
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents tracking finish");
 
     startSaveFileTimes_ = steady_clock::now();
     if (!FinishWriteRecordFile()) {
