@@ -210,9 +210,7 @@ ohos_source_set("hiperf_platform_common") {
       defines += [ "BUNDLE_FRAMEWORK_ENABLE" ]
     }
     if (ability_base_enable) {
-      external_deps += [
-        "ability_base:extractortool",
-      ]
+      external_deps += [ "ability_base:extractortool" ]
     }
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
