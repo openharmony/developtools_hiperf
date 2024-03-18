@@ -1248,20 +1248,16 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
     symbolsFile->textExecVaddrFileOffset_ = symbolFileStruct.textExecVaddrFileOffset_;
     symbolsFile->buildId_ = symbolFileStruct.buildId_;
     for (auto &symbolStruct : symbolFileStruct.symbolStructs_) {
-        if (isHapSymbolFile) {
-            symbolsFile->symbolsMap_.insert(std::make_pair(
-                symbolStruct.vaddr_, // should use pc. or fileVaddr.
-                DfxSymbol(symbolStruct.vaddr_,
-                          symbolStruct.len_,
-                          symbolStruct.symbolName_,
-                          symbolFileStruct.filePath_)
-            ));
-            symbolsFile->SetBoolValue(true);
-        }
         symbolsFile->symbols_.emplace_back(symbolStruct.vaddr_, symbolStruct.len_,
                                            symbolStruct.symbolName_, symbolFileStruct.filePath_);
     }
     symbolsFile->AdjustSymbols(); // reorder
+    if (isHapSymbolFile) {
+        for (const auto& symbol : symbolsFile->symbols_) {
+            symbolsFile->symbolsMap_.emplace(symbol.funcVaddr_, symbol);
+        }
+        symbolsFile->SetBoolValue(true);
+    }
     symbolsFile->debugInfoLoadResult_ = true;
     symbolsFile->symbolsLoaded_ = true; // all ready LoadFrom perf.data
     HLOGV("load %zu symbol from SymbolFileStruct for file '%s'", symbolsFile->symbols_.size(),
