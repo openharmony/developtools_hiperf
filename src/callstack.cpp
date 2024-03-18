@@ -557,9 +557,10 @@ size_t CallStack::DoExpandCallStack(std::vector<DfxFrame> &newCallFrames,
     // in case1 newIt -> C
     // in case2 newIt -> B
     const auto newIt = newCallFrames.end() - expandLimit;
-
-    HLOGM("try find new call chain bottom %s for limit %zu", newIt->ToString().c_str(),
-          expandLimit);
+    if (newIt != newCallFrames.end()) {
+        HLOGM("try find new call chain bottom %s for limit %zu", newIt->ToString().c_str(),
+            expandLimit);
+    }
 
     // first frame search, from called - > caller
     // for case 2 it should found B

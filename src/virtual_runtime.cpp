@@ -185,6 +185,9 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid, const std::str
 
 bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
 {
+    if (map == nullptr) {
+        return false;
+    }
     // found it by name
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(map->name);
     if (symbolsFile == nullptr) {
@@ -354,12 +357,14 @@ void VirtualRuntime::UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offs
 
 void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
 {
+    if (recordSample == nullptr) {
+        return;
+    }
     u64 nr = recordSample->data_.nr;
     if (nr == 0) {
         collectSymbolCallBack_(recordSample);
         return;
     }
-
     u32 pid = recordSample->data_.pid;
     u64 *ips = recordSample->data_.ips;
     StackId stackId;
@@ -383,7 +388,6 @@ void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
             return;
         }
     }
-
     // callstack dedup success
     recordSample->stackId_.value = stackId.value;
     recordSample->header.size -= (sizeof(u64) * nr - sizeof(stackId));

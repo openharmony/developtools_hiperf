@@ -1144,6 +1144,9 @@ void SymbolsFile::SortMatchedSymbols()
         return;
     }
     sort(matchedSymbols_.begin(), matchedSymbols_.end(), [](const DfxSymbol* a, const DfxSymbol* b) {
+        if (a == nullptr || b == nullptr) {
+            return true;
+        }
         return a->funcVaddr_ < b->funcVaddr_;
     });
 }
@@ -1190,7 +1193,7 @@ const DfxSymbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
         6   6
         7   7
     */
-    if (found != symbols_.begin()) {
+    if (found != symbols_.begin() && found != symbols_.end()) {
         found = std::prev(found);
         if (found->Contain(vaddrInFile)) {
             found->offsetToVaddr_ = vaddrInFile - found->funcVaddr_;

@@ -189,6 +189,9 @@ void SubCommandStat::PrintPerHead()
 void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,
                                    std::string &configName)
 {
+    if (reportSum == nullptr) {
+        return;
+    }
     // print value
     std::string strEventCount = std::to_string(reportSum->eventCountSum);
     for (size_t i = strEventCount.size() - 1, j = 1; i > 0; --i, ++j) {
