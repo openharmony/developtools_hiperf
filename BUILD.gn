@@ -466,7 +466,10 @@ ohos_source_set("hiperf_platform_host") {
   subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
   public_deps = [ ":hiperf_platform_common" ]
-  external_deps = [ "faultloggerd:unwinder_host" ]
+  external_deps = [
+    "faultloggerd:unwinder_host",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_shared_library("hiperf_host_lib") {
