@@ -690,7 +690,8 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
         HLOGD("pc 0x%" PRIx64 " sp 0x%" PRIx64 "", frame.pc, frame.sp);
     }
     auto lastIt = callStack.end() - 1;
-    if (lastIt->pc == (lastIt - 1)->pc && lastIt->sp == (lastIt - 1)->sp) {
+    auto preIt = lastIt - 1;
+    if (callStack.size() > 1 && lastIt->pc == preIt->pc && lastIt->sp == preIt->sp) {
         callStack.erase(lastIt);
         HLOGD("remove last callframe");
     }
