@@ -32,9 +32,14 @@ declare_args() {
   hiperf_code_analyze = false
   hiperf_use_syspara = true
   bundle_framework_enable = false
+  ability_base_enable = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.bundlemanager_bundle_framework)) {
     bundle_framework_enable = true
+  }
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.ability_ability_base)) {
+    ability_base_enable = true
   }
 }
 
