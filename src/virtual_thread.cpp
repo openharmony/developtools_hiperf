@@ -142,7 +142,7 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByFileInfo(const std::string name,
 
 std::shared_ptr<DfxMap> VirtualThread::FindFirstMapByFileInfo(const std::string name) const
 {
-    for (auto &map : memMaps_) {
+    for (const auto &map : memMaps_) {
         if (map == nullptr || name != map->name) {
             continue;
         }

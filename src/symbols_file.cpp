@@ -921,10 +921,6 @@ public:
         HLOGD("the symbol file is %s.", filePath_.c_str());
         if (StringEndsWith(filePath_, ".hap") || StringEndsWith(filePath_, ".hsp")) {
             dfxExtractor_ = std::make_unique<DfxExtractor>(filePath_);
-            if (dfxExtractor_ == nullptr) {
-                HLOGD("DfxExtractor create failed.");
-                return false;
-            }
             if (!dfxExtractor_->GetHapAbcInfo(loadOffSet_, abcDataPtr_, abcDataSize_)) {
                 HLOGD("failed to call GetHapAbcInfo, the symbol file is:%s", filePath_.c_str());
                 return false;
@@ -1193,16 +1189,18 @@ const DfxSymbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
         6   6
         7   7
     */
-    if (found != symbols_.begin() && found != symbols_.end()) {
+    if (found != symbols_.begin()) {
         found = std::prev(found);
-        if (found->Contain(vaddrInFile)) {
-            found->offsetToVaddr_ = vaddrInFile - found->funcVaddr_;
-            if (!found->matched_) {
-                found->matched_ = true;
-                matchedSymbols_.push_back(&(*found));
+        if (found != symbols_.end()) {
+            if (found->Contain(vaddrInFile)) {
+                found->offsetToVaddr_ = vaddrInFile - found->funcVaddr_;
+                if (!found->matched_) {
+                    found->matched_ = true;
+                    matchedSymbols_.push_back(&(*found));
+                }
+                symbol = *found; // copy
+                HLOGV("found '%s' for vaddr 0x%016" PRIx64 "", symbol.ToString().c_str(), vaddrInFile);
             }
-            symbol = *found; // copy
-            HLOGV("found '%s' for vaddr 0x%016" PRIx64 "", symbol.ToString().c_str(), vaddrInFile);
         }
     }
 
