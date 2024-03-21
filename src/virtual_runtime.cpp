@@ -809,7 +809,7 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
     HLOGD("try to find symbols for file: %s", map->name.c_str());
     for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
         if (symbolsFiles_[i]->filePath_ == map->name) {
-            map->symbolFileIndex = i;
+            map->symbolFileIndex = static_cast<int32_t>(i);
             HLOGV("already have '%s'", map->name.c_str());
             return;
         }
@@ -1114,7 +1114,9 @@ void VirtualRuntime::UpdateFromPerfData(const std::vector<SymbolFileStruct> &sym
 
         // load from symbolFileStruct (perf.data)
         std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::LoadSymbolsFromSaved(symbolFileStruct);
-
+        if (symbolsFile == nullptr) {
+            continue;
+        }
         // reaload from sybol path If it exists
         if (symbolsPaths_.size() > 0) {
             HLOGV("try again with symbolsPaths setup");

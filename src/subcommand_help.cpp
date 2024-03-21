@@ -42,8 +42,10 @@ bool SubCommandHelp::OnHelp(std::vector<std::string> &args)
 
         printf("options:\n");
         for (const auto &commandOption : mainOptions) {
-            printf("\t%-20s\t%s\n", commandOption.first.c_str(),
-                   commandOption.second->help.c_str());
+            if (commandOption.second != nullptr) {
+                printf("\t%-20s\t%s\n", commandOption.first.c_str(),
+                    commandOption.second->help.c_str());
+            }
         }
 
         auto &commands = SubCommand::GetSubCommands();

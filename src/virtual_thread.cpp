@@ -154,6 +154,9 @@ std::shared_ptr<DfxMap> VirtualThread::FindFirstMapByFileInfo(const std::string 
 
 SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) const
 {
+    if (map == nullptr) {
+        return nullptr;
+    }
     if (map->symbolFileIndex != -1) {
         // no need further operation
         if (symbolsFiles_[map->symbolFileIndex]->LoadDebugInfo(map)) {
@@ -166,7 +169,7 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) co
                 HLOGD("found symbol for map '%s'", map->name.c_str());
                 if (symbolsFiles_[i]->LoadDebugInfo(map)) {
                     HLOGD("found symbol for map '%s'", map->name.c_str());
-                    map->symbolFileIndex = i;
+                    map->symbolFileIndex = static_cast<int32_t>(i);
                     return symbolsFiles_[i].get();
                 }
             }
@@ -225,23 +228,25 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
     }
     if (memMapIndex != illegal) {
         auto map = memMaps_[memMapIndex];
-        if (map->elf == nullptr) {
-            SymbolsFile* symFile = FindSymbolsFileByMap(map);
-            if (symFile == nullptr) {
-                return false;
+        if (map != nullptr) {
+            if (map->elf == nullptr) {
+                SymbolsFile* symFile = FindSymbolsFileByMap(map);
+                if (symFile == nullptr) {
+                    return false;
+                }
+                map->elf = symFile->GetElfFile();
             }
-            map->elf = symFile->GetElfFile();
-        }
-        if (map->elf != nullptr) {
-            // default base offset is zero
-            uint64_t foff = vaddr - map->begin + map->offset - map->elf->GetBaseOffset();
-            if (map->elf->Read(foff, data, size)) {
-                return true;
+            if (map->elf != nullptr) {
+                // default base offset is zero
+                uint64_t foff = vaddr - map->begin + map->offset - map->elf->GetBaseOffset();
+                if (map->elf->Read(foff, data, size)) {
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
-                return false;
+                HLOGW("find addr %" PRIx64 "in map but not loaded symbole %s", vaddr, map->name.c_str());
             }
-        } else {
-            HLOGW("find addr %" PRIx64 "in map but not loaded symbole %s", vaddr, map->name.c_str());
         }
     } else {
 #ifdef HIPERF_DEBUG
