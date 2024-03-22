@@ -359,6 +359,9 @@ void SubCommandReport::LoadEventDesc()
 {
     const PerfFileSection *featureSection =
         recordFileReader_->GetFeatureSection(FEATURE::EVENT_DESC);
+    if (featureSection == nullptr) {
+        return;
+    }
     const PerfFileSectionEventDesc &sectionEventdesc =
         *static_cast<const PerfFileSectionEventDesc *>(featureSection);
     HLOGV("Event descriptions: %zu", sectionEventdesc.eventDesces_.size());
