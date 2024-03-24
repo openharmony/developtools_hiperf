@@ -1187,13 +1187,13 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
         return false;
     }
 
-    //write comm event
-    WriteCommEventBeforeSampling();
-
     // make a thread wait the other command
     if (clientPipeOutput_ != -1) {
         clientCommandHanle_ = std::thread(&SubCommandRecord::ClientCommandHandle, this);
     }
+
+    //write comm event
+    WriteCommEventBeforeSampling();
 
     // start tracking
     if (isDataSizeLimitStop_) {
@@ -1203,7 +1203,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
             return false;
         }
     } else {
-        if (!perfEvents_.StartTracking(!isFifoServer_)) {
+        if (!perfEvents_.StartTracking((!isFifoServer_) && (clientPipeInput_ == -1))) {
             return false;
         }
     }
