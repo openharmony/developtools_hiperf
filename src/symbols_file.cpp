@@ -906,7 +906,10 @@ private:
     pid_t pid_ = 0;
 public:
     explicit HapFileSymbols(const std::string &symbolFilePath, pid_t pid)
-        : ElfFileSymbols(symbolFilePath, SYMBOL_HAP_FILE), pid_(pid) {}
+        : ElfFileSymbols(symbolFilePath, SYMBOL_HAP_FILE)
+    {
+        pid_ = pid;
+    }
 
     bool IsHapAbc()
     {
