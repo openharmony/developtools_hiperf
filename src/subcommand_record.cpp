@@ -1614,6 +1614,9 @@ void SubCommandRecord::SymbolicHits()
 
 bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 {
+    if (record == nullptr) {
+        return false;
+    }
     if (record->GetType() == PERF_RECORD_SAMPLE) {
         PerfRecordSample *sample = static_cast<PerfRecordSample *>(record.get());
 #if USE_COLLECT_SYMBOLIC
@@ -1629,6 +1632,9 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 
 void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
 {
+    if (sample == nullptr) {
+        return;
+    }
     perf_callchain_context context = sample->inKernel() ? PERF_CONTEXT_KERNEL
                                                         : PERF_CONTEXT_USER;
     pid_t server_pid;

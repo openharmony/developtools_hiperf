@@ -597,21 +597,23 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_pt
 {
     data_.pid = pid;
     data_.tid = tid;
-    data_.addr = item->begin;
-    data_.len = item->end - item->begin;
-    data_.pgoff = item->offset;
-    data_.maj = item->major;
-    data_.min = item->minor;
-    data_.ino = item->inode;
-    data_.ino_generation = 0;
-    // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
-    // why prot get from this is 7. rwxp
-    DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
-    if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
-        HLOGE("strncpy_s failed");
-    }
+    if (item != nullptr) {
+        data_.addr = item->begin;
+        data_.len = item->end - item->begin;
+        data_.pgoff = item->offset;
+        data_.maj = item->major;
+        data_.min = item->minor;
+        data_.ino = item->inode;
+        data_.ino_generation = 0;
+        // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
+        // why prot get from this is 7. rwxp
+        DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
+        if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
+            HLOGE("strncpy_s failed");
+        }
 
-    header.size = sizeof(header) + sizeof(data_) - KILO + item->name.size() + 1;
+        header.size = sizeof(header) + sizeof(data_) - KILO + item->name.size() + 1;
+    }
 }
 
 bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const

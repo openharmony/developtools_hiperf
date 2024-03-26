@@ -166,6 +166,9 @@ bool RegisterMainOption(const std::string &optionName, const std::string &help,
 
     if (g_MainOptions.count(optionName) == 0) {
         g_MainOptions[optionName] = std::make_unique<MainOption>();
+        if (g_MainOptions[optionName].get() == nullptr) {
+            return false;
+        }
         g_MainOptions[optionName].get()->help = help;
         g_MainOptions[optionName].get()->callBackFunction = std::move(callBackFunction);
         return true;

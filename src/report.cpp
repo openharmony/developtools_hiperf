@@ -69,17 +69,19 @@ void Report::AddReportItem(const PerfRecordSample &sample, bool includeCallStack
             }
         } else {
             auto frameIt = sample.callFrames_.begin();
-            HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
-            // for arkjs frame, skip the stub.an frame
-            if (StringEndsWith(frameIt->mapName, "stub.an")) {
-                HLOGV("stub.an frame, go to next, mapname %s", frameIt->mapName.c_str());
-                frameIt++;
+            if (frameIt != sample.callFrames_.end()) {
+                HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
+                // for arkjs frame, skip the stub.an frame
+                if (StringEndsWith(frameIt->mapName, "stub.an")) {
+                    HLOGV("stub.an frame, go to next, mapname %s", frameIt->mapName.c_str());
+                    frameIt++;
+                }
+                ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
+                    sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
+                    frameIt->funcName, frameIt->funcOffset, sample.data_.period);
+                HLOGV("%s", item.ToDebugString().c_str());
+                HLOG_ASSERT(!item.func_.empty());
             }
-            ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-                sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
-                frameIt->funcName, frameIt->funcOffset, sample.data_.period);
-            HLOGV("%s", item.ToDebugString().c_str());
-            HLOG_ASSERT(!item.func_.empty());
         }
     }
     configs_[configIndex].sampleCount_++;
@@ -391,7 +393,7 @@ void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
         if (remainingWidth == 0) {
             key.maxLen_ = 0;
         }
-        if (fprintf(output_, "%-*s ", (remainingWidth > 0) ? static_cast<int>(key.maxLen_) : 0,
+        if (fprintf(output_, "%-*s ", (remainingWidth > 0) ? static_cast<unsigned int>(key.maxLen_) : 0,
             key.keyName_.c_str()) < 0) {
             return;
         }

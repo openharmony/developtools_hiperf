@@ -90,7 +90,9 @@ uint64_t UniqueStackTable::PutIpInSlot(uint64_t thisIp, uint64_t prevIdx)
     node.section.inKernel = !!(thisIp & IP_IN_KERNEL);
     while (currentDeconflictTimes_--) {
         Node* tableNode = reinterpret_cast<Node *>(tableHead_) + curIpIdx;
-
+        if (tableNode == nullptr) {
+            continue;
+        }
         // empty case
         if (tableNode->value == 0) {
             tableNode->value = node.value;
@@ -133,7 +135,9 @@ uint64_t UniqueStackTable::PutIpsInTable(StackId *stackId, u64 *ips, u64 nr)
             return 0;
         }
     }
-
+    if (stackId == nullptr) {
+        return 0;
+    }
     stackId->section.id = prev;
     stackId->section.nr = nr;
     return prev;
