@@ -951,7 +951,7 @@ public:
             HLOGD("symbol file name %s loadOffSet %u abcDataSize_ %u abcDataPtr_ %s",
                   filePath_.c_str(), (uint32_t)loadOffSet_, (uint32_t)abcDataSize_, abcDataPtr_.get());
         }
-        auto ret = DfxArk::ArkCreateJsSymbolExtractor(arkExtractorptr_);
+        auto ret = DfxArk::ArkCreateJsSymbolExtractor(&arkExtractorptr_);
         if (ret < 0) {
             arkExtractorptr_ = 0;
             HLOGE("failed to call ArkCreateJsSymbolExtractor, the symbol file is:%s", filePath_.c_str());
