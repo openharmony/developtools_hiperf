@@ -779,9 +779,9 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
             filename = newFileName;
             HLOGD("Fix hm bundle path to %s", filename.c_str());
             return true;
-            } else {
-                needCheck = false;
-            }
+        } else {
+            needCheck = false;
+        }
     }
     return false;
 }
