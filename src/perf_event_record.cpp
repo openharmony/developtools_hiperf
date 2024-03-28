@@ -1000,7 +1000,7 @@ pid_t PerfRecordSample::GetUstackServerPid()
 
     size_t curr_server = 0;
     // ip_nr == 1...nr: server_pid of data_.ips[nr]
-    for (size_t i = 1; i < data_.nr; i++) {
+    for (size_t i = 0; i < data_.nr; i++) {
         // context change, use next server pid
         if (data_.ips[i] >= PERF_CONTEXT_MAX) {
             curr_server++;
