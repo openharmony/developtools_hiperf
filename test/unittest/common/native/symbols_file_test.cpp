@@ -274,7 +274,7 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
 
     // add [kernel.kallsyms]
     if (modulesCount.size() != lines + 1u) {
-        printf("warn: modulesCount != lines + 1, modulesCount: %d\n", modulesCount.size());
+        printf("warn: modulesCount != lines + 1, modulesCount: %lu\n", modulesCount.size());
     }
     if (HasFailure()) {
         for (auto &module : modulesCount) {
@@ -538,13 +538,11 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
         }
 #ifdef __arm__
         for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::THUNK_BP; ++addr) {
-#else
-        for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::FINI; ++addr) {
-#endif
             if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_fini");
             }
         }
+#endif
         if (HasFailure()) {
             PrintSymbols(elfSymbols->GetSymbols());
         }
