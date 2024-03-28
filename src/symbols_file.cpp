@@ -256,6 +256,10 @@ protected:
         if (StringEndsWith(elfPath, ".hap")) {
             filePath_ = elfPath + "!" + elfFile_->GetElfName();
             HLOGD("update path for so in hap %s.", filePath_.c_str());
+            if (map == nullptr) {
+                HLOGW("map should not be nullptr.");
+                return false;
+            }
             map->name = filePath_;
             map->elf = elfFile_;
             map->prevMap->name = filePath_;
@@ -344,6 +348,9 @@ private:
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
         eh_frame_hdr *ehFrameHdr = (eh_frame_hdr *)buffer;
+        if (ehFrameHdr == nullptr) {
+            return false;
+        }
         const uint8_t *dataPtr = ehFrameHdr->encode_data;
         DwarfEncoding dwEhFramePtr(ehFrameHdr->eh_frame_ptr_enc, dataPtr);
         DwarfEncoding dwFdeCount(ehFrameHdr->fde_count_enc, dataPtr);
@@ -922,10 +929,6 @@ public:
         HLOGD("the symbol file is %s.", filePath_.c_str());
         if (StringEndsWith(filePath_, ".hap") || StringEndsWith(filePath_, ".hsp")) {
             dfxExtractor_ = std::make_unique<DfxExtractor>(filePath_);
-            if (dfxExtractor_ == nullptr) {
-                HLOGD("DfxExtractor create failed.");
-                return false;
-            }
             if (!dfxExtractor_->GetHapAbcInfo(loadOffSet_, abcDataPtr_, abcDataSize_)) {
                 HLOGD("failed to call GetHapAbcInfo, the symbol file is:%s", filePath_.c_str());
                 return false;
@@ -1150,6 +1153,9 @@ void SymbolsFile::SortMatchedSymbols()
         return;
     }
     sort(matchedSymbols_.begin(), matchedSymbols_.end(), [](const DfxSymbol* a, const DfxSymbol* b) {
+        if (a == nullptr || b == nullptr) {
+            return true;
+        }
         return a->funcVaddr_ < b->funcVaddr_;
     });
 }
@@ -1198,14 +1204,16 @@ const DfxSymbol SymbolsFile::GetSymbolWithVaddr(uint64_t vaddrInFile)
     */
     if (found != symbols_.begin()) {
         found = std::prev(found);
-        if (found->Contain(vaddrInFile)) {
-            found->offsetToVaddr_ = vaddrInFile - found->funcVaddr_;
-            if (!found->matched_) {
-                found->matched_ = true;
-                matchedSymbols_.push_back(&(*found));
+        if (found != symbols_.end()) {
+            if (found->Contain(vaddrInFile)) {
+                found->offsetToVaddr_ = vaddrInFile - found->funcVaddr_;
+                if (!found->matched_) {
+                    found->matched_ = true;
+                    matchedSymbols_.push_back(&(*found));
+                }
+                symbol = *found; // copy
+                HLOGV("found '%s' for vaddr 0x%016" PRIx64 "", symbol.ToString().c_str(), vaddrInFile);
             }
-            symbol = *found; // copy
-            HLOGV("found '%s' for vaddr 0x%016" PRIx64 "", symbol.ToString().c_str(), vaddrInFile);
         }
     }
 

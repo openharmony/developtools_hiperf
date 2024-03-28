@@ -189,6 +189,9 @@ void SubCommandStat::PrintPerHead()
 void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,
                                    std::string &configName)
 {
+    if (reportSum == nullptr) {
+        return;
+    }
     // print value
     std::string strEventCount = std::to_string(reportSum->eventCountSum);
     for (size_t i = strEventCount.size() - 1, j = 1; i > 0; --i, ++j) {
@@ -219,6 +222,9 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
 void SubCommandStat::InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
                                 const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance)
 {
+    if (newPerMap == nullptr) {
+        return;
+    }
     newPerMap->cpu = summary.cpu;
     if (g_reportCpuFlag && !g_reportThreadFlag) {
         return;
@@ -251,7 +257,7 @@ void SubCommandStat::ReportDetailInfos(
     std::string perKey = "";
     std::map<std::string, std::unique_ptr<PerfEvents::ReportSum>> perMaps;
     for (auto event = countEvents.begin(); event != countEvents.end(); ++event) {
-        if (event->second->eventCount == 0) {
+        if (event->second == nullptr || event->second->eventCount == 0) {
             continue;
         }
         constexpr float ratio {100.0};
@@ -263,6 +269,9 @@ void SubCommandStat::ReportDetailInfos(
                 auto perMap = std::make_unique<PerfEvents::ReportSum>(PerfEvents::ReportSum {});
                 InitPerMap(perMap, it, runtimeInstance_);
                 perMaps[perKey] = std::move(perMap);
+            }
+            if (perMaps[perKey] == nullptr) {
+                continue;
             }
             perMaps[perKey]->configName = GetDetailComments(event->second, perMaps[perKey]->commentSum,
                                                             it, configName);
@@ -351,7 +360,7 @@ std::string SubCommandStat::GetCommentConfigName(
 
 void SubCommandStat::MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
 {
-    if (reportSum->commentSum == 0) {
+    if (reportSum == nullptr || reportSum->commentSum == 0) {
         return;
     }
     if (reportSum->configName == "sw-task-clock") {

@@ -279,7 +279,8 @@ std::string PlatformPathConvert(const std::string &path)
 
 std::string ReadFileToString(const std::string &fileName)
 {
-    std::ifstream inputString(fileName, std::ios::in);
+    std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
+    std::ifstream inputString(resolvedPath, std::ios::in);
     if (!inputString or !inputString.is_open()) {
         return EMPTY_STRING;
     }
@@ -314,7 +315,8 @@ bool ReadFileToString(const std::string &fileName, std::string &fileData, size_t
 
 bool WriteStringToFile(const std::string &fileName, const std::string &value)
 {
-    std::ofstream output(fileName, std::ios::out);
+    std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
+    std::ofstream output(resolvedPath, std::ios::out);
     if (!output) {
         return false;
     }
