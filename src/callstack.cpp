@@ -681,7 +681,7 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
     regs->SetRegsData(tempRegs);
 #else
     static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
-    regs->SetRegsData((uintptr_t*)(regs_), regsNum_);
+    regs->SetRegsData(reinterpret_cast<uintptr_t*>(regs_), regsNum_);
 #endif
     if (unwinder == nullptr) {
         return false;
@@ -695,7 +695,8 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
     }
     auto lastIt = callStack.end() - 1;
     auto preIt = lastIt - 1;
-    if (callStack.size() > 1 && lastIt->pc == preIt->pc && lastIt->sp == preIt->sp) {
+    if (lastIt != callStack.end() && preIt != callStack.end() &&
+        callStack.size() > 1 && lastIt->pc == preIt->pc && lastIt->sp == preIt->sp) {
         callStack.erase(lastIt);
         HLOGD("remove last callframe");
     }
