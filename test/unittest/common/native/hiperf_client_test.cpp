@@ -146,7 +146,7 @@ HWTEST_F(HiperfClientTest, Prepare, TestSize.Level1)
     opt.SetTargetSystemWide(true);
 
     HiperfClient::Client myHiperf("/data/local/tmp/");
-    ASSERT_TRUE(myHiperf.prepare(opt));
+    ASSERT_TRUE(myHiperf.PrePare(opt));
     this_thread::sleep_for(1s);
 
     ASSERT_TRUE(myHiperf.StartRun());

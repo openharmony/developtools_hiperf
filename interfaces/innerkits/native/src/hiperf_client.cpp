@@ -626,12 +626,15 @@ void Client::KillChild()
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (clientToServerFd_ != -1) {
         close(clientToServerFd_);
+        clientToServerFd_ = -1;
     }
     if (serverToClientFd_ != -1) {
         close(serverToClientFd_);
+        serverToClientFd_ = -1;
     }
     if (hperfPid_ > 0) {
         kill(hperfPid_, SIGKILL);
+        hperfPid_ = -1;
     }
 }
 

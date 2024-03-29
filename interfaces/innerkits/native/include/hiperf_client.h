@@ -344,7 +344,7 @@ public:
     void SetDebugMode();
     void SetDebugMuchMode();
     void EnableHilog();
-
+    void KillChild();
 private:
     static const uint64_t PIPE_READ = 0;
     static const uint64_t PIPE_WRITE = 1;
@@ -353,7 +353,6 @@ private:
 
     bool WaitCommandReply(std::chrono::milliseconds = std::chrono::milliseconds(THOUSAND));
     bool SendCommandAndWait(const std::string &cmd);
-    void KillChild();
     void GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
                     const std::vector<std::string> &args);
 
