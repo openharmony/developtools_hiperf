@@ -38,9 +38,6 @@ inline long gettid()
     return GetCurrentThreadId();
 }
 #endif // !is_mingw
-#if is_ohos
-#include "hiperf_hilog.h"
-#endif
 
 namespace OHOS {
 namespace Developtools {

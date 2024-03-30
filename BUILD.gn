@@ -296,10 +296,7 @@ ohos_source_set("support_protobuf") {
   ]
 
   if (is_ohos) {
-    external_deps = [
-      "faultloggerd:libunwinder_static",
-      "hilog:libhilog",
-    ]
+    external_deps = [ "faultloggerd:libunwinder_static" ]
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
@@ -466,10 +463,7 @@ ohos_source_set("hiperf_platform_host") {
   subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
   public_deps = [ ":hiperf_platform_common" ]
-  external_deps = [
-    "faultloggerd:unwinder_host",
-    "hilog:libhilog",
-  ]
+  external_deps = [ "faultloggerd:unwinder_host" ]
 }
 
 ohos_shared_library("hiperf_host_lib") {
