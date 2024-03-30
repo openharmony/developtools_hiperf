@@ -760,20 +760,28 @@ bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize)
 
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
 {
+    static bool needCheck = true;
+    if (!needCheck) {
+        return false;
+    }
     std::string path = "/data/storage/el1/bundle";
     std::string newpath = "/data/app/el1/bundle/public/";
     std::string newFileName = filename;
     size_t pos = newFileName.find(path);
-    if (pos != std::string::npos && access(filename.c_str(), F_OK) != 0) {
-        // /data/storage/el1/bundle/libs/arm64/libentry.so
-        newFileName.replace(pos, path.length(), newpath + threadname);
-        if (access(newFileName.c_str(), F_OK) != 0) {
-            return false;
+    if (pos != std::string::npos) {
+        if (access(filename.c_str(), F_OK) != 0) {
+            // /data/storage/el1/bundle/libs/arm64/libentry.so
+            newFileName.replace(pos, path.length(), newpath + threadname);
+            if (access(newFileName.c_str(), F_OK) != 0) {
+                return false;
+            }
+            // /data/app/el1/bundle/public/<procname>/libs/arm64/libentry.so
+            filename = newFileName;
+            HLOGD("Fix hm bundle path to %s", filename.c_str());
+            return true;
+        } else {
+            needCheck = false;
         }
-        // /data/app/el1/bundle/public/<procname>/libs/arm64/libentry.so
-        filename = newFileName;
-        HLOGD("Fix hm bundle path to %s", filename.c_str());
-        return true;
     }
     return false;
 }
