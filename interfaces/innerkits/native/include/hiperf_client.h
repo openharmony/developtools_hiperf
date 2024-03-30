@@ -269,7 +269,7 @@ public:
     /**
      * Start record with options of string vector
      */
-    bool Start(const std::vector<std::string> &args);
+    bool Start(const std::vector<std::string> &args, bool immediately = true);
     /**
      * Start record with options of RecordOption
      */

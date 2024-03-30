@@ -388,7 +388,7 @@ void Client::GetExecCmd(std::vector<std::string> &cmd,
     cmd.insert(cmd.end(), args.begin(), args.end());
 }
 
-bool Client::Start(const std::vector<std::string> &args)
+bool Client::Start(const std::vector<std::string> &args, bool immediately)
 {
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (!ready_) {
@@ -444,6 +444,9 @@ bool Client::Start(const std::vector<std::string> &args)
         HIPERF_HILOGI(MODULE_CPP_API, "start failed . lets kill it");
         KillChild();
         return false;
+    }
+    if (immediately) {
+        return StartRun();
     }
     return true;
 }
@@ -580,7 +583,7 @@ bool Client::PrePare(const RecordOption &option)
     if (!option.GetOutputFileName().empty()) {
         outputFileName_ = option.GetOutputFileName();
     }
-    return Start(option.GetOptionVecString());
+    return Start(option.GetOptionVecString(), false);
 }
 
 bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
