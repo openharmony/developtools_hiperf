@@ -440,7 +440,7 @@ bool Client::Start(const std::vector<std::string> &args, bool immediately)
         serverToClientFd_ = serverToClientFd[PIPE_READ];
     }
     using namespace std::chrono_literals;
-    if (!WaitCommandReply(1000ms)) {
+    if (!WaitCommandReply(2000ms)) {
         HIPERF_HILOGI(MODULE_CPP_API, "start failed . lets kill it");
         KillChild();
         return false;
@@ -595,7 +595,7 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
     pollFd.revents = 0;
 
     // wait some data
-    int polled = poll(&pollFd, 2, timeOut.count());
+    int polled = poll(&pollFd, 1, timeOut.count());
     if (polled > 0) {
         while (true) {
             char c;
