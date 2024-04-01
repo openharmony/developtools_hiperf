@@ -138,6 +138,25 @@ HWTEST_F(HiperfClientTest, EnableHilog, TestSize.Level1)
     stdoutRecord.Stop();
 }
 
+HWTEST_F(HiperfClientTest, Prepare, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    HiperfClient::RecordOption opt;
+    opt.SetTargetSystemWide(true);
+
+    HiperfClient::Client myHiperf("/data/local/tmp/");
+    ASSERT_TRUE(myHiperf.PrePare(opt));
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.StartRun());
+    this_thread::sleep_for(1s);
+
+    ASSERT_TRUE(myHiperf.Stop());
+
+    stdoutRecord.Stop();
+}
+
 HWTEST_F(HiperfClientTest, GetCommandPath, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;

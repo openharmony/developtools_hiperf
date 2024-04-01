@@ -269,7 +269,7 @@ public:
     /**
      * Start record with options of string vector
      */
-    bool Start(const std::vector<std::string> &args);
+    bool Start(const std::vector<std::string> &args, bool immediately = true);
     /**
      * Start record with options of RecordOption
      */
@@ -278,6 +278,14 @@ public:
      * Start record synchronizely with specified time
      */
     bool RunHiperfCmdSync(const RecordOption &option);
+    /**
+     * prepare record with options of RecordOption
+     */
+    bool PrePare(const RecordOption &option);
+    /**
+     * Start recording after prepare
+     */
+    bool StartRun();
     /**
      * Pause recording
      */
@@ -336,16 +344,15 @@ public:
     void SetDebugMode();
     void SetDebugMuchMode();
     void EnableHilog();
-
+    void KillChild();
 private:
     static const uint64_t PIPE_READ = 0;
     static const uint64_t PIPE_WRITE = 1;
     static constexpr size_t SIZE_ARGV_TAIL = 1; // nullptr
-    static constexpr int64_t THOUSAND = 1000;
+    static constexpr int64_t THOUSAND = 2000;
 
     bool WaitCommandReply(std::chrono::milliseconds = std::chrono::milliseconds(THOUSAND));
     bool SendCommandAndWait(const std::string &cmd);
-    void KillChild();
     void GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
                     const std::vector<std::string> &args);
 

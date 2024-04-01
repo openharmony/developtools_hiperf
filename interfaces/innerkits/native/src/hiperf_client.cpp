@@ -270,7 +270,7 @@ void RecordOption::SetMmapPages(int mmapPages)
 
 Client::Client(const std::string &outputDir)
 {
-    HIPERF_HILOGD(MODULE_CPP_API, "%" HILOG_PUBLIC "s default init with %" HILOG_PUBLIC "s\n",
+    HIPERF_HILOGI(MODULE_CPP_API, "%" HILOG_PUBLIC "s default init with %" HILOG_PUBLIC "s\n",
                   __FUNCTION__, outputDir.c_str());
     Setup(outputDir);
 }
@@ -284,7 +284,7 @@ bool Client::Setup(std::string outputDir)
     if (!outputDir.empty() && outputDir.back() != '/') {
         outputDir.push_back('/');
     }
-    HIPERF_HILOGD(MODULE_CPP_API, "outputDir setup to %" HILOG_PUBLIC "s\n", outputDir.c_str());
+    HIPERF_HILOGI(MODULE_CPP_API, "outputDir setup to %" HILOG_PUBLIC "s\n", outputDir.c_str());
 
     // found command path
     if (access(CurrentCommandPath.c_str(), X_OK) == 0) {
@@ -294,7 +294,7 @@ bool Client::Setup(std::string outputDir)
     } else if (access(SystemCommandPath.c_str(), X_OK) == 0) {
         executeCommandPath_ = SystemCommandPath;
     } else {
-        HIPERF_HILOGD(MODULE_CPP_API, "no hiperf command found\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "no hiperf command found\n");
         return ready_;
     }
 
@@ -305,7 +305,7 @@ bool Client::Setup(std::string outputDir)
     } else if (access(CurrentPath.c_str(), W_OK) == 0) {
         outputDir_ = CurrentPath;
     } else {
-        HIPERF_HILOGD(MODULE_CPP_API, "no writeable output path found\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "no writeable output path found\n");
         return ready_;
     }
     outputFileName_ = PerfDataName;
@@ -340,7 +340,7 @@ void Client::SetDebugMuchMode()
 
 bool Client::Start()
 {
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
 
     std::vector<std::string> args;
     args.push_back("-p");
@@ -388,11 +388,11 @@ void Client::GetExecCmd(std::vector<std::string> &cmd,
     cmd.insert(cmd.end(), args.begin(), args.end());
 }
 
-bool Client::Start(const std::vector<std::string> &args)
+bool Client::Start(const std::vector<std::string> &args, bool immediately)
 {
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (!ready_) {
-        HIPERF_HILOGD(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
 
@@ -401,12 +401,12 @@ bool Client::Start(const std::vector<std::string> &args)
     if (pipe(clientToServerFd) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGD(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", errInfo);
+        HIPERF_HILOGI(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", errInfo);
         return false;
     } else if (pipe(serverToClientFd) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGD(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", errInfo);
+        HIPERF_HILOGI(MODULE_CPP_API, "failed to create pipe: %" HILOG_PUBLIC "s", errInfo);
         close(clientToServerFd[PIPE_READ]);
         close(clientToServerFd[PIPE_WRITE]);
         return false;
@@ -416,7 +416,7 @@ bool Client::Start(const std::vector<std::string> &args)
     if (hperfPid_ == -1) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGD(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
+        HIPERF_HILOGI(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
         close(clientToServerFd[PIPE_READ]);
         close(clientToServerFd[PIPE_WRITE]);
         close(serverToClientFd[PIPE_READ]);
@@ -440,17 +440,20 @@ bool Client::Start(const std::vector<std::string> &args)
         serverToClientFd_ = serverToClientFd[PIPE_READ];
     }
     using namespace std::chrono_literals;
-    if (!WaitCommandReply(1000ms)) {
-        HIPERF_HILOGD(MODULE_CPP_API, "start failed . lets kill it");
+    if (!WaitCommandReply(2000ms)) {
+        HIPERF_HILOGI(MODULE_CPP_API, "start failed . lets kill it");
         KillChild();
         return false;
+    }
+    if (immediately) {
+        return StartRun();
     }
     return true;
 }
 
 bool Client::Start(const RecordOption &option)
 {
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (!option.GetOutputFileName().empty()) {
         outputFileName_ = option.GetOutputFileName();
     }
@@ -466,7 +469,7 @@ void Client::ChildRunExecv(std::vector<std::string> &cmd)
     char *argv[cmd.size() + SIZE_ARGV_TAIL];
     size_t i = 0;
     for (i = 0; i < cmd.size(); ++i) {
-        HIPERF_HILOGD(MODULE_CPP_API, "args %" HILOG_PUBLIC "zu : %" HILOG_PUBLIC "s", i,
+        HIPERF_HILOGI(MODULE_CPP_API, "args %" HILOG_PUBLIC "zu : %" HILOG_PUBLIC "s", i,
                         cmd[i].c_str());
         argv[i] = cmd[i].data();
     }
@@ -477,7 +480,7 @@ void Client::ChildRunExecv(std::vector<std::string> &cmd)
     // never reach the following line, unless calling of execv function failed.
     char errInfo[ERRINFOLEN] = { 0 };
     strerror_r(errno, errInfo, ERRINFOLEN);
-    HIPERF_HILOGD(MODULE_CPP_API,
+    HIPERF_HILOGI(MODULE_CPP_API,
             "failed to call exec: '%" HILOG_PUBLIC "s' %" HILOG_PUBLIC "s\n",
             executeCommandPath_.c_str(), errInfo);
     exit(EXIT_FAILURE); // EXIT_FAILURE 1
@@ -507,26 +510,26 @@ bool Client::ParentWait(pid_t &wpid, int &childStatus)
             // and child will return the value of recording process's retVal
             // false -> Calling of execv func failed, child will output errInfo
             ret = WEXITSTATUS(childStatus) == 0 ? true : false;
-            HIPERF_HILOGD(MODULE_CPP_API,
+            HIPERF_HILOGI(MODULE_CPP_API,
                 "Hiperf Api Child normally exit Calling of execv : '%" HILOG_PUBLIC "s' \n",
                 ret ? "success" : "failed");
             return ret;
         } else if (WIFSIGNALED(childStatus)) [[unlikely]] {
             // child was killed by SIGKILL
-            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process was killed by signal SIGKILL\n");
+            HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process was killed by signal SIGKILL\n");
             ret = false;
             return ret;
         } else if (WIFSTOPPED(childStatus)) [[unlikely]] {
             // child was stopped by SIGSTOP, and waiting for SIGCONT
-            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process was stopped by signal SIGSTOP\n");
+            HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process was stopped by signal SIGSTOP\n");
 #ifdef WIFCONTINUED
         } else if (WIFCONTINUED(childStatus)) {
             // child was continued by SIGCONT
-            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process was continued\n by SIGCONT");
+            HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process was continued\n by SIGCONT");
 #endif
         } else [[unlikely]] {
             // non-standard case, may never happen
-            HIPERF_HILOGD(MODULE_CPP_API, "Hiperf recording process Unexpected status\n");
+            HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process Unexpected status\n");
         }
     } while (!WIFEXITED(childStatus) && !WIFSIGNALED(childStatus));
 
@@ -535,7 +538,7 @@ bool Client::ParentWait(pid_t &wpid, int &childStatus)
         ret = WEXITSTATUS(childStatus) == HIPERF_EXIT_CODE;
     } else {
     // signal exit, means Hiperf recording process may occur some runtime errors.
-        HIPERF_HILOGD(MODULE_CPP_API,
+        HIPERF_HILOGI(MODULE_CPP_API,
             "Hiperf recording occurs some runtime errors, end with signal : %"
             HILOG_PUBLIC "d,  exit status : %" HILOG_PUBLIC "d\n",
             WIFSIGNALED(childStatus), WEXITSTATUS(childStatus));
@@ -547,9 +550,9 @@ bool Client::ParentWait(pid_t &wpid, int &childStatus)
 
 bool Client::RunHiperfCmdSync(const RecordOption &option)
 {
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (!ready_) {
-        HIPERF_HILOGD(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
     const std::vector<std::string> &args = option.GetOptionVecString();
@@ -561,7 +564,7 @@ bool Client::RunHiperfCmdSync(const RecordOption &option)
     if (hperfPid_ == -1) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGD(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
+        HIPERF_HILOGI(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
         return false;
     } else if (hperfPid_ == 0) {
         // child execute
@@ -572,6 +575,15 @@ bool Client::RunHiperfCmdSync(const RecordOption &option)
         ret = ParentWait(wpid, childStatus);
     }
     return ret;
+}
+
+bool Client::PrePare(const RecordOption &option)
+{
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    if (!option.GetOutputFileName().empty()) {
+        outputFileName_ = option.GetOutputFileName();
+    }
+    return Start(option.GetOptionVecString(), false);
 }
 
 bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
@@ -589,7 +601,7 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
             char c;
             ssize_t result = TEMP_FAILURE_RETRY(read(serverToClientFd_, &c, 1));
             if (result <= 0) {
-                HIPERF_HILOGD(MODULE_CPP_API, "read failed from pipe");
+                HIPERF_HILOGI(MODULE_CPP_API, "read failed from pipe");
                 return false; // read fial means not ok
             }
 
@@ -599,12 +611,12 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
             }
         }
     } else if (polled == 0) {
-        HIPERF_HILOGD(MODULE_CPP_API, "Client:command no response %" HILOG_PUBLIC "" PRIu64 ".\n",
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:command no response %" HILOG_PUBLIC "" PRIu64 ".\n",
                       (uint64_t)timeOut.count());
     } else {
-        HIPERF_HILOGD(MODULE_CPP_API, "Client:command poll failed.\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:command poll failed.\n");
     }
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:new reply:%" HILOG_PUBLIC "s\n", reply.c_str());
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:new reply:%" HILOG_PUBLIC "s\n", reply.c_str());
     if (reply == ReplyOK) {
         return true;
     } else {
@@ -614,26 +626,29 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
 
 void Client::KillChild()
 {
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (clientToServerFd_ != -1) {
         close(clientToServerFd_);
+        clientToServerFd_ = -1;
     }
     if (serverToClientFd_ != -1) {
         close(serverToClientFd_);
+        serverToClientFd_ = -1;
     }
     if (hperfPid_ > 0) {
         kill(hperfPid_, SIGKILL);
+        hperfPid_ = -1;
     }
 }
 
 bool Client::SendCommandAndWait(const std::string &cmd)
 {
     if (clientToServerFd_ == -1) {
-        HIPERF_HILOGD(MODULE_CPP_API, "fd not ready. maybe not called start.");
+        HIPERF_HILOGI(MODULE_CPP_API, "fd not ready. maybe not called start.");
         return false;
     }
     size_t size = write(clientToServerFd_, cmd.c_str(), cmd.size());
-    HIPERF_HILOGD(MODULE_CPP_API,
+    HIPERF_HILOGI(MODULE_CPP_API,
                   "Client:%" HILOG_PUBLIC "s -> %" HILOG_PUBLIC "d : %" HILOG_PUBLIC "zd\n",
                   cmd.c_str(), clientToServerFd_, size);
     if (size == cmd.size()) {
@@ -643,13 +658,26 @@ bool Client::SendCommandAndWait(const std::string &cmd)
     }
 }
 
+bool Client::StartRun()
+{
+    if (!ready_) {
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        return false;
+    }
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    if (SendCommandAndWait(ReplyStart)) {
+        return true;
+    }
+    return false;
+}
+
 bool Client::Pause()
 {
     if (!ready_) {
-        HIPERF_HILOGD(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (SendCommandAndWait(ReplyPause)) {
         return true;
     }
@@ -659,10 +687,10 @@ bool Client::Pause()
 bool Client::Resume()
 {
     if (!ready_) {
-        HIPERF_HILOGD(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (SendCommandAndWait(ReplyResume)) {
         return true;
     }
@@ -672,10 +700,10 @@ bool Client::Resume()
 bool Client::Stop()
 {
     if (!ready_) {
-        HIPERF_HILOGD(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (SendCommandAndWait(ReplyStop)) {
         // wait sampling process exit really
         while (SendCommandAndWait(ReplyCheck)) {
@@ -688,7 +716,7 @@ bool Client::Stop()
 
 void Client::EnableHilog()
 {
-    HIPERF_HILOGD(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     hilog_ = true;
 }
 } // namespace HiperfClient
