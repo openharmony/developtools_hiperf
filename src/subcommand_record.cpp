@@ -32,7 +32,7 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "hiperf_client.h"
-#if is_ohos
+#if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
 #include "option.h"

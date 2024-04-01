@@ -18,7 +18,7 @@
 #include <ratio>
 
 #include "option.h"
-#if is_ohos
+#if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
 

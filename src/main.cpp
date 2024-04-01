@@ -18,7 +18,7 @@
 
 #include "command.h"
 #include "debug_logger.h"
-#if is_ohos
+#if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
 #include "option_debug.h"
