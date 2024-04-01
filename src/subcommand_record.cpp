@@ -32,6 +32,9 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "hiperf_client.h"
+#if defined(is_ohos) && is_ohos
+#include "hiperf_hilog.h"
+#endif
 #include "option.h"
 #include "perf_event_record.h"
 #include "perf_file_reader.h"

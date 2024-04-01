@@ -18,6 +18,9 @@
 #include <ratio>
 
 #include "option.h"
+#if defined(is_ohos) && is_ohos
+#include "hiperf_hilog.h"
+#endif
 
 using namespace std::literals::chrono_literals;
 using namespace std::chrono;
