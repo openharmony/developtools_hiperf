@@ -287,12 +287,12 @@ bool Client::Setup(std::string outputDir)
     HIPERF_HILOGI(MODULE_CPP_API, "outputDir setup to %" HILOG_PUBLIC "s\n", outputDir.c_str());
 
     // found command path
-    if (access(CurrentCommandPath.c_str(), X_OK) == 0) {
-        executeCommandPath_ = CurrentCommandPath;
+    if (access(SystemCommandPath.c_str(), X_OK) == 0) {
+        executeCommandPath_ = SystemCommandPath;
     } else if (access(TempCommandPath.c_str(), X_OK) == 0) {
         executeCommandPath_ = TempCommandPath;
-    } else if (access(SystemCommandPath.c_str(), X_OK) == 0) {
-        executeCommandPath_ = SystemCommandPath;
+    } else if (access(CurrentCommandPath.c_str(), X_OK) == 0) {
+        executeCommandPath_ = CurrentCommandPath;
     } else {
         HIPERF_HILOGI(MODULE_CPP_API, "no hiperf command found\n");
         return ready_;
