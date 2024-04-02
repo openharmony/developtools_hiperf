@@ -794,6 +794,7 @@ bool IsArkJsFile(const std::string& filepath)
 
 bool IsHiviewCall()
 {
+#if defined(is_ohos) && is_ohos
     pid_t ppid = syscall(SYS_getppid);
     std::string cmdline = GetProcessName(ppid);
     HLOGD("getppid is %d, cmdline is %s", ppid, cmdline.c_str());
@@ -802,6 +803,9 @@ bool IsHiviewCall()
         return true;
     }
     return false;
+#else
+    return false;
+#endif
 }
 } // namespace HiPerf
 } // namespace Developtools
