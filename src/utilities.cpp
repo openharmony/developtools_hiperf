@@ -663,7 +663,7 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
 bool IsSupportNonDebuggableApp()
 {
     // root first
-    if (IsRoot()) {
+    if (IsRoot() || IsHiviewCall()) {
         return true;
     }
     // user mode
@@ -783,6 +783,7 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
             needCheck = false;
         }
     }
+
     return false;
 }
 
@@ -790,6 +791,18 @@ bool IsArkJsFile(const std::string& filepath)
 {
     return (StringEndsWith(filepath, ".hap") || StringEndsWith(filepath, ".hsp") ||
             StringStartsWith(filepath, "[anon:ArkTS Code"));
+}
+
+bool IsHiviewCall()
+{
+    pid_t ppid = syscall(SYS_getppid);
+    std::string cmdline = GetProcessName(ppid);
+    HLOGD("getppid is %d, cmdline is %s", ppid, cmdline.c_str());
+    if (cmdline == HIVIEW_CMDLINE) {
+        HLOGD("hiview call");
+        return true;
+    }
+    return false;
 }
 } // namespace HiPerf
 } // namespace Developtools

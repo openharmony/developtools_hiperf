@@ -102,6 +102,7 @@ static const std::string USER_TYPE_PARAM_GET = "";
 static const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
 static FILE *outputDump_ = nullptr;
 const uint64_t waitAppRunCheckTimeOut = 10;
+const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
 
 struct ThreadInfos {
     pid_t tid;
@@ -306,6 +307,7 @@ float Percentage(const T &a, const T &b)
 bool IsRoot();
 bool IsBeta();
 bool IsAllowProfilingUid();
+bool IsHiviewCall();
 bool PowerOfTwo(uint64_t n);
 
 const std::string HMKERNEL = "hmkernel";

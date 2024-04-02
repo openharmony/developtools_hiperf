@@ -349,9 +349,9 @@ private:
     static const uint64_t PIPE_READ = 0;
     static const uint64_t PIPE_WRITE = 1;
     static constexpr size_t SIZE_ARGV_TAIL = 1; // nullptr
-    static constexpr int64_t THOUSAND = 2000;
+    static constexpr int64_t TIMEOUT_MILLISECOND = 2000;
 
-    bool WaitCommandReply(std::chrono::milliseconds = std::chrono::milliseconds(THOUSAND));
+    bool WaitCommandReply(std::chrono::milliseconds = std::chrono::milliseconds(TIMEOUT_MILLISECOND));
     bool SendCommandAndWait(const std::string &cmd);
     void GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
                     const std::vector<std::string> &args);
