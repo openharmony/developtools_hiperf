@@ -783,7 +783,6 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
             needCheck = false;
         }
     }
-
     return false;
 }
 
