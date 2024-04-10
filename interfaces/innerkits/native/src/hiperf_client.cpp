@@ -412,8 +412,8 @@ bool Client::Start(const std::vector<std::string> &args, bool immediately)
         return false;
     }
 
-    hperfPid_ = fork();
-    if (hperfPid_ == -1) {
+    hperfPrePid_ = fork();
+    if (hperfPrePid_ == -1) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HIPERF_HILOGI(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
@@ -422,9 +422,8 @@ bool Client::Start(const std::vector<std::string> &args, bool immediately)
         close(serverToClientFd[PIPE_READ]);
         close(serverToClientFd[PIPE_WRITE]);
         return false;
-    } else if (hperfPid_ == 0) {
+    } else if (hperfPrePid_ == 0) {
         // child process
-        prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0);
         close(clientToServerFd[PIPE_WRITE]);
         close(serverToClientFd[PIPE_READ]);
 
@@ -486,7 +485,7 @@ void Client::ChildRunExecv(std::vector<std::string> &cmd)
     exit(EXIT_FAILURE); // EXIT_FAILURE 1
 }
 
-bool Client::ParentWait(pid_t &wpid, int &childStatus)
+bool Client::ParentWait(pid_t &wpid, pid_t pid, int &childStatus)
 {
     bool ret = false;
     do {
@@ -497,10 +496,10 @@ bool Client::ParentWait(pid_t &wpid, int &childStatus)
 #else
         option = WUNTRACED;
 #endif
-        wpid = waitpid(hperfPid_, &childStatus, option);
+        wpid = waitpid(pid, &childStatus, option);
         if (wpid == -1) {
             perror("waitpid");
-            exit(EXIT_FAILURE);
+            return false;
         }
 
         if (WIFEXITED(childStatus)) {
@@ -572,7 +571,7 @@ bool Client::RunHiperfCmdSync(const RecordOption &option)
         GetExecCmd(cmd, args);
         ChildRunExecv(cmd);
     } else {
-        ret = ParentWait(wpid, childStatus);
+        ret = ParentWait(wpid, hperfPid_, childStatus);
     }
     return ret;
 }
@@ -638,6 +637,12 @@ void Client::KillChild()
     if (hperfPid_ > 0) {
         kill(hperfPid_, SIGKILL);
         hperfPid_ = -1;
+    }
+    if (hperfPrePid_ > 0) {
+        pid_t wpid;
+        int childStatus;
+        ParentWait(wpid, hperfPrePid_, childStatus);
+        hperfPrePid_ = -1;
     }
 }
 
