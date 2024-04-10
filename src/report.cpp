@@ -72,7 +72,7 @@ void Report::AddReportItem(const PerfRecordSample &sample, bool includeCallStack
             if (frameIt != sample.callFrames_.end()) {
                 HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
                 // for arkjs frame, skip the stub.an frame
-                if (StringEndsWith(frameIt->mapName, "stub.an")) {
+                if (StringEndsWith(frameIt->mapName, "stub.an") && sample.callFrames_.size() > 1) {
                     HLOGV("stub.an frame, go to next, mapname %s", frameIt->mapName.c_str());
                     frameIt++;
                 }
