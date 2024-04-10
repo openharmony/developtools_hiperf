@@ -211,6 +211,7 @@ ohos_source_set("hiperf_platform_common") {
     }
     if (ability_base_enable) {
       external_deps += [ "ability_base:extractortool" ]
+      defines += [ "ENABLE_HAP_EXTRACTOR" ]
     }
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
