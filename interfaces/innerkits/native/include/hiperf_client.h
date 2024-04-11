@@ -340,7 +340,7 @@ public:
     /**
      * Parent wait for child exit
      */
-    bool ParentWait(pid_t &wpid, int &childStatus);
+    bool ParentWait(pid_t &wpid, pid_t pid, int &childStatus);
     void SetDebugMode();
     void SetDebugMuchMode();
     void EnableHilog();
@@ -370,6 +370,7 @@ private:
     int clientToServerFd_ = -1;
     int serverToClientFd_ = -1;
     pid_t hperfPid_ = -1;
+    pid_t hperfPrePid_ = -1; // hiperf pid for prepare mode
 };
 } // namespace HiperfClient
 } // namespace HiPerf
