@@ -937,7 +937,7 @@ bool SubCommandRecord::ClientCommandResponse(bool OK)
 
 bool SubCommandRecord::IsSamplingRunning()
 {
-    constexpr int maxWaitTrackingCount = 1000 / 100; // wait 1 second
+    constexpr int maxWaitTrackingCount = 3000 / 100; // wait 3 second
     int waitTrackingCount = maxWaitTrackingCount;
     while (!perfEvents_.IsTrackRunning()) {
         waitTrackingCount--;
