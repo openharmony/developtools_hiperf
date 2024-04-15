@@ -476,7 +476,7 @@ void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, DfxFrame &callFrame)
         HLOGD("callFrame.funcName:%s, GetName:%s\n", callFrame.funcName.c_str(), symbol.GetName().data());
     }
 
-    callFrame.index = symbol.index_;
+    callFrame.index = static_cast<size_t>(symbol.index_);
     callFrame.mapName = symbol.module_.empty() ? symbol.comm_ : symbol.module_;
     HLOG_ASSERT_MESSAGE(!callFrame.funcName.empty(), "%s", symbol.ToDebugString().c_str());
 }
@@ -722,7 +722,8 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
             auto elfLoadInfoMap = symFile->GetPtLoads();
             u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
             u64 len = elfLoadInfoMap[0].mmapLen;
-            u64 pgoff = elfLoadInfoMap[0].offset & (~(elfLoadInfoMap[0].align - 1));
+            u64 pgoff = elfLoadInfoMap[0].offset &
+                        (~(elfLoadInfoMap[0].align - 1 >= 0 ? elfLoadInfoMap[0].align - 1 : 0));
             std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
                 std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
                 begin, len, pgoff, 0, 0, 0, PROT_READ, 0, curMap->name);

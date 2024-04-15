@@ -85,7 +85,7 @@ int ReportJsonFile::GetFunctionID(int libId, const std::string &function)
         // make a new function for unknown name
         addNewFunction(libId, function);
         // retuen the last index
-        return functionList_.size() - 1;
+        return functionList_.size() - 1 >= 0 ? functionList_.size() - 1 : 0;
     }
 }
 

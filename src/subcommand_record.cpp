@@ -531,7 +531,7 @@ bool SubCommandRecord::CheckTargetPids()
 bool SubCommandRecord::ParseDataLimitOption(const std::string &str)
 {
     uint unit = 1;
-    char c = str.at(str.size() - 1);
+    char c = str.at(str.size() - 1 >= 0 ? str.size() - 1 : 0);
     if (c == 'K' or c == 'k') {
         unit = KILO;
     } else if (c == 'm' or c == 'M') {
@@ -542,7 +542,7 @@ bool SubCommandRecord::ParseDataLimitOption(const std::string &str)
         return false;
     }
 
-    std::string num = str.substr(0, str.size() - 1);
+    std::string num = str.substr(0, str.size() - 1 >= 0 ? str.size() - 1 : 0);
     int64_t size = 0;
     try {
         size = std::stoul(num);
