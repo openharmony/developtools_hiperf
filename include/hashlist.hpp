@@ -102,7 +102,7 @@ HashList<Key, Val>::Iterator::Iterator(LinkNode<Key, Val> *pnode, HashList *phas
 
 template<typename Key, typename Val>
 HashList<Key, Val>::Iterator::Iterator(const LinkNode<Key, Val> *pnode, const HashList *phashList)
-    : pnode_ {const_cast<LinkNode<Key, Val>*>(pnode)}, 
+    : pnode_ {const_cast<LinkNode<Key, Val>*>(pnode)},
       phashList_ {const_cast<HashList*>(phashList)}
 {
     if (phashList_ == nullptr) {

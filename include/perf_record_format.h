@@ -94,17 +94,17 @@ struct PerfRecordMmapData {
             allocated memory.
 */
 struct PerfRecordMmap2Data {
-    u32 pid;
-    u32 tid;
-    u64 addr;
-    u64 len;
-    u64 pgoff;
-    u32 maj;
-    u32 min;
-    u64 ino;
-    u64 ino_generation;
-    u32 prot;
-    u32 flags;
+    u32 pid = 0;
+    u32 tid = 0;
+    u64 addr = 0;
+    u64 len = 0;
+    u64 pgoff = 0;
+    u32 maj = 0;
+    u32 min = 0;
+    u64 ino = 0;
+    u64 ino_generation = 0;
+    u32 prot = 0;
+    u32 flags = 0;
     char filename[KILO];
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;

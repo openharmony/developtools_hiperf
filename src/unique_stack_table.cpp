@@ -107,7 +107,7 @@ uint64_t UniqueStackTable::PutIpInSlot(uint64_t thisIp, uint64_t prevIdx)
         curIpIdx += currentDeconflictTimes_ * hashStep_ + 1;
         if (curIpIdx >= totalNodes_) {
             // make sure index 0 do not occupy
-            curIpIdx -= (availableNodes_ - 1);
+            curIpIdx -= (availableNodes_ - 1 >= 0 ? availableNodes_ - 1 : 0);
         }
     }
 

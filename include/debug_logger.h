@@ -116,7 +116,7 @@ public:
 #endif
 
     // used in UT
-    bool OpenLog(const std::string & = "", const std::string & = "w");
+    bool OpenLog(const std::string &tempLogPath = "", const std::string &flags = "w");
     bool RestoreLog();
     void Reset();
 

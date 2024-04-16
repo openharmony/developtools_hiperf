@@ -57,7 +57,7 @@ int64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
     if (memMaps_[memMapsIndexs_[0]]->begin > addr) {
         return illegal;
     }
-    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() -  1]]->end <= addr) {
+    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() -  1 >= 0 ? memMapsIndexs_.size() -  1 : 0]]->end <= addr) {
         return illegal;
     }
     constexpr int divisorNum {2};
@@ -94,7 +94,7 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByAddr(uint64_t addr) const
     if (memMaps_[memMapsIndexs_[0]]->begin > addr) {
         return nullptr;
     }
-    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() - 1]]->end <= addr) {
+    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() - 1 >= 0 ? memMapsIndexs_.size() - 1 : 0]]->end <= addr) {
         return nullptr;
     }
     constexpr int divisorNum {2};
@@ -399,7 +399,7 @@ std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string filename,
     }
     std::shared_ptr<DfxMap> map = memMaps_.emplace_back(std::make_shared<DfxMap>(begin, begin + len, offset,
         prot, filename));
-    memMapsIndexs_.emplace_back(memMaps_.size() - 1);
+    memMapsIndexs_.emplace_back(memMaps_.size() - 1 >= 0 ? memMaps_.size() - 1 : 0);
     HLOGD(" %u:%u create a new map(total %zu) at '%s' (0x%" PRIx64 "-0x%" PRIx64 ")@0x%" PRIx64 " ",
           pid_, tid_, memMaps_.size(), map->name.c_str(), map->begin, map->end, map->offset);
     SortMemMaps();

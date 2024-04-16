@@ -194,7 +194,7 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
     }
     // print value
     std::string strEventCount = std::to_string(reportSum->eventCountSum);
-    for (size_t i = strEventCount.size() - 1, j = 1; i > 0; --i, ++j) {
+    for (size_t i = strEventCount.size() - 1 >= 0 ? strEventCount.size() - 1 : 0, j = 1; i > 0; --i, ++j) {
         if (j == THOUSNADS_SEPARATOR) {
             j = 0;
             strEventCount.insert(strEventCount.begin() + i, ',');
@@ -299,7 +299,7 @@ void SubCommandStat::ReportNormal(
         std::string configName = it->first;
         std::string comment = comments[configName];
         std::string strEventCount = std::to_string(it->second->eventCount);
-        for (size_t i = strEventCount.size() - 1, j = 1; i > 0; --i, ++j) {
+        for (size_t i = strEventCount.size() - 1 >= 0 ? strEventCount.size() - 1 : 0, j = 1; i > 0; --i, ++j) {
             if (j == THOUSNADS_SEPARATOR) {
                 strEventCount.insert(strEventCount.begin() + i, ',');
                 j = 0;

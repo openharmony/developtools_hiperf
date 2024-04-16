@@ -613,6 +613,14 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_pt
         }
 
         header.size = sizeof(header) + sizeof(data_) - KILO + item->name.size() + 1;
+    } else {
+        data_.addr = 0;
+        data_.len = 0;
+        data_.pgoff = 0;
+        data_.maj = 0;
+        data_.min = 0;
+        data_.ino = 0;
+        data_.ino_generation = 0;
     }
 }
 

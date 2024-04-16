@@ -24,9 +24,7 @@
 #include <utility>
 #if HAVE_LIBUNWIND
 #include <libunwind.h>
-extern "C" {
 #include <libunwind_i.h>
-}
 #endif
 
 #include "dfx_regs.h"
