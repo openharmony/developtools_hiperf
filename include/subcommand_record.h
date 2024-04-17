@@ -181,6 +181,8 @@ public:
         "   --cmdline-size <size>\n"
         "         set value to /sys/kernel/tracing/saved_cmdlines_size\n"
         "         the value should be between 512 and 4096\n"
+        "   --report\n"
+        "         Report with callstack after record. Conflicts with the -a option.\n"
         )
     // clang-format on
     {
@@ -208,6 +210,7 @@ private:
     bool verboseReport_ = false;
     bool kernelCallChain_ = true;
     bool callChainUserOnly_ = false;
+    bool report_ = false;
     float timeStopSec_ = PerfEvents::DEFAULT_TIMEOUT;
     int frequency_ = 0;
     int period_ = 0;
@@ -320,6 +323,7 @@ private:
     bool ParseControlCmd(const std::string cmd);
     bool CheckTargetProcessOptions();
     bool CheckTargetPids();
+    bool CheckReportOption();
     void WriteCommEventBeforeSampling();
 
     VirtualRuntime virtualRuntime_;
@@ -340,6 +344,7 @@ private:
     void SetHM();
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
+    bool OnlineReportData();
 };
 } // namespace HiPerf
 } // namespace Developtools

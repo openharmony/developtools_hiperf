@@ -39,6 +39,7 @@
 #include "perf_event_record.h"
 #include "perf_file_reader.h"
 #include "utilities.h"
+#include "subcommand_report.h"
 
 using namespace std::chrono;
 namespace OHOS {
@@ -153,6 +154,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" pipe_input:\t%d\n", clientPipeInput_);
     printf(" pipe_output:\t%d\n", clientPipeOutput_);
     printf(" cmdlinesSize_:\t%d\n", cmdlinesSize_);
+    printf(" report_:\t%s\n", report_ ? "true" : "false");
 }
 
 bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
@@ -284,6 +286,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--cmdline-size", cmdlinesSize_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--report", report_)) {
         return false;
     }
     if (targetSystemWide_ && dedupStack_) {
@@ -433,6 +438,9 @@ bool SubCommandRecord::CheckOptions()
     if (!CheckTargetProcessOptions()) {
         return false;
     }
+    if (!CheckReportOption()) {
+        return false;
+    }
     return true;
 }
 
@@ -525,6 +533,15 @@ bool SubCommandRecord::CheckTargetPids()
     }
     selectPids_.insert(selectPids_.end(), selectTids_.begin(), selectTids_.end());
 
+    return true;
+}
+
+bool SubCommandRecord::CheckReportOption()
+{
+    if (targetSystemWide_ && report_) {
+        printf("--report options conflict, please check usage\n");
+        return false;
+    }
     return true;
 }
 
@@ -1232,6 +1249,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     // finial report
     RecordCompleted();
     RecoverSavedCmdlinesSize();
+    OnlineReportData();
     CloseClientThread();
     return true;
 }
@@ -1835,6 +1853,42 @@ void SubCommandRecord::SetHM()
             }
         }
     }
+}
+
+bool SubCommandRecord::OnlineReportData()
+{
+    if (!report_) {
+        return true;
+    }
+    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s begin to report file %" HILOG_PUBLIC "s",
+                  __FUNCTION__, outputFilename_.c_str());
+    bool ret = false;
+    std::string tempFileName = outputFilename_ + ".tmp";
+    if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s can't rename file %" HILOG_PUBLIC "s"
+                      "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
+                      __FUNCTION__, outputFilename_.c_str(), errno, errInfo);
+        return false;
+    }
+
+    std::unique_ptr<SubCommandReport> report = std::make_unique<SubCommandReport>();
+    HLOGD("report the file %s to report file %s \n", tempFileName.c_str(), outputFilename_.c_str());
+    std::vector<std::string> args;
+    args.emplace_back("-i");
+    args.emplace_back(tempFileName);
+    args.emplace_back("-o");
+    args.emplace_back(outputFilename_);
+    args.emplace_back("-s");
+    if (report->ParseOption(args)) {
+        ret =  report->OnSubCommand(args);
+    }
+
+    remove(tempFileName.c_str());
+    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s report result %" HILOG_PUBLIC "s",
+                  __FUNCTION__, ret ? "success" : "fail");
+    return ret;
 }
 } // namespace HiPerf
 } // namespace Developtools

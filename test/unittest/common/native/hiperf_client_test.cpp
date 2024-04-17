@@ -450,6 +450,16 @@ HWTEST_F(HiperfClientTest, SetMmapPages, TestSize.Level1)
     TestCaseOption(opt);
 }
 
+HWTEST_F(HiperfClientTest, SetReport, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    opt.SetReport(true);
+
+    TestCaseOption(opt);
+}
+
 HWTEST_F(HiperfClientTest, SetVecBranchSampleTypes, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
