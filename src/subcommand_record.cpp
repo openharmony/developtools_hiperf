@@ -1873,7 +1873,7 @@ bool SubCommandRecord::OnlineReportData()
         return false;
     }
 
-    std::unique_ptr<SubCommandReport> report = std::make_unique<SubCommandReport>();
+    std::unique_ptr<SubCommandReport> reporter = std::make_unique<SubCommandReport>();
     HLOGD("report the file %s to report file %s \n", tempFileName.c_str(), outputFilename_.c_str());
     std::vector<std::string> args;
     args.emplace_back("-i");
@@ -1881,8 +1881,8 @@ bool SubCommandRecord::OnlineReportData()
     args.emplace_back("-o");
     args.emplace_back(outputFilename_);
     args.emplace_back("-s");
-    if (report->ParseOption(args)) {
-        ret =  report->OnSubCommand(args);
+    if (reporter->ParseOption(args)) {
+        ret =  reporter->OnSubCommand(args);
     }
 
     if (remove(tempFileName.c_str()) != 0) {
