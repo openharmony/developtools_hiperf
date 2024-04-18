@@ -1885,7 +1885,13 @@ bool SubCommandRecord::OnlineReportData()
         ret =  report->OnSubCommand(args);
     }
 
-    remove(tempFileName.c_str());
+    if (remove(tempFileName.c_str()) != 0) {
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s remove file failed %" HILOG_PUBLIC "s"
+                      "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
+                      __FUNCTION__, tempFileName.c_str(), errno, errInfo);
+    }
     HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s report result %" HILOG_PUBLIC "s",
                   __FUNCTION__, ret ? "success" : "fail");
     return ret;
