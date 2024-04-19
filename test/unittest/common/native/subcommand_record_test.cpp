@@ -1434,6 +1434,26 @@ HWTEST_F(SubCommandRecordTest, TestHasReport, TestSize.Level1)
 {
     TestRecordCommand("-d 2 -s dwarf --report", true, true);
 }
+
+/**
+ * @tc.name: TraceCommand
+ * @tc.desc: Test TraceCommand option
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TraceCommand, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -s dwarf ls", true, false);
+}
+
+/**
+ * @tc.name: TraceCommandErr
+ * @tc.desc: Test InvalidCommand option
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TraceCommandErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -s dwarf invalidcommand", false, false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

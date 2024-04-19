@@ -162,6 +162,8 @@ HWTEST_F(SubCommandReportTest, TestParseOption, TestSize.Level1)
     EXPECT_EQ(mSubCommandReport.ParseOption(args), true);
     args = {"--branch"};
     EXPECT_EQ(mSubCommandReport.ParseOption(args), true);
+    args = {"--debug"};
+    EXPECT_EQ(mSubCommandReport.ParseOption(args), true);
     args.clear();
 }
 
@@ -213,7 +215,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i1, TestSize.Level1)
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     const auto startTime = chrono::steady_clock::now();
-    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "perf1.data"), false);
+    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "perf1.data --debug"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
