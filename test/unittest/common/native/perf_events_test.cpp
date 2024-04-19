@@ -131,7 +131,7 @@ void PerfEventsTest::SetAllConfig(PerfEvents &event)
     event.SetSystemTarget(true);
     event.SetTimeOut(DEFAULT_TRACKING_TIME);
     event.SetInherit(false);
-    std::vector<std::string> trackedCommand_ {};
+    std::vector<std::string> trackedCommand_ {"ls"};
     event.SetTrackedCommand(trackedCommand_);
     const unsigned int frequency = 1000;
     event.SetSampleFrequency(frequency);
@@ -213,7 +213,7 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     event.SetSystemTarget(true);
     event.SetTimeOut(DEFAULT_TRACKING_TIME);
     event.SetInherit(false);
-    std::vector<std::string> trackedCommand_ {};
+    std::vector<std::string> trackedCommand_ {"ls"};
     event.SetTrackedCommand(trackedCommand_);
     event.AddDefaultEvent(PERF_TYPE_SOFTWARE);
     event.AddDefaultEvent(PERF_TYPE_HARDWARE);
@@ -300,7 +300,7 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level1)
     event.SetTimeReport(DEFAULT_STAT_REPORT_TIME);
     event.SetVerboseReport(false);
     event.SetInherit(false);
-    std::vector<std::string> trackedCommand_;
+    std::vector<std::string> trackedCommand_ {"ls"};
     event.SetTrackedCommand(trackedCommand_);
     event.AddDefaultEvent(PERF_TYPE_SOFTWARE);
     event.AddDefaultEvent(PERF_TYPE_TRACEPOINT);
