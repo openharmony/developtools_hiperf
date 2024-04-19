@@ -268,6 +268,11 @@ void RecordOption::SetMmapPages(int mmapPages)
     SetOption(ArgMmapPages, mmapPages);
 }
 
+void RecordOption::SetReport(bool report)
+{
+    SetOption(ArgReport, report);
+}
+
 Client::Client(const std::string &outputDir)
 {
     HIPERF_HILOGI(MODULE_CPP_API, "%" HILOG_PUBLIC "s default init with %" HILOG_PUBLIC "s\n",

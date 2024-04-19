@@ -70,6 +70,7 @@ static const std::string ArgClockId = "--clockid";
 static const std::string ArgVecBranchSampleTypes = "-j";
 static const std::string ArgMmapPages = "-m";
 static const std::string ArgDedupStack = "--dedup_stack";
+static const std::string ArgReport = "--report";
 
 static const int DEFAULT_DURATION_TIME = 10;
 static const int DEFAULT_FREQUENCY_TIME = 100;
@@ -226,6 +227,10 @@ public:
      * must be a power of two. If not set,  a value <=1024 will be used.
      */
     void SetMmapPages(int mmapPages);
+    /**
+     * Set to report with callstack after recording, default is disable
+     */
+    void SetReport(bool report);
 
     /**
      * Get the string vector of all options.

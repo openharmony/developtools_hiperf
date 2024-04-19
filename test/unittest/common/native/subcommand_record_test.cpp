@@ -1414,6 +1414,26 @@ HWTEST_F(SubCommandRecordTest, SendFifoAndWaitReply, TestSize.Level1)
     std::string test = "test";
     EXPECT_EQ(cmd.SendFifoAndWaitReply(test, CONTROL_WAITREPY_TOMEOUT), false);
 }
+
+/**
+ * @tc.name: ReportErr
+ * @tc.desc: Test report option error
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ReportErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a --report ", false, false);
+}
+
+/**
+ * @tc.name: TestHasReport
+ * @tc.desc: Test --report option
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestHasReport, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -s dwarf --report", true, true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
