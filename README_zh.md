@@ -217,7 +217,7 @@ Usage: hiperf list [event type name]
 下面列出了设备支持的HW事件,并且会提示哪些事件此设备不支持
 
 ```
-./hiperf list hw
+hiperf list hw
 ```
 
 ### stat 命令
@@ -232,7 +232,7 @@ Usage: hiperf stat [options] [command [command-args]]
 下面展示了一个 stats 监听本进程 在 CPU 0 上 3 秒的性能计数器命令
 
 ```
- ./hiperf stat -d 3 -c 0
+ hiperf stat -d 3 -c 0
 ```
 
 ### record 命令
@@ -247,7 +247,7 @@ Usage: hiperf record [options] [command [command-args]]
 对全系统所有进程采样3秒，并且显示详细的信息
 
 ```
-./hiperf record -d 3 -a --verbose
+hiperf record -d 3 -a --verbose
 ```
 
 ### dump 命令
@@ -268,14 +268,14 @@ Usage: hiperf dump [option] \<filename\>
 并且转换为用户需要的格式（比如Json或者ProtoBuf）
 
 ```
-Usage: hiperf dump [option] \<filename\>
-       Dump specific parts of specified file .
+Usage: hiperf report [option] \<filename\>
+       Displays the sampling data .
 ```
 
 范例输出普通报告的命令，限制为占比不超过1%
 
 ```
-./hiperf report --limit-percent 1
+hiperf report --limit-percent 1
 ```
 
 ### 脚本
