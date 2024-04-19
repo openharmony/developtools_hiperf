@@ -258,7 +258,7 @@ hiperf record -d 3 -a --verbose
 
 ```
 Usage: hiperf dump [option] \<filename\>
-       Dump specific parts of specified file .
+       Dump specific parts of specified file.
 ```
 
 ### report 命令
@@ -269,7 +269,7 @@ Usage: hiperf dump [option] \<filename\>
 
 ```
 Usage: hiperf report [option] \<filename\>
-       Displays the sampling data .
+       Displays the sampling data.
 ```
 
 范例输出普通报告的命令，限制为占比不超过1%

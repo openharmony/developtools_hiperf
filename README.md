@@ -254,7 +254,7 @@ The **report** command displays the sampling data (read from **perf.data**) and 
 
 ```
 Usage: hiperf report [option] \<filename\>
-       Displays the sampling data .
+       Displays the sampling data.
 ```
 
 Output a common report, with the minimum display percentage of 1%.
