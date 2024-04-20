@@ -105,7 +105,7 @@ struct PerfRecordMmap2Data {
     u64 ino_generation = 0;
     u32 prot = 0;
     u32 flags = 0;
-    char filename[KILO];
+    char filename[KILO] = {0};
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
