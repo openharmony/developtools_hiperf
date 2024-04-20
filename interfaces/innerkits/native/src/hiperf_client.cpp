@@ -518,12 +518,12 @@ bool Client::ParentWait(pid_t &wpid, pid_t pid, int &childStatus)
                 "Hiperf Api Child normally exit Calling of execv : '%" HILOG_PUBLIC "s' \n",
                 ret ? "success" : "failed");
             return ret;
-        } else if (WIFSIGNALED(childStatus)) [[unlikely]] {
+        } else if (WIFSIGNALED(childStatus)) {
             // child was killed by SIGKILL
             HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process was killed by signal SIGKILL\n");
             ret = false;
             return ret;
-        } else if (WIFSTOPPED(childStatus)) [[unlikely]] {
+        } else if (WIFSTOPPED(childStatus)) {
             // child was stopped by SIGSTOP, and waiting for SIGCONT
             HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process was stopped by signal SIGSTOP\n");
 #ifdef WIFCONTINUED
@@ -531,7 +531,7 @@ bool Client::ParentWait(pid_t &wpid, pid_t pid, int &childStatus)
             // child was continued by SIGCONT
             HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process was continued\n by SIGCONT");
 #endif
-        } else [[unlikely]] {
+        } else {
             // non-standard case, may never happen
             HIPERF_HILOGI(MODULE_CPP_API, "Hiperf recording process Unexpected status\n");
         }

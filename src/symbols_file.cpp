@@ -314,7 +314,6 @@ private:
                            uint64_t &fdeTableSize) override
     {
         if (elfFile_ == nullptr) {
-            HLOGD("Failed to create elf file for %s.", elfPath.c_str());
             return false;
         }
         ShdrInfo shinfo;

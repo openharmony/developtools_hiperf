@@ -17,7 +17,6 @@
 
 #if HAVE_LIBUNWIND
 // for libunwind.h empty struct has size 0 in c, size 1 in c++
-#define UNW_EMPTY_STRUCT uint8_t unused;
 #include <libunwind.h>
 #endif
 
@@ -30,7 +29,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "hashlist.hpp"
+#include "hash_list_template.h"
 #include "register.h"
 #include "utilities.h"
 #include "unwinder.h"

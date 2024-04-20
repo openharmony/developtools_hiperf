@@ -14,7 +14,6 @@
  */
 
 // for libunwind.h empty struct has size 0 in c, size 1 in c++
-#define UNW_EMPTY_STRUCT uint8_t unused;
 #include "register.h"
 #if !is_mingw
 #include <sys/utsname.h>
