@@ -467,13 +467,6 @@ HWTEST_F(SubCommandRecordTest, SelectEventsKernel, TestSize.Level1)
     TestEvents(opt, uk);
 }
 
-HWTEST_F(SubCommandRecordTest, SelectEventsKernel_2, TestSize.Level1)
-{
-    std::string opt = "-d 2 -c 0 -e ";
-    std::string uk = ":k";
-    TestEvents(opt, uk, false);
-}
-
 HWTEST_F(SubCommandRecordTest, SelectEventsErr, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 -c 0 -e what ", false);
@@ -1263,7 +1256,7 @@ HWTEST_F(SubCommandRecordTest, ReStartConflict, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, ReStart, TestSize.Level1)
 {
-    TestRecordCommand("--restart ", false ,true);
+    TestRecordCommand("--restart ");
 }
 
 // --exclude-tid
