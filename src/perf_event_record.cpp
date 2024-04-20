@@ -605,7 +605,6 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_pt
         data_.min = item->minor;
         data_.ino = item->inode;
         data_.ino_generation = 0;
-        memset_s(data_.filename, KILO, 0, KILO);
         // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
         // why prot get from this is 7. rwxp
         DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
@@ -622,7 +621,9 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_pt
         data_.min = 0;
         data_.ino = 0;
         data_.ino_generation = 0;
-        memset_s(data_.filename, KILO, 0, KILO);
+    }
+    if (memset_s(data_.filename, KILO, 0, KILO) != EOK) {
+        HLOGE("memset_s failed");
     }
 }
 
