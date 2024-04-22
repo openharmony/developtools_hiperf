@@ -467,6 +467,13 @@ HWTEST_F(SubCommandRecordTest, SelectEventsKernel, TestSize.Level1)
     TestEvents(opt, uk);
 }
 
+HWTEST_F(SubCommandRecordTest, SelectEventsKernel_2, TestSize.Level1)
+{
+    std::string opt = "-d 2 -c 0 -e ";
+    std::string uk = ":k";
+    TestEvents(opt, uk, false);
+}
+
 HWTEST_F(SubCommandRecordTest, SelectEventsErr, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 -c 0 -e what ", false);
@@ -1236,33 +1243,33 @@ HWTEST_F(SubCommandRecordTest, ExcludeMixedThreadName, TestSize.Level1)
 // --restart
 HWTEST_F(SubCommandRecordTest, ReStartNotApp1, TestSize.Level1)
 {
-    TestRecordCommand("-p 5 --restart ", false ,false);
+    TestRecordCommand("-p 5 --restart ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStartNotApp2, TestSize.Level1)
 {
-    TestRecordCommand("-a --restart ", false ,false);
+    TestRecordCommand("-a --restart ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStartNotApp3, TestSize.Level1)
 {
-    TestRecordCommand("-p 5 -a --restart ", false ,false);
+    TestRecordCommand("-p 5 -a --restart ", false, false);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStartConflict, TestSize.Level1)
 {
-    TestRecordCommand("--restart -a ", false ,true);
+    TestRecordCommand("--restart -a ", false, true);
 }
 
 HWTEST_F(SubCommandRecordTest, ReStart, TestSize.Level1)
 {
-    TestRecordCommand("--restart ");
+    TestRecordCommand("--restart ", false, true);
 }
 
 // --exclude-tid
 HWTEST_F(SubCommandRecordTest, ExcludeTidConflict, TestSize.Level1)
 {
-    TestRecordCommand("--exclude-tid 5 --exclude-thread test ", false , true);
+    TestRecordCommand("--exclude-tid 5 --exclude-thread test ", false, true);
 }
 
 /**
