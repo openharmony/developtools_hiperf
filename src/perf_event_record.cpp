@@ -622,6 +622,9 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_pt
         data_.ino = 0;
         data_.ino_generation = 0;
     }
+    if (memset_s(data_.filename, KILO, 0, KILO) != EOK) {
+        HLOGE("memset_s failed");
+    }
 }
 
 bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const

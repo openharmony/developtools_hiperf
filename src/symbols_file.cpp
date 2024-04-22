@@ -313,6 +313,9 @@ private:
     bool GetHDRSectionInfo(uint64_t &ehFrameHdrElfOffset, uint64_t &fdeTableElfOffset,
                            uint64_t &fdeTableSize) override
     {
+        if (elfFile_ == nullptr) {
+            return false;
+        }
         ShdrInfo shinfo;
         if (!elfFile_->GetSectionInfo(shinfo, ".eh_frame_hdr")) {
             return false;

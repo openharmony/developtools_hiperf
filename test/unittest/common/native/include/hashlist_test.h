@@ -19,6 +19,6 @@
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 
-#include "hashlist.hpp"
+#include "hash_list_template.h"
 
 #endif // HASHLIST_TEST_H

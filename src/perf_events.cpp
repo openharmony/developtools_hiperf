@@ -1333,7 +1333,8 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
     size_t dynSizePos = stackSizePos + sizeof(uint64_t) + stackSize;
     uint64_t dynSize = 0;
     GetRecordFieldFromMmap(mmap, &dynSize, mmap.mmapPage->data_tail + dynSizePos, sizeof(dynSize));
-    uint64_t newStackSize = std::min(ALIGN(dynSize, alignSize), stackSize);
+    uint64_t newStackSize = std::min((dynSize + alignSize >= 1 ? dynSize + alignSize - 1 : 0) &
+                                     (~(alignSize >= 1 ? alignSize - 1 : 0)), stackSize);
     if (newStackSize >= stackSize) {
         return false;
     }

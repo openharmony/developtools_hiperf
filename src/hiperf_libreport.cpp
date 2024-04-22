@@ -143,7 +143,11 @@ const char *ReportGetSymbolFiles(const char *perfFile)
                 result.append(",");
                 it++;
             }
-            result[result.size() - 1] = '\0';
+            if (result.size() >= 1) {
+                result[result.size() - 1] = '\0';
+            } else {
+                result[0] = '\0';
+            }
         }
     }
     return result.c_str();

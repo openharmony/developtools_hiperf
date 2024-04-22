@@ -723,7 +723,7 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
             u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
             u64 len = elfLoadInfoMap[0].mmapLen;
             u64 pgoff = elfLoadInfoMap[0].offset &
-                        (~(elfLoadInfoMap[0].align - 1 >= 0 ? elfLoadInfoMap[0].align - 1 : 0));
+                        (~(elfLoadInfoMap[0].align >= 1 ? elfLoadInfoMap[0].align - 1 : 0));
             std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
                 std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
                 begin, len, pgoff, 0, 0, 0, PROT_READ, 0, curMap->name);

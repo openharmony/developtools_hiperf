@@ -272,7 +272,10 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
             return false;
         } else {
             perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
-            if (header == nullptr || header->size > sizeof(buf)) {
+            if (header == nullptr) {
+                HLOGE("read record header is null");
+                return false;
+            } else if (header->size > sizeof(buf)) {
                 HLOGE("read record header size error %hu", header->size);
                 return false;
             }
