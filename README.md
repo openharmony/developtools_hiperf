@@ -219,7 +219,7 @@ Usage: hiperf stat [options] [command [command-args]]
 Monitor the performance counter of the process on CPU 0 for 3 seconds.
 
 ```
- hiperf stat -d 3 -c 0
+ hiperf stat -a -d 3 -c 0
 ```
 
 ### record

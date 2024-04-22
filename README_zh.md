@@ -232,7 +232,7 @@ Usage: hiperf stat [options] [command [command-args]]
 下面展示了一个 stats 监听本进程 在 CPU 0 上 3 秒的性能计数器命令
 
 ```
- hiperf stat -d 3 -c 0
+ hiperf stat -a -d 3 -c 0
 ```
 
 ### record 命令
