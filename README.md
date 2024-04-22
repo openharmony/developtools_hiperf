@@ -204,7 +204,7 @@ Usage: hiperf list [event type name]
 List the hardware events supported by the PMU. The command also lists the events that are not supported by the PMU.
 
 ```
-./hiperf list hw
+hiperf list hw
 ```
 
 ### stat
@@ -219,7 +219,7 @@ Usage: hiperf stat [options] [command [command-args]]
 Monitor the performance counter of the process on CPU 0 for 3 seconds.
 
 ```
- ./hiperf stat -d 3 -c 0
+hiperf stat -a -d 3 -c 0
 ```
 
 ### record
@@ -234,7 +234,7 @@ Usage: hiperf record [options] [command [command-args]]
 Sample all processes in the system for 3 seconds and display detailed log information.
 
 ```
-	./hiperf record -d 3 -a --verbose
+hiperf record -d 3 -a --verbose
 ```
 
 ### dump
@@ -253,14 +253,14 @@ Usage:hiperf dump [option] \<filename\>
 The **report** command displays the sampling data (read from **perf.data**) and converts it to the required format (for example, JSON or ProtoBuf).
 
 ```
-Usage: hiperf dump [option] \<filename\>
-       Dump specific parts of specified file .
+Usage: hiperf report [option] \<filename\>
+       Displays the sampling data.
 ```
 
 Output a common report, with the minimum display percentage of 1%.
 
 ```
-./hiperf report --limit-percent 1
+hiperf report --limit-percent 1
 ```
 
 ### Scripts
