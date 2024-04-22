@@ -219,7 +219,7 @@ Usage: hiperf stat [options] [command [command-args]]
 Monitor the performance counter of the process on CPU 0 for 3 seconds.
 
 ```
- hiperf stat -a -d 3 -c 0
+hiperf stat -a -d 3 -c 0
 ```
 
 ### record
@@ -234,7 +234,7 @@ Usage: hiperf record [options] [command [command-args]]
 Sample all processes in the system for 3 seconds and display detailed log information.
 
 ```
-	hiperf record -d 3 -a --verbose
+hiperf record -d 3 -a --verbose
 ```
 
 ### dump
