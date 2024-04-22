@@ -28,7 +28,7 @@ bool UniqueStackTable::Init()
     }
 
     availableNodes_ = totalNodes_;
-    hashModulus_ = availableNodes_ - 1;
+    hashModulus_ = availableNodes_ >= 1 ? availableNodes_ - 1 : 0;
     hashStep_ = (totalNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM));
     tableBuf_ = std::make_unique<uint8_t[]>(tableSize_);
 
