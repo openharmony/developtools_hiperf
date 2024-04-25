@@ -20,7 +20,7 @@
 #if defined(is_ohos) && is_ohos
 #include "callstack.h"
 #endif
-#include "hash_list_template.h"
+#include "hashlist.h"
 #include "perf_event_record.h"
 #include "symbols_file.h"
 #include "virtual_thread.h"
