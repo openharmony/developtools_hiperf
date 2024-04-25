@@ -1121,7 +1121,7 @@ auto HashList<Key, Val>::AllocateNode(const Key &key, Val &&val)
     if (IsFull()) {
         pop_back();
     }
-    LinkNode<Key, Val> * pnode = LinkNode<Key, Val>::GetLinkNode(freeHead_.next_);
+    LinkNode<Key, Val> *pnode = LinkNode<Key, Val>::GetLinkNode(freeHead_.next_);
     freeHead_.next_ = freeHead_.next_->next_;
     pnode->link_.next_ = nullptr;
     pnode->link_.prev_ = nullptr;
