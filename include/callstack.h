@@ -29,7 +29,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "hash_list_template.h"
+#include "hashlist.h"
 #include "register.h"
 #include "utilities.h"
 #include "unwinder.h"
