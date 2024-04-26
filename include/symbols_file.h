@@ -197,6 +197,7 @@ public:
     // this means we are in recording
     // will try read some elf in runtime path
     static bool onRecording_;
+    static bool needParseJsFunc_;
     std::vector<DfxSymbol> symbols_ {};
     std::vector<DfxSymbol *> matchedSymbols_ {};
     std::map<uint64_t, DfxSymbol> symbolsMap_;
