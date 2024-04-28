@@ -48,6 +48,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 bool SymbolsFile::onRecording_ = true;
+bool SymbolsFile::needParseJsFunc_ = false;
 
 const std::string SymbolsFile::GetBuildId() const
 {
@@ -1009,7 +1010,7 @@ public:
         HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
-        if (IsAbc()) {
+        if (IsAbc() && needParseJsFunc_) {
             JsFunction jsFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());

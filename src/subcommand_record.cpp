@@ -614,6 +614,7 @@ bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &call
             }
         }
         isCallStackDwarf_ = true;
+        SymbolsFile::needParseJsFunc_ = true; // only in record and dwarf mode need to parse
     } else {
         printf("Invalid -s value '%s'.\n", callStackType.at(0).c_str());
         return false;
