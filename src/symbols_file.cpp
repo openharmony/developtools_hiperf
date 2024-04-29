@@ -276,7 +276,12 @@ protected:
 #ifndef __arm__
         ShdrInfo shinfo;
         if (elfFile_->GetSectionInfo(shinfo, ".eh_frame_hdr")) {
-            LoadEhFrameHDR(elfFile_->GetMmapPtr() + shinfo.offset, shinfo.size, shinfo.offset);
+            auto mmapPtr = elfFile_->GetMmapPtr();
+            if (mmapPtr == nullptr) {
+                HLOGE("mmapPtr should not be nullptr.");
+                return false;
+            }
+            LoadEhFrameHDR(mmapPtr + shinfo.offset, shinfo.size, shinfo.offset);
         }
 #endif
 
@@ -329,7 +334,12 @@ private:
             fdeTableSize = ehFrameHDRFdeCount_;
             return true;
         }
-        if (!LoadEhFrameHDR(elfFile_->GetMmapPtr() + shinfo.offset, elfFile_->GetMmapSize(), shinfo.offset)) {
+        auto mmapPtr = elfFile_->GetMmapPtr();
+        if (mmapPtr == nullptr) {
+            HLOGE("mmapPtr should not be nullptr.");
+            return false;
+        }
+        if (!LoadEhFrameHDR(mmapPtr + shinfo.offset, elfFile_->GetMmapSize(), shinfo.offset)) {
             HLOGW("Failed to load eh_frame_hdr");
             return false;
         }
