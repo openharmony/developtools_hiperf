@@ -17,10 +17,10 @@
 #define REPORT_JSON_FILE_H
 
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <functional>
 #include <map>
-#include <stdio.h>
 
 #include "debug_logger.h"
 #include "perf_file_reader.h"
@@ -383,7 +383,7 @@ private:
     std::vector<std::string_view> libList_;
     std::vector<functionKey> functionList_;
     std::map<int, ReportFuncMapItem> functionMap_;
-    void addNewFunction(int libId, std::string name);
+    void AddNewFunction(int libId, std::string name);
 
     ReportConfigItem &GetConfig(uint64_t id);
     std::string GetConfigName(uint64_t id);

@@ -53,10 +53,10 @@ bool UniqueStackTable::Resize()
         return false;
     }
 
-    uint32_t newtableSize_ = tableSize_ << RESIZE_MULTIPLE;
-    std::unique_ptr<uint8_t[]> newTable = std::make_unique<uint8_t[]>(newtableSize_);
+    uint32_t newtableSize = tableSize_ << RESIZE_MULTIPLE;
+    std::unique_ptr<uint8_t[]> newTable = std::make_unique<uint8_t[]>(newtableSize);
     if (newTable.get() == nullptr) {
-        HLOGE("%s: malloc(%u) failed, errno: %d", __func__, newtableSize_, errno);
+        HLOGE("%s: malloc(%u) failed, errno: %d", __func__, newtableSize, errno);
         return false;
     }
 
@@ -66,10 +66,10 @@ bool UniqueStackTable::Resize()
     }
 
     tableBuf_ = std::move(newTable);
-    tableSize_ = newtableSize_;
+    tableSize_ = newtableSize;
     deconflictTimes_ += DECONFLICT_INCREASE_STEP;
     availableIndex_ += availableNodes_;
-    totalNodes_ = ((newtableSize_ / sizeof(Node)) >> 1) << 1; // make it even.
+    totalNodes_ = ((newtableSize / sizeof(Node)) >> 1) << 1; // make it even.
     availableNodes_ = totalNodes_ - oldNumNodes;
     hashModulus_ = availableNodes_ >= 1 ? availableNodes_ - 1 : 0;
     hashStep_ = availableNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM);
@@ -80,16 +80,16 @@ bool UniqueStackTable::Resize()
 
 uint64_t UniqueStackTable::PutIpInSlot(uint64_t thisIp, uint64_t prevIdx)
 {
-    Node *tableHead_ = reinterpret_cast<Node *>(tableBuf_.get());
+    Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     uint64_t curIpIdx = (((thisIp >> 2) ^ (prevIdx << 4)) % hashModulus_) + availableIndex_;
-    uint8_t currentDeconflictTimes_ = deconflictTimes_;
+    uint8_t currentDeconflictTimes = deconflictTimes_;
 
     Node node;
     node.section.ip = thisIp;
     node.section.prevIdx = prevIdx;
     node.section.inKernel = !!(thisIp & IP_IN_KERNEL);
-    while (currentDeconflictTimes_--) {
-        Node* tableNode = reinterpret_cast<Node *>(tableHead_) + curIpIdx;
+    while (currentDeconflictTimes--) {
+        Node* tableNode = reinterpret_cast<Node *>(tableHead) + curIpIdx;
         if (tableNode == nullptr) {
             continue;
         }
@@ -104,7 +104,7 @@ uint64_t UniqueStackTable::PutIpInSlot(uint64_t thisIp, uint64_t prevIdx)
             return curIpIdx;
         }
 
-        curIpIdx += currentDeconflictTimes_ * hashStep_ + 1;
+        curIpIdx += currentDeconflictTimes * hashStep_ + 1;
         if (curIpIdx >= totalNodes_) {
             // make sure index 0 do not occupy
             curIpIdx -= (availableNodes_ >= 1 ? availableNodes_ - 1 : 0);
@@ -161,14 +161,14 @@ size_t UniqueStackTable::GetWriteSize()
 
 Node* UniqueStackTable::GetFrame(uint64_t stackId)
 {
-    Node *tableHead_ = reinterpret_cast<Node *>(tableBuf_.get());
+    Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     if (stackId >= totalNodes_) {
         // should not occur
         HLOGE("Failed to find frame by index: %" PRIu64 "", stackId);
         return nullptr;
     }
 
-    return (Node *)&tableHead_[stackId];
+    return reinterpret_cast<Node *>(&tableHead[stackId]);
 }
 
 bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
@@ -195,11 +195,11 @@ bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
 
 bool UniqueStackTable::ImportNode(uint32_t index, const Node& node)
 {
-    Node *tableHead_ = reinterpret_cast<Node *>(tableBuf_.get());
+    Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     if (index >= tableSize_) {
         return false;
     }
-    tableHead_[index].value = node.value;
+    tableHead[index].value = node.value;
     return true;
 }
 

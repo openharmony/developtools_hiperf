@@ -79,7 +79,7 @@ public:
 
     // get some cmd
     static const std::map<std::string, std::unique_ptr<SubCommand>> &GetSubCommands();
-    static SubCommand *FindSubCommand(std::string);
+    static SubCommand *FindSubCommand(std::string &cmdName);
 
     // for test code
     static void ClearSubCommands();

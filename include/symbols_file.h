@@ -161,7 +161,7 @@ public:
     virtual uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t mapOffset) const;
 
     // get symbols from vaddr
-    const DfxSymbol GetSymbolWithVaddr(uint64_t vaddr);
+    const DfxSymbol GetSymbolWithVaddr(uint64_t vaddrInFile);
 
     // get the section info , like .ARM.exidx
     virtual bool GetSectionInfo([[maybe_unused]] const std::string &name,

@@ -29,7 +29,6 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static const std::string DEFAULT_DUMP_FILENAME = "perf.data";
 
 class SubCommandDump : public SubCommand {
 public:
@@ -67,7 +66,7 @@ public:
     // clang-format on
     {
     }
-    ~SubCommandDump() override;
+    ~SubCommandDump();
 
     bool OnSubCommand(std::vector<std::string> &args) override;
     bool ParseOption(std::vector<std::string> &args) override;

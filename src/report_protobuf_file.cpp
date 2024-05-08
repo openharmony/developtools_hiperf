@@ -93,7 +93,7 @@ bool ReportProtobufFileWriter::Create(std::string fileName)
     return false;
 }
 
-bool ReportProtobufFileWriter::isOpen()
+bool ReportProtobufFileWriter::IsOpen()
 {
     return protobufFileStream_->is_open();
 }
@@ -261,7 +261,7 @@ bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readB
         do {
             protpbufCodedInputStream_->ReadLittleEndian32(&recordLength);
             if (recordLength != 0) {
-                PrintIndent(defaultIndent, "record length:%u (%x)\n", recordLength, recordLength);
+                PRINT_INDENT(defaultIndent, "record length:%u (%x)\n", recordLength, recordLength);
                 HiperfRecord record;
                 std::string recordBuf;
                 recordBuf.resize(recordLength);
@@ -274,7 +274,7 @@ bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readB
                     return false;
                 } else {
                     if (readBack == nullptr) {
-                        PrintIndent(defaultIndent, "\n");
+                        PRINT_INDENT(defaultIndent, "\n");
                         Dump(record, defaultIndent);
                     } else {
                         readBack(record);
@@ -296,106 +296,106 @@ bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readB
 
 bool ReportProtobufFileReader::Dump(const CallStackSample &message, int indent)
 {
-    PrintIndent(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_time()) {
-        PrintIndent(INDENT_ONE_LEVEL, "time:%" PRId64 "\n", message.time());
+        PRINT_INDENT(indent + 1, "time:%" PRId64 "\n", message.time());
     }
     if (message.has_tid()) {
-        PrintIndent(INDENT_ONE_LEVEL, "tid:%u\n", message.tid());
+        PRINT_INDENT(indent + 1, "tid:%u\n", message.tid());
     }
     for (int i = 0; i < message.callstackframe_size(); i++) {
-        PrintIndent(INDENT_ONE_LEVEL, "%d:\n", i);
+        PRINT_INDENT(indent + 1, "%d:\n", i);
         auto &callframe = message.callstackframe(i);
         if (callframe.has_symbols_vaddr()) {
-            PrintIndent(INDENT_TWO_LEVEL, "symbols_vaddr: 0x%" PRIx64 " \n",
+            PRINT_INDENT(indent + 2, "symbols_vaddr: 0x%" PRIx64 " \n",
                         callframe.symbols_vaddr());
         }
         if (callframe.has_symbols_file_id()) {
-            PrintIndent(INDENT_TWO_LEVEL, "symbols_file_id: %u\n", callframe.symbols_file_id());
+            PRINT_INDENT(indent + 2, "symbols_file_id: %u\n", callframe.symbols_file_id());
         }
         if (callframe.has_function_name_id()) {
-            PrintIndent(INDENT_TWO_LEVEL, "function_name_id: %d\n", callframe.function_name_id());
+            PRINT_INDENT(indent + 2, "function_name_id: %d\n", callframe.function_name_id());
         }
     }
     if (message.has_event_count()) {
-        PrintIndent(INDENT_ONE_LEVEL, "event_count:%" PRIu64 "\n", message.event_count());
+        PRINT_INDENT(indent + 1, "event_count:%" PRIu64 "\n", message.event_count());
     }
     if (message.has_config_name_id()) {
-        PrintIndent(INDENT_ONE_LEVEL, "config_name_id:%u\n", message.config_name_id());
+        PRINT_INDENT(indent + 1, "config_name_id:%u\n", message.config_name_id());
     }
     return true;
 }
 
 bool ReportProtobufFileReader::Dump(const SampleStatistic &message, int indent)
 {
-    PrintIndent(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_count()) {
-        PrintIndent(INDENT_ONE_LEVEL, "count:%" PRIu64 "\n", message.count());
+        PRINT_INDENT(indent + 1, "count:%" PRIu64 "\n", message.count());
     }
     if (message.has_lost()) {
-        PrintIndent(INDENT_ONE_LEVEL, "lost:%" PRIu64 "\n", message.lost());
+        PRINT_INDENT(indent + 1, "lost:%" PRIu64 "\n", message.lost());
     }
     return false;
 }
 
 bool ReportProtobufFileReader::Dump(const SymbolTableFile &message, int indent)
 {
-    PrintIndent(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_id()) {
-        PrintIndent(INDENT_ONE_LEVEL, "id: %u\n", message.id());
+        PRINT_INDENT(indent + 1, "id: %u\n", message.id());
     }
     if (message.has_path()) {
-        PrintIndent(INDENT_ONE_LEVEL, "path: %s\n", message.path().c_str());
+        PRINT_INDENT(indent + 1, "path: %s\n", message.path().c_str());
     }
     for (int i = 0; i < message.function_name_size(); i++) {
-        PrintIndent(INDENT_TWO_LEVEL, "%d:%s\n", i, message.function_name(i).c_str());
+        PRINT_INDENT(indent + 2, "%d:%s\n", i, message.function_name(i).c_str());
     }
     return false;
 }
 bool ReportProtobufFileReader::Dump(const VirtualThreadInfo &message, int indent)
 {
-    PrintIndent(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_pid()) {
-        PrintIndent(INDENT_ONE_LEVEL, "pid:%u\n", message.pid());
+        PRINT_INDENT(indent + 1, "pid:%u\n", message.pid());
     }
     if (message.has_tid()) {
-        PrintIndent(INDENT_ONE_LEVEL, "tid:%u\n", message.tid());
+        PRINT_INDENT(indent + 1, "tid:%u\n", message.tid());
     }
     if (message.has_pid()) {
-        PrintIndent(INDENT_ONE_LEVEL, "name:%s\n", message.name().c_str());
+        PRINT_INDENT(indent + 1, "name:%s\n", message.name().c_str());
     }
     return false;
 }
 bool ReportProtobufFileReader::Dump(const ReportInfo &message, int indent)
 {
-    PrintIndent(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     for (int i = 0; i < message.config_name_size(); i++) {
-        PrintIndent(INDENT_ONE_LEVEL, "config_name:%d:%s\n", i, message.config_name(i).c_str());
+        PRINT_INDENT(indent + 1, "config_name:%d:%s\n", i, message.config_name(i).c_str());
     }
     if (message.has_workload_cmd()) {
-        PrintIndent(INDENT_ONE_LEVEL, "workload:%s\n", message.workload_cmd().c_str());
+        PRINT_INDENT(indent + 1, "workload:%s\n", message.workload_cmd().c_str());
     }
     return true;
 }
 bool ReportProtobufFileReader::Dump(const HiperfRecord &record, int indent)
 {
-    PrintIndent(indent, "%s:\n", record.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", record.GetTypeName().c_str());
     if (record.has_sample()) {
-        return Dump(record.sample(), INDENT_ONE_LEVEL);
+        return Dump(record.sample(), indent + 1);
     } else if (record.has_statistic()) {
-        return Dump(record.statistic(), INDENT_ONE_LEVEL);
+        return Dump(record.statistic(), indent + 1);
     } else if (record.has_file()) {
-        return Dump(record.file(), INDENT_ONE_LEVEL);
+        return Dump(record.file(), indent + 1);
     } else if (record.has_thread()) {
-        return Dump(record.thread(), INDENT_ONE_LEVEL);
+        return Dump(record.thread(), indent + 1);
     } else if (record.has_info()) {
-        return Dump(record.info(), INDENT_ONE_LEVEL);
+        return Dump(record.info(), indent + 1);
     } else {
         printf("unknow proto buf format\n");
         return false;
     }
 }
-bool ReportProtobufFileReader::isOpen()
+bool ReportProtobufFileReader::IsOpen()
 {
     return protobufFileStream_->is_open();
 }

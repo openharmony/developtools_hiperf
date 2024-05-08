@@ -40,50 +40,6 @@ constexpr int num {9};
 constexpr int num {7};
 #endif
 const unsigned char *data[num] {};
-const std::vector<std::string> strs {
-    "DW_EH_PE_empty:DW_EH_PE_absptr format:00 value size:8",
-    "DW_EH_PE_empty:DW_EH_PE_udata2 format:02 value size:2",
-    "DW_EH_PE_empty:DW_EH_PE_udata4 format:03 value size:4",
-    "DW_EH_PE_empty:DW_EH_PE_udata8 format:04 value size:8",
-    "DW_EH_PE_empty:DW_EH_PE_data2 format:0a value size:2",
-    "DW_EH_PE_empty:DW_EH_PE_sdata4 format:0b value size:4",
-    "DW_EH_PE_empty:DW_EH_PE_sdata8 format:0c value size:8",
-    "DW_EH_PE_pcrel:DW_EH_PE_absptr format:10 value size:8",
-    "DW_EH_PE_pcrel:DW_EH_PE_udata2 format:12 value size:2",
-    "DW_EH_PE_pcrel:DW_EH_PE_udata4 format:13 value size:4",
-    "DW_EH_PE_pcrel:DW_EH_PE_udata8 format:14 value size:8",
-    "DW_EH_PE_pcrel:DW_EH_PE_data2 format:1a value size:2",
-    "DW_EH_PE_pcrel:DW_EH_PE_sdata4 format:1b value size:4",
-    "DW_EH_PE_pcrel:DW_EH_PE_sdata8 format:1c value size:8",
-    "DW_EH_PE_textrel:DW_EH_PE_absptr format:20 value size:8",
-    "DW_EH_PE_textrel:DW_EH_PE_udata2 format:22 value size:2",
-    "DW_EH_PE_textrel:DW_EH_PE_udata4 format:23 value size:4",
-    "DW_EH_PE_textrel:DW_EH_PE_udata8 format:24 value size:8",
-    "DW_EH_PE_textrel:DW_EH_PE_data2 format:2a value size:2",
-    "DW_EH_PE_textrel:DW_EH_PE_sdata4 format:2b value size:4",
-    "DW_EH_PE_textrel:DW_EH_PE_sdata8 format:2c value size:8",
-    "DW_EH_PE_datarel:DW_EH_PE_absptr format:30 value size:8",
-    "DW_EH_PE_datarel:DW_EH_PE_udata2 format:32 value size:2",
-    "DW_EH_PE_datarel:DW_EH_PE_udata4 format:33 value size:4",
-    "DW_EH_PE_datarel:DW_EH_PE_udata8 format:34 value size:8",
-    "DW_EH_PE_datarel:DW_EH_PE_data2 format:3a value size:2",
-    "DW_EH_PE_datarel:DW_EH_PE_sdata4 format:3b value size:4",
-    "DW_EH_PE_datarel:DW_EH_PE_sdata8 format:3c value size:8",
-    "DW_EH_PE_funcrel:DW_EH_PE_absptr format:40 value size:8",
-    "DW_EH_PE_funcrel:DW_EH_PE_udata2 format:42 value size:2",
-    "DW_EH_PE_funcrel:DW_EH_PE_udata4 format:43 value size:4",
-    "DW_EH_PE_funcrel:DW_EH_PE_udata8 format:44 value size:8",
-    "DW_EH_PE_funcrel:DW_EH_PE_data2 format:4a value size:2",
-    "DW_EH_PE_funcrel:DW_EH_PE_sdata4 format:4b value size:4",
-    "DW_EH_PE_funcrel:DW_EH_PE_sdata8 format:4c value size:8",
-    "DW_EH_PE_aligned:DW_EH_PE_absptr format:50 value size:8",
-    "DW_EH_PE_aligned:DW_EH_PE_udata2 format:52 value size:2",
-    "DW_EH_PE_aligned:DW_EH_PE_udata4 format:53 value size:4",
-    "DW_EH_PE_aligned:DW_EH_PE_udata8 format:54 value size:8",
-    "DW_EH_PE_aligned:DW_EH_PE_data2 format:5a value size:2",
-    "DW_EH_PE_aligned:DW_EH_PE_sdata4 format:5b value size:4",
-    "DW_EH_PE_aligned:DW_EH_PE_sdata8 format:5c value size:8",
-};
 std::vector<uint64_t> values {
     65535ULL,
     4294967295ULL,
@@ -123,19 +79,19 @@ std::vector<uint64_t> values {
     1940830438011385600ULL,
 };
 std::vector<dw_encode_t> vfs {
-    DW_EH_PE_absptr,
+    DW_EH_PE_ABSPTR,
 #ifdef NOT_USE
-    DW_EH_PE_uleb128,
+    DW_EH_PE_ULEB128,
 #endif
-    DW_EH_PE_udata2,  DW_EH_PE_udata4, DW_EH_PE_udata8,
+    DW_EH_PE_UDATA2,  DW_EH_PE_UDATA4, DW_EH_PE_UDATA8,
 #ifdef NOT_USE
-    DW_EH_PE_sleb128,
+    DW_EH_PE_SLEB128,
 #endif
-    DW_EH_PE_sdata2,  DW_EH_PE_sdata4, DW_EH_PE_sdata8,
+    DW_EH_PE_SDATA2,  DW_EH_PE_SDATA4, DW_EH_PE_SDATA8,
 };
 vector<dw_encode_t> ehas {
-    DW_EH_PE_nothing, DW_EH_PE_pcrel,   DW_EH_PE_textrel, DW_EH_PE_datarel,
-    DW_EH_PE_funcrel, DW_EH_PE_aligned, DW_EH_PE_omit,
+    DW_EH_PE_NOTHING, DW_EH_PE_PCREL,   DW_EH_PE_TEXTREL, DW_EH_PE_DATAREL,
+    DW_EH_PE_FUNCREL, DW_EH_PE_ALIGNED, DW_EH_PE_OMIT,
 };
 } // namespace
 
@@ -182,7 +138,7 @@ HWTEST_F(DwarfTest, GetEnd, TestSize.Level1)
                 dw_encode_t dwe = ehas[i] | vfs[j];
                 DwarfEncoding dw {dwe, data[j]};
                 if (!dw.IsOmit()) {
-                    if (vfs[j] == DW_EH_PE_absptr) {
+                    if (vfs[j] == DW_EH_PE_ABSPTR) {
                         EXPECT_TRUE(data[j] == dw.GetEnd() - dw.GetSize());
                     } else {
                         EXPECT_TRUE(data[j] == dw.GetEnd());
@@ -201,7 +157,7 @@ HWTEST_F(DwarfTest, GetData, TestSize.Level1)
                 dw_encode_t dwe = ehas[i] | vfs[j];
                 DwarfEncoding dw {dwe, data[j]};
                 if (!dw.IsOmit()) {
-                    if (vfs[j] == DW_EH_PE_absptr) {
+                    if (vfs[j] == DW_EH_PE_ABSPTR) {
                         EXPECT_TRUE(data[j] == dw.GetData());
                     } else {
                         EXPECT_TRUE(data[j] == dw.GetData() + dw.GetSize());
@@ -234,7 +190,7 @@ HWTEST_F(DwarfTest, IsOmit, TestSize.Level1)
             {
                 dw_encode_t dwe = ehas[i] | vfs[j];
                 DwarfEncoding dw {dwe, data[j]};
-                if (ehas[i] == DW_EH_PE_omit) {
+                if (ehas[i] == DW_EH_PE_OMIT) {
                     EXPECT_TRUE(dw.IsOmit());
                 } else {
                     EXPECT_FALSE(dw.IsOmit());

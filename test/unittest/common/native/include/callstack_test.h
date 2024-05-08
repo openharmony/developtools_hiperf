@@ -31,7 +31,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static const std::string PATH_RESOURCE_TEST_DWARF_DATA = "resource/testdata/dwarf/";
+const std::string PATH_RESOURCE_TEST_DWARF_DATA = "resource/testdata/dwarf/";
 struct mmapDumpInfo {
     std::string fileName;
     uint64_t begin = 0;

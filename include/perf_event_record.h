@@ -108,7 +108,7 @@ public:
     struct perf_event_header header;
     const std::string name_ {};
 
-    PerfEventRecord(perf_event_type type, bool in_kernel, const std::string &name);
+    PerfEventRecord(perf_event_type type, bool inKernel, const std::string &name);
     PerfEventRecord(perf_event_hiperf_ext_type type, const std::string &name);
 
     PerfEventRecord(uint8_t *p, const std::string &name);
@@ -274,7 +274,7 @@ public:
     };
 
     pid_t GetUstackServerPid();
-    pid_t GetServerPidof(unsigned int ip_nr);
+    pid_t GetServerPidof(unsigned int ipNr);
 };
 
 class PerfRecordExit : public PerfEventRecord {

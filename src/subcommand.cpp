@@ -179,7 +179,7 @@ const std::map<std::string, std::unique_ptr<SubCommand>> &SubCommand::GetSubComm
     return g_SubCommandsMap;
 }
 
-SubCommand *SubCommand::FindSubCommand(std::string cmdName)
+SubCommand *SubCommand::FindSubCommand(std::string &cmdName)
 {
     HLOGV("%s", cmdName.c_str());
     std::lock_guard<std::mutex> lock(g_subCommandMutex);

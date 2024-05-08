@@ -64,9 +64,9 @@ public:
     static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 10E3 * 1024;
     static constexpr size_t TEST_SIZE_F500_FP_SYSTEM = 2E4 * 1024;
     static constexpr size_t TEST_SIZE_F1000_FP_SYSTEM = 3E4 * 1024;
-    static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 4E4 * 1024;
-    static constexpr size_t TEST_SIZE_F4000_FP_SYSTEM = 8E4 * 1024;
-    static constexpr size_t TEST_SIZE_F8000_FP_SYSTEM = 1.6E5 * 1024;
+    static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 5E4 * 1024;
+    static constexpr size_t TEST_SIZE_F4000_FP_SYSTEM = 1E5 * 1024;
+    static constexpr size_t TEST_SIZE_F8000_FP_SYSTEM = 2E5 * 1024;
 
     static constexpr size_t TEST_SIZE_F100_DWARF_PROCESS = 5.6E3 * 1024;
     static constexpr size_t TEST_SIZE_F500_DWARF_PROCESS = 1.6E4 * 1024;

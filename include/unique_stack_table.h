@@ -31,7 +31,7 @@ namespace HiPerf {
 
 constexpr uint32_t INITIAL_TABLE_SIZE = 4 * 1024 * 1024;
 constexpr uint32_t MAX_NODES_CNT = 1 << IDX_BIT_LENGTH ;
-constexpr uint64_t IP_IN_KERNEL = 1ull << 63;
+constexpr uint64_t IP_IN_KERNEL = 1uLL << 63;
 constexpr uint64_t HEAD_NODE_INDEX = 0;
 // FFFFFF0000000000
 constexpr uint64_t KERNEL_PREFIX = 0xFFFFFFull << 40;
@@ -77,7 +77,7 @@ static_assert(sizeof(Node) == 8, "Node size must be 8 byte");
 class UniqueStackTable {
 public:
     bool Init();
-    UniqueStackTable(pid_t pid) : pid_(pid)
+    explicit UniqueStackTable(pid_t pid) : pid_(pid)
     {
         Init();
     }

@@ -19,6 +19,26 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+static const std::vector<std::string> extFeatureNames = {
+    "hiperf_files_symbol",
+    "hiperf_workloader_cmd",
+    "hiperf_record_time",
+    "hiperf_cpu_off",
+    "hiperf_hm_devhost",
+    "hiperf_stack_table",
+};
+static const std::vector<std::string> featureNames = {
+    "unknown_feature", "tracing_data", "build_id",     "hostname",     "osrelease",
+    "version",         "arch",         "nrcpus",       "cpudesc",      "cpuid",
+    "total_mem",       "cmdline",      "event_desc",   "cpu_topology", "numa_topology",
+    "branch_stack",    "pmu_mappings", "group_desc",   "auxtrace",     "stat",
+    "cache",           "sample_time",  "mem_topology", "last_feature",
+};
+#ifdef FUZZER_TEST
+    // issue from fuzz test and also will lead to PerfFileSectionSymbolsFiles uncompletely construct
+static constexpr size_t MAX_SYMBOLS_FILE_NUMBER = 300;
+static constexpr size_t MAX_SYMBOLS_NUMBER = 10000;
+#endif
 std::string PerfFileSection::GetFeatureName(FEATURE featureId)
 {
     unsigned int index = static_cast<unsigned int>(featureId);
@@ -194,7 +214,7 @@ size_t PerfFileSectionString::GetSize()
     return SizeOf(stdString_);
 }
 
-const std::string PerfFileSectionString::toString() const
+const std::string PerfFileSectionString::ToString() const
 {
     return stdString_;
 }

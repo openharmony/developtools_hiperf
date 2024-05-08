@@ -109,22 +109,6 @@ struct perf_file_header {
     uint8_t features[NUM_FEATURES_FILE_HEADER / BITS_IN_BYTE] = {0};
 };
 
-static const std::vector<std::string> extFeatureNames = {
-    "hiperf_files_symbol",
-    "hiperf_workloader_cmd",
-    "hiperf_record_time",
-    "hiperf_cpu_off",
-    "hiperf_hm_devhost",
-    "hiperf_stack_table",
-};
-static const std::vector<std::string> featureNames = {
-    "unknown_feature", "tracing_data", "build_id",     "hostname",     "osrelease",
-    "version",         "arch",         "nrcpus",       "cpudesc",      "cpuid",
-    "total_mem",       "cmdline",      "event_desc",   "cpu_topology", "numa_topology",
-    "branch_stack",    "pmu_mappings", "group_desc",   "auxtrace",     "stat",
-    "cache",           "sample_time",  "mem_topology", "last_feature",
-};
-
 class PerfFileSection {
 public:
     struct perf_file_section header;
@@ -177,7 +161,7 @@ public:
 
     bool GetBinary(char *buf, size_t size);
     size_t GetSize();
-    const std::string toString() const;
+    const std::string ToString() const;
 };
 
 // ref struct
@@ -216,11 +200,6 @@ public:
     bool GetBinary(char *buf, size_t size);
     void ReadSymbolFileStructs();
 private:
-#ifdef FUZZER_TEST
-    // issue from fuzz test and also will lead to PerfFileSectionSymbolsFiles uncompletely construct
-    const size_t MAX_SYMBOLS_FILE_NUMBER = 300;
-    const size_t MAX_SYMBOLS_NUMBER = 10000;
-#endif
 };
 
 // NRCPUS: A structure defining the number of CPUs.

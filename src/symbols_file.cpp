@@ -167,7 +167,7 @@ public:
     {
     }
 
-    virtual ~ElfFileSymbols()
+    ~ElfFileSymbols()
     {
     }
 
@@ -361,7 +361,7 @@ private:
 
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
-        eh_frame_hdr *ehFrameHdr = (eh_frame_hdr *)buffer;
+        const eh_frame_hdr *ehFrameHdr = reinterpret_cast<eh_frame_hdr *>(buffer);
         if (ehFrameHdr == nullptr) {
             return false;
         }
@@ -1266,13 +1266,13 @@ bool SymbolsFile::setSymbolsFilePath(const std::vector<std::string> &symbolsSear
 std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
     const SymbolFileStruct &symbolFileStruct)
 {
-    bool isHapSymbolFile = (SymbolsFileType)symbolFileStruct.symbolType_ == SYMBOL_HAP_FILE;
+    bool isHapSymbolFile = static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_HAP_FILE;
     HLOGD("isHapSymbolFile : %d", isHapSymbolFile);
     auto symbolsFile = CreateSymbolsFile(symbolFileStruct.filePath_);
 
     // default create elf file. but hap file need special operation.
     symbolsFile->filePath_ = symbolFileStruct.filePath_;
-    symbolsFile->symbolFileType_ = (SymbolsFileType)symbolFileStruct.symbolType_;
+    symbolsFile->symbolFileType_ = static_cast<SymbolsFileType>(symbolFileStruct.symbolType_);
     symbolsFile->textExecVaddr_ = symbolFileStruct.textExecVaddr_;
     symbolsFile->textExecVaddrFileOffset_ = symbolFileStruct.textExecVaddrFileOffset_;
     symbolsFile->buildId_ = symbolFileStruct.buildId_;
@@ -1320,7 +1320,7 @@ void SymbolsFile::ExportSymbolToFileFormat(SymbolFileStruct &symbolFileStruct)
           filePath_.c_str());
 }
 
-uint64_t SymbolsFile::GetVaddrInSymbols(uint64_t ip, uint64_t, uint64_t) const
+uint64_t SymbolsFile::GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t mapOffset) const
 {
     // no convert
     return ip;

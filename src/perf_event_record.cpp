@@ -152,11 +152,11 @@ inline void PopFromBinary2(bool condition, uint8_t *&p, T1 &v1, T2 &v2)
 }
 
 // PerfEventRecord
-PerfEventRecord::PerfEventRecord(perf_event_type type, bool in_kernel, const std::string &name)
+PerfEventRecord::PerfEventRecord(perf_event_type type, bool inKernel, const std::string &name)
     : name_(name)
 {
     header.type = type;
-    header.misc = in_kernel ? PERF_RECORD_MISC_KERNEL : PERF_RECORD_MISC_USER;
+    header.misc = inKernel ? PERF_RECORD_MISC_KERNEL : PERF_RECORD_MISC_USER;
     header.size = sizeof(header);
 }
 
@@ -185,17 +185,17 @@ void PerfEventRecord::GetHeaderBinary(std::vector<uint8_t> &buf) const
 void PerfEventRecord::Dump(int indent, std::string outputFilename, FILE *outputDump) const
 {
     if (outputDump != nullptr) {
-        outputDump_ = outputDump;
-    } else if (!outputFilename.empty() && outputDump_ == nullptr) {
+        g_outputDump = outputDump;
+    } else if (!outputFilename.empty() && g_outputDump == nullptr) {
         std::string resolvedPath = CanonicalizeSpecPath(outputFilename.c_str());
-        outputDump_ = fopen(resolvedPath.c_str(), "w");
-        if (outputDump_ == nullptr) {
+        g_outputDump = fopen(resolvedPath.c_str(), "w");
+        if (g_outputDump == nullptr) {
             printf("unable open file to '%s' because '%d'\n", outputFilename.c_str(), errno);
             return;
         }
     }
-    PrintIndent(indent, "\n");
-    PrintIndent(indent, "record %s: type %u, misc %u, size %zu\n", GetName().c_str(), GetType(),
+    PRINT_INDENT(indent, "\n");
+    PRINT_INDENT(indent, "record %s: type %u, misc %u, size %zu\n", GetName().c_str(), GetType(),
                 GetMisc(), GetSize());
     DumpData(indent + 1);
 }
@@ -414,43 +414,43 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordSample::DumpData(int indent) const
 {
-    PrintIndent(indent, "sample_type: 0x%" PRIx64 "\n", sampleType_);
+    PRINT_INDENT(indent, "sample_type: 0x%" PRIx64 "\n", sampleType_);
 
     // dump record according sampleType
     if (sampleType_ & (PERF_SAMPLE_ID | PERF_SAMPLE_IDENTIFIER)) {
-        PrintIndent(indent, "ID %" PRIu64 "\n", static_cast<uint64_t>(data_.sample_id));
+        PRINT_INDENT(indent, "ID %" PRIu64 "\n", static_cast<uint64_t>(data_.sample_id));
     }
     if (sampleType_ & PERF_SAMPLE_IP) {
-        PrintIndent(indent, "ip %llx\n", data_.ip);
+        PRINT_INDENT(indent, "ip %llx\n", data_.ip);
     }
     if (sampleType_ & PERF_SAMPLE_TID) {
-        PrintIndent(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
+        PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
     }
     if (sampleType_ & PERF_SAMPLE_TIME) {
-        PrintIndent(indent, "time %llu\n", data_.time);
+        PRINT_INDENT(indent, "time %llu\n", data_.time);
     }
     if (sampleType_ & PERF_SAMPLE_ADDR) {
-        PrintIndent(indent, "addr %p\n", reinterpret_cast<void *>(data_.addr));
+        PRINT_INDENT(indent, "addr %p\n", reinterpret_cast<void *>(data_.addr));
     }
     if (sampleType_ & PERF_SAMPLE_STREAM_ID) {
-        PrintIndent(indent, "stream_id %" PRIu64 "\n", static_cast<uint64_t>(data_.stream_id));
+        PRINT_INDENT(indent, "stream_id %" PRIu64 "\n", static_cast<uint64_t>(data_.stream_id));
     }
     if (sampleType_ & PERF_SAMPLE_CPU) {
-        PrintIndent(indent, "cpu %u, res %u\n", data_.cpu, data_.res);
+        PRINT_INDENT(indent, "cpu %u, res %u\n", data_.cpu, data_.res);
     }
     if (sampleType_ & PERF_SAMPLE_PERIOD) {
-        PrintIndent(indent, "period %" PRIu64 "\n", static_cast<uint64_t>(data_.period));
+        PRINT_INDENT(indent, "period %" PRIu64 "\n", static_cast<uint64_t>(data_.period));
     }
     if (stackId_.section.id > 0) {
-        PrintIndent(indent, "stackid %" PRIu64 "\n", static_cast<uint64_t>(stackId_.section.id));
+        PRINT_INDENT(indent, "stackid %" PRIu64 "\n", static_cast<uint64_t>(stackId_.section.id));
     }
     if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
         bool userContext = false;
-        PrintIndent(indent, "callchain nr=%lld\n", data_.nr);
+        PRINT_INDENT(indent, "callchain nr=%lld\n", data_.nr);
         for (uint64_t i = 0; i < data_.nr; ++i) {
             std::string_view supplement = "";
             if ((sampleType_ & PERF_SAMPLE_STACK_USER) == 0 || data_.ips[i] != PERF_CONTEXT_USER) {
-                PrintIndent(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
+                PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
                 continue;
             }
             // is PERF_SAMPLE_STACK_USER type and is PERF_CONTEXT_USER
@@ -460,39 +460,39 @@ void PerfRecordSample::DumpData(int indent) const
             } else {
                 supplement = " <expand callstack>";
             }
-            PrintIndent(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
+            PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
         }
     }
     if (sampleType_ & PERF_SAMPLE_RAW) {
-        PrintIndent(indent, "raw size=%u\n", data_.raw_size);
+        PRINT_INDENT(indent, "raw size=%u\n", data_.raw_size);
         const uint32_t *data = reinterpret_cast<const uint32_t *>(data_.raw_data);
         size_t size = data_.raw_size / sizeof(uint32_t);
         for (size_t i = 0; i < size; ++i) {
-            PrintIndent(indent + 1, "0x%08x (%x)\n", data[i], data[i]);
+            PRINT_INDENT(indent + 1, "0x%08x (%x)\n", data[i], data[i]);
         }
     }
     if (sampleType_ & PERF_SAMPLE_BRANCH_STACK) {
-        PrintIndent(indent, "branch_stack nr=%lld\n", data_.bnr);
+        PRINT_INDENT(indent, "branch_stack nr=%lld\n", data_.bnr);
         for (uint64_t i = 0; i < data_.bnr; ++i) {
             auto &item = data_.lbr[i];
-            PrintIndent(indent + 1, "from 0x%llx, to 0x%llx %s%s\n", item.from, item.to,
+            PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx %s%s\n", item.from, item.to,
                         item.mispred ? "mispred" : "", item.predicted ? "predicted" : "");
         }
     }
     if (sampleType_ & PERF_SAMPLE_REGS_USER) {
-        PrintIndent(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
+        PRINT_INDENT(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
         for (uint64_t i = 0; i < data_.reg_nr; ++i) {
-            PrintIndent(indent + 1, "0x%llx\n", data_.user_regs[i]);
+            PRINT_INDENT(indent + 1, "0x%llx\n", data_.user_regs[i]);
         }
     }
     if (sampleType_ & PERF_SAMPLE_SERVER_PID) {
-        PrintIndent(indent, "server nr=%lld\n", data_.server_nr);
+        PRINT_INDENT(indent, "server nr=%lld\n", data_.server_nr);
         for (uint64_t i = 0; i < data_.server_nr; ++i) {
-            PrintIndent(indent + 1, "pid: %llu\n", data_.server_pids[i]);
+            PRINT_INDENT(indent + 1, "pid: %llu\n", data_.server_pids[i]);
         }
     }
     if (sampleType_ & PERF_SAMPLE_STACK_USER) {
-        PrintIndent(indent, "user stack: size %llu dyn_size %lld\n", data_.stack_size,
+        PRINT_INDENT(indent, "user stack: size %llu dyn_size %lld\n", data_.stack_size,
                     data_.dyn_size);
     }
 }
@@ -512,7 +512,7 @@ void PerfRecordSample::Clean()
 PerfRecordMmap::PerfRecordMmap(uint8_t *p) : PerfEventRecord(p, "mmap")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -543,15 +543,15 @@ bool PerfRecordMmap::GetBinary(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     // data_.filename[] is variable-length
-    std::copy((uint8_t *)&data_, (uint8_t *)&data_ + GetSize() - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
     return true;
 }
 
 void PerfRecordMmap::DumpData(int indent) const
 {
-    PrintIndent(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
+    PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
                 data_.addr, data_.len);
-    PrintIndent(indent, "pgoff 0x%llx, filename %s\n", data_.pgoff, data_.filename);
+    PRINT_INDENT(indent, "pgoff 0x%llx, filename %s\n", data_.pgoff, data_.filename);
 }
 
 void PerfRecordMmap::DumpLog(const std::string &prefix) const
@@ -564,7 +564,7 @@ void PerfRecordMmap::DumpLog(const std::string &prefix) const
 PerfRecordMmap2::PerfRecordMmap2(uint8_t *p) : PerfEventRecord(p, "mmap2")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -637,17 +637,17 @@ bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     // data_.filename[] is variable-length
-    std::copy((uint8_t *)&data_, (uint8_t *)&data_ + GetSize() - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
     return true;
 }
 
 void PerfRecordMmap2::DumpData(int indent) const
 {
-    PrintIndent(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
+    PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
                 data_.addr, data_.len);
-    PrintIndent(indent, "pgoff 0x%llx, maj %u, min %u, ino %llu, ino_generation %llu\n",
+    PRINT_INDENT(indent, "pgoff 0x%llx, maj %u, min %u, ino %llu, ino_generation %llu\n",
                 data_.pgoff, data_.maj, data_.min, data_.ino, data_.ino_generation);
-    PrintIndent(indent, "prot %u, flags %u, filename %s\n", data_.prot, data_.flags,
+    PRINT_INDENT(indent, "prot %u, flags %u, filename %s\n", data_.prot, data_.flags,
                 data_.filename);
 }
 void PerfRecordMmap2::DumpLog(const std::string &prefix) const
@@ -660,7 +660,7 @@ void PerfRecordMmap2::DumpLog(const std::string &prefix) const
 PerfRecordLost::PerfRecordLost(uint8_t *p) : PerfEventRecord(p, "lost")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -682,13 +682,13 @@ bool PerfRecordLost::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordLost::DumpData(int indent) const
 {
-    PrintIndent(indent, "id %llu, lost %llu\n", data_.id, data_.lost);
+    PRINT_INDENT(indent, "id %llu, lost %llu\n", data_.id, data_.lost);
 }
 
 PerfRecordComm::PerfRecordComm(uint8_t *p) : PerfEventRecord(p, "comm")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -715,14 +715,14 @@ bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     // data_.comm[] is variable-length
-    std::copy((uint8_t *)&data_, (uint8_t *)&data_ + GetSize() - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
 
     return true;
 }
 
 void PerfRecordComm::DumpData(int indent) const
 {
-    PrintIndent(indent, "pid %u, tid %u, comm %s\n", data_.pid, data_.tid, data_.comm);
+    PRINT_INDENT(indent, "pid %u, tid %u, comm %s\n", data_.pid, data_.tid, data_.comm);
 }
 
 void PerfRecordComm::DumpLog(const std::string &prefix) const
@@ -733,7 +733,7 @@ void PerfRecordComm::DumpLog(const std::string &prefix) const
 PerfRecordExit::PerfRecordExit(uint8_t *p) : PerfEventRecord(p, "exit")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -754,14 +754,14 @@ bool PerfRecordExit::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordExit::DumpData(int indent) const
 {
-    PrintIndent(indent, "pid %u, ppid %u, tid %u, ptid %u time 0x%llx\n", data_.pid, data_.ppid,
+    PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u time 0x%llx\n", data_.pid, data_.ppid,
                 data_.tid, data_.ptid, data_.time);
 }
 
 PerfRecordThrottle::PerfRecordThrottle(uint8_t *p) : PerfEventRecord(p, "throttle")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -782,14 +782,14 @@ bool PerfRecordThrottle::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordThrottle::DumpData(int indent) const
 {
-    PrintIndent(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
+    PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
                 data_.stream_id);
 }
 
 PerfRecordUnthrottle::PerfRecordUnthrottle(uint8_t *p) : PerfEventRecord(p, "unthrottle")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -809,14 +809,14 @@ bool PerfRecordUnthrottle::GetBinary(std::vector<uint8_t> &buf) const
 }
 void PerfRecordUnthrottle::DumpData(int indent) const
 {
-    PrintIndent(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
+    PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
                 data_.stream_id);
 }
 
 PerfRecordFork::PerfRecordFork(uint8_t *p) : PerfEventRecord(p, "fork")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -837,14 +837,14 @@ bool PerfRecordFork::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordFork::DumpData(int indent) const
 {
-    PrintIndent(indent, "pid %u, ppid %u, tid %u, ptid %u\n", data_.pid, data_.ppid, data_.tid,
+    PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u\n", data_.pid, data_.ppid, data_.tid,
                 data_.ptid);
 }
 
 PerfRecordRead::PerfRecordRead(uint8_t *p) : PerfEventRecord(p, "read")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -865,16 +865,16 @@ bool PerfRecordRead::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordRead::DumpData(int indent) const
 {
-    PrintIndent(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
-    PrintIndent(indent, "values: value %llx, time_enabled %llx, time_running %llx, id %llx\n",
-                data_.values.value, data_.values.time_enabled, data_.values.time_running,
+    PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
+    PRINT_INDENT(indent, "values: value %llx, timeEnabled %llx, timeRunning %llx, id %llx\n",
+                data_.values.value, data_.values.timeEnabled, data_.values.timeRunning,
                 data_.values.id);
 }
 
 PerfRecordAux::PerfRecordAux(uint8_t *p) : PerfEventRecord(p, "aux")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -895,14 +895,14 @@ bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordAux::DumpData(int indent) const
 {
-    PrintIndent(indent, "aux_offset %llx, aux_size %llx, flags %llx\n", data_.aux_offset,
+    PRINT_INDENT(indent, "aux_offset %llx, aux_size %llx, flags %llx\n", data_.aux_offset,
                 data_.aux_size, data_.flags);
 }
 
 PerfRecordItraceStart::PerfRecordItraceStart(uint8_t *p) : PerfEventRecord(p, "itraceStart")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -923,13 +923,13 @@ bool PerfRecordItraceStart::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordItraceStart::DumpData(int indent) const
 {
-    PrintIndent(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
+    PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
 }
 
 PerfRecordLostSamples::PerfRecordLostSamples(uint8_t *p) : PerfEventRecord(p, "lostSamples")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -950,13 +950,13 @@ bool PerfRecordLostSamples::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordLostSamples::DumpData(int indent) const
 {
-    PrintIndent(indent, "lost %llu\n", data_.lost);
+    PRINT_INDENT(indent, "lost %llu\n", data_.lost);
 }
 
 PerfRecordSwitch::PerfRecordSwitch(uint8_t *p) : PerfEventRecord(p, "switch")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -978,7 +978,7 @@ bool PerfRecordSwitch::GetBinary(std::vector<uint8_t> &buf) const
 PerfRecordSwitchCpuWide::PerfRecordSwitchCpuWide(uint8_t *p) : PerfEventRecord(p, "switchCpuWide")
 {
     size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
 }
@@ -999,7 +999,7 @@ bool PerfRecordSwitchCpuWide::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordSwitchCpuWide::DumpData(int indent) const
 {
-    PrintIndent(indent, "next_prev_pid %u, next_prev_tid %u\n", data_.next_prev_pid,
+    PRINT_INDENT(indent, "next_prev_pid %u, next_prev_tid %u\n", data_.next_prev_pid,
                 data_.next_prev_tid);
 }
 
@@ -1009,28 +1009,28 @@ pid_t PerfRecordSample::GetUstackServerPid()
         return data_.pid;
     }
 
-    size_t curr_server = 0;
-    // ip_nr == 1...nr: server_pid of data_.ips[nr]
+    size_t currServer = 0;
+    // ipNr == 1...nr: server_pid of data_.ips[nr]
     for (size_t i = 0; i < data_.nr; i++) {
         // context change, use next server pid
         if (data_.ips[i] >= PERF_CONTEXT_MAX) {
-            curr_server++;
+            currServer++;
         }
     }
-    // ip_nr == nr + 1: server_pid of ustack
-    if (curr_server > 0) {
-        curr_server++;
+    // ipNr == nr + 1: server_pid of ustack
+    if (currServer > 0) {
+        currServer++;
     }
-    if (curr_server >= data_.server_nr) {
-        HLOGE("ustack server pid nr %zu out of range", curr_server);
+    if (currServer >= data_.server_nr) {
+        HLOGE("ustack server pid nr %zu out of range", currServer);
         return data_.pid;
     }
 
     // return server pid
-    return data_.server_pids[curr_server];
+    return data_.server_pids[currServer];
 }
 
-pid_t PerfRecordSample::GetServerPidof(unsigned int ip_nr)
+pid_t PerfRecordSample::GetServerPidof(unsigned int ipNr)
 {
     if (!data_.server_nr) {
         return data_.pid;
@@ -1038,28 +1038,28 @@ pid_t PerfRecordSample::GetServerPidof(unsigned int ip_nr)
 
     // init serverPidMap_
     if (!serverPidMap_.size()) {
-        size_t curr_server = 0;
-        // ip_nr == 0: server_pid of data_.ip
-        serverPidMap_.emplace_back(data_.server_pids[curr_server]);
-        // ip_nr == 1...nr: server_pid of data_.ips[nr]
+        size_t currServer = 0;
+        // ipNr == 0: server_pid of data_.ip
+        serverPidMap_.emplace_back(data_.server_pids[currServer]);
+        // ipNr == 1...nr: server_pid of data_.ips[nr]
         for (size_t i = 1; i < data_.nr; i++) {
             // context change, use next server pid
             if (data_.ips[i] >= PERF_CONTEXT_MAX) {
-                curr_server++;
+                currServer++;
             }
-            if (curr_server >= data_.server_nr) {
-                HLOGE("callchain server pid nr %zu out of range", curr_server);
+            if (currServer >= data_.server_nr) {
+                HLOGE("callchain server pid nr %zu out of range", currServer);
                 break;
             }
-            serverPidMap_.emplace_back(data_.server_pids[curr_server]);
+            serverPidMap_.emplace_back(data_.server_pids[currServer]);
         }
     }
 
     // return server pid
-    if (ip_nr >= serverPidMap_.size()) {
+    if (ipNr >= serverPidMap_.size()) {
         return data_.pid;
     } else {
-        return serverPidMap_[ip_nr];
+        return serverPidMap_[ipNr];
     }
 }
 } // namespace HiPerf

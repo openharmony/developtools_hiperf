@@ -29,7 +29,52 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 namespace HiperfClient {
-const ssize_t ERRINFOLEN = 512;
+static const std::string HiperfCommandName = "hiperf";
+static const std::string SystemBinPath = "/system/bin/";
+static const std::string CurrentPath = "./";
+static const std::string PerfDataName = "perf.data";
+static const std::string CommandRecord = "record";
+static const std::string ArgOutputPath = "-o";
+static const std::string ArgDebug = "--verbose";
+static const std::string ArgDebugMuch = "--much";
+static const std::string ArgHilog = "--hilog";
+static const std::string ArgPipeInput = "--pipe_input";
+static const std::string ArgPipeOutput = "--pipe_output";
+static const std::string ArgTargetSystemWide = "-a";
+static const std::string ArgCompressData = "-z";
+static const std::string ArgSelectCpus = "-c";
+static const std::string ArgTimeStopSec = "-d";
+static const std::string ArgFrequency = "-f";
+static const std::string ArgPeriod = "--period";
+static const std::string ArgSelectEvents = "-e";
+static const std::string ArgSelectGroups = "-g";
+static const std::string ArgNoInherit = "--no-inherit";
+static const std::string ArgSelectPids = "-p";
+static const std::string ArgSelectTids = "-t";
+static const std::string ArgExcludePerf = "--exclude-hiperf";
+static const std::string ArgCpuPercent = "--cpu-limit";
+static const std::string ArgOffCPU = "--offcpu";
+static const std::string ArgCallGraph = "--call-stack";
+static const std::string ArgDelayUnwind = "--delay-unwind";
+static const std::string ArgDisableUnwind = "--disable-unwind";
+static const std::string ArgDisableCallstackMerge = "--disable-callstack-expand";
+static const std::string ArgSymbolDir = "--symbol-dir";
+static const std::string ArgOutputFilename = "-o";
+static const std::string ArgDataLimit = "--data-limit";
+static const std::string ArgAppPackage = "--app";
+static const std::string ArgClockId = "--clockid";
+static const std::string ArgVecBranchSampleTypes = "-j";
+static const std::string ArgMmapPages = "-m";
+static const std::string ArgDedupStack = "--dedup_stack";
+static const std::string ArgReport = "--report";
+
+static constexpr int DEFAULT_DURATION_TIME = 10;
+static constexpr int DEFAULT_FREQUENCY_TIME = 100;
+static constexpr uint64_t PIPE_READ = 0;
+static constexpr uint64_t PIPE_WRITE = 1;
+static constexpr ssize_t ERRINFOLEN = 512;
+static constexpr size_t SIZE_ARGV_TAIL = 1; // nullptr
+
 void RecordOption::SetOption(const std::string &name, bool enable)
 {
     auto it = std::find(args_.begin(), args_.end(), name);
