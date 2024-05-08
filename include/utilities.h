@@ -77,6 +77,7 @@ constexpr const int LITTLE_MEMORY_SIZE = 1;
 constexpr const int MULTIPLE_SIZE = 1024;
 constexpr const uint16_t CHECK_FREQUENCY = 100; //
 constexpr const uint8_t CHECK_TIMEOUT = 30;
+constexpr const int INDENT_TWO = 2;
 #if !is_mingw
 #ifndef O_BINARY
 #define O_BINARY 0

@@ -472,15 +472,15 @@ void SubCommandDump::DumpDataPortion(int indent)
 
 void SubCommandDump::PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct)
 {
-    PRINT_INDENT(indent + 2, "filePath:%s\n", symbolFileStruct.filePath_.c_str());
-    PRINT_INDENT(indent + 2, "symbolType:%u\n", symbolFileStruct.symbolType_);
-    PRINT_INDENT(indent + 2, "minExecAddr:0x%" PRIx64 "\n", symbolFileStruct.textExecVaddr_);
-    PRINT_INDENT(indent + 2, "minExecAddrFileOffset:0x%08" PRIx64 "\n",
+    PRINT_INDENT(indent + INDENT_TWO, "filePath:%s\n", symbolFileStruct.filePath_.c_str());
+    PRINT_INDENT(indent + INDENT_TWO, "symbolType:%u\n", symbolFileStruct.symbolType_);
+    PRINT_INDENT(indent + INDENT_TWO, "minExecAddr:0x%" PRIx64 "\n", symbolFileStruct.textExecVaddr_);
+    PRINT_INDENT(indent + INDENT_TWO, "minExecAddrFileOffset:0x%08" PRIx64 "\n",
                 symbolFileStruct.textExecVaddrFileOffset_);
     if (!symbolFileStruct.buildId_.empty()) {
-        PRINT_INDENT(indent + 2, "buildId:'%s'\n", symbolFileStruct.buildId_.c_str());
+        PRINT_INDENT(indent + INDENT_TWO, "buildId:'%s'\n", symbolFileStruct.buildId_.c_str());
     }
-    PRINT_INDENT(indent + 2, "symbol number: %zu\n", symbolFileStruct.symbolStructs_.size());
+    PRINT_INDENT(indent + INDENT_TWO, "symbol number: %zu\n", symbolFileStruct.symbolStructs_.size());
     int symbolid = 0;
     for (auto &symbolStruct : symbolFileStruct.symbolStructs_) {
         PRINT_INDENT(indent + 3, "%05d [0x%016" PRIx64 "@0x%08x]  %s\n", symbolid, symbolStruct.vaddr_,
@@ -492,15 +492,15 @@ void SubCommandDump::PrintSymbolFile(const int &indent, const SymbolFileStruct &
 void SubCommandDump::PrintFeatureEventdesc(int indent,
                                            const PerfFileSectionEventDesc &sectionEventdesc)
 {
-    PRINT_INDENT(indent + 2, "Event descriptions: %zu\n", sectionEventdesc.eventDesces_.size());
+    PRINT_INDENT(indent + INDENT_TWO, "Event descriptions: %zu\n", sectionEventdesc.eventDesces_.size());
     for (size_t i = 0; i < sectionEventdesc.eventDesces_.size(); i++) {
         const AttrWithId &desc = sectionEventdesc.eventDesces_[i];
-        PRINT_INDENT(indent + 2, "event name[%zu]: %s ids: %s\n", i, desc.name.c_str(),
+        PRINT_INDENT(indent + INDENT_TWO, "event name[%zu]: %s ids: %s\n", i, desc.name.c_str(),
                      VectorToString(desc.ids).c_str());
 
         // attr is duplicated the attrs section
     }
-    PRINT_INDENT(indent + 2, "\n");
+    PRINT_INDENT(indent + INDENT_TWO, "\n");
 }
 
 void SubCommandDump::DumpFeaturePortion(int indent)
@@ -523,7 +523,7 @@ void SubCommandDump::DumpFeaturePortion(int indent)
         if (reader_->IsFeatrureStringSection(featureSection.get()->featureId_)) {
             const PerfFileSectionString *sectionString =
                 static_cast<const PerfFileSectionString *>(featureSection.get());
-            PRINT_INDENT(indent + 2, "%s\n", sectionString->ToString().c_str());
+            PRINT_INDENT(indent + INDENT_TWO, "%s\n", sectionString->ToString().c_str());
             continue;
         } else if (featureSection.get()->featureId_ == FEATURE::EVENT_DESC) {
             PrintFeatureEventdesc(
@@ -533,19 +533,19 @@ void SubCommandDump::DumpFeaturePortion(int indent)
             const PerfFileSectionSymbolsFiles *sectionSymbolsFiles =
                 static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
             if (sectionSymbolsFiles != nullptr) {
-                PRINT_INDENT(indent + 2, "SymbolFiles:%zu\n",
+                PRINT_INDENT(indent + INDENT_TWO, "SymbolFiles:%zu\n",
                              sectionSymbolsFiles->symbolFileStructs_.size());
 
                 int fileid = 0;
                 for (auto &symbolFileStruct : sectionSymbolsFiles->symbolFileStructs_) {
-                    PRINT_INDENT(indent + 2, "\n");
-                    PRINT_INDENT(indent + 2, "fileid:%d\n", fileid);
+                    PRINT_INDENT(indent + INDENT_TWO, "\n");
+                    PRINT_INDENT(indent + INDENT_TWO, "fileid:%d\n", fileid);
                     fileid++;
                     // symbol file info
                     PrintSymbolFile(indent, symbolFileStruct);
                 }
             } else {
-                PRINT_INDENT(indent + 2, "get SymbolFiles failed\n");
+                PRINT_INDENT(indent + INDENT_TWO, "get SymbolFiles failed\n");
             }
             continue;
         } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
@@ -554,11 +554,11 @@ void SubCommandDump::DumpFeaturePortion(int indent)
             if (sectioniStackTable != nullptr) {
                 DumpUniqueStackTableNode(indent + 1, *sectioniStackTable);
             } else {
-                PRINT_INDENT(indent + 2, "get StackTable failed\n");
+                PRINT_INDENT(indent + INDENT_TWO, "get StackTable failed\n");
             }
             continue;
         } else {
-            PRINT_INDENT(indent + 2, "not support dump this feature(%d).\n", featureSection.get()->featureId_);
+            PRINT_INDENT(indent + INDENT_TWO, "not support dump this feature(%d).\n", featureSection.get()->featureId_);
         }
     }
 }
@@ -568,14 +568,14 @@ void SubCommandDump::DumpUniqueStackTableNode(int indent, const PerfFileSectionU
     int tableid = 0;
     PRINT_INDENT(indent + 1, "TableNums: %zu\n\n", uniStackTable.uniStackTableInfos_.size());
     for (const auto& uniStackTableInfo : uniStackTable.uniStackTableInfos_) {
-        PRINT_INDENT(indent + 2, "tableid: %d\n", tableid);
-        PRINT_INDENT(indent + 2, "pid: %" PRIu32 "\n", uniStackTableInfo.pid);
-        PRINT_INDENT(indent + 2, "tableSize: %" PRIu32 "\n", uniStackTableInfo.tableSize);
-        PRINT_INDENT(indent + 2, "numNodes: %" PRIu32 "\n", uniStackTableInfo.numNodes);
-        PRINT_INDENT(indent + 2, "%-7s %-7s %-8s\n", "no", "index", "node");
+        PRINT_INDENT(indent + INDENT_TWO, "tableid: %d\n", tableid);
+        PRINT_INDENT(indent + INDENT_TWO, "pid: %" PRIu32 "\n", uniStackTableInfo.pid);
+        PRINT_INDENT(indent + INDENT_TWO, "tableSize: %" PRIu32 "\n", uniStackTableInfo.tableSize);
+        PRINT_INDENT(indent + INDENT_TWO, "numNodes: %" PRIu32 "\n", uniStackTableInfo.numNodes);
+        PRINT_INDENT(indent + INDENT_TWO, "%-7s %-7s %-8s\n", "no", "index", "node");
         for (size_t i = 0; i < uniStackTableInfo.nodes.size(); i++) {
             UniStackNode node = uniStackTableInfo.nodes[i];
-            PRINT_INDENT(indent + 2, "%-7zu %-7" PRIu32 " 0x%-8" PRIx64 "\n", i, node.index, node.node.value);
+            PRINT_INDENT(indent + INDENT_TWO, "%-7zu %-7" PRIu32 " 0x%-8" PRIx64 "\n", i, node.index, node.node.value);
         }
         tableid++;
     }

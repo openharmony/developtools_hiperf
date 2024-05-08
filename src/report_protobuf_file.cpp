@@ -307,14 +307,14 @@ bool ReportProtobufFileReader::Dump(const CallStackSample &message, int indent)
         PRINT_INDENT(indent + 1, "%d:\n", i);
         auto &callframe = message.callstackframe(i);
         if (callframe.has_symbols_vaddr()) {
-            PRINT_INDENT(indent + 2, "symbols_vaddr: 0x%" PRIx64 " \n",
+            PRINT_INDENT(indent + INDENT_TWO, "symbols_vaddr: 0x%" PRIx64 " \n",
                         callframe.symbols_vaddr());
         }
         if (callframe.has_symbols_file_id()) {
-            PRINT_INDENT(indent + 2, "symbols_file_id: %u\n", callframe.symbols_file_id());
+            PRINT_INDENT(indent + INDENT_TWO, "symbols_file_id: %u\n", callframe.symbols_file_id());
         }
         if (callframe.has_function_name_id()) {
-            PRINT_INDENT(indent + 2, "function_name_id: %d\n", callframe.function_name_id());
+            PRINT_INDENT(indent + INDENT_TWO, "function_name_id: %d\n", callframe.function_name_id());
         }
     }
     if (message.has_event_count()) {
@@ -348,7 +348,7 @@ bool ReportProtobufFileReader::Dump(const SymbolTableFile &message, int indent)
         PRINT_INDENT(indent + 1, "path: %s\n", message.path().c_str());
     }
     for (int i = 0; i < message.function_name_size(); i++) {
-        PRINT_INDENT(indent + 2, "%d:%s\n", i, message.function_name(i).c_str());
+        PRINT_INDENT(indent + INDENT_TWO, "%d:%s\n", i, message.function_name(i).c_str());
     }
     return false;
 }
