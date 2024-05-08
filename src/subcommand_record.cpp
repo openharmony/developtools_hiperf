@@ -681,7 +681,7 @@ bool SubCommandRecord::SetPerfMaxSampleRate()
     if (maxRate > frequency) {
         return true;
     }
-    int newRate = frequency > static_cast<int>(PerfEvents::DEFAULT_EVENT_MAX_SAMPLE_RATE) ? frequency :
+    int newRate = frequency > PerfEvents::DEFAULT_EVENT_MAX_SAMPLE_RATE ? frequency :
                   static_cast<int>(PerfEvents::DEFAULT_EVENT_MAX_SAMPLE_RATE);
     return SetPerfLimit(PERF_EVENT_MAX_SAMPLE_RATE, newRate, cmp,
                         "hiviewdfx.hiperf.perf_event_max_sample_rate");
