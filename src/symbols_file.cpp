@@ -361,7 +361,7 @@ private:
 
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
-        const eh_frame_hdr *ehFrameHdr = reinterpret_cast<eh_frame_hdr *>(buffer);
+        const eh_frame_hdr *ehFrameHdr = reinterpret_cast<const eh_frame_hdr *>(buffer);
         if (ehFrameHdr == nullptr) {
             return false;
         }

@@ -196,7 +196,7 @@ void PerfEventRecord::Dump(int indent, std::string outputFilename, FILE *outputD
     }
     PRINT_INDENT(indent, "\n");
     PRINT_INDENT(indent, "record %s: type %u, misc %u, size %zu\n", GetName().c_str(), GetType(),
-                GetMisc(), GetSize());
+                 GetMisc(), GetSize());
     DumpData(indent + 1);
 }
 
@@ -476,7 +476,7 @@ void PerfRecordSample::DumpData(int indent) const
         for (uint64_t i = 0; i < data_.bnr; ++i) {
             auto &item = data_.lbr[i];
             PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx %s%s\n", item.from, item.to,
-                        item.mispred ? "mispred" : "", item.predicted ? "predicted" : "");
+                         item.mispred ? "mispred" : "", item.predicted ? "predicted" : "");
         }
     }
     if (sampleType_ & PERF_SAMPLE_REGS_USER) {
@@ -493,7 +493,7 @@ void PerfRecordSample::DumpData(int indent) const
     }
     if (sampleType_ & PERF_SAMPLE_STACK_USER) {
         PRINT_INDENT(indent, "user stack: size %llu dyn_size %lld\n", data_.stack_size,
-                    data_.dyn_size);
+                     data_.dyn_size);
     }
 }
 
@@ -543,22 +543,22 @@ bool PerfRecordMmap::GetBinary(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     // data_.filename[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
     return true;
 }
 
 void PerfRecordMmap::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
-                data_.addr, data_.len);
+                 data_.addr, data_.len);
     PRINT_INDENT(indent, "pgoff 0x%llx, filename %s\n", data_.pgoff, data_.filename);
 }
 
 void PerfRecordMmap::DumpLog(const std::string &prefix) const
 {
     HLOGV("%s:  MMAP: size %d pid %u tid %u dso '%s' (0x%llx-0x%llx)@0x%llx", prefix.c_str(),
-          header.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len,
-          data_.pgoff);
+          header.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len, data_.pgoff);
 }
 
 PerfRecordMmap2::PerfRecordMmap2(uint8_t *p) : PerfEventRecord(p, "mmap2")
@@ -637,18 +637,19 @@ bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     // data_.filename[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
     return true;
 }
 
 void PerfRecordMmap2::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
-                data_.addr, data_.len);
+                 data_.addr, data_.len);
     PRINT_INDENT(indent, "pgoff 0x%llx, maj %u, min %u, ino %llu, ino_generation %llu\n",
-                data_.pgoff, data_.maj, data_.min, data_.ino, data_.ino_generation);
+                 data_.pgoff, data_.maj, data_.min, data_.ino, data_.ino_generation);
     PRINT_INDENT(indent, "prot %u, flags %u, filename %s\n", data_.prot, data_.flags,
-                data_.filename);
+                 data_.filename);
 }
 void PerfRecordMmap2::DumpLog(const std::string &prefix) const
 {
@@ -715,7 +716,8 @@ bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     // data_.comm[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
 
     return true;
 }
@@ -755,7 +757,7 @@ bool PerfRecordExit::GetBinary(std::vector<uint8_t> &buf) const
 void PerfRecordExit::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u time 0x%llx\n", data_.pid, data_.ppid,
-                data_.tid, data_.ptid, data_.time);
+                 data_.tid, data_.ptid, data_.time);
 }
 
 PerfRecordThrottle::PerfRecordThrottle(uint8_t *p) : PerfEventRecord(p, "throttle")
@@ -783,7 +785,7 @@ bool PerfRecordThrottle::GetBinary(std::vector<uint8_t> &buf) const
 void PerfRecordThrottle::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
-                data_.stream_id);
+                 data_.stream_id);
 }
 
 PerfRecordUnthrottle::PerfRecordUnthrottle(uint8_t *p) : PerfEventRecord(p, "unthrottle")
@@ -810,7 +812,7 @@ bool PerfRecordUnthrottle::GetBinary(std::vector<uint8_t> &buf) const
 void PerfRecordUnthrottle::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
-                data_.stream_id);
+                 data_.stream_id);
 }
 
 PerfRecordFork::PerfRecordFork(uint8_t *p) : PerfEventRecord(p, "fork")
@@ -838,7 +840,7 @@ bool PerfRecordFork::GetBinary(std::vector<uint8_t> &buf) const
 void PerfRecordFork::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u\n", data_.pid, data_.ppid, data_.tid,
-                data_.ptid);
+                 data_.ptid);
 }
 
 PerfRecordRead::PerfRecordRead(uint8_t *p) : PerfEventRecord(p, "read")
@@ -867,8 +869,7 @@ void PerfRecordRead::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
     PRINT_INDENT(indent, "values: value %llx, timeEnabled %llx, timeRunning %llx, id %llx\n",
-                data_.values.value, data_.values.timeEnabled, data_.values.timeRunning,
-                data_.values.id);
+                 data_.values.value, data_.values.timeEnabled, data_.values.timeRunning, data_.values.id);
 }
 
 PerfRecordAux::PerfRecordAux(uint8_t *p) : PerfEventRecord(p, "aux")
@@ -896,7 +897,7 @@ bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
 void PerfRecordAux::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "aux_offset %llx, aux_size %llx, flags %llx\n", data_.aux_offset,
-                data_.aux_size, data_.flags);
+                 data_.aux_size, data_.flags);
 }
 
 PerfRecordItraceStart::PerfRecordItraceStart(uint8_t *p) : PerfEventRecord(p, "itraceStart")
@@ -1000,7 +1001,7 @@ bool PerfRecordSwitchCpuWide::GetBinary(std::vector<uint8_t> &buf) const
 void PerfRecordSwitchCpuWide::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "next_prev_pid %u, next_prev_tid %u\n", data_.next_prev_pid,
-                data_.next_prev_tid);
+                 data_.next_prev_tid);
 }
 
 pid_t PerfRecordSample::GetUstackServerPid()

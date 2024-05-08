@@ -435,7 +435,7 @@ bool PerfFileWriter::AddStringFeature(FEATURE feature, std::string string)
     featureSections_.emplace_back(std::make_unique<PerfFileSectionString>(feature, string));
 
     // update header feature bits
-    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE);
     return true;
 }
 
@@ -452,7 +452,7 @@ bool PerfFileWriter::AddU64Feature(FEATURE feature, uint64_t v)
     featureSections_.emplace_back(std::make_unique<PerfFileSectionU64>(feature, v));
 
     // update header feature bits
-    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE);
     return true;
 }
 
@@ -480,7 +480,7 @@ bool PerfFileWriter::AddSymbolsFeature(
     featureSections_.emplace_back(
         std::make_unique<PerfFileSectionSymbolsFiles>(feature, symbolFileStructs));
     // update header feature bits
-    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE);
     return true;
 }
 } // namespace HiPerf

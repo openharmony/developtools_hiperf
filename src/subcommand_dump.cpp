@@ -235,19 +235,19 @@ void SubCommandDump::PrintHeaderInfo(const int &indent)
     }
     // attr
     PRINT_INDENT(indent, "attrs[file section]: offset %" PRId64 ", size %" PRId64 "\n",
-                header.attrs.offset, header.attrs.size);
+                 header.attrs.offset, header.attrs.size);
     // data
     PRINT_INDENT(indent, "data[file section]: offset %" PRId64 ", size %" PRId64 "\n",
-                header.data.offset, header.data.size);
+                 header.data.offset, header.data.size);
     PRINT_INDENT(indent, "event_types[file section]: offset %" PRId64 ", size %" PRId64 "\n",
-                header.eventTypes.offset, header.eventTypes.size);
+                 header.eventTypes.offset, header.eventTypes.size);
     // feature
     PRINT_INDENT(indent,
-                "adds_features[]: 0x%" PRIX64 " 0x%" PRIX64 " 0x%" PRIX64 " 0x%" PRIX64 "\n",
-                *(reinterpret_cast<const uint64_t *>(&header.features[0])),
-                *(reinterpret_cast<const uint64_t *>(&header.features[8])),
-                *(reinterpret_cast<const uint64_t *>(&header.features[16])),
-                *(reinterpret_cast<const uint64_t *>(&header.features[24])));
+                 "adds_features[]: 0x%" PRIX64 " 0x%" PRIX64 " 0x%" PRIX64 " 0x%" PRIX64 "\n",
+                 *(reinterpret_cast<const uint64_t *>(&header.features[0])),
+                 *(reinterpret_cast<const uint64_t *>(&header.features[8])),
+                 *(reinterpret_cast<const uint64_t *>(&header.features[16])),
+                 *(reinterpret_cast<const uint64_t *>(&header.features[24])));
 }
 
 void SubCommandDump::DumpPrintFileHeader(int indent)
@@ -336,25 +336,25 @@ void SubCommandDump::DumpPrintEventAttr(const perf_event_attr &attr, int indent)
     PRINT_INDENT(indent + 1, "read_format (0x%llx) \n", attr.read_format);
 
     PRINT_INDENT(indent + 1, "disabled %u, inherit %u, pinned %u, exclusive %u\n", attr.disabled,
-                attr.inherit, attr.pinned, attr.exclusive);
+                 attr.inherit, attr.pinned, attr.exclusive);
 
     PRINT_INDENT(indent + 1, "exclude_user %u, exclude_kernel %u, exclude_hv %u, exclude_idle %u\n",
-                attr.exclude_user, attr.exclude_kernel, attr.exclude_hv, attr.exclude_idle);
+                 attr.exclude_user, attr.exclude_kernel, attr.exclude_hv, attr.exclude_idle);
 
     PRINT_INDENT(indent + 1, "mmap %u, mmap2 %u, comm %u, comm_exec %u, freq %u\n", attr.mmap,
-                attr.mmap2, attr.comm, attr.comm_exec, attr.freq);
+                 attr.mmap2, attr.comm, attr.comm_exec, attr.freq);
 
     PRINT_INDENT(indent + 1, "inherit_stat %u, enable_on_exec %u, task %u, use_clockid %u\n",
-                attr.inherit_stat, attr.enable_on_exec, attr.task, attr.use_clockid);
+                 attr.inherit_stat, attr.enable_on_exec, attr.task, attr.use_clockid);
 
     PRINT_INDENT(indent + 1, "watermark %u, precise_ip %u, mmap_data %u, clockid %d\n", attr.watermark,
-                attr.precise_ip, attr.mmap_data, attr.clockid);
+                 attr.precise_ip, attr.mmap_data, attr.clockid);
 
     PRINT_INDENT(indent + 1, "sample_id_all %u, exclude_host %u, exclude_guest %u\n", attr.sample_id_all,
-                attr.exclude_host, attr.exclude_guest);
+                 attr.exclude_host, attr.exclude_guest);
     PRINT_INDENT(indent + 1, "branch_sample_type 0x%llx\n", attr.branch_sample_type);
     PRINT_INDENT(indent + 1, "exclude_callchain_kernel %u, exclude_callchain_user %u\n",
-                attr.exclude_callchain_kernel, attr.exclude_callchain_user);
+                 attr.exclude_callchain_kernel, attr.exclude_callchain_user);
     PRINT_INDENT(indent + 1, "sample_regs_user 0x%llx\n", attr.sample_regs_user);
     PRINT_INDENT(indent + 1, "sample_stack_user 0x%x\n", attr.sample_stack_user);
 }
@@ -431,7 +431,7 @@ void SubCommandDump::DumpCallChain(int indent, std::unique_ptr<PerfRecordSample>
         for (auto frameIt = sample->callFrames_.begin(); frameIt != sample->callFrames_.end();
              frameIt++) {
             PRINT_INDENT(indent, "%02zd:%s\n", std::distance(frameIt, sample->callFrames_.end()),
-                        frameIt->ToSymbolString().c_str());
+                         frameIt->ToSymbolString().c_str());
         }
     }
 }
@@ -484,7 +484,7 @@ void SubCommandDump::PrintSymbolFile(const int &indent, const SymbolFileStruct &
     int symbolid = 0;
     for (auto &symbolStruct : symbolFileStruct.symbolStructs_) {
         PRINT_INDENT(indent + 3, "%05d [0x%016" PRIx64 "@0x%08x]  %s\n", symbolid, symbolStruct.vaddr_,
-                    symbolStruct.len_, symbolStruct.symbolName_.c_str());
+                     symbolStruct.len_, symbolStruct.symbolName_.c_str());
         symbolid++;
     }
 }
@@ -496,7 +496,7 @@ void SubCommandDump::PrintFeatureEventdesc(int indent,
     for (size_t i = 0; i < sectionEventdesc.eventDesces_.size(); i++) {
         const AttrWithId &desc = sectionEventdesc.eventDesces_[i];
         PRINT_INDENT(indent + 2, "event name[%zu]: %s ids: %s\n", i, desc.name.c_str(),
-                    VectorToString(desc.ids).c_str());
+                     VectorToString(desc.ids).c_str());
 
         // attr is duplicated the attrs section
     }
@@ -509,7 +509,7 @@ void SubCommandDump::DumpFeaturePortion(int indent)
     auto features = reader_->GetFeatures();
     for (auto feature : features) {
         PRINT_INDENT(indent + 1, "feature %d:%s\n", feature,
-                    PerfFileSection::GetFeatureName(feature).c_str());
+                     PerfFileSection::GetFeatureName(feature).c_str());
     }
 
     const auto &featureSections = reader_->GetFeatureSections();
@@ -519,7 +519,7 @@ void SubCommandDump::DumpFeaturePortion(int indent)
 
     for (auto &featureSection : featureSections) {
         PRINT_INDENT(indent + 1, "feature %d:%s content: \n", featureSection.get()->featureId_,
-                    PerfFileSection::GetFeatureName(featureSection.get()->featureId_).c_str());
+                     PerfFileSection::GetFeatureName(featureSection.get()->featureId_).c_str());
         if (reader_->IsFeatrureStringSection(featureSection.get()->featureId_)) {
             const PerfFileSectionString *sectionString =
                 static_cast<const PerfFileSectionString *>(featureSection.get());
@@ -534,7 +534,7 @@ void SubCommandDump::DumpFeaturePortion(int indent)
                 static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
             if (sectionSymbolsFiles != nullptr) {
                 PRINT_INDENT(indent + 2, "SymbolFiles:%zu\n",
-                            sectionSymbolsFiles->symbolFileStructs_.size());
+                             sectionSymbolsFiles->symbolFileStructs_.size());
 
                 int fileid = 0;
                 for (auto &symbolFileStruct : sectionSymbolsFiles->symbolFileStructs_) {

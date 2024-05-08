@@ -174,7 +174,6 @@ private:
     DebugLevel savedDebugLevel_;
     bool savedMixOutput_ = false; // log mix to std
 };
-#define TEMP_MIX_LOG_LEVEL(level) ScopeDebugLevel tempLogLevel(level, true)
 
 #define LOG_LEVEL(LEVEL)  LOG_##LEVEL
 #define LOG_LEVEL_MUCH    "M:"
