@@ -37,6 +37,11 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
+static const std::string USER_DOMESTIC_BETA = "beta";
+static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
+static const std::string USER_TYPE_PARAM_GET = "";
+static const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
+
 std::string CanonicalizeSpecPath(const char* src)
 {
     if (src == nullptr) {
@@ -188,8 +193,9 @@ bool StdoutRecord::Start()
 
 std::string StdoutRecord::Stop()
 {
-    if (stop_)
+    if (stop_) {
         return content_;
+    }
     fflush(stdout);
     // restore fd
     dup2(stdoutFile_, STDOUT_FILENO);

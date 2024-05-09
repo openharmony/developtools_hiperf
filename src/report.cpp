@@ -94,20 +94,20 @@ void Report::AddReportItemBranch(const PerfRecordSample &sample)
     HLOG_ASSERT(configs_.size() > configIndex);
     VirtualThread &thread = virtualRuntime_.GetThread(sample.data_.pid, sample.data_.tid);
     for (u64 i = 0; i < sample.data_.bnr; i++) {
-        DfxSymbol symbol_to =
+        DfxSymbol symbolTo =
             virtualRuntime_.GetSymbol(sample.data_.lbr[i].to, sample.data_.pid, sample.data_.tid);
-        DfxSymbol symbol_from =
+        DfxSymbol symbolFrom =
             virtualRuntime_.GetSymbol(sample.data_.lbr[i].from, sample.data_.pid, sample.data_.tid);
 
         // branch only have 1 time only for period
         ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-            sample.data_.pid, sample.data_.tid, thread.name_, symbol_to.module_, symbol_to.GetName(),
-            symbol_to.funcVaddr_, 1u);
+            sample.data_.pid, sample.data_.tid, thread.name_, symbolTo.module_, symbolTo.GetName(),
+            symbolTo.funcVaddr_, 1u);
 
-        item.fromDso_ = symbol_from.module_;
-        item.fromFunc_ = symbol_from.GetName();
+        item.fromDso_ = symbolFrom.module_;
+        item.fromFunc_ = symbolFrom.GetName();
 
-        HLOGV("%s 0x%" PRIx64 "", item.ToDebugString().c_str(), symbol_to.taskVaddr_);
+        HLOGV("%s 0x%" PRIx64 "", item.ToDebugString().c_str(), symbolTo.taskVaddr_);
     }
     configs_[configIndex].sampleCount_++;
     configs_[configIndex].eventCount_ += sample.data_.bnr;
@@ -455,8 +455,7 @@ void Report::PrepareConsole()
     HLOGD("consoleWidth_:%d", consoleWidth_);
 }
 
-void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFrame,
-                                 uint64_t totalEventCount)
+void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFrame, uint64_t totalEventCount)
 {
     /*
     90% a

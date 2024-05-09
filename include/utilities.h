@@ -77,6 +77,7 @@ constexpr const int LITTLE_MEMORY_SIZE = 1;
 constexpr const int MULTIPLE_SIZE = 1024;
 constexpr const uint16_t CHECK_FREQUENCY = 100; //
 constexpr const uint8_t CHECK_TIMEOUT = 30;
+constexpr const int INDENT_TWO = 2;
 #if !is_mingw
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -94,15 +95,11 @@ namespace HiPerf {
 std::string CanonicalizeSpecPath(const char* src);
 const std::string EMPTY_STRING = "";
 const ssize_t ERRINFOLEN = 512;
-const std::string USER_DOMESTIC_BETA = "beta";
 const std::set<int> ALLOW_UIDS = {1201};
 
-static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
-static const std::string USER_TYPE_PARAM_GET = "";
-static const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
-static FILE *outputDump_ = nullptr;
+const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
+static FILE *g_outputDump = nullptr;
 const uint64_t waitAppRunCheckTimeOut = 10;
-const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
 
 struct ThreadInfos {
     pid_t tid;
@@ -312,15 +309,12 @@ bool PowerOfTwo(uint64_t n);
 
 const std::string HMKERNEL = "hmkernel";
 
-#define INDENT_ONE_LEVEL (indent + 1)
-#define INDENT_TWO_LEVEL (indent + 2)
-
-#define PrintIndent(indent, format, ...)                                                           \
+#define PRINT_INDENT(indent, format, ...)                                                          \
     if (indent >= 0) {                                                                             \
-        if (outputDump_ == nullptr) {                                                              \
+        if (g_outputDump == nullptr) {                                                             \
             printf("%*s" format, (indent)*2, "", ##__VA_ARGS__);                                   \
         } else {                                                                                   \
-            fprintf(outputDump_, "%*s" format, (indent)*2, "", ##__VA_ARGS__);                     \
+            fprintf(g_outputDump, "%*s" format, (indent)*2, "", ##__VA_ARGS__);                    \
         }                                                                                          \
     } else {                                                                                       \
         HLOGV("%s" format, "", ##__VA_ARGS__);                                                     \
@@ -347,7 +341,7 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
 template <typename Func>
 class ScopeGuard {
 public:
-    ScopeGuard(Func&& fn)
+    explicit ScopeGuard(Func&& fn)
         : fn_(fn) {}
     ~ScopeGuard()
     {

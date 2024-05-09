@@ -44,7 +44,7 @@ public:
     bool ProcessRecord(const PerfEventRecord &record);
     bool ProcessSampleRecord(const PerfRecordSample &recordSample, uint32_t configIndex,
                              const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles);
-    bool ProcessSymbolsFiles(const std::vector<std::unique_ptr<SymbolsFile>> &);
+    bool ProcessSymbolsFiles(const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles);
     bool ProcessReportInfo(const std::vector<std::string> &configNames,
                            const std::string &workloadCmd);
 
@@ -60,10 +60,10 @@ private:
     uint64_t recordCount_ = 0;
     uint64_t recordLost_ = 0;
 
-    bool isOpen();
+    bool IsOpen();
     bool Write(const void *buffer, int size) override;
-    virtual bool ProcessRecord(const PerfRecordComm &);
-    virtual bool ProcessRecord(const PerfRecordLost &);
+    virtual bool ProcessRecord(const PerfRecordComm &recordComm);
+    virtual bool ProcessRecord(const PerfRecordLost &recordLost);
     void BeforeClose();
 
     FRIEND_TEST(ReportProtobufFileTest, Close);
@@ -84,7 +84,7 @@ private:
     std::string fileName_;
     std::unique_ptr<std::ifstream> protobufFileStream_ = std::make_unique<std::ifstream>();
 
-    bool isOpen();
+    bool IsOpen();
     bool CheckFileMagic();
     int Read(void *buffer, int size) override;
     bool Dump(const Proto::HiperfRecord &record, int indent = 0);

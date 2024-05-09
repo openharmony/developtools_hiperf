@@ -29,6 +29,10 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+
+static constexpr int MMAP_PROT_CHARS = 4;
+static constexpr int MAP_PROT_EXEC_INDEX = 2;
+
 #ifdef DEBUG_TIME
 
 bool VirtualThread::IsSorted() const
@@ -329,9 +333,9 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
             HLOGM("map line: %s", line.c_str());
 
             // 2fe40000-311e1000
-            constexpr const int MMAP_ADDR_RANGE_TOKEN = 2;
+            constexpr const int mmapAddrRangeToken = 2;
             std::vector<std::string> addrRanges = StringSplit(mapTokens[0], "-");
-            if (addrRanges.size() != MMAP_ADDR_RANGE_TOKEN) {
+            if (addrRanges.size() != mmapAddrRangeToken) {
                 continue;
             }
             // 2fe40000 / 311e1000
@@ -344,25 +348,23 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
                 continue;
             }
 
-            constexpr const int MMAP_PROT_CHARS = 4;
-            constexpr const int MAP_PROT_EXEC_INDEX = 2;
             // --x-
             if (mapTokens[MMAP_LINE_TOKEN_INDEX_FLAG].size() != MMAP_PROT_CHARS ||
                 mapTokens[MMAP_LINE_TOKEN_INDEX_FLAG][MAP_PROT_EXEC_INDEX] != 'x') {
                 continue;
             }
 
-            const std::string ANON_PREFIX = "[anon:[";
-            const std::string ANON_POSTFIX = "]]";
+            const std::string anonPrefix = "[anon:[";
+            const std::string anonPostfix = "]]";
             filename = mapTokens[MMAP_LINE_TOKEN_INDEX_NAME];
             if (filename == "shmm") {
                 continue;
             }
-            if (filename.find(ANON_PREFIX) != std::string::npos) {
+            if (filename.find(anonPrefix) != std::string::npos) {
                 // '[anon:[liblinux/devhost.ko]]' to '/liblinux/devhost.ko'
-                filename = filename.substr(ANON_PREFIX.size(),
-                                           filename.size() - ANON_PREFIX.size() -
-                                           ANON_POSTFIX.size());
+                filename = filename.substr(anonPrefix.size(),
+                                           filename.size() - anonPrefix.size() -
+                                           anonPostfix.size());
                 filename = "/" + filename;
             } else if (filename.find(DEVHOST_LINUX_FILE_NAME) != std::string::npos) {
                 // '/lib/libdh-linux.so.5.10.97-oh' to '/lib/libdh-linux.so'

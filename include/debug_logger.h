@@ -17,12 +17,12 @@
 #define HIPERF_DEBUG_H
 
 #include <chrono>
+#include <cstdio>
 #include <cstring>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <sstream>
-#include <stdio.h>
 #include <string>
 #include <unistd.h>
 
@@ -99,7 +99,7 @@ public:
         __attribute__((format(printf, 4, 5)));
     // for class, pointer need add 1 offset (first one is *this)
 
-    bool EnableHiLog(bool = true);
+    bool EnableHiLog(bool enable = true);
     DebugLevel GetLogLevel() const
     {
         return debugLevel_;
@@ -121,7 +121,7 @@ public:
     void Reset();
 
 private:
-    bool ShouldLog(DebugLevel debugLevel, const std::string &logTag) const;
+    bool ShouldLog(DebugLevel level, const std::string &logtag) const;
     DebugLevel GetLogLevelByName(const std::string &) const;
     DebugLevel GetLogLevelByTag(const std::string &) const;
     const std::string GetLogLevelName(DebugLevel) const;
@@ -167,14 +167,13 @@ private:
 
 class ScopeDebugLevel {
 public:
-    ScopeDebugLevel(DebugLevel level, bool mix = false);
+    explicit ScopeDebugLevel(DebugLevel level, bool mix = false);
     ~ScopeDebugLevel();
 
 private:
     DebugLevel savedDebugLevel_;
     bool savedMixOutput_ = false; // log mix to std
 };
-#define TempMixLogLevel(level) ScopeDebugLevel tempLogLevel(level, true)
 
 #define LOG_LEVEL(LEVEL)  LOG_##LEVEL
 #define LOG_LEVEL_MUCH    "M:"

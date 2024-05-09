@@ -1659,12 +1659,12 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
     }
     perf_callchain_context context = sample->inKernel() ? PERF_CONTEXT_KERNEL
                                                         : PERF_CONTEXT_USER;
-    pid_t server_pid;
+    pid_t serverPid;
     // if no nr use ip ? remove stack nr == 0?
     if (sample->data_.nr == 0) {
-        server_pid = sample->GetServerPidof(0);
-        if (virtualRuntime_.IsKernelThread(server_pid)) {
-            kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ip);
+        serverPid = sample->GetServerPidof(0);
+        if (virtualRuntime_.IsKernelThread(serverPid)) {
+            kernelThreadSymbolsHits_[serverPid].insert(sample->data_.ip);
         } else if (context == PERF_CONTEXT_KERNEL) {
             kernelSymbolsHits_.insert(sample->data_.ip);
         } else {
@@ -1679,9 +1679,9 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
                     context = PERF_CONTEXT_USER;
                 }
             } else {
-                server_pid = sample->GetServerPidof(i);
-                if (virtualRuntime_.IsKernelThread(server_pid)) {
-                    kernelThreadSymbolsHits_[server_pid].insert(sample->data_.ips[i]);
+                serverPid = sample->GetServerPidof(i);
+                if (virtualRuntime_.IsKernelThread(serverPid)) {
+                    kernelThreadSymbolsHits_[serverPid].insert(sample->data_.ips[i]);
                 } else if (context == PERF_CONTEXT_KERNEL) {
                     kernelSymbolsHits_.insert(sample->data_.ips[i]);
                 } else {

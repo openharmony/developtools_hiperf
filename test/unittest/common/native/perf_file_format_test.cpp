@@ -93,13 +93,13 @@ HWTEST_F(PerfFileFormatTest, PerfFileSectionString, TestSize.Level1)
     perf_header_string *p = reinterpret_cast<perf_header_string *>(&buff[0]);
 
     PerfFileSectionString withString = {FEATURE::RESERVED, testString};
-    ASSERT_EQ(withString.toString(), testString);
+    ASSERT_EQ(withString.ToString(), testString);
     ASSERT_EQ(withString.GetSize(), (testString.size() + sizeof(uint32_t) + 1));
     ASSERT_TRUE(withString.GetBinary(buff, sizeof(buff)));
     ASSERT_EQ(testString, p->string);
 
     PerfFileSectionString withBuff(FEATURE::RESERVED, buff, sizeof(buff));
-    ASSERT_EQ(withBuff.toString(), testString);
+    ASSERT_EQ(withBuff.ToString(), testString);
     ASSERT_EQ(withBuff.GetSize(), (testString.size() + sizeof(uint32_t) + 1));
     ASSERT_TRUE(withBuff.GetBinary(buff, sizeof(buff)));
     ASSERT_EQ(testString, p->string);

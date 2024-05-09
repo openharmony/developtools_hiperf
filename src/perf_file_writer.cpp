@@ -184,8 +184,9 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
                     auto record = GetPerfSampleFromCacheMain(static_cast<perf_event_type>(header->type),
                                                              data, defaultEventAttr_);
                     // skip unknown record
-                    if (record == nullptr)
+                    if (record == nullptr) {
                         return true;
+                    }
                     remainingSize -= header->size;
                     // call callback to process, do not destroy the record
                     callback(std::move(record));
@@ -410,8 +411,8 @@ bool PerfFileWriter::AddNrCpusFeature(FEATURE feature, uint32_t nrCpusAvailable,
         std::make_unique<PerfFileSectionNrCpus>(feature, nrCpusAvailable, nrCpusOnline));
 
     // update header feature bits
-    header_.features[(int)FEATURE::NRCPUS / BITS_IN_BYTE] |=
-        1 << ((int)FEATURE::NRCPUS % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(FEATURE::NRCPUS) / BITS_IN_BYTE] |=
+        1 << (static_cast<int>(FEATURE::NRCPUS) % BITS_IN_BYTE); // bit
     return true;
 }
 
@@ -422,8 +423,8 @@ bool PerfFileWriter::AddEventDescFeature(FEATURE feature,
           eventDesces.size());
     featureSections_.emplace_back(std::make_unique<PerfFileSectionEventDesc>(feature, eventDesces));
 
-    header_.features[(int)FEATURE::EVENT_DESC / BITS_IN_BYTE] |=
-        1 << ((int)FEATURE::EVENT_DESC % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(FEATURE::EVENT_DESC) / BITS_IN_BYTE] |=
+        1 << (static_cast<int>(FEATURE::EVENT_DESC) % BITS_IN_BYTE); // bit
     return true;
 }
 
@@ -434,7 +435,7 @@ bool PerfFileWriter::AddStringFeature(FEATURE feature, std::string string)
     featureSections_.emplace_back(std::make_unique<PerfFileSectionString>(feature, string));
 
     // update header feature bits
-    header_.features[(int)feature / BITS_IN_BYTE] |= 1 << ((int)feature % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE);
     return true;
 }
 
@@ -451,7 +452,7 @@ bool PerfFileWriter::AddU64Feature(FEATURE feature, uint64_t v)
     featureSections_.emplace_back(std::make_unique<PerfFileSectionU64>(feature, v));
 
     // update header feature bits
-    header_.features[(int)feature / BITS_IN_BYTE] |= 1 << ((int)feature % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE);
     return true;
 }
 
@@ -460,7 +461,7 @@ bool PerfFileWriter::AddUniStackTableFeature(const ProcessStackMap *table)
     const FEATURE feature = FEATURE::HIPERF_FILES_UNISTACK_TABLE;
     featureSections_.emplace_back(
         std::make_unique<PerfFileSectionUniStackTable>(feature, table));
-    header_.features[(int)feature / BITS_IN_BYTE] |= 1 << ((int)feature % BITS_IN_BYTE);
+    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE);
     return true;
 }
 
@@ -479,7 +480,7 @@ bool PerfFileWriter::AddSymbolsFeature(
     featureSections_.emplace_back(
         std::make_unique<PerfFileSectionSymbolsFiles>(feature, symbolFileStructs));
     // update header feature bits
-    header_.features[(int)feature / BITS_IN_BYTE] |= 1 << ((int)feature % BITS_IN_BYTE); // bit
+    header_.features[static_cast<int>(feature) / BITS_IN_BYTE] |= 1 << (static_cast<int>(feature) % BITS_IN_BYTE);
     return true;
 }
 } // namespace HiPerf

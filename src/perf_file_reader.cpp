@@ -160,17 +160,17 @@ bool PerfFileReader::ReadAttrSection()
         // size of perf_event_attr change between different linux kernel versions.
         // can not memcpy to perf_file_attr as a whole
         perf_file_attr attr {};
-        size_t attr_size = header_.attrSize - sizeof(attr.ids);
+        size_t attrSize = header_.attrSize - sizeof(attr.ids);
 
         // If the size is smaller, you can use a pointer to point directly.
         // Our UAPI is 4.19. is less than 5.1
-        if (sizeof(perf_event_attr) > header_.attrSize) {
+        if (header_.attrSize < sizeof(perf_event_attr)) {
             HLOGE("size not match, ptr of perf_event_attr maybe overfollow %zu vs %zu",
-                  sizeof(perf_event_attr), attr_size);
+                  sizeof(perf_event_attr), attrSize);
         }
 
         attr.attr = *(reinterpret_cast<perf_event_attr *>(&buf[0]));
-        attr.ids = *(reinterpret_cast<perf_file_section *>(&buf[attr_size]));
+        attr.ids = *(reinterpret_cast<perf_file_section *>(&buf[attrSize]));
         vecAttr_.push_back(attr);
     }
 
@@ -247,9 +247,9 @@ bool PerfFileReader::ReadDataSection(ProcessRecordCB &callback)
 
 const perf_event_attr *PerfFileReader::GetDefaultAttr()
 {
-    if (vecAttr_.empty())
+    if (vecAttr_.empty()) {
         return nullptr;
-
+    }
     return &(vecAttr_[0].attr);
 }
 
@@ -380,7 +380,7 @@ const std::string PerfFileReader::GetFeatureString(const FEATURE feature) const
         if (featureSection != nullptr) {
             const PerfFileSectionString *sectionString =
                 static_cast<const PerfFileSectionString *>(featureSection);
-            return sectionString->toString();
+            return sectionString->ToString();
         } else {
             HLOGV("have not found: %s", featureName.c_str());
         }

@@ -41,8 +41,8 @@ struct sample_id {
 // If PERF_FORMAT_GROUP was not specified
 struct read_format {
     __u64 value;        /* The value of the event */
-    __u64 time_enabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
-    __u64 time_running; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
+    __u64 timeEnabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
+    __u64 timeRunning; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
     __u64 id;           /* if PERF_FORMAT_ID */
 };
 

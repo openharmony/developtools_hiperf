@@ -96,11 +96,11 @@ bool SubCommandReportTest::FileCompare(const std::string &stringOut,
     std::vector<std::string> actualLines = StringSplit(stringOut, "\n");
     std::vector<std::string> expectLines = StringSplit(ReadFileToString(targetFile), "\n");
 
-    for (int i = 0; i < (int)actualLines.size(); i++) {
+    for (size_t i = 0; i < actualLines.size(); i++) {
         actualLines[i].erase(actualLines[i].find_last_not_of(" ") + 1);
     }
 
-    for (int y = 0; y < (int)expectLines.size(); y++) {
+    for (size_t y = 0; y < expectLines.size(); y++) {
         expectLines[y].erase(expectLines[y].find_last_not_of(" ") + 1);
     }
     auto actual = actualLines.begin();

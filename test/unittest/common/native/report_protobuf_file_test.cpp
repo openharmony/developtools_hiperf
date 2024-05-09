@@ -94,11 +94,11 @@ HWTEST_F(ReportProtobufFileTest, Create, TestSize.Level1)
 HWTEST_F(ReportProtobufFileTest, Close, TestSize.Level1)
 {
     std::string fileName = "perf.proto";
-    EXPECT_EQ(protobufOutputFileWriter_->isOpen(), false);
+    EXPECT_EQ(protobufOutputFileWriter_->IsOpen(), false);
     ASSERT_EQ(protobufOutputFileWriter_->Create(fileName), true);
-    EXPECT_EQ(protobufOutputFileWriter_->isOpen(), true);
+    EXPECT_EQ(protobufOutputFileWriter_->IsOpen(), true);
     protobufOutputFileWriter_->Close();
-    EXPECT_EQ(protobufOutputFileWriter_->isOpen(), false);
+    EXPECT_EQ(protobufOutputFileWriter_->IsOpen(), false);
 }
 
 /**

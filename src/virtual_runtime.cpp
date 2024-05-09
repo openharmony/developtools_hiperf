@@ -482,12 +482,12 @@ void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, DfxFrame &callFrame)
 }
 
 void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
-                                       pid_t server_pid, perf_callchain_context context)
+                                       pid_t serverPid, perf_callchain_context context)
 {
     pid_t pid = static_cast<pid_t>(recordSample.data_.pid);
     pid_t tid = static_cast<pid_t>(recordSample.data_.tid);
-    if (server_pid != pid) {
-        pid = tid = server_pid;
+    if (serverPid != pid) {
+        pid = tid = serverPid;
     }
     auto symbol = GetSymbol(ip, pid, tid, context);
     MakeCallFrame(symbol, recordSample.callFrames_.emplace_back(ip, 0));
@@ -519,10 +519,10 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
     // Symbolic the Call Stack
     recordSample.callFrames_.clear();
     perf_callchain_context context = PERF_CONTEXT_MAX;
-    pid_t server_pid;
+    pid_t serverPid;
     if (recordSample.data_.nr == 0) {
-        server_pid = recordSample.GetServerPidof(0);
-        SymbolicCallFrame(recordSample, recordSample.data_.ip, server_pid, PERF_CONTEXT_MAX);
+        serverPid = recordSample.GetServerPidof(0);
+        SymbolicCallFrame(recordSample, recordSample.data_.ip, serverPid, PERF_CONTEXT_MAX);
     }
     for (u64 i = 0; i < recordSample.data_.nr; i++) {
         uint64_t ip = recordSample.data_.ips[i];
@@ -534,8 +534,8 @@ void VirtualRuntime::SymbolicRecord(PerfRecordSample &recordSample)
             // ip 0 or 1 or less than 0
             continue;
         }
-        server_pid = recordSample.GetServerPidof(i);
-        SymbolicCallFrame(recordSample, ip, server_pid, context);
+        serverPid = recordSample.GetServerPidof(i);
+        SymbolicCallFrame(recordSample, ip, serverPid, context);
     }
 #ifdef HIPERF_DEBUG_TIME
     auto usedTime = duration_cast<microseconds>(steady_clock::now() - startTime);
@@ -555,11 +555,11 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
     }
 
     u64 skip = 0;
-    u64 skip_pid = 0;
+    u64 skipPid = 0;
     u64 *ips = sample.data_.ips;
     for (; skip < sample.data_.nr; skip++) {
         if (ips[skip] == PERF_CONTEXT_KERNEL) {
-            skip_pid++;
+            skipPid++;
         }
         if (ips[skip] == PERF_CONTEXT_USER) {
             break;
@@ -569,9 +569,9 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
     sample.data_.nr -= skip;
     sample.header.size -= sizeof(u64) * skip;
     if (sample.data_.server_nr > 0) {
-        sample.skipPid_ = skip_pid;
-        sample.data_.server_nr -= skip_pid;
-        sample.header.size -= sizeof(u64) * skip_pid;
+        sample.skipPid_ = skipPid;
+        sample.data_.server_nr -= skipPid;
+        sample.header.size -= sizeof(u64) * skipPid;
     }
 }
 
@@ -584,11 +584,11 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     HLOGV("unwind record (time:%llu)", recordSample.data_.time);
     // if we have userstack ?
     if (recordSample.data_.stack_size > 0) {
-        pid_t server_pid = recordSample.GetUstackServerPid();
+        pid_t serverPid = recordSample.GetUstackServerPid();
         pid_t pid = static_cast<pid_t>(recordSample.data_.pid);
         pid_t tid = static_cast<pid_t>(recordSample.data_.tid);
-        if (server_pid != pid) {
-            pid = tid = server_pid;
+        if (serverPid != pid) {
+            pid = tid = serverPid;
         }
         auto &thread = UpdateThread(pid, tid);
         callstack_.UnwindCallStack(thread, recordSample.data_.user_abi == PERF_SAMPLE_REGS_ABI_32,

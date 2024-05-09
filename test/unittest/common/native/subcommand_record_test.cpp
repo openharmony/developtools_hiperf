@@ -40,6 +40,32 @@ namespace HiPerf {
 static const std::string TEST_FILE = "/data/local/tmp/perf.data";
 static const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2ms;
 
+static constexpr size_t TEST_SIZE_F100_DWARF_SYSTEM = 1.4E4 * 1024;
+static constexpr size_t TEST_SIZE_F500_DWARF_SYSTEM = 3.6E4 * 1024;
+static constexpr size_t TEST_SIZE_F1000_DWARF_SYSTEM = 5.9E4 * 1024;
+static constexpr size_t TEST_SIZE_F2000_DWARF_SYSTEM = 8.3E4 * 1024;
+static constexpr size_t TEST_SIZE_F4000_DWARF_SYSTEM = 1.7E5 * 1024;
+static constexpr size_t TEST_SIZE_F8000_DWARF_SYSTEM = 3.5E5 * 1024;
+static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 10E3 * 1024;
+static constexpr size_t TEST_SIZE_F500_FP_SYSTEM = 2E4 * 1024;
+static constexpr size_t TEST_SIZE_F1000_FP_SYSTEM = 3E4 * 1024;
+static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 5E4 * 1024;
+static constexpr size_t TEST_SIZE_F4000_FP_SYSTEM = 1E5 * 1024;
+static constexpr size_t TEST_SIZE_F8000_FP_SYSTEM = 2E5 * 1024;
+
+static constexpr size_t TEST_SIZE_F100_DWARF_PROCESS = 5.6E3 * 1024;
+static constexpr size_t TEST_SIZE_F500_DWARF_PROCESS = 1.6E4 * 1024;
+static constexpr size_t TEST_SIZE_F1000_DWARF_PROCESS = 2.9E4 * 1024;
+static constexpr size_t TEST_SIZE_F2000_DWARF_PROCESS = 6.1E4 * 1024;
+static constexpr size_t TEST_SIZE_F4000_DWARF_PROCESS = 5.8E4 * 1024;
+static constexpr size_t TEST_SIZE_F8000_DWARF_PROCESS = 1.2E5 * 1024;
+static constexpr size_t TEST_SIZE_F100_FP_PROCESS = 3.6E3 * 1024;
+static constexpr size_t TEST_SIZE_F500_FP_PROCESS = 8.8E3 * 1024;
+static constexpr size_t TEST_SIZE_F1000_FP_PROCESS = 1.5E4 * 1024;
+static constexpr size_t TEST_SIZE_F2000_FP_PROCESS = 3.1E4 * 1024;
+static constexpr size_t TEST_SIZE_F4000_FP_PROCESS = 6.2E4 * 1024;
+static constexpr size_t TEST_SIZE_F8000_FP_PROCESS = 1.3E5 * 1024;
+
 class SubCommandRecordTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -54,32 +80,6 @@ public:
     static void TestRecordCommand(const std::string &option, bool expect = true, bool fixPid = true);
 
     size_t GetFileSize(const char* fileName);
-
-    static constexpr size_t TEST_SIZE_F100_DWARF_SYSTEM = 1.4E4 * 1024;
-    static constexpr size_t TEST_SIZE_F500_DWARF_SYSTEM = 3.6E4 * 1024;
-    static constexpr size_t TEST_SIZE_F1000_DWARF_SYSTEM = 5.9E4 * 1024;
-    static constexpr size_t TEST_SIZE_F2000_DWARF_SYSTEM = 8.3E4 * 1024;
-    static constexpr size_t TEST_SIZE_F4000_DWARF_SYSTEM = 1.7E5 * 1024;
-    static constexpr size_t TEST_SIZE_F8000_DWARF_SYSTEM = 3.5E5 * 1024;
-    static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 10E3 * 1024;
-    static constexpr size_t TEST_SIZE_F500_FP_SYSTEM = 2E4 * 1024;
-    static constexpr size_t TEST_SIZE_F1000_FP_SYSTEM = 3E4 * 1024;
-    static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 4E4 * 1024;
-    static constexpr size_t TEST_SIZE_F4000_FP_SYSTEM = 8E4 * 1024;
-    static constexpr size_t TEST_SIZE_F8000_FP_SYSTEM = 1.6E5 * 1024;
-
-    static constexpr size_t TEST_SIZE_F100_DWARF_PROCESS = 5.6E3 * 1024;
-    static constexpr size_t TEST_SIZE_F500_DWARF_PROCESS = 1.6E4 * 1024;
-    static constexpr size_t TEST_SIZE_F1000_DWARF_PROCESS = 2.9E4 * 1024;
-    static constexpr size_t TEST_SIZE_F2000_DWARF_PROCESS = 6.1E4 * 1024;
-    static constexpr size_t TEST_SIZE_F4000_DWARF_PROCESS = 5.8E4 * 1024;
-    static constexpr size_t TEST_SIZE_F8000_DWARF_PROCESS = 1.2E5 * 1024;
-    static constexpr size_t TEST_SIZE_F100_FP_PROCESS = 3.6E3 * 1024;
-    static constexpr size_t TEST_SIZE_F500_FP_PROCESS = 8.8E3 * 1024;
-    static constexpr size_t TEST_SIZE_F1000_FP_PROCESS = 1.5E4 * 1024;
-    static constexpr size_t TEST_SIZE_F2000_FP_PROCESS = 3.1E4 * 1024;
-    static constexpr size_t TEST_SIZE_F4000_FP_PROCESS = 6.2E4 * 1024;
-    static constexpr size_t TEST_SIZE_F8000_FP_PROCESS = 1.3E5 * 1024;
 };
 
 void SubCommandRecordTest::SetUpTestCase() {}

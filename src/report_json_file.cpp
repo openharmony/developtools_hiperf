@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 bool ReportJsonFile::debug_ = false;
-void ReportJsonFile::addNewFunction(int libId, std::string name)
+void ReportJsonFile::AddNewFunction(int libId, std::string name)
 {
     functionList_.emplace_back(functionKey(libId, name));
     functionMap_.emplace(functionMap_.size(), ReportFuncMapItem(libId, name));
@@ -43,7 +43,7 @@ void ReportJsonFile::ProcessSymbolsFiles(
         const auto &symbols = symbolsFileIt->get()->GetSymbols();
         auto symbolIt = symbols.begin();
         while (symbolIt != symbols.end()) {
-            addNewFunction(libId, std::string(symbolIt->GetName()));
+            AddNewFunction(libId, std::string(symbolIt->GetName()));
             symbolIt++;
         }
         symbolsFileIt++;
@@ -83,7 +83,7 @@ int ReportJsonFile::GetFunctionID(int libId, const std::string &function)
     } else {
         HLOGW("'%s' not found in function list in lib %d", function.data(), libId);
         // make a new function for unknown name
-        addNewFunction(libId, function);
+        AddNewFunction(libId, function);
         // retuen the last index
         return functionList_.size() >= 1 ? functionList_.size() - 1 : 0;
     }

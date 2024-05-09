@@ -327,7 +327,7 @@ void SubCommandReport::UpdateReportInfo()
             HLOGV("found HIPERF_META_WORKLOAD_CMD");
             const PerfFileSectionString *sectionString =
                 static_cast<const PerfFileSectionString *>(featureSection);
-            workloader = sectionString->toString();
+            workloader = sectionString->ToString();
         } else {
             HLOGW("NOT found HIPERF_META_WORKLOAD_CMD");
         }
@@ -509,7 +509,7 @@ bool SubCommandReport::OutputStd()
 
             fprintf(output_, "%s: %s\n",
                     PerfFileSection::GetFeatureName(featureSection.get()->featureId_).c_str(),
-                    sectionString->toString().c_str());
+                    sectionString->ToString().c_str());
         }
     }
 

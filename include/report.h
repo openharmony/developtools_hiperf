@@ -17,10 +17,10 @@
 #define REPORT_H
 
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <functional>
 #include <map>
-#include <stdio.h>
 
 #include "debug_logger.h"
 // remove me latter
@@ -471,6 +471,7 @@ public:
         ReportEventConfigItem(const ReportEventConfigItem &) = delete;
         ReportEventConfigItem &operator=(const ReportEventConfigItem &) = delete;
         ReportEventConfigItem(ReportEventConfigItem &&) = default;
+        ReportEventConfigItem &operator=(ReportEventConfigItem &&) = default;
         std::string eventName_;
         uint64_t sampleCount_ = 0;
         uint64_t eventCount_ = 0;
@@ -529,7 +530,7 @@ private:
     // use virtual only for gmock test
     bool MultiLevelSorting(const ReportItem &a, const ReportItem &b);
     bool MultiLevelSameAndUpdateCount(ReportItem &l, ReportItem &r);
-    void MergeCallFrameCount(ReportItem &l, ReportItem &r);
+    void MergeCallFrameCount(ReportItem &leftItem, ReportItem &rightItem);
     virtual int MultiLevelCompare(const ReportItem &a, const ReportItem &b);
 
     void StatisticsRecords();
@@ -540,18 +541,17 @@ private:
     unsigned int consoleWidth_ = 0;
     void PrepareConsole();
 
-    void OutputStdStatistics(ReportEventConfigItem &);
+    void OutputStdStatistics(ReportEventConfigItem &config);
     bool OutputStdStatistics(ReportEventConfigItem &config, ReportEventConfigItem &otherConfig);
 
-    void OutputStdHead(ReportEventConfigItem &, bool diffMode = false);
+    void OutputStdHead(ReportEventConfigItem &config, bool diffMode = false);
 
-    void OutputStdContent(ReportEventConfigItem &);
-    void OutputStdContentDiff(ReportEventConfigItem &, ReportEventConfigItem &);
+    void OutputStdContent(ReportEventConfigItem &config);
+    void OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfigItem &right);
 
     void OutputStdContentItem(const ReportItem &reportItem);
 
-    void OutputStdCallFrames(int indent, const ReportItemCallFrame &callFrames,
-                             uint64_t totalEventCount);
+    void OutputStdCallFrames(int indent, const ReportItemCallFrame &callFrame, uint64_t totalEventCount);
     bool OutputStdCallFrame(int indent, const std::string_view &funcName, uint64_t eventCount,
                             uint64_t totalEventCount);
     void OutputStdItemHeating(float heat, float heat2);

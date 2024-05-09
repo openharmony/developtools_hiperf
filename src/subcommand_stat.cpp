@@ -32,7 +32,7 @@ namespace HiPerf {
 static std::map<pid_t, ThreadInfos> thread_map_;
 static bool g_reportCpuFlag = false;
 static bool g_reportThreadFlag = false;
-static VirtualRuntime runtimeInstance_;
+static VirtualRuntime g_runtimeInstance;
 void SubCommandStat::DumpOptions() const
 {
     printf("DumpOptions:\n");
@@ -267,7 +267,7 @@ void SubCommandStat::ReportDetailInfos(
             GetPerKey(perKey, it);
             if (perMaps.count(perKey) == 0) {
                 auto perMap = std::make_unique<PerfEvents::ReportSum>(PerfEvents::ReportSum {});
-                InitPerMap(perMap, it, runtimeInstance_);
+                InitPerMap(perMap, it, g_runtimeInstance);
                 perMaps[perKey] = std::move(perMap);
             }
             if (perMaps[perKey] == nullptr) {
@@ -276,8 +276,8 @@ void SubCommandStat::ReportDetailInfos(
             perMaps[perKey]->configName = GetDetailComments(event->second, perMaps[perKey]->commentSum,
                                                             it, configName);
             perMaps[perKey]->eventCountSum += it.eventCount;
-            if (it.time_running < it.time_enabled && it.time_running != 0) {
-                perMaps[perKey]->scaleSum += 1 / (static_cast<double>(it.time_enabled) / it.time_running);
+            if (it.timeRunning < it.timeEnabled && it.timeRunning != 0) {
+                perMaps[perKey]->scaleSum += 1 / (static_cast<double>(it.timeEnabled) / it.timeRunning);
             }
         }
         for (auto iper = perMaps.begin(); iper != perMaps.end(); iper++) {
@@ -305,8 +305,8 @@ void SubCommandStat::ReportNormal(
                 j = 0;
             }
         }
-        if (it->second->time_running < it->second->time_enabled && it->second->time_running != 0) {
-            scale = 1 / (static_cast<double>(it->second->time_enabled) / it->second->time_running);
+        if (it->second->timeRunning < it->second->timeEnabled && it->second->timeRunning != 0) {
+            scale = 1 / (static_cast<double>(it->second->timeEnabled) / it->second->timeRunning);
         }
         printf(" %24s  %-30s | %-32s | (%.0lf%%)\n", strEventCount.c_str(), configName.c_str(),
                comment.c_str(), scale * ratio);
@@ -322,9 +322,9 @@ bool SubCommandStat::FindEventCount(const std::map<std::string, std::unique_ptr<
     if (itr != countEvents.end()) {
         eventCount = itr->second->eventCount;
         if (itr->second->id == group_id
-            && itr->second->time_running < itr->second->time_enabled
-            && itr->second->time_running != 0) {
-            scale = static_cast<double>(itr->second->time_enabled) / itr->second->time_running;
+            && itr->second->timeRunning < itr->second->timeEnabled
+            && itr->second->timeRunning != 0) {
+            scale = static_cast<double>(itr->second->timeEnabled) / itr->second->timeRunning;
             return true;
         }
     }
@@ -334,8 +334,8 @@ bool SubCommandStat::FindEventCount(const std::map<std::string, std::unique_ptr<
 bool SubCommandStat::FindPerCoreEventCount(PerfEvents::Summary &summary, __u64 &eventCount, double &scale)
 {
     eventCount = summary.eventCount;
-    if (summary.time_running < summary.time_enabled && summary.time_running != 0) {
-        scale = static_cast<double>(summary.time_enabled) / summary.time_running;
+    if (summary.timeRunning < summary.timeEnabled && summary.timeRunning != 0) {
+        scale = static_cast<double>(summary.timeEnabled) / summary.timeRunning;
         return true;
     }
     return false;
@@ -406,11 +406,11 @@ std::string SubCommandStat::GetDetailComments(const std::unique_ptr<PerfEvents::
         return "sw-cpu-clock";
     }
     double scale = 1.0;
-    if (summary.time_running < summary.time_enabled && summary.time_running != 0) {
-        scale = static_cast<double>(summary.time_enabled) / summary.time_running;
+    if (summary.timeRunning < summary.timeEnabled && summary.timeRunning != 0) {
+        scale = static_cast<double>(summary.timeEnabled) / summary.timeRunning;
     }
     if (configName == GetCommentConfigName(countEvent, "sw-task-clock")) {
-        comment += countEvent->used_cpus * scale;
+        comment += countEvent->usedCpus * scale;
         return "sw-task-clock";
     }
     if (configName == GetCommentConfigName(countEvent, "hw-cpu-cycles")) {
@@ -482,13 +482,13 @@ void SubCommandStat::GetComments(const std::map<std::string, std::unique_ptr<Per
             continue;
         }
         double scale = 1.0;
-        if (it->second->time_running < it->second->time_enabled && it->second->time_running != 0) {
-            scale = static_cast<double>(it->second->time_enabled) / it->second->time_running;
+        if (it->second->timeRunning < it->second->timeEnabled && it->second->timeRunning != 0) {
+            scale = static_cast<double>(it->second->timeEnabled) / it->second->timeRunning;
         }
         commentConfigName = GetCommentConfigName(it->second, "sw-task-clock");
         if (configName == commentConfigName) {
-            double used_cpus = it->second->used_cpus * scale;
-            comments[configName] = StringPrintf("%lf cpus used", used_cpus);
+            double usedCpus = it->second->usedCpus * scale;
+            comments[configName] = StringPrintf("%lf cpus used", usedCpus);
             continue;
         }
         commentConfigName = GetCommentConfigName(it->second, "hw-cpu-cycles");
@@ -567,10 +567,10 @@ bool SubCommandStat::FindRunningTime(
             it->second->eventCount != 0u) {
             group_id = it->second->id;
             running_time_in_sec = it->second->eventCount / 1e9;
-            if (it->second->time_running < it->second->time_enabled &&
-                it->second->time_running != 0) {
+            if (it->second->timeRunning < it->second->timeEnabled &&
+                it->second->timeRunning != 0) {
                 main_scale =
-                    static_cast<double>(it->second->time_enabled) / it->second->time_running;
+                    static_cast<double>(it->second->timeEnabled) / it->second->timeRunning;
             }
             return true;
         }
@@ -585,8 +585,8 @@ bool SubCommandStat::FindPercoreRunningTime(PerfEvents::Summary &summary, double
         return false;
     }
     running_time_int_sec = summary.eventCount / 1e9;
-    if (summary.time_running < summary.time_enabled && summary.time_running != 0) {
-        main_scale = static_cast<double>(summary.time_enabled) /summary.time_running;
+    if (summary.timeRunning < summary.timeEnabled && summary.timeRunning != 0) {
+        main_scale = static_cast<double>(summary.timeEnabled) / summary.timeRunning;
     }
     return true;
 }

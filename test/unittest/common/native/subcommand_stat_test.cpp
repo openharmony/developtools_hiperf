@@ -1703,7 +1703,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
         printf("output:\n%s", stringOut.c_str());
     }
 
-    std::string expectStr = "time_enabled:";
+    std::string expectStr = "timeEnabled:";
     EXPECT_EQ(FindExpectStr(stringOut, expectStr), true);
     t1.join();
 }
@@ -1744,7 +1744,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level1)
         printf("output:\n%s", stringOut.c_str());
     }
 
-    std::string expectStr = "time_enabled:";
+    std::string expectStr = "timeEnabled:";
     EXPECT_EQ(FindExpectStr(stringOut, expectStr), false);
     t1.join();
 }
@@ -1949,10 +1949,10 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level1)
         } else {
             countEventTmp->eventCount = 20283000;
         }
-        countEventTmp->time_enabled = 2830280;
-        countEventTmp->time_running = 2278140;
+        countEventTmp->timeEnabled = 2830280;
+        countEventTmp->timeRunning = 2278140;
         countEventTmp->id = 0;
-        countEventTmp->used_cpus = countEventTmp->eventCount / 1e9;
+        countEventTmp->usedCpus = countEventTmp->eventCount / 1e9;
     }
     cmdStat.Report(countEvents);
     std::string stringOut = stdoutRecord.Stop();

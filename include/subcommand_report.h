@@ -17,12 +17,12 @@
 #define SUBCOMMAND_REPORT_H
 
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <functional>
 #include <map>
 #include <optional>
 #include <set>
-#include <stdio.h>
 #include <tuple>
 #include <linux/perf_event.h>
 

@@ -51,13 +51,12 @@ namespace HiPerf {
 using ConfigTable = std::map<__u64, const std::string>;
 using SharedConfigTable = std::unique_ptr<ConfigTable>;
 
-static const std::string PERF_EVENT_PARANOID = "/proc/sys/kernel/perf_event_paranoid";
-static const std::string PERF_DISABLE_PARAM = "security.perf_harden";
+const std::string PERF_DISABLE_PARAM = "security.perf_harden";
 
 // define convert from linux/perf_event.h
 // description from https://man7.org/linux/man-pages/man2/perf_event_open.2.html
 
-static const ConfigTable PERF_HW_CONFIGS = {
+const ConfigTable PERF_HW_CONFIGS = {
     {PERF_COUNT_HW_CPU_CYCLES, "hw-cpu-cycles"},
     {PERF_COUNT_HW_INSTRUCTIONS, "hw-instructions"},
     {PERF_COUNT_HW_CACHE_REFERENCES, "hw-cache-references"},
@@ -69,22 +68,22 @@ static const ConfigTable PERF_HW_CONFIGS = {
     {PERF_COUNT_HW_STALLED_CYCLES_BACKEND, "hw-stalled-cycles-backend"},
     {PERF_COUNT_HW_REF_CPU_CYCLES, "hw-ref-cpu-cycles"},
 };
-static const ConfigTable PERF_HW_CACHE_CONFIGS = {
+const ConfigTable PERF_HW_CACHE_CONFIGS = {
     {PERF_COUNT_HW_CACHE_L1D, "hw-cache-l1d"},   {PERF_COUNT_HW_CACHE_L1I, "hw-cache-l1i"},
     {PERF_COUNT_HW_CACHE_LL, "hw-cache-ll"},     {PERF_COUNT_HW_CACHE_DTLB, "hw-cache-dtlb"},
     {PERF_COUNT_HW_CACHE_ITLB, "hw-cache-itlb"}, {PERF_COUNT_HW_CACHE_BPU, "hw-cache-bpu"},
     {PERF_COUNT_HW_CACHE_NODE, "hw-cache-node"},
 };
-static const ConfigTable PERF_HW_CACHE_OP_CONFIGS = {
+const ConfigTable PERF_HW_CACHE_OP_CONFIGS = {
     {PERF_COUNT_HW_CACHE_OP_READ, "hw-cache-op-read"},
     {PERF_COUNT_HW_CACHE_OP_WRITE, "hw-cache-op-write"},
     {PERF_COUNT_HW_CACHE_OP_PREFETCH, "hw-cache-op-prefetch"},
 };
-static const ConfigTable PERF_HW_CACHE_OP_RESULT_CONFIGS = {
+const ConfigTable PERF_HW_CACHE_OP_RESULT_CONFIGS = {
     {PERF_COUNT_HW_CACHE_RESULT_ACCESS, "hw-cache-result-access"},
     {PERF_COUNT_HW_CACHE_RESULT_MISS, "hw-cache-result-miss"},
 };
-static const ConfigTable PERF_SW_CONFIGS = {
+const ConfigTable PERF_SW_CONFIGS = {
     {PERF_COUNT_SW_CPU_CLOCK, "sw-cpu-clock"},
     {PERF_COUNT_SW_TASK_CLOCK, "sw-task-clock"},
     {PERF_COUNT_SW_PAGE_FAULTS, "sw-page-faults"},
@@ -97,7 +96,7 @@ static const ConfigTable PERF_SW_CONFIGS = {
     {PERF_COUNT_SW_DUMMY, "sw-dummy"},
     {PERF_COUNT_SW_BPF_OUTPUT, "sw-bpf-output"},
 };
-static const ConfigTable PERF_RAW_CONFIGS = {
+const ConfigTable PERF_RAW_CONFIGS = {
     {0x0, "raw-sw-incr"},
     {0x1, "raw-l1-icache-refill"},
     {0x2, "raw-l1-itlb-refill"},
@@ -266,7 +265,7 @@ static ConfigTable PERF_TRACEPOINT_CONFIGS = {
 
 };
 
-static const std::map<perf_type_id, std::string> PERF_TYPES = {
+const std::map<perf_type_id, std::string> PERF_TYPES = {
     {PERF_TYPE_HARDWARE, "hardware"},
     {PERF_TYPE_SOFTWARE, "software"},
     {PERF_TYPE_TRACEPOINT, "tracepoint"},
@@ -281,7 +280,7 @@ static std::map<perf_type_id, ConfigTable> TYPE_CONFIGS = {
 };
 
 // default config
-static const std::vector<__u64> DEFAULT_HW_CONFIGS = {
+const std::vector<__u64> DEFAULT_HW_CONFIGS = {
     PERF_COUNT_HW_CPU_CYCLES,
 #if defined(__aarch64__)
     PERF_COUNT_HW_STALLED_CYCLES_FRONTEND,
@@ -291,12 +290,12 @@ static const std::vector<__u64> DEFAULT_HW_CONFIGS = {
     PERF_COUNT_HW_BRANCH_INSTRUCTIONS,
     PERF_COUNT_HW_BRANCH_MISSES,
 };
-static const std::vector<__u64> DEFAULT_SW_CONFIGS = {
+const std::vector<__u64> DEFAULT_SW_CONFIGS = {
     PERF_COUNT_SW_TASK_CLOCK,
     PERF_COUNT_SW_CONTEXT_SWITCHES,
     PERF_COUNT_SW_PAGE_FAULTS,
 };
-static const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
+const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
     {PERF_TYPE_HARDWARE, DEFAULT_HW_CONFIGS},
     {PERF_TYPE_SOFTWARE, DEFAULT_SW_CONFIGS},
 };
@@ -308,15 +307,15 @@ struct read_format_event {
 
 struct read_format_group {
     __u64 nr;           /* The number of events */
-    __u64 time_enabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
-    __u64 time_running; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
+    __u64 timeEnabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
+    __u64 timeRunning; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
     read_format_event events[1];
 };
 
 struct read_format_no_group {
     __u64 value;        /* The value of the event */
-    __u64 time_enabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
-    __u64 time_running; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
+    __u64 timeEnabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
+    __u64 timeRunning; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
     __u64 id;           /* if PERF_FORMAT_ID */
 };
 
@@ -350,7 +349,7 @@ public:
     bool EnableTracking();
     bool IsTrackRunning();
 
-    void SetSystemTarget(bool);
+    void SetSystemTarget(bool systemTarget);
     void SetCpu(const std::vector<pid_t> cpus); // cpu id must be [0~N]
     void SetPid(const std::vector<pid_t> pids); // tis is same as pid in kernel
     void SetTimeOut(float timeOut);
@@ -397,11 +396,11 @@ public:
         int cpu;
         pid_t tid;
         __u64 eventCount = 0;
-        __u64 time_enabled = 0;
-        __u64 time_running = 0;
+        __u64 timeEnabled = 0;
+        __u64 timeRunning = 0;
         Summary(const int cpu, const pid_t tid, const __u64 eventCount,
-                const __u64 time_enabled, const __u64 time_running)
-            : cpu(cpu), tid(tid), eventCount(eventCount), time_enabled(time_enabled), time_running(time_running)
+                const __u64 timeEnabled, const __u64 timeRunning)
+            : cpu(cpu), tid(tid), eventCount(eventCount), timeEnabled(timeEnabled), timeRunning(timeRunning)
         {
         }
     };
@@ -422,10 +421,10 @@ public:
         bool userOnly = false;
         bool kernelOnly = false;
         __u64 eventCount = 0;
-        __u64 time_enabled = 0;
-        __u64 time_running = 0;
+        __u64 timeEnabled = 0;
+        __u64 timeRunning = 0;
         __u64 id = 0;
-        double used_cpus = 0;
+        double usedCpus = 0;
         std::vector<Summary> summaries;
     };
     using StatCallBack =
@@ -558,18 +557,18 @@ private:
         int cpu;
         pid_t pid;
         __u64 eventCount;
-        mutable uint64_t perf_id_ = 0;
+        mutable uint64_t perfId = 0;
         uint64_t GetPrefId() const
         {
-            if (perf_id_ == 0) {
+            if (perfId == 0) {
                 read_format_no_group readNoGroupValue;
                 if (read(fd, &readNoGroupValue, sizeof(readNoGroupValue)) > 0) {
-                    perf_id_ = readNoGroupValue.id;
+                    perfId = readNoGroupValue.id;
                 } else {
                     HLOGW("read failed with fd %d", fd.Get());
                 }
             }
-            return perf_id_;
+            return perfId;
         }
     };
     struct EventItem {
@@ -637,7 +636,7 @@ private:
         return &(eventGroupItem_.at(0).eventItems.at(0).attr);
     };
 
-    OHOS::UniqueFd Open(perf_event_attr &attr, pid_t pid = 0, int cpu = -1, int group_fd = -1,
+    OHOS::UniqueFd Open(perf_event_attr &attr, pid_t pid = 0, int cpu = -1, int groupFd = -1,
                         unsigned long flags = 0);
     std::unique_ptr<perf_event_attr> CreateDefaultAttr(perf_type_id type, __u64 config);
 };

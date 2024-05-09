@@ -27,7 +27,20 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static ArchType deviceArchType = ArchType::ARCH_UNKNOWN;
+static ArchType g_deviceArchType = ArchType::ARCH_UNKNOWN;
+// order is IP , SP for ut
+static const std::map<size_t, const std::string> PERF_REG_NAME_MAP = {
+#if defined(target_cpu_x86_64)
+    {PERF_REG_X86_IP, "PERF_REG_X86_IP"},
+    {PERF_REG_X86_SP, "PERF_REG_X86_SP"},
+#elif defined(target_cpu_arm)
+    {PERF_REG_ARM_PC, "PERF_REG_ARM_PC"},
+    {PERF_REG_ARM_SP, "PERF_REG_ARM_SP"},
+#elif defined(target_cpu_arm64)
+    {PERF_REG_ARM64_PC, "PERF_REG_ARM64_PC"},
+    {PERF_REG_ARM64_SP, "PERF_REG_ARM64_SP"},
+#endif
+};
 
 // these copy from kerne uapi perf_regs.h
 uint64_t GetSupportedRegMask(ArchType arch)
@@ -212,54 +225,54 @@ ArchType GetArchTypeFromUname(const std::string &machine)
 
 ArchType GetArchTypeFromABI(bool abi32)
 {
-    if (deviceArchType == ArchType::ARCH_UNKNOWN) {
-        deviceArchType = GetDeviceArch();
+    if (g_deviceArchType == ArchType::ARCH_UNKNOWN) {
+        g_deviceArchType = GetDeviceArch();
     }
     if (abi32) {
-        if (deviceArchType == ArchType::ARCH_ARM64) {
+        if (g_deviceArchType == ArchType::ARCH_ARM64) {
             return ArchType::ARCH_ARM;
-        } else if (deviceArchType == ArchType::ARCH_X86_64) {
+        } else if (g_deviceArchType == ArchType::ARCH_X86_64) {
             return ArchType::ARCH_X86;
         }
     }
-    return deviceArchType;
+    return g_deviceArchType;
 }
 
 ArchType SetDeviceArch(ArchType arch)
 {
-    HLOGD("deviceArchType change to  %s", GetArchName(arch).c_str());
-    deviceArchType = arch;
-    return deviceArchType;
+    HLOGD("g_deviceArchType change to  %s", GetArchName(arch).c_str());
+    g_deviceArchType = arch;
+    return g_deviceArchType;
 }
 
 ArchType GetDeviceArch()
 {
 #if defined(is_mingw) && is_mingw
-    return deviceArchType;
+    return g_deviceArchType;
 #else
-    if (deviceArchType != ArchType::ARCH_UNKNOWN) {
-        return deviceArchType;
+    if (g_deviceArchType != ArchType::ARCH_UNKNOWN) {
+        return g_deviceArchType;
     } else {
         utsname systemName;
         if ((uname(&systemName)) != 0) {
             // fallback
-            deviceArchType = buildArchType;
+            g_deviceArchType = BUILD_ARCH_TYPE;
         } else {
-            deviceArchType = GetArchTypeFromUname(systemName.machine);
+            g_deviceArchType = GetArchTypeFromUname(systemName.machine);
             HLOGD("machine arch is %s : %s", systemName.machine,
-                  GetArchName(deviceArchType).c_str());
-            if (deviceArchType == ArchType::ARCH_UNKNOWN) {
-                deviceArchType = buildArchType;
+                  GetArchName(g_deviceArchType).c_str());
+            if (g_deviceArchType == ArchType::ARCH_UNKNOWN) {
+                g_deviceArchType = BUILD_ARCH_TYPE;
             }
         }
     }
-    return deviceArchType;
+    return g_deviceArchType;
 #endif
 }
 
 void UpdateRegForABI(ArchType arch, u64 *regs)
 {
-    if (deviceArchType == ArchType::ARCH_ARM64 and arch == ArchType::ARCH_ARM) {
+    if (g_deviceArchType == ArchType::ARCH_ARM64 and arch == ArchType::ARCH_ARM) {
         // arm in arm64
         regs[PERF_REG_ARM_PC] = regs[PERF_REG_ARM64_PC];
     }

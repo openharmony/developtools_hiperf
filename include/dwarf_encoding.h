@@ -24,10 +24,10 @@ using sleb128_t = int64_t;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static constexpr const int LEB_BYTE_EFFECTIVE_LENGTH = 7;
-static constexpr const int SIGN_BIT_OF_BYTE = 0x40;
-static constexpr const int MAX_VALUE_OF_BYTE = 0x7f;
-static constexpr const int MORE_BIT_OF_BYTE = 0x80;
+constexpr const int LEB_BYTE_EFFECTIVE_LENGTH = 7;
+constexpr const int SIGN_BIT_OF_BYTE = 0x40;
+constexpr const int MAX_VALUE_OF_BYTE = 0x7f;
+constexpr const int MORE_BIT_OF_BYTE = 0x80;
 
 /*
 10.5.1. DWARF Exception Header Encoding
@@ -150,11 +150,6 @@ encoded	fde_count
     binary search table
 */
 
-struct binary_search_table {
-    uint64_t ipVaddrOffset;
-    uint64_t fdeVaddrOffset;
-};
-
 struct eh_frame_hdr {
     // Version of the .eh_frame_hdr format. This value shall be 1.
     dw_encode_t version;
@@ -179,12 +174,6 @@ struct eh_frame_hdr {
     // encoded values, the initial location, and the address. The entries are sorted in an
     // increasing order by the initial location value.
 
-    /*
-     * struct {
-     *    encoded start_ip
-     *    encoded fde_addr
-     * } binary_search_table[fde_count]
-     */
     unsigned char encode_data[0];
 } PACKED;
 } // namespace HiPerf

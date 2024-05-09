@@ -126,7 +126,7 @@ const std::string DwarfEncoding::FormatName() const
         case DW_EH_PE_sleb128:
             return "DW_EH_PE_sleb128";
         case DW_EH_PE_sdata2:
-            return "DW_EH_PE_data2";
+            return "DW_EH_PE_sdata2";
         case DW_EH_PE_sdata4:
             return "DW_EH_PE_sdata4";
         case DW_EH_PE_sdata8:

@@ -45,7 +45,7 @@ using uSymbolsHits = std::unordered_map<pid_t, std::unordered_set<uint64_t>>;
 
 class VirtualRuntime {
 public:
-    VirtualRuntime(bool onDevice = true);
+    explicit VirtualRuntime(bool onDevice = true);
     ~VirtualRuntime();
     // thread need hook the record
     // from the record , it will call back to write some Simulated Record
@@ -55,13 +55,13 @@ public:
     using CollectSymbolCallBack = std::function<void(PerfRecordSample*)>;
 
     void SetRecordMode(RecordCallBack recordCallBack);
-    void SetCollectSymbolCallBack(CollectSymbolCallBack collectSymboolCallBack);
+    void SetCollectSymbolCallBack(CollectSymbolCallBack collectSymbolCallBack);
 
     // this both used in report and record follow
     // it process the record, and rebuild the trhread maps
     // It internally determines whether to go to the Record process (which will generate virtual
     // events) or the Report process by judging whether SetRecordMode has been passed.
-    void UpdateFromRecord(PerfEventRecord &reocrd);
+    void UpdateFromRecord(PerfEventRecord &record);
     void NeedDropKernelCallChain(PerfRecordSample &sample);
     // in reocrd mode
     // we make a kernel symbols from some proc file
@@ -218,7 +218,7 @@ private:
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
 #endif
     void SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
-                           pid_t server_pid, perf_callchain_context context);
+                           pid_t serverPid, perf_callchain_context context);
     bool RecoverCallStack(PerfRecordSample &recordSample);
     std::vector<std::string> symbolsPaths_;
 

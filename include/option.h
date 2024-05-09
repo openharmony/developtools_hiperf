@@ -34,8 +34,8 @@ struct MainOption {
 };
 
 // called from main
-bool RegisterMainOption(const std::string &, const std::string &,
-                        std::function<bool(std::vector<std::string> &)>);
+bool RegisterMainOption(const std::string &optionName, const std::string &help,
+                        std::function<bool(std::vector<std::string> &)> callBackFunction);
 
 void ClearMainOptions();
 
@@ -45,15 +45,12 @@ argsVector::iterator FindOption(argsVector &args, const std::string &optionName)
 
 // some option function
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, bool &value);
-bool GetValueFromString(const std::string &optionValue, const std::string &optionName, int &);
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, int &value);
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, float &value);
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::string &value);
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::vector<int> &values);
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName,
-                        float &value);
-bool GetValueFromString(const std::string &optionValue, const std::string &optionName,
-                        std::string &value);
-bool GetValueFromString(const std::string &optionValue, const std::string &optionName,
-                        std::vector<int> &value);
-bool GetValueFromString(const std::string &optionValue, const std::string &optionName,
-                        std::vector<std::string> &value);
+                        std::vector<std::string> &values);
 
 bool GetOptionTrackedCommand(argsVector &args, std::vector<std::string> &trackedCommand);
 
@@ -129,7 +126,7 @@ bool GetOptionValue(argsVector &args, std::string optionName, T &value)
     }
 }
 
-const MainOption *FindMainOption(const std::string);
+const MainOption *FindMainOption(const std::string &argName);
 
 const std::map<std::string, std::unique_ptr<MainOption>> &GetMainOptions();
 } // namespace Option

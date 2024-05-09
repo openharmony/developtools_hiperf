@@ -40,7 +40,7 @@ const std::map<std::string, std::unique_ptr<MainOption>> &GetMainOptions()
     return g_MainOptions;
 }
 
-const MainOption *FindMainOption(const std::string argName)
+const MainOption *FindMainOption(const std::string &argName)
 {
     HLOGV("%s", argName.c_str());
     auto found = g_MainOptions.find(argName);
@@ -52,8 +52,7 @@ const MainOption *FindMainOption(const std::string argName)
     }
 }
 
-std::vector<std::string>::iterator FindOption(std::vector<std::string> &args,
-                                              const std::string &optionName)
+std::vector<std::string>::iterator FindOption(argsVector &args, const std::string &optionName)
 {
     HLOGV("try find '%s' in args: %s", optionName.c_str(), VectorToString(args).c_str());
     auto tmpit = args.begin();
@@ -107,15 +106,13 @@ bool GetValueFromString(const std::string &optionValue, const std::string &optio
     return false;
 }
 
-bool GetValueFromString(const std::string &optionValue, const std::string &optionName,
-                        std::string &value)
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::string &value)
 {
     value = optionValue;
     return true; // every thing done
 }
 
-bool GetValueFromString(const std::string &optionValue, const std::string &optionName,
-                        std::vector<int> &values)
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::vector<int> &values)
 {
     std::vector<std::string> stringValues = StringSplit(optionValue, ",");
     HLOGD("split int result:'%s':'%s'", optionName.c_str(), VectorToString(stringValues).c_str());
@@ -132,8 +129,7 @@ bool GetValueFromString(const std::string &optionValue, const std::string &optio
     return false;
 }
 
-bool GetValueFromString(const std::string &optionValue, const std::string &optionName,
-                        std::vector<std::string> &values)
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::vector<std::string> &values)
 {
     values = StringSplit(optionValue, ",");
     HLOGD("split string result:'%s':'%s' from '%s'", optionName.c_str(),
@@ -141,8 +137,7 @@ bool GetValueFromString(const std::string &optionValue, const std::string &optio
     return values.size() > 0; // convert successed ?
 }
 
-bool GetOptionTrackedCommand(std::vector<std::string> &args,
-                             std::vector<std::string> &trackedCommand)
+bool GetOptionTrackedCommand(argsVector &args, std::vector<std::string> &trackedCommand)
 {
     if (!args.empty()) {
         trackedCommand.insert(trackedCommand.begin(), args.begin(), args.end());

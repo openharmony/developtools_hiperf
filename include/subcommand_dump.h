@@ -29,7 +29,6 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static const std::string DEFAULT_DUMP_FILENAME = "perf.data";
 
 class SubCommandDump : public SubCommand {
 public:

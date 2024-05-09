@@ -28,7 +28,7 @@ namespace HiPerf {
 using namespace OHOS::HiviewDFX;
 
 // these define copy from kernel uapi
-enum perf_event_x86_regs {
+enum PerfEventX86Regs {
     PERF_REG_X86_AX,
     PERF_REG_X86_BX,
     PERF_REG_X86_CX,
@@ -57,7 +57,7 @@ enum perf_event_x86_regs {
     PERF_REG_X86_64_MAX = PERF_REG_X86_R15 + 1,
 };
 
-enum perf_event_arm64_regs {
+enum PerfEventArm64Regs {
     PERF_REG_ARM64_X0,
     PERF_REG_ARM64_X1,
     PERF_REG_ARM64_X2,
@@ -94,7 +94,7 @@ enum perf_event_arm64_regs {
     PERF_REG_ARM64_MAX,
 };
 
-enum perf_event_arm_regs {
+enum PerfEventArmRegs {
     PERF_REG_ARM_R0,
     PERF_REG_ARM_R1,
     PERF_REG_ARM_R2,
@@ -114,20 +114,6 @@ enum perf_event_arm_regs {
     PERF_REG_ARM_MAX,
 };
 
-// order is IP , SP for ut
-static const std::map<size_t, const std::string> PERF_REG_NAME_MAP = {
-#if defined(target_cpu_x86_64)
-    {PERF_REG_X86_IP, "PERF_REG_X86_IP"},
-    {PERF_REG_X86_SP, "PERF_REG_X86_SP"},
-#elif defined(target_cpu_arm)
-    {PERF_REG_ARM_PC, "PERF_REG_ARM_PC"},
-    {PERF_REG_ARM_SP, "PERF_REG_ARM_SP"},
-#elif defined(target_cpu_arm64)
-    {PERF_REG_ARM64_PC, "PERF_REG_ARM64_PC"},
-    {PERF_REG_ARM64_SP, "PERF_REG_ARM64_SP"},
-#endif
-};
-
 // context name
 static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
     {PERF_CONTEXT_HV, "PERF_CONTEXT_HV"},
@@ -140,11 +126,11 @@ static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
 };
 
 #if defined(target_cpu_x86_64)
-constexpr ArchType buildArchType = ArchType::ARCH_X86_64;
+constexpr ArchType BUILD_ARCH_TYPE = ArchType::ARCH_X86_64;
 #elif defined(target_cpu_arm64)
-constexpr ArchType buildArchType = ArchType::ARCH_ARM64;
+constexpr ArchType BUILD_ARCH_TYPE = ArchType::ARCH_ARM64;
 #elif defined(target_cpu_arm)
-constexpr ArchType buildArchType = ArchType::ARCH_ARM;
+constexpr ArchType BUILD_ARCH_TYPE = ArchType::ARCH_ARM;
 #else
 #error NOT SUPPORT ARCH
 #endif
@@ -180,7 +166,7 @@ ArchType GetDeviceArch();
 ArchType SetDeviceArch(ArchType arch);
 ArchType GetArchTypeFromUname(const std::string &machine);
 ArchType GetArchTypeFromABI(bool abi32);
-void UpdateRegForABI(ArchType arch, u64 registers[]);
+void UpdateRegForABI(ArchType arch, u64 *registers);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

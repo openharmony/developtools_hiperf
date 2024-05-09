@@ -42,23 +42,23 @@ namespace Developtools {
 namespace HiPerf {
 static std::atomic_bool g_trackRunning = false;
 
-OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, pid_t pid, int cpu, int group_fd,
+OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, pid_t pid, int cpu, int groupFd,
                                 unsigned long flags)
 {
-    OHOS::UniqueFd fd = UniqueFd(syscall(__NR_perf_event_open, &attr, pid, cpu, group_fd, flags));
+    OHOS::UniqueFd fd = UniqueFd(syscall(__NR_perf_event_open, &attr, pid, cpu, groupFd, flags));
     if (fd < 0) {
         HLOGEP("syscall perf_event_open failed. ");
         // dump when open failed.
         SubCommandDump::DumpPrintEventAttr(attr, std::numeric_limits<int>::min());
     }
-    HLOGV("perf_event_open: got fd %d for pid %d cpu %d group %d flags %lu", fd.Get(), pid, cpu, group_fd, flags);
+    HLOGV("perf_event_open: got fd %d for pid %d cpu %d group %d flags %lu", fd.Get(), pid, cpu, groupFd, flags);
     return fd;
 }
 
 PerfEvents::PerfEvents() : timeOut_(DEFAULT_TIMEOUT * THOUSANDS), timeReport_(0)
 {
     pageSize_ = sysconf(_SC_PAGESIZE);
-    HLOGI("BuildArch %s", GetArchName(buildArchType).c_str());
+    HLOGI("BuildArch %s", GetArchName(BUILD_ARCH_TYPE).c_str());
 }
 
 PerfEvents::~PerfEvents()
@@ -1055,20 +1055,20 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
             for (const auto &fditem : eventItem.fdItems) {
                 if (read(fditem.fd, &readNoGroupValue, sizeof(readNoGroupValue)) > 0) {
                     countEvent->eventCount += readNoGroupValue.value;
-                    countEvent->time_enabled += readNoGroupValue.time_enabled;
-                    countEvent->time_running += readNoGroupValue.time_running;
+                    countEvent->timeEnabled += readNoGroupValue.timeEnabled;
+                    countEvent->timeRunning += readNoGroupValue.timeRunning;
                     countEvent->id = groupId;
                     if (durationInSec != 0) {
-                        countEvent->used_cpus = (countEvent->eventCount / 1e9) / (durationInSec / THOUSANDS);
+                        countEvent->usedCpus = (countEvent->eventCount / 1e9) / (durationInSec / THOUSANDS);
                     }
                     if (verboseReport_) {
-                        printf("%s id:%llu(c%d:p%d) time_enabled:%llu time_running:%llu value:%llu\n",
+                        printf("%s id:%llu(c%d:p%d) timeEnabled:%llu timeRunning:%llu value:%llu\n",
                                eventItem.configName.c_str(), readNoGroupValue.id, fditem.cpu, fditem.pid,
-                               readNoGroupValue.time_enabled, readNoGroupValue.time_running, readNoGroupValue.value);
+                               readNoGroupValue.timeEnabled, readNoGroupValue.timeRunning, readNoGroupValue.value);
                     }
                     if ((perCpu_ || perThread_) && readNoGroupValue.value) {
                         countEvent->summaries.emplace_back(fditem.cpu, fditem.pid, readNoGroupValue.value,
-                            readNoGroupValue.time_enabled, readNoGroupValue.time_running);
+                            readNoGroupValue.timeEnabled, readNoGroupValue.timeRunning);
                     }
                 } else {
                     printf("read failed from event '%s'\n", eventItem.configName.c_str());
