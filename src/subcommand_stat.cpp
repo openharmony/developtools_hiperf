@@ -586,7 +586,7 @@ bool SubCommandStat::FindPercoreRunningTime(PerfEvents::Summary &summary, double
     }
     running_time_int_sec = summary.eventCount / 1e9;
     if (summary.timeRunning < summary.timeEnabled && summary.timeRunning != 0) {
-        main_scale = static_cast<double>(summary.timeEnabled) /summary.timeRunning;
+        main_scale = static_cast<double>(summary.timeEnabled) / summary.timeRunning;
     }
     return true;
 }

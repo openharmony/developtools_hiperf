@@ -29,44 +29,42 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 namespace HiperfClient {
-static const std::string HiperfCommandName = "hiperf";
-static const std::string SystemBinPath = "/system/bin/";
-static const std::string CurrentPath = "./";
-static const std::string PerfDataName = "perf.data";
-static const std::string CommandRecord = "record";
-static const std::string ArgOutputPath = "-o";
-static const std::string ArgDebug = "--verbose";
-static const std::string ArgDebugMuch = "--much";
-static const std::string ArgHilog = "--hilog";
-static const std::string ArgPipeInput = "--pipe_input";
-static const std::string ArgPipeOutput = "--pipe_output";
-static const std::string ArgTargetSystemWide = "-a";
-static const std::string ArgCompressData = "-z";
-static const std::string ArgSelectCpus = "-c";
-static const std::string ArgTimeStopSec = "-d";
-static const std::string ArgFrequency = "-f";
-static const std::string ArgPeriod = "--period";
-static const std::string ArgSelectEvents = "-e";
-static const std::string ArgSelectGroups = "-g";
-static const std::string ArgNoInherit = "--no-inherit";
-static const std::string ArgSelectPids = "-p";
-static const std::string ArgSelectTids = "-t";
-static const std::string ArgExcludePerf = "--exclude-hiperf";
-static const std::string ArgCpuPercent = "--cpu-limit";
-static const std::string ArgOffCPU = "--offcpu";
-static const std::string ArgCallGraph = "--call-stack";
-static const std::string ArgDelayUnwind = "--delay-unwind";
-static const std::string ArgDisableUnwind = "--disable-unwind";
-static const std::string ArgDisableCallstackMerge = "--disable-callstack-expand";
-static const std::string ArgSymbolDir = "--symbol-dir";
-static const std::string ArgOutputFilename = "-o";
-static const std::string ArgDataLimit = "--data-limit";
-static const std::string ArgAppPackage = "--app";
-static const std::string ArgClockId = "--clockid";
-static const std::string ArgVecBranchSampleTypes = "-j";
-static const std::string ArgMmapPages = "-m";
-static const std::string ArgDedupStack = "--dedup_stack";
-static const std::string ArgReport = "--report";
+static const std::string HIPERF_COMMAND_NAME = "hiperf";
+static const std::string SYSTEM_BIN_PATH = "/system/bin/";
+static const std::string CURRENT_PATH = "./";
+static const std::string PERF_DATA_NAME = "perf.data";
+static const std::string COMMAND_RECORD = "record";
+static const std::string ARG_OUTPUT_PATH = "-o";
+static const std::string ARG_DEBUG = "--verbose";
+static const std::string ARG_DEBUG_MUCH = "--much";
+static const std::string ARG_HILOG = "--hilog";
+static const std::string ARG_PIPE_INPUT = "--pipe_input";
+static const std::string ARG_PIPE_OUTPUT = "--pipe_output";
+static const std::string ARG_TARGET_SYSTEM_WIDE = "-a";
+static const std::string ARG_COMPRESS_DATA = "-z";
+static const std::string ARG_SELECT_CPUS = "-c";
+static const std::string ARG_TIME_STOP_SEC = "-d";
+static const std::string ARG_FREQUENCY = "-f";
+static const std::string ARG_PERIOD = "--period";
+static const std::string ARG_SELECT_EVENTS = "-e";
+static const std::string ARG_SELECT_GROUPS = "-g";
+static const std::string ARG_NO_INHERIT = "--no-inherit";
+static const std::string ARG_SELECT_PIDS = "-p";
+static const std::string ARG_SELECT_TIDS = "-t";
+static const std::string ARG_EXCLUDE_PERF = "--exclude-hiperf";
+static const std::string ARG_CPU_PERCENT = "--cpu-limit";
+static const std::string ARG_OFF_CPU = "--offcpu";
+static const std::string ARG_CALL_GRAPH = "--call-stack";
+static const std::string ARG_DELAY_UNWIND = "--delay-unwind";
+static const std::string ARG_DISABLE_UNWIND = "--disable-unwind";
+static const std::string ARG_DISABLE_CALLSTACK_MERGE = "--disable-callstack-expand";
+static const std::string ARG_SYMBOL_DIR = "--symbol-dir";
+static const std::string ARG_DATA_LIMIT = "--data-limit";
+static const std::string ARG_APP_PACKAGE = "--app";
+static const std::string ARG_CLOCK_ID = "--clockid";
+static const std::string ARG_VEC_BRANCH_SAMPLE_TYPES = "-j";
+static const std::string ARG_MMAP_PAGES = "-m";
+static const std::string ARG_REPORT = "--report";
 
 static constexpr int DEFAULT_DURATION_TIME = 10;
 static constexpr int DEFAULT_FREQUENCY_TIME = 100;
@@ -182,53 +180,53 @@ void RecordOption::SetOption(const std::string &name, const std::vector<std::str
 
 void RecordOption::SetTargetSystemWide(bool enable)
 {
-    SetOption(ArgTargetSystemWide, enable);
+    SetOption(ARG_TARGET_SYSTEM_WIDE, enable);
 }
 
 void RecordOption::SetCompressData(bool enable)
 {
-    SetOption(ArgCompressData, enable);
+    SetOption(ARG_COMPRESS_DATA, enable);
 }
 
 void RecordOption::SetSelectCpus(const std::vector<int> &cpus)
 {
-    SetOption(ArgSelectCpus, cpus);
+    SetOption(ARG_SELECT_CPUS, cpus);
 }
 
 void RecordOption::SetTimeStopSec(int timeStopSec)
 {
     this->timeSpec_ = true;
-    SetOption(ArgTimeStopSec, timeStopSec);
+    SetOption(ARG_TIME_STOP_SEC, timeStopSec);
 }
 
 void RecordOption::SetFrequency(int frequency)
 {
-    SetOption(ArgFrequency, frequency);
+    SetOption(ARG_FREQUENCY, frequency);
 }
 
 void RecordOption::SetPeriod(int period)
 {
-    SetOption(ArgPeriod, period);
+    SetOption(ARG_PERIOD, period);
 }
 
 void RecordOption::SetSelectEvents(const std::vector<std::string> &selectEvents)
 {
-    SetOption(ArgSelectEvents, selectEvents);
+    SetOption(ARG_SELECT_EVENTS, selectEvents);
 }
 
 void RecordOption::SetSelectGroups(const std::vector<std::string> &selectGroups)
 {
-    SetOption(ArgSelectGroups, selectGroups);
+    SetOption(ARG_SELECT_GROUPS, selectGroups);
 }
 
 void RecordOption::SetNoInherit(bool enable)
 {
-    SetOption(ArgNoInherit, enable);
+    SetOption(ARG_NO_INHERIT, enable);
 }
 
 void RecordOption::SetSelectPids(const std::vector<pid_t> &selectPids)
 {
-    SetOption(ArgSelectPids, selectPids);
+    SetOption(ARG_SELECT_PIDS, selectPids);
 }
 
 void RecordOption::SetCallStackSamplingConfigs(int duration)
@@ -245,77 +243,77 @@ void RecordOption::SetCallStackSamplingConfigs(int duration)
 
 void RecordOption::SetSelectTids(const std::vector<pid_t> &selectTids)
 {
-    SetOption(ArgSelectTids, selectTids);
+    SetOption(ARG_SELECT_TIDS, selectTids);
 }
 
 void RecordOption::SetExcludePerf(bool excludePerf)
 {
-    SetOption(ArgExcludePerf, excludePerf);
+    SetOption(ARG_EXCLUDE_PERF, excludePerf);
 }
 
 void RecordOption::SetCpuPercent(int cpuPercent)
 {
-    SetOption(ArgCpuPercent, cpuPercent);
+    SetOption(ARG_CPU_PERCENT, cpuPercent);
 }
 
 void RecordOption::SetOffCPU(bool offCPU)
 {
-    SetOption(ArgOffCPU, offCPU);
+    SetOption(ARG_OFF_CPU, offCPU);
 }
 
 void RecordOption::SetCallGraph(const std::string &callGraph)
 {
-    SetOption(ArgCallGraph, callGraph);
+    SetOption(ARG_CALL_GRAPH, callGraph);
 }
 
 void RecordOption::SetDelayUnwind(bool delayUnwind)
 {
-    SetOption(ArgDelayUnwind, delayUnwind);
+    SetOption(ARG_DELAY_UNWIND, delayUnwind);
 }
 
 void RecordOption::SetDisableUnwind(bool disableUnwind)
 {
-    SetOption(ArgDisableUnwind, disableUnwind);
+    SetOption(ARG_DISABLE_UNWIND, disableUnwind);
 }
 
 void RecordOption::SetDisableCallstackMerge(bool disableCallstackMerge)
 {
-    SetOption(ArgDisableCallstackMerge, disableCallstackMerge);
+    SetOption(ARG_DISABLE_CALLSTACK_MERGE, disableCallstackMerge);
 }
 
 void RecordOption::SetSymbolDir(const std::string &symbolDir_)
 {
-    SetOption(ArgSymbolDir, symbolDir_);
+    SetOption(ARG_SYMBOL_DIR, symbolDir_);
 }
 
 void RecordOption::SetDataLimit(const std::string &limit)
 {
-    SetOption(ArgDataLimit, limit);
+    SetOption(ARG_DATA_LIMIT, limit);
 }
 
 void RecordOption::SetAppPackage(const std::string &appPackage)
 {
-    SetOption(ArgAppPackage, appPackage);
+    SetOption(ARG_APP_PACKAGE, appPackage);
 }
 
 void RecordOption::SetClockId(const std::string &clockId)
 {
-    SetOption(ArgClockId, clockId);
+    SetOption(ARG_CLOCK_ID, clockId);
 }
 
 void RecordOption::SetVecBranchSampleTypes(const std::vector<std::string> &vecBranchSampleTypes)
 {
-    SetOption(ArgVecBranchSampleTypes, vecBranchSampleTypes);
+    SetOption(ARG_VEC_BRANCH_SAMPLE_TYPES, vecBranchSampleTypes);
 }
 
 void RecordOption::SetMmapPages(int mmapPages)
 {
-    SetOption(ArgMmapPages, mmapPages);
+    SetOption(ARG_MMAP_PAGES, mmapPages);
 }
 
 void RecordOption::SetReport(bool report)
 {
-    SetOption(ArgReport, report);
+    SetOption(ARG_REPORT, report);
 }
 
 Client::Client(const std::string &outputDir)
@@ -327,9 +325,9 @@ Client::Client(const std::string &outputDir)
 
 bool Client::Setup(std::string outputDir)
 {
-    std::string CurrentCommandPath = CurrentPath + HiperfCommandName;
-    std::string SystemCommandPath = SystemBinPath + HiperfCommandName;
-    std::string TempCommandPath = TempBinPath + HiperfCommandName;
+    std::string CurrentCommandPath = CURRENT_PATH + HIPERF_COMMAND_NAME;
+    std::string SystemCommandPath = SYSTEM_BIN_PATH + HIPERF_COMMAND_NAME;
+    std::string TempCommandPath = TempBinPath + HIPERF_COMMAND_NAME;
 
     if (!outputDir.empty() && outputDir.back() != '/') {
         outputDir.push_back('/');
@@ -352,13 +350,13 @@ bool Client::Setup(std::string outputDir)
     // found command path
     if (access(outputDir.c_str(), W_OK) == 0) {
         outputDir_ = outputDir;
-    } else if (access(CurrentPath.c_str(), W_OK) == 0) {
-        outputDir_ = CurrentPath;
+    } else if (access(CURRENT_PATH.c_str(), W_OK) == 0) {
+        outputDir_ = CURRENT_PATH;
     } else {
         HIPERF_HILOGI(MODULE_CPP_API, "no writeable output path found\n");
         return ready_;
     }
-    outputFileName_ = PerfDataName;
+    outputFileName_ = PERF_DATA_NAME;
 
     myPid_ = getpid();
 
@@ -404,17 +402,17 @@ void Client::PrepareExecCmd(std::vector<std::string> &cmd)
     cmd.emplace_back(executeCommandPath_);
 
     if (debug_) {
-        cmd.emplace_back(ArgDebug);
+        cmd.emplace_back(ARG_DEBUG);
     } else if (debugMuch_) {
-        cmd.emplace_back(ArgDebugMuch);
+        cmd.emplace_back(ARG_DEBUG_MUCH);
     }
 
     if (hilog_) {
-        cmd.emplace_back(ArgHilog);
+        cmd.emplace_back(ARG_HILOG);
     }
 
-    cmd.emplace_back(CommandRecord);
-    cmd.emplace_back(ArgOutputPath);
+    cmd.emplace_back(COMMAND_RECORD);
+    cmd.emplace_back(ARG_OUTPUT_PATH);
     cmd.emplace_back(GetOutputPerfDataPath());
 }
 
@@ -422,9 +420,9 @@ void Client::GetExecCmd(std::vector<std::string> &cmd, int pipeIn, int pipeOut,
                         const std::vector<std::string> &args)
 {
     PrepareExecCmd(cmd);
-    cmd.emplace_back(ArgPipeInput);
+    cmd.emplace_back(ARG_PIPE_INPUT);
     cmd.emplace_back(std::to_string(pipeIn));
-    cmd.emplace_back(ArgPipeOutput);
+    cmd.emplace_back(ARG_PIPE_OUTPUT);
     cmd.emplace_back(std::to_string(pipeOut));
 
     cmd.insert(cmd.end(), args.begin(), args.end());

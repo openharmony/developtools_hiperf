@@ -29,8 +29,9 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-constexpr const int MMAP_PROT_CHARS = 4;
-constexpr const int MAP_PROT_EXEC_INDEX = 2;
+
+static constexpr int MMAP_PROT_CHARS = 4;
+static constexpr int MAP_PROT_EXEC_INDEX = 2;
 
 #ifdef DEBUG_TIME
 

@@ -79,19 +79,19 @@ std::vector<uint64_t> values {
     1940830438011385600ULL,
 };
 std::vector<dw_encode_t> vfs {
-    DW_EH_PE_ABSPTR,
+    DW_EH_PE_absptr,
 #ifdef NOT_USE
-    DW_EH_PE_ULEB128,
+    DW_EH_PE_uleb128,
 #endif
-    DW_EH_PE_UDATA2,  DW_EH_PE_UDATA4, DW_EH_PE_UDATA8,
+    DW_EH_PE_udata2,  DW_EH_PE_udata4, DW_EH_PE_udata8,
 #ifdef NOT_USE
-    DW_EH_PE_SLEB128,
+    DW_EH_PE_sleb128,
 #endif
-    DW_EH_PE_SDATA2,  DW_EH_PE_SDATA4, DW_EH_PE_SDATA8,
+    DW_EH_PE_sdata2,  DW_EH_PE_sdata4, DW_EH_PE_sdata8,
 };
 vector<dw_encode_t> ehas {
-    DW_EH_PE_NOTHING, DW_EH_PE_PCREL,   DW_EH_PE_TEXTREL, DW_EH_PE_DATAREL,
-    DW_EH_PE_FUNCREL, DW_EH_PE_ALIGNED, DW_EH_PE_OMIT,
+    DW_EH_PE_nothing, DW_EH_PE_pcrel,   DW_EH_PE_textrel, DW_EH_PE_datarel,
+    DW_EH_PE_funcrel, DW_EH_PE_aligned, DW_EH_PE_omit,
 };
 } // namespace
 
@@ -138,7 +138,7 @@ HWTEST_F(DwarfTest, GetEnd, TestSize.Level1)
                 dw_encode_t dwe = ehas[i] | vfs[j];
                 DwarfEncoding dw {dwe, data[j]};
                 if (!dw.IsOmit()) {
-                    if (vfs[j] == DW_EH_PE_ABSPTR) {
+                    if (vfs[j] == DW_EH_PE_absptr) {
                         EXPECT_TRUE(data[j] == dw.GetEnd() - dw.GetSize());
                     } else {
                         EXPECT_TRUE(data[j] == dw.GetEnd());
@@ -157,7 +157,7 @@ HWTEST_F(DwarfTest, GetData, TestSize.Level1)
                 dw_encode_t dwe = ehas[i] | vfs[j];
                 DwarfEncoding dw {dwe, data[j]};
                 if (!dw.IsOmit()) {
-                    if (vfs[j] == DW_EH_PE_ABSPTR) {
+                    if (vfs[j] == DW_EH_PE_absptr) {
                         EXPECT_TRUE(data[j] == dw.GetData());
                     } else {
                         EXPECT_TRUE(data[j] == dw.GetData() + dw.GetSize());
@@ -190,7 +190,7 @@ HWTEST_F(DwarfTest, IsOmit, TestSize.Level1)
             {
                 dw_encode_t dwe = ehas[i] | vfs[j];
                 DwarfEncoding dw {dwe, data[j]};
-                if (ehas[i] == DW_EH_PE_OMIT) {
+                if (ehas[i] == DW_EH_PE_omit) {
                     EXPECT_TRUE(dw.IsOmit());
                 } else {
                     EXPECT_FALSE(dw.IsOmit());

@@ -167,7 +167,7 @@ public:
     {
     }
 
-    ~ElfFileSymbols()
+    virtual ~ElfFileSymbols()
     {
     }
 

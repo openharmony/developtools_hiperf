@@ -66,7 +66,7 @@ public:
     // clang-format on
     {
     }
-    ~SubCommandDump();
+    ~SubCommandDump() override;
 
     bool OnSubCommand(std::vector<std::string> &args) override;
     bool ParseOption(std::vector<std::string> &args) override;

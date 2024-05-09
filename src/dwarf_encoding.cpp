@@ -66,11 +66,11 @@ uint64_t DwarfEncoding::GetValue() const
 
 uint64_t DwarfEncoding::GetAppliedValue() const
 {
-    if ((Application() & DW_EH_PE_DATAREL) == DW_EH_PE_DATAREL) {
+    if ((Application() & DW_EH_PE_datarel) == DW_EH_PE_datarel) {
         return value_[0] + vaddrBase_;
-    } else if ((Application() & DW_EH_PE_TEXTREL) == DW_EH_PE_TEXTREL) {
+    } else if ((Application() & DW_EH_PE_textrel) == DW_EH_PE_textrel) {
         return value_[0] + vaddrText_;
-    } else if ((Application() & DW_EH_PE_PCREL) == DW_EH_PE_PCREL) {
+    } else if ((Application() & DW_EH_PE_pcrel) == DW_EH_PE_pcrel) {
         return value_[0] + vaddrPC_;
     }
     HLOGM("Application is empty");
@@ -80,7 +80,7 @@ uint64_t DwarfEncoding::GetAppliedValue() const
 
 bool DwarfEncoding::IsOmit() const
 {
-    return (dw_ == DW_EH_PE_OMIT);
+    return (dw_ == DW_EH_PE_omit);
 }
 
 dw_encode_t DwarfEncoding::Format() const
@@ -94,17 +94,17 @@ dw_encode_t DwarfEncoding::Application() const
 uint64_t DwarfEncoding::ReadValue(const unsigned char *&data) const
 {
     switch (Format()) {
-        case DW_EH_PE_UDATA2:
+        case DW_EH_PE_udata2:
             return dwReadAnyTypeData(data, uint16_t());
-        case DW_EH_PE_UDATA4:
+        case DW_EH_PE_udata4:
             return dwReadAnyTypeData(data, uint32_t());
-        case DW_EH_PE_UDATA8:
+        case DW_EH_PE_udata8:
             return dwReadAnyTypeData(data, uint64_t());
-        case DW_EH_PE_SDATA2:
+        case DW_EH_PE_sdata2:
             return dwReadAnyTypeData(data, int16_t());
-        case DW_EH_PE_SDATA4:
+        case DW_EH_PE_sdata4:
             return dwReadAnyTypeData(data, int32_t());
-        case DW_EH_PE_SDATA8:
+        case DW_EH_PE_sdata8:
             return dwReadAnyTypeData(data, int64_t());
         default:
             return -1;
@@ -113,25 +113,25 @@ uint64_t DwarfEncoding::ReadValue(const unsigned char *&data) const
 const std::string DwarfEncoding::FormatName() const
 {
     switch (Format()) {
-        case DW_EH_PE_ABSPTR:
+        case DW_EH_PE_absptr:
             return "DW_EH_PE_absptr";
-        case DW_EH_PE_ULEB128:
+        case DW_EH_PE_uleb128:
             return "DW_EH_PE_uleb128";
-        case DW_EH_PE_UDATA2:
+        case DW_EH_PE_udata2:
             return "DW_EH_PE_udata2";
-        case DW_EH_PE_UDATA4:
+        case DW_EH_PE_udata4:
             return "DW_EH_PE_udata4";
-        case DW_EH_PE_UDATA8:
+        case DW_EH_PE_udata8:
             return "DW_EH_PE_udata8";
-        case DW_EH_PE_SLEB128:
+        case DW_EH_PE_sleb128:
             return "DW_EH_PE_sleb128";
-        case DW_EH_PE_SDATA2:
+        case DW_EH_PE_sdata2:
             return "DW_EH_PE_sdata2";
-        case DW_EH_PE_SDATA4:
+        case DW_EH_PE_sdata4:
             return "DW_EH_PE_sdata4";
-        case DW_EH_PE_SDATA8:
+        case DW_EH_PE_sdata8:
             return "DW_EH_PE_sdata8";
-        case DW_EH_PE_OMIT:
+        case DW_EH_PE_omit:
             return "DW_EH_PE_omit";
         default:
             return "unknown format";
@@ -140,19 +140,19 @@ const std::string DwarfEncoding::FormatName() const
 const std::string DwarfEncoding::ApplicationName() const
 {
     switch (Application()) {
-        case DW_EH_PE_PCREL:
+        case DW_EH_PE_pcrel:
             return "DW_EH_PE_pcrel";
-        case DW_EH_PE_TEXTREL:
+        case DW_EH_PE_textrel:
             return "DW_EH_PE_textrel";
-        case DW_EH_PE_DATAREL:
+        case DW_EH_PE_datarel:
             return "DW_EH_PE_datarel";
-        case DW_EH_PE_FUNCREL:
+        case DW_EH_PE_funcrel:
             return "DW_EH_PE_funcrel";
-        case DW_EH_PE_ALIGNED:
+        case DW_EH_PE_aligned:
             return "DW_EH_PE_aligned";
-        case DW_EH_PE_OMIT:
+        case DW_EH_PE_omit:
             return "DW_EH_PE_omit";
-        case DW_EH_PE_NOTHING:
+        case DW_EH_PE_nothing:
             return "DW_EH_PE_empty";
         default:
             return "unknown format";

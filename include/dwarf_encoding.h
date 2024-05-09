@@ -42,46 +42,46 @@ using dw_encode_t = unsigned char; // 4 bits + 4 bits
 // Table 10-5. DWARF Exception Header value format
 
 enum DW_EH_PE_VF {
-    DW_EH_PE_ABSPTR = 0x00,  // a literal pointer whose size is determined by the architecture.
-    DW_EH_PE_ULEB128 = 0x01, // Unsigned value is encoded using the Little Endian Base 128 (LEB128)
-    DW_EH_PE_UDATA2 = 0x02,  // A 2 bytes unsigned value.
-    DW_EH_PE_UDATA4 = 0x03,  // A 4 bytes unsigned value.
-    DW_EH_PE_UDATA8 = 0x04,  // An 8 bytes unsigned value.
-    DW_EH_PE_SLEB128 = 0x09, // Signed value is encoded using the Little Endian Base 128(LEB128)
-    DW_EH_PE_SDATA2 = 0x0A,  // A 2 bytes signed value.
-    DW_EH_PE_SDATA4 = 0x0B,  // A 4 bytes signed value.
-    DW_EH_PE_SDATA8 = 0x0C,  // An 8 bytes signed value.
+    DW_EH_PE_absptr = 0x00,  // a literal pointer whose size is determined by the architecture.
+    DW_EH_PE_uleb128 = 0x01, // Unsigned value is encoded using the Little Endian Base 128 (LEB128)
+    DW_EH_PE_udata2 = 0x02,  // A 2 bytes unsigned value.
+    DW_EH_PE_udata4 = 0x03,  // A 4 bytes unsigned value.
+    DW_EH_PE_udata8 = 0x04,  // An 8 bytes unsigned value.
+    DW_EH_PE_sleb128 = 0x09, // Signed value is encoded using the Little Endian Base 128(LEB128)
+    DW_EH_PE_sdata2 = 0x0A,  // A 2 bytes signed value.
+    DW_EH_PE_sdata4 = 0x0B,  // A 4 bytes signed value.
+    DW_EH_PE_sdata8 = 0x0C,  // An 8 bytes signed value.
 };
 
 // Table 10-6. DWARF Exception Header application
 enum DW_EH_PE_A {
-    DW_EH_PE_NOTHING = 0x00, // nothing to do
-    DW_EH_PE_PCREL = 0x10,   // relative to the current program counter.
-    DW_EH_PE_TEXTREL = 0x20, // relative to the beginning of the .text section.
-    DW_EH_PE_DATAREL = 0x30, // relative to the beginning of the .got or .eh_frame_hdr section.
-    DW_EH_PE_FUNCREL = 0x40, // relative to the beginning of the function.
-    DW_EH_PE_ALIGNED = 0x50, // aligned to an address unit sized boundary.
-    DW_EH_PE_OMIT = 0xff,    // indicate that no value is present.
+    DW_EH_PE_nothing = 0x00, // nothing to do
+    DW_EH_PE_pcrel = 0x10,   // relative to the current program counter.
+    DW_EH_PE_textrel = 0x20, // relative to the beginning of the .text section.
+    DW_EH_PE_datarel = 0x30, // relative to the beginning of the .got or .eh_frame_hdr section.
+    DW_EH_PE_funcrel = 0x40, // relative to the beginning of the function.
+    DW_EH_PE_aligned = 0x50, // aligned to an address unit sized boundary.
+    DW_EH_PE_omit = 0xff,    // indicate that no value is present.
 };
 
 const std::map<dw_encode_t, size_t> DWFormatSizeMap = {
 #ifdef ARM
-    {DW_EH_PE_ABSPTR, 4},
+    {DW_EH_PE_absptr, 4},
 #else
-    {DW_EH_PE_ABSPTR, 8},
+    {DW_EH_PE_absptr, 8},
 #endif
 #ifdef NOT_USE
-    {DW_EH_PE_ULEB128, sizeof(char) * 128},
+    {DW_EH_PE_uleb128, sizeof(char) * 128},
 #endif
-    {DW_EH_PE_UDATA2, sizeof(char) * 2},
-    {DW_EH_PE_UDATA4, sizeof(char) * 4},
-    {DW_EH_PE_UDATA8, sizeof(char) * 8},
+    {DW_EH_PE_udata2, sizeof(char) * 2},
+    {DW_EH_PE_udata4, sizeof(char) * 4},
+    {DW_EH_PE_udata8, sizeof(char) * 8},
 #ifdef NOT_USE
-    {DW_EH_PE_SLEB128, sizeof(char) * 128},
+    {DW_EH_PE_sleb128, sizeof(char) * 128},
 #endif
-    {DW_EH_PE_SDATA2, sizeof(char) * 2},
-    {DW_EH_PE_SDATA4, sizeof(char) * 4},
-    {DW_EH_PE_SDATA8, sizeof(char) * 8},
+    {DW_EH_PE_sdata2, sizeof(char) * 2},
+    {DW_EH_PE_sdata4, sizeof(char) * 4},
+    {DW_EH_PE_sdata8, sizeof(char) * 8},
 };
 
 template<class T>

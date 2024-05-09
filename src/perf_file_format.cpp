@@ -19,7 +19,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static const std::vector<std::string> extFeatureNames = {
+static const std::vector<std::string> EXT_FEATURE_NAMES = {
     "hiperf_files_symbol",
     "hiperf_workloader_cmd",
     "hiperf_record_time",
@@ -27,7 +27,7 @@ static const std::vector<std::string> extFeatureNames = {
     "hiperf_hm_devhost",
     "hiperf_stack_table",
 };
-static const std::vector<std::string> featureNames = {
+static const std::vector<std::string> FEATURE_NAMES = {
     "unknown_feature", "tracing_data", "build_id",     "hostname",     "osrelease",
     "version",         "arch",         "nrcpus",       "cpudesc",      "cpuid",
     "total_mem",       "cmdline",      "event_desc",   "cpu_topology", "numa_topology",
@@ -44,15 +44,15 @@ std::string PerfFileSection::GetFeatureName(FEATURE featureId)
     unsigned int index = static_cast<unsigned int>(featureId);
     if (featureId >= FEATURE::HIPERF_FIRST_FEATURE) {
         index -= static_cast<unsigned int>(FEATURE::HIPERF_FIRST_FEATURE);
-        if (index >= extFeatureNames.size()) {
-            return featureNames[0];
+        if (index >= EXT_FEATURE_NAMES.size()) {
+            return FEATURE_NAMES[0];
         }
-        return extFeatureNames[index];
+        return EXT_FEATURE_NAMES[index];
     } else {
-        if (index >= featureNames.size()) {
-            return featureNames[0];
+        if (index >= FEATURE_NAMES.size()) {
+            return FEATURE_NAMES[0];
         }
-        return featureNames[index];
+        return FEATURE_NAMES[index];
     }
 }
 
