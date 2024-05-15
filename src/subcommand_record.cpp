@@ -58,7 +58,6 @@ const std::string PERF_EVENT_MAX_SAMPLE_RATE = "/proc/sys/kernel/perf_event_max_
 const std::string PERF_EVENT_MLOCK_KB = "/proc/sys/kernel/perf_event_mlock_kb";
 const std::string SCHED_SWITCH = "/sys/kernel/tracing/events/sched/sched_switch/enable";
 const std::string SCHED_SWITCH_DEBUG = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
-const std::string SCHED_SWITCH_HM = "/sys/kernel/tracing/hongmeng/events/sched/sched_switch/enable";
 const std::string PROC_VERSION = "/proc/version";
 const std::string SAVED_CMDLINES_SIZE = "/sys/kernel/tracing/saved_cmdlines_size";
 
@@ -741,9 +740,6 @@ bool SubCommandRecord::TraceOffCpu()
     // whether system support sched_switch event
     int enable = -1;
     std::string node = SCHED_SWITCH;
-    if (isHM_) {
-        node = SCHED_SWITCH_HM;
-    }
     const std::string nodeDebug = SCHED_SWITCH_DEBUG;
     if (!ReadIntFromProcFile(node.c_str(), enable) and
         !ReadIntFromProcFile(nodeDebug.c_str(), enable)) {
