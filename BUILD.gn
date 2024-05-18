@@ -165,10 +165,6 @@ if (hiperf_target_static) {
   common_deps -= [ ":support_protobuf" ]
 }
 
-if (hiperf_use_libunwind) {
-  common_deps += [ ":support_libunwind" ]
-}
-
 config("hiperf_syspara_config") {
   defines = [ "CONFIG_HAS_SYSPARA" ]
 }
@@ -249,22 +245,6 @@ ohos_source_set("hiperf_platform_linux") {
 
 config("libunwind_config") {
   defines = [ "HAVE_LIBUNWIND=1" ]
-}
-
-ohos_source_set("support_libunwind") {
-  part_name = "hiperf"
-  subsystem_name = "developtools"
-  public_configs = common_configs
-  public_configs += [ ":libunwind_config" ]
-  if (hiperf_target_host) {
-    public_deps = [ "//third_party/libunwind:unwind_source_${host_cpu}" ]
-  } else {
-    if (target_cpu == "arm64") {
-      public_deps = [ "//third_party/libunwind:unwind_source_arm64_opt" ]
-    } else {
-      public_deps = [ "//third_party/libunwind:unwind_source_${target_cpu}" ]
-    }
-  }
 }
 
 config("elf_config") {
