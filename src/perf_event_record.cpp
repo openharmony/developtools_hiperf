@@ -430,7 +430,7 @@ void PerfRecordSample::DumpData(int indent) const
         PRINT_INDENT(indent, "time %llu\n", data_.time);
     }
     if (sampleType_ & PERF_SAMPLE_ADDR) {
-        PRINT_INDENT(indent, "addr %p\n", reinterpret_cast<void *>(data_.addr));
+        PRINT_INDENT(indent, "addr hide\n");
     }
     if (sampleType_ & PERF_SAMPLE_STREAM_ID) {
         PRINT_INDENT(indent, "stream_id %" PRIu64 "\n", static_cast<uint64_t>(data_.stream_id));
