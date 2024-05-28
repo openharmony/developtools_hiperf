@@ -171,6 +171,9 @@ PerfEventRecord::PerfEventRecord(perf_event_hiperf_ext_type type, const std::str
 PerfEventRecord::PerfEventRecord(uint8_t *p, const std::string &name) : name_(name)
 {
     if (p == nullptr) {
+        header.type = PERF_RECORD_MMAP;
+        header.misc = PERF_RECORD_MISC_USER;
+        header.size = 0;
         return;
     }
     header = *(reinterpret_cast<perf_event_header *>(p));
