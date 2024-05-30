@@ -284,9 +284,7 @@ ohos_source_set("support_protobuf") {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
 
-  sources = [
-    "./src/report_protobuf_file.cpp",
-  ]
+  sources = [ "./src/report_protobuf_file.cpp" ]
 }
 
 #protobuf {
@@ -324,9 +322,7 @@ host_protoc_path =
     root_out_dir + host_out_path + "/" + protoc_subsystem_out_path + "/protoc"
 
 action("hiperf_host_build_proto") {
-  deps = [
-    "//third_party/protobuf:protoc(//build/toolchain/linux:clang_x64)",
-  ]
+  deps = [ "//third_party/protobuf:protoc(//build/toolchain/linux:clang_x64)" ]
   args = []
   outputs = proto_file_codegen
   sources = []
@@ -358,12 +354,8 @@ ohos_source_set("proto_file_cpp") {
   subsystem_name = "developtools"
   cflags = []
 
-  deps = [
-    ":hiperf_host_build_proto",
-  ]
-  public_deps = [
-    "//third_party/protobuf:protobuf_lite_static",
-  ]
+  deps = [ ":hiperf_host_build_proto" ]
+  public_deps = [ "//third_party/protobuf:protobuf_lite_static" ]
 
   sources = proto_file_codegen
   public_configs = [ ":proto_file_cpp_config" ]
@@ -373,9 +365,7 @@ ohos_source_set("proto_file_cpp") {
 
 ohos_executable("hiperf") {
   install_enable = true
-  sources = [
-    "./src/main.cpp",
-  ]
+  sources = [ "./src/main.cpp" ]
   deps = [
     ":hiperf_etc",
     ":hiperf_platform_common",
@@ -401,12 +391,8 @@ ohos_executable("hiperf") {
 }
 
 ohos_executable("hiperf_host") {
-  sources = [
-    "./src/main.cpp",
-  ]
-  deps = [
-    ":hiperf_platform_common",
-  ]
+  sources = [ "./src/main.cpp" ]
+  deps = [ ":hiperf_platform_common" ]
 
   if (use_musl) {
     static_link = true
@@ -458,19 +444,13 @@ group("hiperf_etc") {
 ohos_source_set("hiperf_platform_host") {
   part_name = "hiperf"
   subsystem_name = "developtools"
-  sources = [
-    "./src/hiperf_libreport.cpp",
-  ]
-  public_deps = [
-    ":hiperf_platform_common",
-  ]
+  sources = [ "./src/hiperf_libreport.cpp" ]
+  public_deps = [ ":hiperf_platform_common" ]
   external_deps = [ "faultloggerd:unwinder_host" ]
 }
 
 ohos_shared_library("hiperf_host_lib") {
-  public_deps = [
-    ":hiperf_platform_host",
-  ]
+  public_deps = [ ":hiperf_platform_host" ]
   output_name = "hiperf_report"
 
   ldflags = [ "-static-libstdc++" ]
@@ -480,12 +460,8 @@ ohos_shared_library("hiperf_host_lib") {
 }
 
 ohos_executable("hiperf_host_lib_demo") {
-  sources = [
-    "./src/hiperf_libreport_demo.cpp",
-  ]
-  deps = [
-    ":hiperf_host_lib",
-  ]
+  sources = [ "./src/hiperf_libreport_demo.cpp" ]
+  deps = [ ":hiperf_host_lib" ]
   include_dirs = [ "${hiperf_path}/include" ]
 
   subsystem_name = "developtools"
@@ -493,12 +469,8 @@ ohos_executable("hiperf_host_lib_demo") {
 }
 
 ohos_copy("hiperf_host_python") {
-  sources = [
-    "./script",
-  ]
-  outputs = [
-    target_out_dir + "/host/",
-  ]
+  sources = [ "./script" ]
+  outputs = [ target_out_dir + "/host/" ]
 
   module_source_dir = target_out_dir + "/$target_name"
   module_install_name = ""
@@ -516,29 +488,21 @@ ohos_source_set("hiperf_code_analyze") {
 
 group("hiperf_target") {
   if (hiperf_target_host) {
-    deps = [
-      ":hiperf(${host_toolchain})",
-    ]
+    deps = [ ":hiperf(${host_toolchain})" ]
   } else {
-    deps = [
-      ":hiperf",
-    ]
+    deps = [ ":hiperf" ]
   }
 }
 
 group("hiperf_test_target") {
   testonly = true
-  deps = [
-    "test:hiperf_test",
-  ]
+  deps = [ "test:hiperf_test" ]
 }
 
 group("hiperf_target_all") {
   if (!is_emulator) {
     if (is_double_framework) {
-      deps = [
-        ":hiperf_target",
-      ]
+      deps = [ ":hiperf_target" ]
     } else {
       deps = []
       if (!use_libfuzzer) {
@@ -570,34 +534,24 @@ group("hiperf_target_all") {
 
 group("hiperf_demo") {
   if (hiperf_target_host) {
-    deps = [
-      "demo/cpp:hiperf_demo(${host_toolchain})",
-    ]
+    deps = [ "demo/cpp:hiperf_demo(${host_toolchain})" ]
   } else {
-    deps = [
-      "demo/cpp:hiperf_demo",
-    ]
+    deps = [ "demo/cpp:hiperf_demo" ]
   }
 }
 
 group("hiperf_example_cmd") {
   if (hiperf_target_host) {
-    deps = [
-      "demo/cpp:hiperf_example_cmd(${host_toolchain})",
-    ]
+    deps = [ "demo/cpp:hiperf_example_cmd(${host_toolchain})" ]
   } else {
-    deps = [
-      "demo/cpp:hiperf_example_cmd",
-    ]
+    deps = [ "demo/cpp:hiperf_example_cmd" ]
   }
 }
 
 group("hiperf_all") {
   testonly = true
   if (hiperf_code_analyze) {
-    deps = [
-      ":hiperf_code_analyze",
-    ]
+    deps = [ ":hiperf_code_analyze" ]
   } else {
     deps = [
       ":hiperf_example_cmd",
