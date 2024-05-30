@@ -716,6 +716,9 @@ void PerfEvents::LoadTracepointEventTypesFromSystem()
                     } catch (...) {
                         continue;
                     }
+                    if (isHM_ && id < MIN_HM_TRACEPOINT_EVENT_ID) {
+                        continue;
+                    }
                     auto typeConfigs = TYPE_CONFIGS.find(PERF_TYPE_TRACEPOINT);
                     HLOG_ASSERT(typeConfigs != TYPE_CONFIGS.end());
                     auto configPair = typeConfigs->second.insert(

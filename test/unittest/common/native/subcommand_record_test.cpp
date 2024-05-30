@@ -20,15 +20,15 @@
 #include <cinttypes>
 #include <sched.h>
 #include <sstream>
+#include <sys/stat.h>
+#include <sys/utsname.h>
 #include <thread>
-
 #include <poll.h>
 #include <unistd.h>
 
 #include "command.h"
 #include "debug_logger.h"
 #include "utilities.h"
-#include <sys/stat.h>
 
 using namespace std::literals::chrono_literals;
 using namespace testing::ext;
@@ -416,6 +416,13 @@ HWTEST_F(SubCommandRecordTest, PeriodAndFrequncyConflict, TestSize.Level1)
 void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk, bool isFork)
 {
     PerfEvents perfEvents;
+    utsname unameBuf;
+    bool isHM = false;
+    if ((uname(&unameBuf)) == 0) {
+        std::string osrelease = unameBuf.release;
+        isHM = osrelease.find(HMKERNEL) != std::string::npos;
+    }
+    perfEvents.SetHM(isHM);
     for (auto type : TYPE_CONFIGS) {
         auto configs = perfEvents.GetSupportEvents(type.first);
         if (configs.empty()) {

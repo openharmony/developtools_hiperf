@@ -330,6 +330,7 @@ public:
     static constexpr size_t MAX_BUFFER_SIZE_LITTLE = 128 * 1024 * 1024;
     static constexpr size_t MAX_BUFFER_SIZE_LARGE = 256 * 1024 * 1024;
     static constexpr uint64_t DEFAULT_EVENT_MAX_SAMPLE_RATE = 8000;
+    static constexpr uint64_t MIN_HM_TRACEPOINT_EVENT_ID = 32768;
 
     PerfEvents();
     ~PerfEvents();
