@@ -512,17 +512,17 @@ bool PerfEvents::StartTracking(bool immediately)
         return false;
     }
 
+    if (recordCallBack_) {
+        if (!PrepareRecordThread()) {
+            return false;
+        }
+    }
+
     HLOGD("step: 1. enable event");
     trackingStartTime_ = steady_clock::now();
     if (immediately) {
         if (!EnableTracking()) {
             HLOGE("PerfEvents::EnableTracking() failed");
-            return false;
-        }
-    }
-
-    if (recordCallBack_) {
-        if (!PrepareRecordThread()) {
             return false;
         }
     }
@@ -547,13 +547,14 @@ bool PerfEvents::StartTracking(bool immediately)
         StatLoop();
     }
 
-    HLOGD("step: 3. disable event");
-    if (!PerfEventsEnable(false)) {
-        HLOGE("PerfEvents::PerfEventsEnable() failed");
-    }
     if (recordCallBack_) {
         // read left samples after disable events
         ReadRecordsFromMmaps();
+    }
+
+    HLOGD("step: 3. disable event");
+    if (!PerfEventsEnable(false)) {
+        HLOGE("PerfEvents::PerfEventsEnable() failed");
     }
     trackingEndTime_ = steady_clock::now();
 
