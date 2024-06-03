@@ -508,12 +508,16 @@ group("hiperf_target_all") {
       if (!use_libfuzzer) {
         deps += [
           ":hiperf_host(//build/toolchain/linux:clang_x64)",  # host linux
-          ":hiperf_host(//build/toolchain/mingw:mingw_x86_64)",  # host mingw
           ":hiperf_host_lib(//build/toolchain/linux:clang_x64)",  # host linux
-          ":hiperf_host_lib(//build/toolchain/mingw:mingw_x86_64)",  # host_mingw
           ":hiperf_host_lib_demo(//build/toolchain/linux:clang_x64)",  # host_linux
           ":hiperf_host_python",
         ]
+        if (!is_tsan) {
+          deps += [
+            ":hiperf_host(//build/toolchain/mingw:mingw_x86_64)",  # host mingw
+            ":hiperf_host_lib(//build/toolchain/mingw:mingw_x86_64)",  # host_mingw
+          ]
+        }
       }
       deps += [
         ":hiperf_target",
