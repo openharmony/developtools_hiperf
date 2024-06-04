@@ -249,12 +249,14 @@ bool PerfEvents::AddEvent(const std::string &eventString, bool followGroup)
             }
         }
     } else {
-        for (auto type : TYPE_CONFIGS) {
-            for (auto config : (type.second)) {
-                if (config.second == eventName) {
-                    return AddEvent(type.first, config.first, excludeUser, excludeKernel,
-                                    followGroup);
-                }
+        if (StringStartsWith(eventName, "0x")
+            && eventName.length() <= MAX_HEX_EVENT_NAME_LENGTH && IsHexDigits(eventName)) {
+            return AddEvent(PERF_TYPE_RAW, std::stoull(eventName, nullptr, NUMBER_FORMAT_HEX_BASE),
+                            excludeUser, excludeKernel, followGroup);
+        } else {
+            auto [find, typeId, configId] = GetStaticConfigId(eventName);
+            if (find) {
+                return AddEvent(typeId, configId, excludeUser, excludeKernel, followGroup);
             }
         }
     }
