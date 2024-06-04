@@ -4782,7 +4782,7 @@ input{
             this.panel.innerHTML = '';
             let processes = json.recordSampleInfo[window.eventIndex].processes;
             processes.slice(0).forEach(it => {
-                it.threads.sort((a, b) => { return b.sampleCount - a.sampleCount });
+                it.threads.sort((a, b) => { return b.eventCount - a.eventCount });
                 it.threads.slice(0).forEach(th => {
                     let pid = it.pid;
                     let processName = json.processNameMap[it.pid];
