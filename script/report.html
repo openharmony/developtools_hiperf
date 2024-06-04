@@ -4021,6 +4021,7 @@ input{
             if (this.data) {
                 if (this.reverse) {
                     this.drawCReverse(
+                        0,
                         this.c,
                         1,
                         {
@@ -4031,6 +4032,7 @@ input{
                         });
                 } else {
                     this.drawC(
+                        0,
                         this.c,
                         1,
                         {
@@ -4042,6 +4044,13 @@ input{
                 }
             }
         };
+
+        getCount(c) {
+            let count;// 鼠标hover展示的百分比
+            count = c.subEvents;
+            count = `${count}`;
+            return count;
+        }
 
         getStatistics(c) {
             let statistics;// 鼠标hover展示的百分比
@@ -4111,13 +4120,16 @@ input{
             return heatColor;
         }
 
-        drawCReverse = (c, dept, rect) => {
+        drawCReverse = (parentEvents, c, dept, rect) => {
             let ctx = this.context;
             let offset = 0;
+            if (parentEvents === 0) {
+                parentEvents = c.reduce((acc, cur) => acc + cur.subEvents, 0);
+            }
             for (let i = 0; i < c.length; i++) {
                 let funName = this.getFunctionName(c[i].symbol);
                 let funcId = c[i].symbol;
-                let percent = c[i].subEvents * 100 / (c.reduce((acc, cur) => acc + cur.subEvents, 0));
+                let percent = c[i].subEvents * 100 / parentEvents;
                 let percent2 = c[i].subEvents * 100 / this.sumCount;
                 if (percent2 < 0.1) continue // 过滤掉 百分比为0.1一下的节点
                 let heatColor = this.getColor(percent2, funName);
@@ -4152,8 +4164,13 @@ input{
                         ctx.strokeStyle = `#000000`;
                         ctx.strokeRect(_x, rect.y + 1, w - 1, rect.h);
                         let statisticNum = this.getStatistics(c[i]);
+                        let count = this.getCount(c[i]);
                         this.funcNameSpan.textContent = funName;
-                        this.panel.title = funName + ': [' + statisticNum + ']';
+                        if (this.type === 1 || this.type === 2 || this.type === 3) {
+                            this.panel.title = funName + ': [' + count + '  ' + statisticNum + ']';
+                        } else {
+                            this.panel.title = funName + ': [' + statisticNum + ']';
+                        }
                         this.percentSpan.textContent = statisticNum;
                     } else {
                         if (this.mouseState === 'mouseUp') {
@@ -4170,17 +4187,20 @@ input{
                 // 递归绘制子节点
                 if (c[i].callStack && c[i].callStack.length > 0) {
                     _rect.y = _rect.y + _rect.h;
-                    this.drawCReverse(c[i].callStack, dept + 1, _rect);
+                    this.drawCReverse(c[i].subEvents, [i].callStack, dept + 1, _rect);
                 }
             }
         }
-        drawC = (c, dept, rect) => {
+        drawC = (parentEvents, c, dept, rect) => {
             let ctx = this.context;
             let offset = 0;
+            if (parentEvents === 0) {
+                parentEvents = c.reduce((acc, cur) => acc + cur.subEvents, 0);
+            }
             for (let i = 0; i < c.length; i++) {
                 let funName = this.getFunctionName(c[i].symbol);
                 let funcId = c[i].symbol;
-                let percent = c[i].subEvents * 100 / (c.reduce((acc, cur) => acc + cur.subEvents, 0));// sumCount;
+                let percent = c[i].subEvents * 100 / parentEvents;// sumCount;
                 let percent2 = c[i].subEvents * 100 / this.sumCount;
                 if (percent2 < 0.1) continue // 过滤掉 百分比为0.1一下的节点
                 let heatColor = this.getColor(percent2, funName);
@@ -4215,8 +4235,13 @@ input{
                         ctx.strokeStyle = `#000000`;
                         ctx.strokeRect(_x, rect.y + 1, w - 1, rect.h);
                         let statisticNum = this.getStatistics(c[i]);
+                        let count = this.getCount(c[i]);
                         this.funcNameSpan.textContent = funName;
-                        this.panel.title = funName + ': [' + statisticNum + ']';
+                        if (this.type === 1 || this.type === 2 || this.type === 3) {
+                            this.panel.title = funName + ': [' + count + '  ' + statisticNum + ']';
+                        } else {
+                            this.panel.title = funName + ': [' + statisticNum + ']';
+                        }
                         this.percentSpan.textContent = statisticNum;
                     } else {
                         if (this.mouseState === 'mouseUp') {
@@ -4233,7 +4258,7 @@ input{
                 // 递归绘制子节点
                 if (c[i].callStack && c[i].callStack.length > 0) {
                     _rect.y = _rect.y - _rect.h;
-                    this.drawC(c[i].callStack, dept + 1, _rect);
+                    this.drawC(c[i].subEvents, c[i].callStack, dept + 1, _rect);
                 }
             }
         }
@@ -4395,6 +4420,7 @@ input{
             if (json.osVersion) {
                 rows.push({key: 'OS Version', value: json.osVersion,time:''});
             }
+            rows.push({key: 'Script Version', value: '1.0.0.240604',time:''});
             if (json.deviceCommandLine) {
                 rows.push({key:'Record cmdline',value: json.deviceCommandLine,time:''});
             }
@@ -4446,7 +4472,6 @@ input{
                 this.backBt.style.borderColor = '#aaa';
                 this.backBt.style.color = '#555';
             });
-            
             this.chartMaxCount = 126;
             this.backBt.addEventListener('click',this.back.bind(this));
             this.chart.chartClickListener = (item) => {
@@ -4757,6 +4782,7 @@ input{
             this.panel.innerHTML = '';
             let processes = json.recordSampleInfo[window.eventIndex].processes;
             processes.slice(0).forEach(it => {
+                it.threads.sort((a, b) => { return b.sampleCount - a.sampleCount });
                 it.threads.slice(0).forEach(th => {
                     let pid = it.pid;
                     let processName = json.processNameMap[it.pid];
@@ -4900,9 +4926,9 @@ input{
                 }
             };
             // 合并倒树结构
-            let mergeRc = () => {
+            let mergeRc = (obj) => {
                 let rc = {};
-                let _rc = this.getNodesMatchingFuncId(filterRG, val.funId);// 将rg树中 为funId值的节点 形成一个数组
+                let _rc = this.getNodesMatchingFuncId(obj, val.funId);// 将rg树中 为funId值的节点 形成一个数组
                 let _sumCount = _rc.reduce((acc, cur) => acc + cur.subEvents, 0);// 计算eventCount值
                 let splitChildrenForNodes = (nodes) => {
                     let map = new Map();
@@ -4939,7 +4965,8 @@ input{
                 };
             }
             findF(filterG);
-            rc = mergeRc();
+            rc = mergeRc(filterRG);
+            c = mergeRc(filterG);
             this.flame1.data = {
                 pid: val.processId,
                 processName: val.processName,
@@ -5192,16 +5219,17 @@ input{
             this.pagination.addEventListener('onShowSizeChange',this.updateTableSource.bind(this));
             this.size && (this.size = this.size);
             this.color && (this.color = this.color);
+            this.ds = [];
             this.keyword.addEventListener('input',e=>{
                 if (this.searchKey !== this.keyword.value) {
                     this.searchKey = this.keyword.value;
                     this.pagination.current = 1;
-                    let ds = this.source.filter(item => item.process.indexOf(this.searchKey) !== -1
+                    this.ds = this.source.filter(item => item.process.indexOf(this.searchKey) !== -1
                         || item.thread.indexOf(this.searchKey) !== -1
                         || item.library.indexOf(this.searchKey) !== -1 || item.fun.indexOf(this.searchKey) !== -1);
-                    this.pagination.total = ds.length;
+                    this.pagination.total = this.ds.length;
                     this.table.dataSource =
-                        this.paginationHandler(this.pagination.current,parseInt(this.pagination.pageSize),ds);
+                        this.paginationHandler(this.pagination.current,parseInt(this.pagination.pageSize),this.ds);
                 }
             });
             this.keyword.addEventListener('onClear',e=>{
@@ -5253,7 +5281,14 @@ input{
                 this.eventType.value = e.detail.value;
                 this.suffix = e.detail.value === '3' ? '(in ms)' : '';
             }
-            this.table.dataSource = this.paginationHandler(this.pagination.current,parseInt(this.pagination.pageSize));
+            if (this.ds.length !== 0) {
+                this.pagination.total = this.ds.length;
+                this.table.dataSource =
+                    this.paginationHandler(this.pagination.current,parseInt(this.pagination.pageSize),this.ds);
+            } else {
+                this.table.dataSource =
+                    this.paginationHandler(this.pagination.current,parseInt(this.pagination.pageSize));
+            }
         }
 
         attributeChangedCallback(name, oldValue, newValue) {
