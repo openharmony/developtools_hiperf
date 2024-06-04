@@ -474,7 +474,7 @@ public:
             }
         }
         return std::make_tuple(false, PERF_TYPE_MAX, 0);
-    }
+    };
 
     const std::string GetTraceConfigName(__u64 config_id)
     {
