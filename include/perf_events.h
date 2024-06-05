@@ -331,6 +331,7 @@ public:
     static constexpr size_t MAX_BUFFER_SIZE_LARGE = 256 * 1024 * 1024;
     static constexpr uint64_t DEFAULT_EVENT_MAX_SAMPLE_RATE = 8000;
     static constexpr uint64_t MIN_HM_TRACEPOINT_EVENT_ID = 32768;
+    static constexpr size_t MAX_HEX_EVENT_NAME_LENGTH = 10;
 
     PerfEvents();
     ~PerfEvents();
@@ -461,6 +462,18 @@ public:
             HLOGW("type not found for %d  in %zu", type_id, TYPE_CONFIGS.size());
         }
         return "<not found>";
+    };
+
+    static const std::tuple<bool, perf_type_id, __u64> GetStaticConfigId(const std::string &event_name)
+    {
+        for (auto type : TYPE_CONFIGS) {
+            for (auto config : (type.second)) {
+                if (config.second == event_name) {
+                    return std::make_tuple(true, type.first, config.first);
+                }
+            }
+        }
+        return std::make_tuple(false, PERF_TYPE_MAX, 0);
     };
 
     const std::string GetTraceConfigName(__u64 config_id)
