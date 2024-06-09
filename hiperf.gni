@@ -30,6 +30,7 @@ declare_args() {
   hiperf_use_libunwinder = true
   hiperf_debug = true
   hiperf_code_analyze = false
+  hiperf_spe = false
   hiperf_use_syspara = true
   bundle_framework_enable = false
   ability_base_enable = false
