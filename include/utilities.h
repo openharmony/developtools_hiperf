@@ -307,7 +307,7 @@ bool IsAllowProfilingUid();
 bool IsHiviewCall();
 bool PowerOfTwo(uint64_t n);
 
-const std::string HMKERNEL = "hmkernel";
+const std::string HMKERNEL = "HongMeng";
 
 #define PRINT_INDENT(indent, format, ...)                                                          \
     if (indent >= 0) {                                                                             \
