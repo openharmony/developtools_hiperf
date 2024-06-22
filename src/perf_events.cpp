@@ -1094,7 +1094,7 @@ bool PerfEvents::CreateMmap(const FdItem &item, const perf_event_attr &attr)
         if (rbuf == MMAP_FAILED) {
             char errInfo[ERRINFOLEN] = {0};
             strerror_r(errno, errInfo, ERRINFOLEN);
-            perror("errno:%d, errstr:%s", errno, errInfo);
+            perror("errno: %d, errstr: %s", errno, errInfo);
             perror("Fail to call mmap \n");
             return false;
         }
