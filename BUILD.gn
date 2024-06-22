@@ -322,7 +322,9 @@ host_protoc_path =
     root_out_dir + host_out_path + "/" + protoc_subsystem_out_path + "/protoc"
 
 action("hiperf_host_build_proto") {
-  deps = [ "//third_party/protobuf:protoc(//build/toolchain/linux:clang_x64)" ]
+  deps = [
+    "//third_party/protobuf:protoc(//build/toolchain/linux:clang_${host_cpu})",
+  ]
   args = []
   outputs = proto_file_codegen
   sources = []
@@ -507,9 +509,9 @@ group("hiperf_target_all") {
       deps = []
       if (!use_libfuzzer) {
         deps += [
-          ":hiperf_host(//build/toolchain/linux:clang_x64)",  # host linux
-          ":hiperf_host_lib(//build/toolchain/linux:clang_x64)",  # host linux
-          ":hiperf_host_lib_demo(//build/toolchain/linux:clang_x64)",  # host_linux
+          ":hiperf_host(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
+          ":hiperf_host_lib(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
+          ":hiperf_host_lib_demo(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
           ":hiperf_host_python",
         ]
         if (!is_tsan) {
