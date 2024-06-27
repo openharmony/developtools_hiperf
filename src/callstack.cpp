@@ -545,7 +545,8 @@ size_t CallStack::DoExpandCallStack(std::vector<DfxFrame> &newCallFrames,
     int maxCycle = 0;
 
     if (expandLimit == 0 or newCallFrames.size() < expandLimit or
-        cachedCallFrames.size() < expandLimit) {
+        cachedCallFrames.size() < expandLimit or
+        cachedCallFrames.size() >= MAX_CALL_FRAME_UNWIND_SIZE) {
         HLOGM("expandLimit %zu not match new %zu cache %zu", expandLimit, newCallFrames.size(),
               cachedCallFrames.size());
         return 0; // size not enough
