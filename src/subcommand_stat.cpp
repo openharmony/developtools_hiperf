@@ -277,7 +277,7 @@ void SubCommandStat::ReportDetailInfos(
                                                             it, configName);
             perMaps[perKey]->eventCountSum += it.eventCount;
             if (it.timeRunning < it.timeEnabled && it.timeRunning != 0) {
-                perMaps[perKey]->scaleSum += 1 / (static_cast<double>(it.timeEnabled) / it.timeRunning);
+                perMaps[perKey]->scaleSum = 1 / (static_cast<double>(it.timeEnabled) / it.timeRunning);
             }
         }
         for (auto iper = perMaps.begin(); iper != perMaps.end(); iper++) {
