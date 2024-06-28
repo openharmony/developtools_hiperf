@@ -90,7 +90,11 @@ void SubCommandStatTest::TestCodeThread(int &tid)
     std::vector<std::unique_ptr<char[]>> mems;
     tid = gettid();
     printf("TestCodeThread:%d ++\n", tid);
+#if defined(__aarch64__)
+    constexpr int sleepTime {2000};
+#else
     constexpr int sleepTime {500};
+#endif
     const int sum = 10;
     const int num = 2;
     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
