@@ -797,8 +797,10 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
 
 bool IsArkJsFile(const std::string& filepath)
 {
-    return (StringEndsWith(filepath, ".hap") || StringEndsWith(filepath, ".hsp") ||
-            StringStartsWith(filepath, "[anon:ArkTS Code"));
+    return (StringEndsWith(filepath, ".hap") ||
+            StringStartsWith(filepath, "[anon:ArkTS Code") ||
+            StringEndsWith(filepath, ".hsp") ||
+            StringEndsWith(filepath, ".abc"));
 }
 
 bool IsHiviewCall()
