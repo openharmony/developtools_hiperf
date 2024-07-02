@@ -16,6 +16,8 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <condition_variable>
+#include <mutex>
 #include <regex>
 #include <sstream>
 #include <thread>
@@ -67,7 +69,14 @@ public:
 
     const int defaultRunTimeoutMs = 4100;
     const std::string timeReportStr = "Report at ";
+    static std::mutex mtx;
+    static std::condition_variable cv;
+    static bool needWait;
 };
+
+std::mutex SubCommandStatTest::mtx;
+std::condition_variable SubCommandStatTest::cv;
+bool SubCommandStatTest::needWait = true;
 
 void SubCommandStatTest::SetUpTestCase() {}
 
@@ -87,17 +96,13 @@ void SubCommandStatTest::TearDown()
 
 void SubCommandStatTest::TestCodeThread(int &tid)
 {
+    bool wait = needWait;
     std::vector<std::unique_ptr<char[]>> mems;
     tid = gettid();
     printf("TestCodeThread:%d ++\n", tid);
-#if defined(__aarch64__)
-    constexpr int sleepTime {2000};
-#else
-    constexpr int sleepTime {500};
-#endif
+
     const int sum = 10;
     const int num = 2;
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 
     constexpr size_t memSize {1024};
     for (uint i = 0; i < sum * memSize; i++) {
@@ -111,8 +116,10 @@ void SubCommandStatTest::TestCodeThread(int &tid)
     for (uint i = 0; i < sum * memSize; i++) {
         mems.pop_back();
     }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(num * sleepTime));
+    if (wait) {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock);
+    }
     printf("TestCodeThread:%d --\n", tid);
 }
 
@@ -361,6 +368,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a4, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
 
     printf("wait child thread run.\n");
@@ -387,6 +395,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
 
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
@@ -415,6 +427,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_c1, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -431,7 +444,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c1, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -452,6 +468,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c1, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_c2, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -468,7 +485,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c2, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -515,6 +535,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c3, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_c4, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -551,6 +572,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c4, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_c5, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -587,6 +609,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c5, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -603,7 +626,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -623,6 +649,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -657,6 +684,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_p1, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -691,6 +719,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p1, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -725,6 +754,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -759,6 +789,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_aa, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -818,6 +849,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d1, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_d2, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -853,6 +885,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d2, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_d3, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -888,6 +921,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d3, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -904,6 +938,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
 
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
@@ -924,6 +962,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -940,7 +979,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -964,6 +1006,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -980,7 +1023,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1002,6 +1048,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_i2, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1037,6 +1084,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i2, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_i3, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1072,6 +1120,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i3, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1088,7 +1137,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1110,6 +1162,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_e, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1126,7 +1179,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1145,6 +1201,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_e1, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1161,7 +1218,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e1, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1180,6 +1240,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e1, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1196,7 +1257,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1215,6 +1279,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1231,7 +1296,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1250,6 +1318,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_e4, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1284,6 +1353,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e4, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1302,7 +1372,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     const std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1326,6 +1399,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1343,7 +1417,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     const std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1366,6 +1443,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1383,7 +1461,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     const std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1406,6 +1487,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_g3, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = false;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1442,6 +1524,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g3, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1460,7 +1543,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1487,6 +1573,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t, TestSize.Level1)
 {
     int tid1 = 0;
     int tid2 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     std::thread t2(SubCommandStatTest::TestCodeThread, std::ref(tid2));
 
@@ -1511,7 +1598,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1533,6 +1623,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t1, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1553,7 +1644,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t1, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1637,6 +1731,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t3, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
 
     printf("wait child thread run.\n");
@@ -1659,7 +1754,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1679,6 +1777,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
 
     printf("wait child thread run.\n");
@@ -1701,7 +1800,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
@@ -1720,6 +1822,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level1)
 {
     int tid1 = 0;
+    SubCommandStatTest::needWait = true;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
 
     printf("wait child thread run.\n");
@@ -1742,7 +1845,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level1)
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
