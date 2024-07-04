@@ -200,7 +200,7 @@ void Report::AdjustReportItems()
         std::sort(config.reportItems_.begin(), config.reportItems_.end(),
                   [this] (const ReportItem &a, const ReportItem &b) -> bool {
                     return this->MultiLevelSorting(std::move(a), std::move(b));
-                  });
+        });
         HLOGD("MultiLevelSorting %" PRIu64 " done", totalReportCount);
         // reorder the callstack
         if (option_.debug_) {

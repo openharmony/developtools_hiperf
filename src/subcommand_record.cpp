@@ -911,7 +911,7 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     if (dedupStack_) {
         virtualRuntime_.SetDedupStack();
         auto collectSymbol = [this](PerfRecordSample *sample) {
-            this->SaveRecord((std::unique_ptr<PerfEventRecord>)sample, false);
+            this->CollectSymbol((std::unique_ptr<PerfEventRecord>)sample, false);
         };
         virtualRuntime_.SetCollectSymbolCallBack(collectSymbol);
     }
