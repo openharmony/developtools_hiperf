@@ -774,7 +774,6 @@ void SubCommandRecord::RecoverSavedCmdlinesSize()
 bool SubCommandRecord::PreparePerfEvent()
 {
     // we need to notify perfEvents_ sampling mode by SetRecordCallBack first
-    // auto processRecord = std::bind(&SubCommandRecord::ProcessRecord, this, std::placeholders::_1);
     auto processRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
         return this->ProcessRecord(std::move(record));
     };
@@ -876,7 +875,6 @@ bool SubCommandRecord::PrepareSysKernel()
 
 bool SubCommandRecord::PrepareVirtualRuntime()
 {
-    // auto saveRecord = std::bind(&SubCommandRecord::SaveRecord, this, std::placeholders::_1, false);
     auto saveRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
         return this->SaveRecord(std::move(record), false);
     };
