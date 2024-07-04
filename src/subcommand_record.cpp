@@ -913,7 +913,6 @@ bool SubCommandRecord::PrepareVirtualRuntime()
         auto collectSymbol = [this](PerfRecordSample *sample) {
             this->SaveRecord((std::unique_ptr<PerfEventRecord>)sample, false);
         };
-            // std::bind(&SubCommandRecord::CollectSymbol, this, std::placeholders::_1);
         virtualRuntime_.SetCollectSymbolCallBack(collectSymbol);
     }
     return true;
@@ -1719,9 +1718,8 @@ bool SubCommandRecord::FinishWriteRecordFile()
             virtualRuntime_.CollectDedupSymbol(kernelSymbolsHits_, userSymbolsHits_);
         } else {
             fileWriter_->ReadDataSection(
-                // std::bind(&SubCommandRecord::CollectionSymbol, this, std::placeholders::_1));
                 [this] (std::unique_ptr<PerfEventRecord> record) -> bool {
-                        return this->CollectionSymbol(std::move(record));
+                    return this->CollectionSymbol(std::move(record));
                 });
         }
 #if USE_COLLECT_SYMBOLIC

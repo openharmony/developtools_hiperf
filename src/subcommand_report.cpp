@@ -485,7 +485,6 @@ bool SubCommandReport::LoadPerfData()
         [this] (std::unique_ptr<PerfEventRecord> record) -> bool {
             return this->RecordCallBack(std::move(record));
         });
-        // std::bind(&SubCommandReport::RecordCallBack, this, std::placeholders::_1));
     if (cpuOffMode_) {
         FlushCacheRecord();
     }
