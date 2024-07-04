@@ -69,7 +69,10 @@ int main()
     if (myHiperf.Start(opt)) {
         printf("demo start successfully\n");
     }
-    std::thread workload(TestCodeThread, 0);
+    auto it = []() {
+        TestCodeThread(0);
+    }
+    std::thread workload(it);
     sleep(waitTime);
     // try for each thread times
     for (int i = 0; i < countTry; i++) {
