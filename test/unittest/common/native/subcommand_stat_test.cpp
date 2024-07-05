@@ -36,7 +36,7 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-std::atomic<bool> wait_g = true;
+static std::atomic<bool> wait_g = true;
 class SubCommandStatTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
