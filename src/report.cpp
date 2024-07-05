@@ -121,7 +121,9 @@ void Report::StatisticsRecords()
         // merge duplicate
         HLOGD("uniquing %zu", totalReportCount);
         auto last = std::unique(config.reportItems_.begin(), config.reportItems_.end(),
-                                std::bind(&Report::MultiLevelSameAndUpdateCount, this, _1, _2));
+            [this] (ReportItem &l, ReportItem &r) -> bool {
+                return this->MultiLevelSameAndUpdateCount(l, r);
+            });
 
         config.reportItems_.erase(last, config.reportItems_.end());
 
@@ -196,7 +198,9 @@ void Report::AdjustReportItems()
         // sort first.
         HLOGD("MultiLevelSorting %" PRIu64 "", totalReportCount);
         std::sort(config.reportItems_.begin(), config.reportItems_.end(),
-                  std::bind(&Report::MultiLevelSorting, this, _1, _2));
+            [this] (const ReportItem &a, const ReportItem &b) -> bool {
+                return this->MultiLevelSorting(a, b);
+            });
         HLOGD("MultiLevelSorting %" PRIu64 " done", totalReportCount);
         // reorder the callstack
         if (option_.debug_) {

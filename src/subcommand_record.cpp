@@ -774,7 +774,9 @@ void SubCommandRecord::RecoverSavedCmdlinesSize()
 bool SubCommandRecord::PreparePerfEvent()
 {
     // we need to notify perfEvents_ sampling mode by SetRecordCallBack first
-    auto processRecord = std::bind(&SubCommandRecord::ProcessRecord, this, std::placeholders::_1);
+    auto processRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
+        return this->ProcessRecord(std::move(record));
+    };
     perfEvents_.SetRecordCallBack(processRecord);
 
     perfEvents_.SetCpu(selectCpus_);
@@ -873,7 +875,9 @@ bool SubCommandRecord::PrepareSysKernel()
 
 bool SubCommandRecord::PrepareVirtualRuntime()
 {
-    auto saveRecord = std::bind(&SubCommandRecord::SaveRecord, this, std::placeholders::_1, false);
+    auto saveRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
+        return this->SaveRecord(std::move(record), false);
+    };
     virtualRuntime_.SetRecordMode(saveRecord);
 
     // do some config for virtualRuntime_
@@ -906,8 +910,9 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     }
     if (dedupStack_) {
         virtualRuntime_.SetDedupStack();
-        auto collectSymbol =
-            std::bind(&SubCommandRecord::CollectSymbol, this, std::placeholders::_1);
+        auto collectSymbol = [this](PerfRecordSample *sample) {
+            this->CollectSymbol(std::move(sample));
+        };
         virtualRuntime_.SetCollectSymbolCallBack(collectSymbol);
     }
     return true;
@@ -1713,7 +1718,9 @@ bool SubCommandRecord::FinishWriteRecordFile()
             virtualRuntime_.CollectDedupSymbol(kernelSymbolsHits_, userSymbolsHits_);
         } else {
             fileWriter_->ReadDataSection(
-                std::bind(&SubCommandRecord::CollectionSymbol, this, std::placeholders::_1));
+                [this] (std::unique_ptr<PerfEventRecord> record) -> bool {
+                    return this->CollectionSymbol(std::move(record));
+                });
         }
 #if USE_COLLECT_SYMBOLIC
         SymbolicHits();
