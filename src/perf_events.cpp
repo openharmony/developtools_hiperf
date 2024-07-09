@@ -549,14 +549,13 @@ bool PerfEvents::StartTracking(bool immediately)
         StatLoop();
     }
 
-    if (recordCallBack_) {
-        // read left samples after disable events
-        ReadRecordsFromMmaps();
-    }
-
     HLOGD("step: 3. disable event");
     if (!PerfEventsEnable(false)) {
         HLOGE("PerfEvents::PerfEventsEnable() failed");
+    }
+    if (recordCallBack_) {
+        // read left samples after disable events
+        ReadRecordsFromMmaps();
     }
     trackingEndTime_ = steady_clock::now();
 
