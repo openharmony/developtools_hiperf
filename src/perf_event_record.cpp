@@ -15,6 +15,7 @@
 #define HILOG_TAG "PerfRecord"
 
 #include "perf_event_record.h"
+#include "spe_decoder.h"
 #include <cinttypes>
 
 #include "utilities.h"
@@ -59,6 +60,8 @@ std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
             return std::make_unique<PerfRecordRead>(data);
         case PERF_RECORD_AUX:
             return std::make_unique<PerfRecordAux>(data);
+        case PERF_RECORD_AUXTRACE:
+            return std::make_unique<PerfRecordAuxtrace>(data);
         case PERF_RECORD_ITRACE_START:
             return std::make_unique<PerfRecordItraceStart>(data);
         case PERF_RECORD_LOST_SAMPLES:
@@ -215,6 +218,77 @@ void PerfEventRecord::DumpLog(const std::string &prefix) const
 std::vector<u64> PerfRecordSample::ips_ = {};
 std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
 std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
+
+PerfRecordAuxtrace::PerfRecordAuxtrace(uint8_t *p) : PerfEventRecord(p, "auxtrace")
+{
+    size_t copySize = header.size - sizeof(header);
+    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+        HLOGE("memcpy_s return failed!!!");
+    }
+    rawData_ = p + header.size;
+}
+
+PerfRecordAuxtrace::PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid)
+    : PerfEventRecord(PERF_RECORD_AUXTRACE, "auxtrace")
+{
+    data_.size = size;
+    data_.offset = offset;
+    data_.reference = reference;
+    data_.idx = idx;
+    data_.tid = tid;
+    data_.cpu = cpu;
+    data_.reserved__ = pid;
+
+    header.size = sizeof(header) + sizeof(data_);
+}
+
+bool PerfRecordAuxtrace::GetBinary1(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < header.size) {
+        buf.resize(header.size);
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    std::copy((uint8_t *)&data_, (uint8_t *)&data_ + header.size - GetHeaderSize(), p);
+    return true;
+}
+
+bool PerfRecordAuxtrace::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    std::copy((uint8_t *)&data_, (uint8_t *)&data_ + header.size - GetHeaderSize(), p);
+    p += header.size - GetHeaderSize();
+    std::copy((uint8_t *)rawData_, (uint8_t *)rawData_ + data_.size, p);
+    return true;
+}
+
+void PerfRecordAuxtrace::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "size 0x%llx, offset 0x%llx, reference 0x%llx, idx %u, tid %u, cpu %u, pid %u\n",
+                 data_.size, data_.offset, data_.reference, data_.idx, data_.tid, data_.cpu, data_.reserved__);
+#if defined(is_ohos) && is_ohos
+    SpeDumpRawData(rawData_, data_.size, indent, g_outputDump);
+#endif
+}
+
+void PerfRecordAuxtrace::DumpLog(const std::string &prefix) const
+{
+    HLOGV("size %llu, offset 0x%llx, reference 0x%llx, idx %u, tid %u, cpu %u\n",
+          data_.size, data_.offset, data_.reference, data_.idx, data_.tid, data_.cpu);
+}
+
+size_t PerfRecordAuxtrace::GetSize() const
+{
+    return header.size + data_.size;
+}
 
 void PerfRecordSample::DumpLog(const std::string &prefix) const
 {
@@ -436,7 +510,7 @@ void PerfRecordSample::DumpData(int indent) const
         PRINT_INDENT(indent, "time %llu\n", data_.time);
     }
     if (sampleType_ & PERF_SAMPLE_ADDR) {
-        PRINT_INDENT(indent, "addr hide\n");
+        PRINT_INDENT(indent, "addr %p\n", reinterpret_cast<void *>(data_.addr));
     }
     if (sampleType_ & PERF_SAMPLE_STREAM_ID) {
         PRINT_INDENT(indent, "stream_id %" PRIu64 "\n", static_cast<uint64_t>(data_.stream_id));
@@ -895,15 +969,24 @@ bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    auto pDest = reinterpret_cast<PerfRecordAuxData *>(p);
-    *pDest = data_;
+    PushToBinary(true, p, data_.aux_offset);
+    PushToBinary(true, p, data_.aux_size);
+    PushToBinary(true, p, data_.flags);
+    PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.sample_id.pid, data_.sample_id.tid);
+    PushToBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.sample_id.time);
+    PushToBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.sample_id.id);
+    PushToBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.sample_id.stream_id);
+
+    PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.sample_id.cpu, data_.sample_id.res);
+    PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id.id2);
     return true;
 }
 
 void PerfRecordAux::DumpData(int indent) const
 {
-    PRINT_INDENT(indent, "aux_offset %llx, aux_size %llx, flags %llx\n", data_.aux_offset,
-                 data_.aux_size, data_.flags);
+    PRINT_INDENT(indent, "aux_offset 0x%llx aux_size 0x%llx flags 0x%llx pid %u tid %u time %llu",
+                 data_.aux_offset, data_.aux_size, data_.flags, data_.sample_id.pid, data_.sample_id.tid,
+                 data_.sample_id.time);
 }
 
 PerfRecordItraceStart::PerfRecordItraceStart(uint8_t *p) : PerfEventRecord(p, "itraceStart")

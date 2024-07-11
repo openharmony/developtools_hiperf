@@ -156,6 +156,45 @@ void SubCommandRecord::DumpOptions() const
     printf(" report_:\t%s\n", report_ ? "true" : "false");
 }
 
+bool SubCommandRecord::GetSpeOptions()
+{
+    std::string speName;
+
+    for (size_t i = 0; i < selectEvents_.size(); i++) {
+        std::string optionValue = selectEvents_[i];
+
+        std::vector<std::string> valueExpressions = StringSplit(optionValue, "/");
+        if (i == 0) {
+            if (valueExpressions.size() > 1) {
+                speName = valueExpressions[0];
+                valueExpressions.erase(valueExpressions.begin());
+            } else {
+                break;
+            }
+        }
+
+        for (auto item: valueExpressions) {
+            std::vector<std::string> expressions = StringSplit(item, "=");
+            size_t itemNum = 2;
+            if (expressions.size() == itemNum) {
+                std::string name = expressions[0];
+                unsigned long long num = std::stoull(expressions[1]);
+                if (speOptMap_.find(name) != speOptMap_.end()) {
+                    speOptMap_[name] = num;
+                }
+                if (num != 0) {
+                    speOptions_.emplace_back(name);
+                }
+            }
+        }
+    }
+    if (speName.size() > 0) {
+        selectEvents_.clear();
+        selectEvents_.emplace_back(speName);
+    }
+    return true;
+}
+
 bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
 {
     if (!Option::GetOptionValue(args, "-a", targetSystemWide_)) {
@@ -233,6 +272,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "-g", selectGroups_)) {
+        return false;
+    }
+    if (!GetSpeOptions()) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-s", callStackType_)) {
@@ -779,6 +821,13 @@ bool SubCommandRecord::PreparePerfEvent()
     };
     perfEvents_.SetRecordCallBack(processRecord);
 
+    if (selectEvents_.size() > 0 && selectEvents_[0] == "arm_spe_0") {
+        selectEvents_.insert(selectEvents_.begin(), "sw-dummy");
+        perfEvents_.isSpe_ = true;
+        perfEvents_.SetConfig(speOptMap_);
+        isSpe_ = true;
+    }
+
     perfEvents_.SetCpu(selectCpus_);
     perfEvents_.SetPid(selectPids_); // Tids has insert Pids in CheckTargetProcessOptions()
 
@@ -924,6 +973,13 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
         virtualRuntime_.GetThread(it->first, it->first);
         for (auto tid : it->second) {
             virtualRuntime_.GetThread(it->first, tid);
+        }
+    }
+    if (mapPids_.empty()) {
+        if (!selectPids_.empty()) {
+            for (auto pid : selectPids_) {
+                virtualRuntime_.GetThread(pid, pid);
+            }
         }
     }
 }
@@ -1650,6 +1706,12 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
         // the record is allowed from a cache memory, does not free memory after use
         record.release();
     }
+
+    if (isSpe_ && record->GetType() == PERF_RECORD_AUXTRACE) {
+        PerfRecordAuxtrace *sample = static_cast<PerfRecordAuxtrace *>(record.get());
+        virtualRuntime_.SymbolSpeRecord(*sample);
+    }
+
     return true;
 }
 

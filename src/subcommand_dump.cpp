@@ -27,6 +27,7 @@
 #include "perf_event_record.h"
 #include "perf_events.h"
 #include "register.h"
+#include "spe_decoder.h"
 #include "symbols_file.h"
 #include "utilities.h"
 #include "virtual_runtime.h"
@@ -182,6 +183,7 @@ bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
         // before load data section
         SetHM();
         DumpDataPortion(indent_);
+        DumpSpeReport();
     }
 
     if (dumpFeatures_ || dumpAll_) {
@@ -412,7 +414,7 @@ void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
                          recordSample->data_.tid, exportSampleIndex_, recordSample->data_.time);
         std::string resolvedPath = CanonicalizeSpecPath(userData.c_str());
         std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvedPath.c_str(), "wb"), fclose);
-        std::vector<u8> buf(RECORD_SIZE_LIMIT);
+        static std::vector<u8> buf(RECORD_SIZE_LIMIT);
         if (!recordSample->GetBinary(buf)) {
             HLOGE("export user sample data failed");
             return;
@@ -601,6 +603,19 @@ void SubCommandDump::SetHM()
         vr_.SetDevhostPid(devhost);
     }
 }
+
+void SubCommandDump::DumpSpeReport()
+{
+#if defined(is_ohos) && is_ohos
+    std::string cmdline = reader_->GetFeatureString(FEATURE::CMDLINE);
+    if (cmdline.find("-e arm_spe_0") != std::string::npos) {
+        HLOGD("dump spe report data");
+        UpdateHeating();
+        DumpSpeReportData(indent_, g_outputDump);
+    }
+#endif
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

@@ -259,7 +259,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
     const auto startReadTime = steady_clock::now();
 #endif
     // record size can not exceed 64K
-    HIPERF_BUF_ALIGN uint8_t buf[RECORD_SIZE_LIMIT];
+    HIPERF_BUF_ALIGN static uint8_t buf[RECORD_SIZE_LIMIT_SPE];
     // diff with reader
     uint64_t remainingSize = header_.data.size;
     size_t recordNumber = 0;
@@ -275,13 +275,22 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
             if (header == nullptr) {
                 HLOGE("read record header is null");
                 return false;
-            } else if (header->size > sizeof(buf)) {
+            } else if (header->size > RECORD_SIZE_LIMIT) {
                 HLOGE("read record header size error %hu", header->size);
                 return false;
             }
             if (remainingSize >= header->size) {
                 size_t headerSize = sizeof(perf_event_header);
                 if (Read(buf + headerSize, header->size - headerSize)) {
+                    size_t speSize = 0;
+                    if (header->type == PERF_RECORD_AUXTRACE) {
+                        struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>
+                                                                  (header + 1);
+                        speSize = auxtrace->size;
+                        if (speSize > 0) {
+                            Read(buf + header->size, auxtrace->size);
+                        }
+                    }
                     uint8_t *data = buf;
                     std::unique_ptr<PerfEventRecord> record = GetPerfEventRecord(
                         static_cast<perf_event_type>(header->type), data, *GetDefaultAttr());
@@ -291,7 +300,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
                     } else {
                         HLOGV("record type %u", record->GetType());
                     }
-                    remainingSize -= header->size;
+                    remainingSize = remainingSize - header->size - speSize;
 #ifdef HIPERF_DEBUG_TIME
                     const auto startCallbackTime = steady_clock::now();
 #endif

@@ -123,14 +123,14 @@ bool PerfFileWriter::WriteRecord(const PerfEventRecord &record)
         return false;
     }
 
-    HLOGV("write '%s'", record.GetName().c_str());
+    HLOGV("write '%s', size %zu", record.GetName().c_str(), record.GetSize());
 
-    if (record.GetSize() > RECORD_SIZE_LIMIT) {
+    if (record.GetSize() > RECORD_SIZE_LIMIT_SPE) {
         HLOGD("%s record size exceed limit", record.GetName().c_str());
         return false;
     }
     // signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0xb64eb195
-    static std::vector<u8> buf(RECORD_SIZE_LIMIT);
+    static std::vector<u8> buf(RECORD_SIZE_LIMIT_SPE);
 
     if (!record.GetBinary(buf)) {
         return false;
@@ -162,7 +162,7 @@ bool PerfFileWriter::ReadDataSection(ProcessRecordCB &callback)
 bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
 {
     // record size can not exceed 64K
-    HIPERF_BUF_ALIGN uint8_t buf[RECORD_SIZE_LIMIT];
+    HIPERF_BUF_ALIGN static uint8_t buf[RECORD_SIZE_LIMIT_SPE];
     // diff with reader
     uint64_t remainingSize = dataSection_.size;
     size_t recordNumber = 0;
@@ -175,10 +175,19 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
             return false;
         } else {
             perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
-            HLOG_ASSERT(header->size < sizeof(buf));
+            HLOG_ASSERT(header->size < RECORD_SIZE_LIMIT);
             if (remainingSize >= header->size) {
                 size_t headerSize = sizeof(perf_event_header);
                 if (Read(buf + headerSize, header->size - headerSize)) {
+                    size_t speSize = 0;
+                    if (header->type == PERF_RECORD_AUXTRACE) {
+                        struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>
+                                                                  (header + 1);
+                        speSize = auxtrace->size;
+                        if (speSize > 0) {
+                            Read(buf + header->size, auxtrace->size);
+                        }
+                    }
                     uint8_t *data = buf;
                     // the record is allowed from a cache memory, does not free memory after use
                     auto record = GetPerfSampleFromCacheMain(static_cast<perf_event_type>(header->type),
@@ -187,7 +196,7 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
                     if (record == nullptr) {
                         return true;
                     }
-                    remainingSize -= header->size;
+                    remainingSize = remainingSize - header->size - speSize;
                     // call callback to process, do not destroy the record
                     callback(std::move(record));
                     recordNumber++;

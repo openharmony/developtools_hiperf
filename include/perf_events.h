@@ -37,6 +37,7 @@
 
 #include "debug_logger.h"
 #include "perf_event_record.h"
+#include "perf_record_format.h"
 #include "ring_buffer.h"
 #include "tracked_command.h"
 #include "utilities.h"
@@ -44,6 +45,17 @@
 
 // this for some performance debug
 #define HIDEBUG_SKIP_CALLBACK 0
+#define CALC_OFFSET(offset, size) ((offset) & ((size) - 1))
+#ifndef CLOCK_MONOTONIC_RAW
+#define CLOCK_MONOTONIC_RAW 4
+#endif
+#define PERF_AUXTRACE_RECORD_ALIGNMENT 8
+#define PTR_TO_VOID(ptr) ((void *)(uintptr_t)(ptr))
+#define PTR_ADD(b, o) ({ \
+    uintptr_t _b = (uintptr_t)(b);  \
+    uintptr_t _p = (uintptr_t)&(((uint8_t *)(_b))[o]);  \
+    PTR_TO_VOID(_p);  \
+})
 
 namespace OHOS {
 namespace Developtools {
@@ -497,16 +509,23 @@ public:
         perf_event_mmap_page *mmapPage = nullptr;
         uint8_t *buf = nullptr;
         size_t bufSize = 0;
+        size_t auxBufSize = 0;
         // for read and sort
         size_t dataSize = 0;
         perf_event_header header;
         uint64_t timestamp = 0;
         const perf_event_attr *attr = nullptr;
         size_t posCallChain = 0;
+        int cpu = 0;
+        void *auxBuf = nullptr;
+        pid_t tid_ = 0;
     };
 
     bool isHM_ = false;
+    bool isSpe_ = false;
+
     void SetHM(bool isHM);
+    void SetConfig(std::map<const std::string, unsigned long long> &speOptMaps);
 private:
     size_t recordEventCount_ = 0; // only for debug time
 #ifdef HIPERF_DEBUG_TIME
@@ -530,9 +549,11 @@ private:
     void StatLoop();
     bool IsRecordInMmap(int timeout);
     void ReadRecordsFromMmaps();
+    void ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxSize, u32 pid, u32 tid);
+    void SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, u32 size);
     bool GetRecordFromMmap(MmapFd &mmap);
     void GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size);
-    void MoveRecordToBuf(MmapFd &mmap);
+    void MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxSize, u32 &pid, u32 &tid);
     size_t GetCallChainPosInSampleRecord(const perf_event_attr &attr);
     size_t GetStackSizePosInSampleRecord(MmapFd &mmap);
     bool CutStackAndMove(MmapFd &mmap);
@@ -565,11 +586,16 @@ private:
 
     unsigned int samplePeriod_ = 0;
     unsigned int sampleFreq_ = 0;
+    unsigned long long config_ = 0;
+    unsigned long long config1_ = 0;
+    unsigned long long config2_ = 0;
+    unsigned int speType_ = 0;
 
     struct FdItem {
         OHOS::UniqueFd fd;
         int cpu;
         pid_t pid;
+        pid_t tid;
         __u64 eventCount;
         mutable uint64_t perfId = 0;
         uint64_t GetPrefId() const
@@ -604,6 +630,7 @@ private:
 #endif
     const int pollTimeOut_ = 500; // ms
     size_t pageSize_ = 4096;
+    size_t auxMmapPages_ = 128;
     bool systemTarget_ = false;
     bool excludeHiperf_ = false;
     pid_t selfPid_ = -1;
@@ -628,6 +655,7 @@ private:
     bool AddEvent(perf_type_id type, __u64 config, bool excludeUser = false,
                   bool excludeKernel = false, bool followGroup = false);
     bool AddEvent(const std::string &eventString, bool followGroup = false);
+    bool AddSpeEvent(u32 type, bool followGroup = false);
     bool IsEventSupport(perf_type_id type, __u64 config);
     bool IsEventAttrSupport(perf_event_attr &attr);
 
@@ -642,6 +670,7 @@ private:
     bool CreateFdEvents();
     bool StatReport(const __u64 &durationInSec);
     bool CreateMmap(const FdItem &item, const perf_event_attr &attr);
+    bool CreateSpeMmap(const FdItem &item, const perf_event_attr &attr);
 
     const perf_event_attr *GetDefaultAttr()
     {
