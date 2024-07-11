@@ -52,7 +52,6 @@ OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, pid_t pid, int cpu, int g
         // dump when open failed.
         SubCommandDump::DumpPrintEventAttr(attr, std::numeric_limits<int>::min());
     }
-    SubCommandDump::DumpPrintEventAttr(attr, std::numeric_limits<int>::min());
     HLOGV("perf_event_open: got fd %d for pid %d cpu %d group %d flags %lu", fd.Get(), pid, cpu, groupFd, flags);
     return fd;
 }
