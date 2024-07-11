@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SPE_DECODER_H_
-#define SPE_DECODER_H_
+#ifndef SPE_DECODER_H
+#define SPE_DECODER_H
 
 #include <linux/const.h>
 #include <stddef.h>
@@ -91,7 +91,7 @@ struct SpePkt {
 
 #define PERF_SPE_HDR_SHORT_INDEX(h)         ((h) & GENMASK_ULL(2, 0))
 #define PERF_SPE_HDR_EXTENDED_INDEX(h0, h1)     (((h0) & GENMASK_ULL(1, 0)) << 3 | \
-                         PERF_SPE_HDR_SHORT_INDEX(h1))
+                                                 PERF_SPE_HDR_SHORT_INDEX(h1))
 
 /* Address packet header */
 #define PERF_SPE_ADDR_PKT_HDR_INDEX_INS         0x0
@@ -312,4 +312,4 @@ void GetSpeEventNameByType(uint32_t type, std::string& eventName);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
-#endif // SPE_DECODER_H_
+#endif // SPE_DECODER_H

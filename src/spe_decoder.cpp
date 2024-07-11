@@ -428,8 +428,11 @@ static int SpePktDescOpType(const struct SpePkt *packet,
 static int SpePktDescAddr(const struct SpePkt *packet,
                           char *buf, size_t bufLen)
 {
-    int ns, el, idx = packet->index;
-    int ch, pat;
+    int ns;
+    int el;
+    int idx = packet->index;
+    int ch;
+    int pat;
     u64 payload = packet->payload;
     int err = 0;
     static const char *idxName[] = {"PC", "TGT", "VA", "PA", "PBT"};
@@ -548,7 +551,9 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
 
 static u64 SpeCalcIp(int index, u64 payload)
 {
-    u64 ns, el, val;
+    u64 ns;
+    u64 el;
+    u64 val;
 
     /* Instruction virtual address or Branch target address */
     if (index == PERF_SPE_ADDR_PKT_HDR_INDEX_INS ||
@@ -653,12 +658,13 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
 {
     int err;
     int idx;
-    u64 payload, ip;
+    u64 payload;
+    u64 ip;
 
     memset_s(&decoder->record, sizeof(decoder->record), 0, sizeof(decoder->record));
     decoder->record.context_id = (u64)-1;
 
-    while (1) {
+    while (true) {
         err = SpeGetNextPacket(decoder);
         if (err <= 0) {
             return err;
@@ -804,12 +810,12 @@ void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump
     }
     struct SpePkt packet;
     size_t pos = 0;
-    int ret, pktLen, i;
+    int ret;
+    int pktLen
+    int i;
     char desc[PERF_SPE_PKT_DESC_MAX];
 
-    PRINT_INDENT(indent, ". ... ARM SPE data: size %#zx bytes\n",
-                 len);
-
+    PRINT_INDENT(indent, ". ... ARM SPE data: size %#zx bytes\n", len);
     while (len) {
         ret = SpeGetPacket(buf, len, &packet);
         if (ret > 0) {

@@ -156,7 +156,7 @@ u32 GetSpeType()
     }
     HLOGD("spetype %u", speType);
 
-    fclose(fd);
+    (void)fclose(fd);
     return speType;
 }
 
