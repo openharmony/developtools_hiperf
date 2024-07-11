@@ -1360,14 +1360,14 @@ size_t PerfEvents::CalcBufferSize()
 
 inline bool PerfEvents::IsRecordInMmap(int timeout)
 {
-    HLOGV("enter")
+    HLOGV("enter");
     if (pollFds_.size() > 0) {
         if (poll(static_cast<struct pollfd*>(pollFds_.data()), pollFds_.size(), timeout) <= 0) {
             // time out try again
             return false;
         }
     }
-    HLOGV("poll record from mmap")
+    HLOGV("poll record from mmap");
     return true;
 }
 
