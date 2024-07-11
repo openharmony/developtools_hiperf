@@ -49,8 +49,7 @@ static const std::string TEST_FILE_ELF_STRIPPED_NOEFHDR = "elf_test_stripped_noe
 #endif
 
 // vmlinux
-static const std::string 
-TEST_FILE_VMLINUX = "vmlinux";
+static const std::string TEST_FILE_VMLINUX = "vmlinux";
 static const std::string TEST_FILE_VMLINUX_STRIPPED = "vmlinux_stripped";
 static const std::string TEST_FILE_VMLINUX_STRIPPED_NOBUILDID = "vmlinux_stripped_nobuildid";
 static const std::string TEST_FILE_VMLINUX_STRIPPED_BROKEN = "vmlinux_stripped_broken";
