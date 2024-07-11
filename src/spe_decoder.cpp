@@ -811,7 +811,7 @@ void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump
     struct SpePkt packet;
     size_t pos = 0;
     int ret;
-    int pktLen
+    int pktLen;
     int i;
     char desc[PERF_SPE_PKT_DESC_MAX];
 
