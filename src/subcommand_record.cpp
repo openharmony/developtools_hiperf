@@ -975,13 +975,6 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
             virtualRuntime_.GetThread(it->first, tid);
         }
     }
-    if (mapPids_.empty()) {
-        if (!selectPids_.empty()) {
-            for (auto pid : selectPids_) {
-                virtualRuntime_.GetThread(pid, pid);
-            }
-        }
-    }
 }
 
 bool SubCommandRecord::ClientCommandResponse(bool OK)

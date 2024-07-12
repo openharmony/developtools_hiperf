@@ -259,7 +259,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
     const auto startReadTime = steady_clock::now();
 #endif
     // record size can not exceed 64K
-    HIPERF_BUF_ALIGN static uint8_t buf[RECORD_SIZE_LIMIT_SPE];
+    HIPERF_BUF_ALIGN uint8_t buf[RECORD_SIZE_LIMIT];
     // diff with reader
     uint64_t remainingSize = header_.data.size;
     size_t recordNumber = 0;
@@ -275,7 +275,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
             if (header == nullptr) {
                 HLOGE("read record header is null");
                 return false;
-            } else if (header->size > RECORD_SIZE_LIMIT) {
+            } else if (header->size > sizeof(buf)) {
                 HLOGE("read record header size error %hu", header->size);
                 return false;
             }

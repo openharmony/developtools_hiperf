@@ -414,7 +414,7 @@ void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
                          recordSample->data_.tid, exportSampleIndex_, recordSample->data_.time);
         std::string resolvedPath = CanonicalizeSpecPath(userData.c_str());
         std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvedPath.c_str(), "wb"), fclose);
-        static std::vector<u8> buf(RECORD_SIZE_LIMIT);
+        std::vector<u8> buf(RECORD_SIZE_LIMIT);
         if (!recordSample->GetBinary(buf)) {
             HLOGE("export user sample data failed");
             return;

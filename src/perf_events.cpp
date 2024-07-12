@@ -70,7 +70,7 @@ void PerfEvents::SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, u32 si
         copySize = min(traceSize, left);
         src = PTR_ADD(dataPage, offset);
         if (memcpy_s(buf, left, src, copySize) != 0) {
-            HLOGV("SpeReadData memcpy_s failed.");
+            HLOGV("SpeReadData memcpy_s failed. ");
         }
 
         traceSize -= copySize;
@@ -91,28 +91,21 @@ static u64 arm_spe_reference()
 void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxSize, u32 pid, u32 tid)
 {
     if (mmapFd.mmapPage == nullptr || mmapFd.auxBuf == nullptr) {
-        printf("ReadRecordsFromSpeMmaps mmapFd.mmapPage is nullptr, mmapFd.fd:%d", mmapFd.fd);
+        printf("ReadRecordsFromSpeMmaps mmapFd.mmapPage == nullptr, mmapFd.fd: %d", mmapFd.fd);
         return;
     }
     perf_event_mmap_page *userPage = reinterpret_cast<perf_event_mmap_page *>(mmapFd.mmapPage);
     void *auxPage = mmapFd.auxBuf;
     u64 auxHead = userPage->aux_head;
     u64 auxTail = userPage->aux_tail;
-    HLOGD("mmap cpu %d, aux_head: %llu, aux_tail:%llu, auxSize:%llu",
-          mmapFd.cpu, auxHead, auxTail, auxSize);
     if (auxHead <= auxTail) {
-        return;
-    }
-    if (auxSize > auxMmapPages_ * pageSize_) {
-        HLOGE("auxSize : %llu exceed max size:%zu", auxSize, auxMmapPages_ * pageSize_);
-        userPage->aux_tail += auxSize;
         return;
     }
     int cpu = mmapFd.cpu;
     __sync_synchronize();
     PerfRecordAuxtrace auxtraceRecord = PerfRecordAuxtrace(auxSize, auxTail,
                                                            arm_spe_reference(), cpu, tid, cpu, pid);
-    static std::vector<u8> vbuf(RECORD_SIZE_LIMIT_SPE);
+    static std::vector<u8> vbuf(RECORD_SIZE_LIMIT);
     uint8_t *buf;
     if ((buf = recordBuf_->AllocForWrite(auxtraceRecord.header.size + auxSize)) == nullptr) {
         HLOGD("alloc buffer failed: PerfRecordAuxtrace record, readSize: %llu", auxSize);
@@ -153,7 +146,6 @@ u32 GetSpeType()
         HLOGV("fscanf_s file failed");
         return -1;
     }
-    HLOGD("spetype %u", speType);
 
     (void)fclose(fd);
     return speType;
@@ -1359,14 +1351,12 @@ size_t PerfEvents::CalcBufferSize()
 
 inline bool PerfEvents::IsRecordInMmap(int timeout)
 {
-    HLOGV("enter");
     if (pollFds_.size() > 0) {
         if (poll(static_cast<struct pollfd*>(pollFds_.data()), pollFds_.size(), timeout) <= 0) {
             // time out try again
             return false;
         }
     }
-    HLOGV("poll record from mmap");
     return true;
 }
 
@@ -1393,7 +1383,7 @@ void PerfEvents::ReadRecordsFromMmaps()
     if (MmapRecordHeap_.empty()) {
         return;
     }
-    bool enableFlag = false;
+
     if (MmapRecordHeap_.size() > 1) {
         for (const auto &it : MmapRecordHeap_) {
             GetRecordFromMmap(*it);
@@ -1411,7 +1401,6 @@ void PerfEvents::ReadRecordsFromMmaps()
             MoveRecordToBuf(*MmapRecordHeap_[heapSize - 1], auxEvent, auxSize, pid, tid);
             if (isSpe_ && auxEvent) {
                 ReadRecordsFromSpeMmaps(*MmapRecordHeap_[heapSize - 1], auxSize, pid, tid);
-                enableFlag = true;
             }
             if (GetRecordFromMmap(*MmapRecordHeap_[heapSize - 1])) {
                 std::push_heap(MmapRecordHeap_.begin(), MmapRecordHeap_.begin() + heapSize,
@@ -1430,12 +1419,7 @@ void PerfEvents::ReadRecordsFromMmaps()
         MoveRecordToBuf(*MmapRecordHeap_.front(), auxEvent, auxSize, pid, tid);
         if (isSpe_ && auxEvent) {
             ReadRecordsFromSpeMmaps(*MmapRecordHeap_.front(), auxSize, pid, tid);
-            enableFlag = true;
         }
-    }
-    if (isSpe_ && enableFlag) {
-        PerfEventsEnable(false);
-        PerfEventsEnable(true);
     }
     MmapRecordHeap_.clear();
     {

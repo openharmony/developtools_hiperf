@@ -195,10 +195,10 @@ public:
 
     static bool RegisterSubCommandRecord(void);
     std::map<const std::string, unsigned long long> speOptMap_ = {
-        {"branch_filter", 0}, {"load_filter", 0},
-        {"store_filter", 0},  {"ts_enable", 0},
-        {"pa_enable", 0},     {"jitter", 0},
-        {"min_latency", 0},   {"event_filter", 0},
+        {"branch_filter", 0},   {"load_filter", 0},
+        {"store_filter", 0},    {"ts_enable", 0},
+        {"pa_enable", 0},       {"jitter", 0},
+        {"min_latency", 0},      {"event_filter", 0},
     };
 
 private:

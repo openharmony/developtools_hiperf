@@ -223,7 +223,7 @@ PerfRecordAuxtrace::PerfRecordAuxtrace(uint8_t *p) : PerfEventRecord(p, "auxtrac
 {
     size_t copySize = header.size - sizeof(header);
     if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s return failed!!!");
+        HLOGE("memcpy_s retren failed !!!");
     }
     rawData_ = p + header.size;
 }
@@ -281,7 +281,7 @@ void PerfRecordAuxtrace::DumpData(int indent) const
 
 void PerfRecordAuxtrace::DumpLog(const std::string &prefix) const
 {
-    HLOGV("size %llu, offset 0x%llx, reference 0x%llx, idx %u, tid %u, cpu %u\n",
+    HLOGV("size 0x%llx, offset 0x%llx, reference 0x%llx, idx %u, tid %u, cpu %u\n",
           data_.size, data_.offset, data_.reference, data_.idx, data_.tid, data_.cpu);
 }
 
@@ -984,7 +984,7 @@ bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordAux::DumpData(int indent) const
 {
-    PRINT_INDENT(indent, "aux_offset 0x%llx aux_size 0x%llx flags 0x%llx pid %u tid %u time %llu",
+    PRINT_INDENT(indent, "aux_offset 0x%llx, aux_size 0x%llx, flags 0x%llx\n  pid 0x%u  tid 0x%u, time 0x%llu",
                  data_.aux_offset, data_.aux_size, data_.flags, data_.sample_id.pid, data_.sample_id.tid,
                  data_.sample_id.time);
 }
