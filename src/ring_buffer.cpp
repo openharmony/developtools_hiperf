@@ -16,6 +16,7 @@
 
 #include <linux/perf_event.h>
 #include "ring_buffer.h"
+#include "perf_event_record.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -107,7 +108,13 @@ uint8_t *RingBuffer::GetReadData()
     if (header == nullptr) {
         return nullptr;
     }
-    readSize_ += header->size;
+
+    if (header->type == PERF_RECORD_AUXTRACE) {
+        struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>(header + 1);
+        readSize_ += header->size + auxtrace->size;
+    } else {
+        readSize_ += header->size;
+    }
     return buf_.get() + readPos;
 }
 

@@ -179,6 +179,15 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
             if (remainingSize >= header->size) {
                 size_t headerSize = sizeof(perf_event_header);
                 if (Read(buf + headerSize, header->size - headerSize)) {
+                    size_t speSize = 0;
+                    if (header->type == PERF_RECORD_AUXTRACE) {
+                        struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>
+                                                                  (header + 1);
+                        speSize = auxtrace->size;
+                        if (speSize > 0) {
+                            Read(buf + header->size, auxtrace->size);
+                        }
+                    }
                     uint8_t *data = buf;
                     // the record is allowed from a cache memory, does not free memory after use
                     auto record = GetPerfSampleFromCacheMain(static_cast<perf_event_type>(header->type),
@@ -187,7 +196,7 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
                     if (record == nullptr) {
                         return true;
                     }
-                    remainingSize -= header->size;
+                    remainingSize = remainingSize - header->size - speSize;
                     // call callback to process, do not destroy the record
                     callback(std::move(record));
                     recordNumber++;

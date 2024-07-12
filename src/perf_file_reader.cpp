@@ -282,6 +282,15 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
             if (remainingSize >= header->size) {
                 size_t headerSize = sizeof(perf_event_header);
                 if (Read(buf + headerSize, header->size - headerSize)) {
+                    size_t speSize = 0;
+                    if (header->type == PERF_RECORD_AUXTRACE) {
+                        struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>
+                                                                  (header + 1);
+                        speSize = auxtrace->size;
+                        if (speSize > 0) {
+                            Read(buf + header->size, auxtrace->size);
+                        }
+                    }
                     uint8_t *data = buf;
                     std::unique_ptr<PerfEventRecord> record = GetPerfEventRecord(
                         static_cast<perf_event_type>(header->type), data, *GetDefaultAttr());
@@ -291,7 +300,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
                     } else {
                         HLOGV("record type %u", record->GetType());
                     }
-                    remainingSize -= header->size;
+                    remainingSize = remainingSize - header->size - speSize;
 #ifdef HIPERF_DEBUG_TIME
                     const auto startCallbackTime = steady_clock::now();
 #endif

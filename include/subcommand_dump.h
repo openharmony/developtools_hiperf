@@ -115,6 +115,7 @@ private:
     void PrintHeaderInfo(const int &indent);
     void PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct);
     void PrintFeatureEventdesc(int indent, const PerfFileSectionEventDesc &sectionEventdesc);
+    void DumpSpeReport();
     VirtualRuntime vr_;
 
     void SetHM();

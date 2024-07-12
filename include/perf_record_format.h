@@ -46,6 +46,16 @@ struct read_format {
     __u64 id;           /* if PERF_FORMAT_ID */
 };
 
+struct PerfRecordAuxtraceData {
+    u64 size;
+    u64 offset;
+    u64 reference;
+    u32 idx;
+    u32 tid;
+    u32 cpu;
+    u32 reserved__;
+};
+
 /*
     The MMAP events record the PROT_EXEC mappings so that
     we can correlate user-space IPs to code.  They have
@@ -263,9 +273,7 @@ struct PerfRecordAuxData {
     u64 aux_offset;
     u64 aux_size;
     u64 flags;
-#if SAMPLE_ID_ALL
     struct sample_id sample_id;
-#endif
 };
 
 /*

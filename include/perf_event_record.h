@@ -43,6 +43,7 @@ using namespace OHOS::HiviewDFX;
 static constexpr uint32_t RECORD_SIZE_LIMIT = 65535;
 
 enum perf_event_hiperf_ext_type {
+    PERF_RECORD_AUXTRACE = 71,
     PERF_RECORD_HIPERF_CALLSTACK = UINT32_MAX / 2,
 };
 
@@ -168,6 +169,21 @@ constexpr __u64 SAMPLE_TYPE = PERF_SAMPLE_IP | SAMPLE_ID | PERF_SAMPLE_PERIOD;
 
 constexpr __u32 MIN_SAMPLE_STACK_SIZE = 8;
 constexpr __u32 MAX_SAMPLE_STACK_SIZE = 65528;
+
+class PerfRecordAuxtrace : public PerfEventRecord {
+public:
+    PerfRecordAuxtraceData data_;
+    u8* rawData_ = nullptr;
+    explicit PerfRecordAuxtrace(uint8_t *p);
+    PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid);
+
+    bool GetBinary1(std::vector<uint8_t> &buf) const;
+    bool GetBinary(std::vector<uint8_t> &buf) const override;
+    void DumpData(int indent) const override;
+    void DumpLog(const std::string &prefix) const override;
+
+    virtual size_t GetSize() const override;
+};
 
 class PerfRecordMmap : public PerfEventRecord {
 public:
@@ -350,6 +366,7 @@ public:
 */
 class PerfRecordAux : public PerfEventRecord {
 public:
+    uint64_t sampleType_ = SAMPLE_ID;
     PerfRecordAuxData data_;
 
     explicit PerfRecordAux(uint8_t *p);

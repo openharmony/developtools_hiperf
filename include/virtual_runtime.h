@@ -138,6 +138,7 @@ public:
         return userSpaceThreadMap_;
     }
     void SymbolicRecord(PerfRecordSample &recordSample);
+    void SymbolSpeRecord(PerfRecordAuxtrace &recordAuxTrace);
 
     // report use
     void UpdateFromPerfData(const std::vector<SymbolFileStruct> &);
@@ -201,6 +202,7 @@ private:
     void UpdateFromRecord(PerfRecordMmap2 &recordMmap2);
     void UpdateFromRecord(PerfRecordComm &recordComm);
     void DedupFromRecord(PerfRecordSample *recordSample);
+    void UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace);
     // threads
     VirtualThread &UpdateThread(pid_t pid, pid_t tid, const std::string name = "");
     VirtualThread &CreateThread(pid_t pid, pid_t tid, const std::string name = "");

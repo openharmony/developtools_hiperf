@@ -26,6 +26,7 @@
 
 #include "dfx_map.h"
 #include "register.h"
+#include "spe_decoder.h"
 #include "symbols_file.h"
 #include "utilities.h"
 
@@ -461,6 +462,12 @@ void VirtualRuntime::UpdateFromRecord(PerfEventRecord &record)
 #ifdef HIPERF_DEBUG_TIME
         processCommRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
+    } else if (record.GetType() == PERF_RECORD_AUXTRACE) {
+        auto recordAuxTrace = static_cast<PerfRecordAuxtrace *>(&record);
+        UpdateFromRecord(*recordAuxTrace);
+#ifdef HIPERF_DEBUG_TIME
+        processCommRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+#endif
     } else {
         HLOGW("skip record type %d", record.GetType());
     }
@@ -791,6 +798,73 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordComm &recordComm)
 {
     recordComm.DumpLog(__FUNCTION__);
     UpdateThread(recordComm.data_.pid, recordComm.data_.tid, recordComm.data_.comm);
+}
+
+void VirtualRuntime::UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace)
+{
+    if (recordCallBack_ == nullptr) {
+#if defined(is_ohos) && is_ohos
+        recordAuxTrace.DumpLog(__FUNCTION__);
+        SpeDecoder *decoder = SpeDecoderDataNew(recordAuxTrace.rawData_, recordAuxTrace.data_.size);
+        std::vector<SpeRecord> records;
+        while (true) {
+            int ret = SpeDecode(decoder);
+            if (ret <= 0) {
+                break;
+            }
+            struct SpeRecord record = SpeRecord(decoder->record);
+            records.emplace_back(record);
+        }
+        std::vector<ReportItemAuxRawData> auxRawData;
+        for (auto rec: records) {
+            u64 pc = 0;
+            if (rec.from_ip) {
+                pc = rec.from_ip;
+            } else if (rec.to_ip) {
+                pc = rec.to_ip;
+            } else {
+                continue;
+            }
+            DfxSymbol symbol = GetSymbol(pc, recordAuxTrace.data_.reserved__, recordAuxTrace.data_.tid);
+            HLOGV("pc 0x%llx symbol %s", pc, symbol.ToDebugString().c_str());
+            struct ReportItemAuxRawData reportItem = {rec.type, 0.0f, 1, symbol.comm_.data(), pc,
+                                                      symbol.module_.data(), symbol.GetName().data(),
+                                                      symbol.fileVaddr_};
+            auxRawData.emplace_back(reportItem);
+            HLOGV("type %u, from_ip: 0x%llx, to_ip: 0x%llx, timestamp: %llu, virt_addr: 0x%llx, phys_addr: 0x%llx",
+                  rec.type, rec.from_ip, rec.to_ip, rec.timestamp, rec.virt_addr, rec.phys_addr);
+        }
+        AddReportItems(auxRawData);
+        SpeDecoderFree(decoder);
+#endif
+    }
+}
+
+void VirtualRuntime::SymbolSpeRecord(PerfRecordAuxtrace &recordAuxTrace)
+{
+#if defined(is_ohos) && is_ohos
+    recordAuxTrace.DumpLog(__FUNCTION__);
+    SpeDecoder *decoder = SpeDecoderDataNew(recordAuxTrace.rawData_, recordAuxTrace.data_.size);
+    while (true) {
+        int ret = SpeDecode(decoder);
+        if (ret <= 0) {
+            break;
+        }
+        struct SpeRecord record = SpeRecord(decoder->record);
+        u64 pc = 0;
+        if (record.from_ip) {
+            pc = record.from_ip;
+        } else if (record.to_ip) {
+            pc = record.to_ip;
+        } else {
+            continue;
+        }
+
+        DfxSymbol symbol = GetSymbol(pc, recordAuxTrace.data_.reserved__, recordAuxTrace.data_.tid);
+        HLOGV("pc 0x%llx symbol %s", pc, symbol.ToDebugString().c_str());
+    }
+    SpeDecoderFree(decoder);
+#endif
 }
 
 void VirtualRuntime::SetRecordMode(RecordCallBack recordCallBack)
