@@ -68,7 +68,17 @@ config("hiperf_inner_config") {
     defines += [ "HIPERF_DEBUG_TIME" ]
   }
 
-  cflags += [ "-std=c++17" ]
+  cflags += [
+    "-std=c++17",
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Os",
+  ]
   defines += [ "is_mingw=${is_mingw}" ]
   defines += [ "is_linux=${is_linux}" ]
   defines += [ "is_ohos=${is_ohos}" ]
