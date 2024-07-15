@@ -63,10 +63,10 @@ static int SpeGetPayload(const unsigned char *buf, size_t len,
     buf += 1 + extHdr;
 
     switch (payloadLen) {
-        case LEN_TYPE_BYTE: packet->payload = static_cast<uint8_t>(*buf); break;
-        case LEN_TYPE_HLFWRD: packet->payload = LE16_TO_CPU(static_cast<uint16_t>(*buf)); break;
-        case LEN_TYPE_WORD: packet->payload = LE32_TO_CPU(static_cast<uint32_t>(*buf)); break;
-        case LEN_TYPE_DBLEWRD: packet->payload = LE64_TO_CPU(static_cast<uint64_t>(*buf)); break;
+        case LEN_TYPE_BYTE: packet->payload = *(reinterpret_cast<const uint8_t *>(buf)); break;
+        case LEN_TYPE_HLFWRD: packet->payload = LE16_TO_CPU(*reinterpret_cast<const uint16_t *>(buf)); break;
+        case LEN_TYPE_WORD: packet->payload = LE32_TO_CPU(*reinterpret_cast<const uint32_t *>(buf)); break;
+        case LEN_TYPE_DBLEWRD: packet->payload = LE64_TO_CPU(*reinterpret_cast<const uint64_t *>(buf)); break;
         default: return PERF_SPE_BAD_PACKET;
     }
 

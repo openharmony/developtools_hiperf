@@ -251,7 +251,8 @@ bool PerfRecordAuxtrace::GetBinary1(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
     return true;
 }
 
@@ -264,7 +265,8 @@ bool PerfRecordAuxtrace::GetBinary(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
     p += header.size - GetHeaderSize();
     std::copy(static_cast<uint8_t *>(rawData_), static_cast<uint8_t *>(rawData_) + data_.size, p);
     return true;
