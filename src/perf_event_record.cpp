@@ -222,7 +222,7 @@ std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
 PerfRecordAuxtrace::PerfRecordAuxtrace(uint8_t *p) : PerfEventRecord(p, "auxtrace")
 {
     size_t copySize = header.size - sizeof(header);
-    if (memcpy_s((uint8_t *)&data_, sizeof(data_), p + sizeof(header), copySize) != 0) {
+    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
         HLOGE("memcpy_s retren failed !!!");
     }
     rawData_ = p + header.size;
@@ -251,7 +251,7 @@ bool PerfRecordAuxtrace::GetBinary1(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    std::copy((uint8_t *)&data_, (uint8_t *)&data_ + header.size - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
     return true;
 }
 
@@ -264,9 +264,9 @@ bool PerfRecordAuxtrace::GetBinary(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    std::copy((uint8_t *)&data_, (uint8_t *)&data_ + header.size - GetHeaderSize(), p);
+    std::copy(reinterpret_cast<const uint8_t *>(&data_), reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
     p += header.size - GetHeaderSize();
-    std::copy((uint8_t *)rawData_, (uint8_t *)rawData_ + data_.size, p);
+    std::copy(static_cast<uint8_t *>(rawData_), static_cast<uint8_t *>(rawData_) + data_.size, p);
     return true;
 }
 
