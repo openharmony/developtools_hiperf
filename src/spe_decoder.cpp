@@ -63,10 +63,10 @@ static int SpeGetPayload(const unsigned char *buf, size_t len,
     buf += 1 + extHdr;
 
     switch (payloadLen) {
-        case LEN_TYPE_BYTE: packet->payload = *(uint8_t *)buf; break;
-        case LEN_TYPE_HLFWRD: packet->payload = LE16_TO_CPU(*(uint16_t *)buf); break;
-        case LEN_TYPE_WORD: packet->payload = LE32_TO_CPU(*(uint32_t *)buf); break;
-        case LEN_TYPE_DBLEWRD: packet->payload = LE64_TO_CPU(*(uint64_t *)buf); break;
+        case LEN_TYPE_BYTE: packet->payload = *(reinterpret_cast<const uint8_t *>(buf)); break;
+        case LEN_TYPE_HLFWRD: packet->payload = LE16_TO_CPU(*reinterpret_cast<const uint16_t *>(buf)); break;
+        case LEN_TYPE_WORD: packet->payload = LE32_TO_CPU(*reinterpret_cast<const uint32_t *>(buf)); break;
+        case LEN_TYPE_DBLEWRD: packet->payload = LE64_TO_CPU(*reinterpret_cast<const uint64_t *>(buf)); break;
         default: return PERF_SPE_BAD_PACKET;
     }
 
@@ -239,7 +239,7 @@ static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
                            const char *fmt, ...)
 {
     va_list args;
-    int ret;
+    int ret = 0;
 
     /* If any errors occur, exit */
     if (err && *err) {
@@ -612,7 +612,7 @@ struct SpeDecoder *SpeDecoderNew(struct SpeParams *params)
 {
     struct SpeDecoder *decoder;
 
-    decoder = (struct SpeDecoder*)malloc(sizeof(struct SpeDecoder));
+    decoder = static_cast<struct SpeDecoder*>(malloc(sizeof(struct SpeDecoder)));
     if (!decoder) {
         return NULL;
     }
@@ -656,8 +656,6 @@ static int SpeGetNextPacket(struct SpeDecoder *decoder)
 
 static int SpeReadRecord(struct SpeDecoder *decoder)
 {
-    int err;
-    int idx;
     u64 payload;
     u64 ip;
 
@@ -665,12 +663,12 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
     decoder->record.context_id = (u64)-1;
 
     while (true) {
-        err = SpeGetNextPacket(decoder);
+        int err = SpeGetNextPacket(decoder);
         if (err <= 0) {
             return err;
         }
 
-        idx = decoder->packet.index;
+        int idx = decoder->packet.index;
         payload = decoder->packet.payload;
 
         switch (decoder->packet.type) {
@@ -810,14 +808,13 @@ void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump
     }
     struct SpePkt packet;
     size_t pos = 0;
-    int ret;
     int pktLen;
     int i;
     char desc[PERF_SPE_PKT_DESC_MAX];
 
     PRINT_INDENT(indent, ". ... ARM SPE data: size %#zx bytes\n", len);
     while (len) {
-        ret = SpeGetPacket(buf, len, &packet);
+        int ret = SpeGetPacket(buf, len, &packet);
         if (ret > 0) {
             pktLen = ret;
         } else {
@@ -877,7 +874,7 @@ void AddReportItems(const std::vector<ReportItemAuxRawData>& auxRawData)
     for (const auto& data : auxRawData) {
         for (auto type : DEFAULT_SPE_EVENT_TYPE) {
             if (data.type & type) {
-                if (typeCount.count(type) <= 0) {
+                if (typeCount.count(type) == 0) {
                     typeCount[type] = 1;
                 } else {
                     typeCount[type]++;

@@ -1452,6 +1452,9 @@ bool PerfEvents::GetRecordFromMmap(MmapFd &mmap)
 
 void PerfEvents::GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size)
 {
+    if (mmap.bufSize == 0) {
+        return;
+    }
     pos = pos % mmap.bufSize;
     size_t tailSize = mmap.bufSize - pos;
     size_t copySize = std::min(size, tailSize);

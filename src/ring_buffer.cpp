@@ -43,6 +43,9 @@ uint8_t *RingBuffer::AllocForWrite(size_t writeSize)
     }
     size_t writeHead = head_.load(std::memory_order_relaxed);
     size_t readHead = tail_.load(std::memory_order_acquire);
+    if (size_ == 0) {
+        return nullptr;
+    }
     size_t writePos = writeHead % size_;
     size_t readPos = readHead % size_;
     writeSize_ = writeSize;
@@ -91,6 +94,9 @@ uint8_t *RingBuffer::GetReadData()
     }
 
     readSize_ = 0;
+    if (size_ == 0) {
+        return nullptr;
+    }
     size_t writePos = writeHead % size_;
     size_t readPos = readHead % size_;
     if (writePos <= readPos) {

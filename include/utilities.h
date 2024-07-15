@@ -298,6 +298,9 @@ private:
 template<class T>
 float Percentage(const T &a, const T &b)
 {
+    if (b == 0) {
+        return 0;
+    }
     return static_cast<float>(a) / static_cast<float>(b) * FULL_PERCENTAGE;
 }
 

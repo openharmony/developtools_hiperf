@@ -142,7 +142,9 @@ bool PerfFileReader::ReadAttrSection()
         HLOGW("attr size %" PRId64 " doesn't match expected size %zu", header_.attrSize,
               sizeof(perf_file_attr));
     }
-
+    if (header_.attrSize == 0) {
+        return false;
+    }
     int attrCount = header_.attrs.size / header_.attrSize;
     if (attrCount == 0) {
         HLOGE("no attr in file");
