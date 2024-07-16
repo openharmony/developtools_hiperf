@@ -27,10 +27,33 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 bool ReportJsonFile::debug_ = false;
+
 void ReportJsonFile::AddNewFunction(int libId, std::string name)
 {
     functionList_.emplace_back(functionKey(libId, name));
     functionMap_.emplace(functionMap_.size(), ReportFuncMapItem(libId, name));
+    auto it = functionMap_.find(libId);
+    if (it == functionMap_.end()) {
+        it = functionMap.try_emplace(libId).first;
+    }
+    it->second.insert_or_assign(name, ReportFuncMapItem(libId, name, functionId_++));
+}
+
+void ReportJsonFile::OutputJsonFunctionMap(FILE *output)
+{
+    std::string key = "SymbolMap";
+    if (fprint(output, "\"%s\":{", key.c_str()) != -1) {
+        bool first = true;
+
+        for (const auto& [libId, funcMap] : functionMap_) {
+            for (const auto& [_, reportFuncMapItem] : funcMap) {
+                OutputJsonPair(output, reportFuncMapItem.reportFuncId_, reportFuncMapItem, first);
+                first = false;
+            }
+        }
+
+        fprint(output, "}");
+    }
 }
 
 void ReportJsonFile::ProcessSymbolsFiles(
@@ -77,16 +100,19 @@ ReportConfigItem &ReportJsonFile::GetConfig(uint64_t id)
 
 int ReportJsonFile::GetFunctionID(int libId, const std::string &function)
 {
-    auto it = find(functionList_.begin(), functionList_.end(), functionKey(libId, function));
-    if (it != functionList_.end()) {
-        return it - functionList_.begin();
-    } else {
+    auto functionMapIt = functionMap_.find(libId);
+    if (functionMapIt == functionMap_.end()) {
+        functionMapIt = functionMap_.try_emplace(libId).first;
+    }
+    auto funcMapIt = functionMapIt->second.find(function);
+    if (funcMapIt == functionMapIt->second.end()) {
         HLOGW("'%s' not found in function list in lib %d", function.data(), libId);
         // make a new function for unknown name
         AddNewFunction(libId, function);
-        // retuen the last index
-        return functionList_.size() >= 1 ? functionList_.size() - 1 : 0;
+        // return the last index
+        return functionId_ - 1;
     }
+    return funcMapIt->second.reportFuncId_;
 }
 
 void ReportJsonFile::UpdateReportSample(uint64_t id, pid_t pid, pid_t tid, uint64_t eventCount)
@@ -115,7 +141,7 @@ void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem 
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
                 grandchildren.nodeIndex_ = nodeIndex_++;
-                grandchildren.funcName_ = std::get<keyfuncName>(functionList_.at(funcId));
+                grandchildren.funcName_ = it->funcName
                 grandchildren.reverseCaller_ = true;
             }
             // only the last one need count
@@ -147,7 +173,7 @@ void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNo
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
                 grandchildren.nodeIndex_ = nodeIndex_++;
-                grandchildren.funcName_ = std::get<keyfuncName>(functionList_.at(funcId));
+                grandchildren.funcName_ = it->funcName
             }
             // only the last one need count
             if (it + 1 == frames.rend()) {
@@ -296,7 +322,7 @@ void ReportJsonFile::OutputJsonRuntimeInfo()
         return;
     }
 
-    OutputJsonMap(output_, "SymbolMap", functionMap_, true);
+    OutputJsonFunctionMap(output_);
     if (fprintf(output_, ",") < 0) {
         return;
     }
