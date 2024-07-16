@@ -30,11 +30,9 @@ bool ReportJsonFile::debug_ = false;
 
 void ReportJsonFile::AddNewFunction(int libId, std::string name)
 {
-    functionList_.emplace_back(functionKey(libId, name));
-    functionMap_.emplace(functionMap_.size(), ReportFuncMapItem(libId, name));
     auto it = functionMap_.find(libId);
     if (it == functionMap_.end()) {
-        it = functionMap.try_emplace(libId).first;
+        it = functionMap_.try_emplace(libId).first;
     }
     it->second.insert_or_assign(name, ReportFuncMapItem(libId, name, functionId_++));
 }
@@ -42,7 +40,7 @@ void ReportJsonFile::AddNewFunction(int libId, std::string name)
 void ReportJsonFile::OutputJsonFunctionMap(FILE *output)
 {
     std::string key = "SymbolMap";
-    if (fprint(output, "\"%s\":{", key.c_str()) != -1) {
+    if (fprintf(output, "\"%s\":{", key.c_str()) != -1) {
         bool first = true;
 
         for (const auto& [libId, funcMap] : functionMap_) {
@@ -52,7 +50,7 @@ void ReportJsonFile::OutputJsonFunctionMap(FILE *output)
             }
         }
 
-        fprint(output, "}");
+        fprintf(output, "}");
     }
 }
 
