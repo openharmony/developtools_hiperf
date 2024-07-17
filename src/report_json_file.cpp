@@ -139,7 +139,7 @@ void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem 
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
                 grandchildren.nodeIndex_ = nodeIndex_++;
-                grandchildren.funcName_ = it->funcName
+                grandchildren.funcName_ = it->funcName;
                 grandchildren.reverseCaller_ = true;
             }
             // only the last one need count
@@ -171,7 +171,7 @@ void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNo
             ReportCallNodeItem &grandchildren = GetOrCreateMapItem(*child, funcId);
             if (debug_) {
                 grandchildren.nodeIndex_ = nodeIndex_++;
-                grandchildren.funcName_ = it->funcName
+                grandchildren.funcName_ = it->funcName;
             }
             // only the last one need count
             if (it + 1 == frames.rend()) {
