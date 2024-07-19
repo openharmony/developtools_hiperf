@@ -969,6 +969,9 @@ bool SubCommandRecord::PrepareVirtualRuntime()
 
 void SubCommandRecord::WriteCommEventBeforeSampling()
 {
+    if (restart_) {
+        return;
+    }
     for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
         virtualRuntime_.GetThread(it->first, it->first);
         for (auto tid : it->second) {
