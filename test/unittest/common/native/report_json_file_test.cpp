@@ -594,8 +594,8 @@ HWTEST_F(ReportJsonFileTest, ProcessSymbolsFiles, TestSize.Level1)
     json->ProcessSymbolsFiles(symbolsFiles);
     EXPECT_EQ(json->libList_.size(), 2u);
     ASSERT_EQ(json->functionMap_.size(), 2u);
-    EXPECT_EQ(json->functionMap_.size(), 2u);
-    EXPECT_EQ(json->functionMap_.size(), 3u);
+    EXPECT_EQ(json->functionMap_[0].size(), 2u);
+    EXPECT_EQ(json->functionMap_[1].size(), 3u);
 }
 
 /**
