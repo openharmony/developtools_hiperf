@@ -951,6 +951,83 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
     t1.join();
 }
 
+
+/**
+ * @tc.name: TestOnSubCommand_d5
+ * @tc.desc: -d
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d5, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat -p ";
+    cmdstr += std::to_string(tid1);
+    cmdstr += " -c 0 -d 3 --dumpoptions --per-core";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    g_wait = true;
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
+    g_wait = false;
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+    t1.join();
+}
+
+/**
+ * @tc.name: TestOnSubCommand_d6
+ * @tc.desc: -d
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d6, TestSize.Level1)
+{
+    int tid1 = 0;
+    std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
+    while (tid1 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::string cmdstr = "stat -p ";
+    cmdstr += std::to_string(tid1);
+    cmdstr += " -c 0 -d 3 --dumpoptions --per-thread";
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    g_wait = true;
+    EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
+    g_wait = false;
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.notify_all();
+    }
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+    t1.join();
+}
+
 /**
  * @tc.name: TestOnSubCommand_i
  * @tc.desc: -i

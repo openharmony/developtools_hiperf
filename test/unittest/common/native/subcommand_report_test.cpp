@@ -206,6 +206,48 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i, TestSize.Level1)
 }
 
 /**
+ * @tc.name: TestOnSubCommand_zip_fail
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "invalid_perf.data.tar.gz"), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+}
+
+/**
+ * @tc.name: TestOnSubCommand_zip_fail1
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail1, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "invalid_gzip_perf.data.tar.gz"), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+}
+
+/**
  * @tc.name: TestOnSubCommand_i1
  * @tc.desc:
  * @tc.type: FUNC

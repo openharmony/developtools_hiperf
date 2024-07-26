@@ -220,6 +220,7 @@ HWTEST_F(DebugLoggerTest, SetLogTags, TestSize.Level1)
     const std::string errorLogTag = "errtag";
     const std::string errorLogTags = "errtag,errtag,errtag";
     const std::string mixLogTags = "errtag,errtag,DebugTest,errtag";
+    const std::string LogTags = "DebugTest:T,DebugTest:V";
 
     DebugLogger::GetInstance()->SetLogTags("DebugTest");
 
@@ -241,6 +242,11 @@ HWTEST_F(DebugLoggerTest, SetLogTags, TestSize.Level1)
 
     EXPECT_EQ(DebugLogger::GetInstance()->ShouldLog(LEVEL_MUCH, "DebugTest"), true);
     EXPECT_EQ(DebugLogger::GetInstance()->ShouldLog(LEVEL_DEBUG, "DebugTest"), true);
+
+    DebugLogger::GetInstance()->SetLogTags(LogTags);
+
+    EXPECT_EQ(DebugLogger::GetInstance()->ShouldLog(LEVEL_MUCH, "DebugTest"), false);
+    EXPECT_EQ(DebugLogger::GetInstance()->ShouldLog(LEVEL_VERBOSE, "DebugTest"), true);
 
     // back to default
     DebugLogger::GetInstance()->SetLogTags("");
