@@ -84,7 +84,7 @@ std::unique_ptr<ReportJsonFile> ReportJsonFileTest::PrepairReportJson(
         functionKey(0, "funca1"),
         functionKey(0, "funca2"),
         functionKey(1, "funcb1"),
-        functionKey(2, "funcc1"),
+        functionKey(2, "funcc1"), // 2: num two
     };
     // id , pid , tid , event count
     uint64_t id = 1;
