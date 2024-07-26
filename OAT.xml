@@ -72,8 +72,8 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/.*" desc="test resource file, no copyright header"/>
                 <filteritem type="filepath" name="test/fuzztest/resource/testdata/.*" desc="test resource file, no copyright header"/>
                 <filteritem type="filename" name="test/fuzztest/resource/testdata/report_test.data"/>
-                <filteritem type="filename" name="test/fuzztest/resource/testdata/invalid_perf.data.tar.gz"/>
-                <filteritem type="filename" name="test/fuzztest/resource/testdata/invalid_gzip_perf.data.tar.gz"/>
+                <filteritem type="filename" name="test/unittest/resource/testdata/invalid_perf.data.tar.gz"/>
+                <filteritem type="filename" name="test/unittest/resource/testdata/invalid_gzip_perf.data.tar.gz"/>
             </filefilter>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
                 <filteritem type="filepath" name="test/unittest/resource/test/unittest/resource/testdata/ehdr_from_readelf_64" desc="the binary file for test, the file is self-developed"/>

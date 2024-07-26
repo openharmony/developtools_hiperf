@@ -206,7 +206,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestOnSubCommand_zip_fail
+ * @tc.name: TestOnSubCommand_gzip_fail
  * @tc.desc:
  * @tc.type: FUNC
  */
@@ -227,7 +227,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestOnSubCommand_zip_fail1
+ * @tc.name: TestOnSubCommand_gzip_fail1
  * @tc.desc:
  * @tc.type: FUNC
  */
