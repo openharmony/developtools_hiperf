@@ -80,12 +80,10 @@ std::unique_ptr<ReportJsonFile> ReportJsonFileTest::PrepairReportJson(
     json->reportConfigItems_.emplace(
         ids, ReportConfigItem(json->reportConfigItems_.size(), "eventName"));
     json->libList_ = {"liba", "libb", "libc"};
-    json->functionList_ = {
-        functionKey(0, "funca1"),
-        functionKey(0, "funca2"),
-        functionKey(1, "funcb1"),
-        functionKey(2, "funcc1"), // 2: num two
-    };
+    json->AddNewFunction(0, "funca1");
+    json->AddNewFunction(0, "funca2");
+    json->AddNewFunction(1, "funcb1");
+    json->AddNewFunction(2, "funcc1"); // 2: num two
     // id , pid , tid , event count
     uint64_t id = 1;
     uint64_t eventCount = 10;
@@ -595,8 +593,9 @@ HWTEST_F(ReportJsonFileTest, ProcessSymbolsFiles, TestSize.Level1)
 
     json->ProcessSymbolsFiles(symbolsFiles);
     EXPECT_EQ(json->libList_.size(), 2u);
-    EXPECT_EQ(json->functionList_.size(), 5u);
-    EXPECT_EQ(json->functionMap_.size(), 5u);
+    ASSERT_EQ(json->functionMap_.size(), 2u);
+    EXPECT_EQ(json->functionMap_[0].size(), 2u);
+    EXPECT_EQ(json->functionMap_[1].size(), 3u);
 }
 
 /**

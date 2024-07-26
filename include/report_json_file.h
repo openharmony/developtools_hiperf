@@ -186,6 +186,7 @@ V &GetOrCreateMapItem(std::map<K, V> &map, const K &key)
 struct ReportFuncMapItem {
     int libId_ = -1;
     std::string funcName_;
+    int reportFuncId_ = -1;
     void OutputJson(FILE *output) const
     {
         if (fprintf(output, "{") < 0) {
@@ -197,7 +198,8 @@ struct ReportFuncMapItem {
             return;
         }
     }
-    ReportFuncMapItem(int libId, std::string &funcName) : libId_(libId), funcName_(funcName) {}
+    ReportFuncMapItem(int libId, std::string &funcName, int reportFuncId)
+        : libId_(libId), funcName_(funcName), reportFuncId_(reportFuncId) {}
 };
 
 struct ReportFuncItem {
@@ -351,7 +353,6 @@ struct ReportConfigItem {
     ReportConfigItem(int index, std::string eventName) : index_(index), eventName_(eventName) {}
 };
 
-using functionKey = std::tuple<int, std::string>;
 static constexpr const int keyLibId = 0;
 static constexpr const int keyfuncName = 1;
 
@@ -381,9 +382,10 @@ private:
     const std::unique_ptr<PerfFileReader> &recordFileReader_;
     const VirtualRuntime &virtualRuntime_;
     std::vector<std::string_view> libList_;
-    std::vector<functionKey> functionList_;
-    std::map<int, ReportFuncMapItem> functionMap_;
+    int functionId_ = 0;
+    std::map<int, std::map<std::string, ReportFuncMapItem>> functionMap_;
     void AddNewFunction(int libId, std::string name);
+    void OutputJsonFunctionMap(FILE *output);
 
     ReportConfigItem &GetConfig(uint64_t id);
     std::string GetConfigName(uint64_t id);
