@@ -473,7 +473,7 @@ public:
         } else {
             HLOGW("type not found for %d  in %zu", type_id, TYPE_CONFIGS.size());
         }
-        return "<not found>";
+        return StringPrintf("0x%llx", config_id);;
     };
 
     static const std::tuple<bool, perf_type_id, __u64> GetStaticConfigId(const std::string &event_name)
