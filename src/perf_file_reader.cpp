@@ -265,6 +265,11 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
     // diff with reader
     uint64_t remainingSize = header_.data.size;
     size_t recordNumber = 0;
+    const perf_event_attr *attr = GetDefaultAttr();
+    if (attr == nullptr) {
+        HLOGE("attr is null");
+        return false;
+    }
     while (remainingSize > 0) {
         if (remainingSize < sizeof(perf_event_header)) {
             HLOGW("not enough sizeof perf_event_header");
@@ -295,7 +300,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
                     }
                     uint8_t *data = buf;
                     std::unique_ptr<PerfEventRecord> record = GetPerfEventRecord(
-                        static_cast<perf_event_type>(header->type), data, *GetDefaultAttr());
+                        static_cast<perf_event_type>(header->type), data, *attr);
                     // unknown record , break the process
                     if (!record) {
                         return false;
