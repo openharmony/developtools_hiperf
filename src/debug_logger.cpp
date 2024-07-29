@@ -254,7 +254,9 @@ bool DebugLogger::OpenLog(const std::string &tempLogPath, const std::string &fla
         return false;
     }
     if (!tempLogPath.empty()) {
-        fclose(file_);
+        if (file_ != nullptr) {
+            fclose(file_);
+        }
         std::string resolvedPath = CanonicalizeSpecPath(tempLogPath.c_str());
         file_ = fopen(resolvedPath.c_str(), flags.c_str());
     }

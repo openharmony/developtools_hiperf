@@ -658,7 +658,9 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
 {
     u64 payload;
     u64 ip;
-
+    if (decoder == nullptr) {
+        return -1;
+    }
     memset_s(&decoder->record, sizeof(decoder->record), 0, sizeof(decoder->record));
     decoder->record.context_id = (u64)-1;
 

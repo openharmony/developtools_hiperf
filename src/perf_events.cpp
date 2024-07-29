@@ -144,6 +144,7 @@ u32 GetSpeType()
     }
     if (fscanf_s(fd, "%u", &speType) <= 0) {
         HLOGV("fscanf_s file failed");
+        (void)fclose(fd);
         return -1;
     }
 
@@ -171,16 +172,6 @@ PerfEvents::~PerfEvents()
         it = cpuMmap_.erase(it);
     }
 
-    // close file descriptor of perf_event_open() created
-    for (auto eventGroupItem = eventGroupItem_.begin(); eventGroupItem != eventGroupItem_.end();) {
-        for (const auto &eventItem : eventGroupItem->eventItems) {
-            for (const auto &fdItem : eventItem.fdItems) {
-                close(fdItem.fd);
-            }
-        }
-        eventGroupItem = eventGroupItem_.erase(eventGroupItem);
-    }
-
     ExitReadRecordBufThread();
 }
 
@@ -191,20 +182,16 @@ bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
     if (fd < 0) {
         printf("event not support %s\n", GetStaticConfigName(type, config).c_str());
         return false;
-    } else {
-        close(fd);
-        return true;
     }
+    return true;
 }
 bool PerfEvents::IsEventAttrSupport(perf_event_attr &attr)
 {
     UniqueFd fd = Open(attr);
     if (fd < 0) {
         return false;
-    } else {
-        close(fd);
-        return true;
     }
+    return true;
 }
 
 bool PerfEvents::SetBranchSampleType(uint64_t value)
