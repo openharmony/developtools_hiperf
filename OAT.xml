@@ -56,7 +56,7 @@ Note:If the text contains special characters, please escape them according to th
 <configuration>
     <oatconfig>
         <filefilterlist>
-            <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
+            <filefilter name="defaultPolicyFilter" desc="Filters for compatibility, license header policies">
                 <filteritem type="filepath" name="test/unittest/resource/testdata/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/report/.*" desc="test resource file, no license header"/>
@@ -119,6 +119,8 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf.uncompress.data" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/fp.compress.data" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/fp.uncompress.data" desc="the binary file for test, the file is self-developed"/>
+                <filteritem type="filepath" name="test/unittest/resource/testdata/invalid_perf.data.tar.gz" desc="the binary file for test, the file is self-developed"/>
+                <filteritem type="filepath" name="test/unittest/resource/testdata/invalid_gzip_perf.data.tar.gz" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="demo/js/entry/src/main/resources/base/media/icon.png" desc="the binary file, the file is self-picture"/>
                 <filteritem type="filepath" name="figures/hiperf_architecture.png" desc="the binary file, the file is self-picture"/>
                 <filteritem type="filepath" name="figures/hiperf_architecture_zh.png" desc="the binary file, the file is self-picture"/>

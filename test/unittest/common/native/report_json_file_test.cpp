@@ -83,7 +83,7 @@ std::unique_ptr<ReportJsonFile> ReportJsonFileTest::PrepairReportJson(
     json->AddNewFunction(0, "funca1");
     json->AddNewFunction(0, "funca2");
     json->AddNewFunction(1, "funcb1");
-    json->AddNewFunction(2, "funcc1");
+    json->AddNewFunction(2, "funcc1"); // 2: num two
     // id , pid , tid , event count
     uint64_t id = 1;
     uint64_t eventCount = 10;

@@ -169,6 +169,25 @@ HWTEST_F(RegisterTest, RegisterGetName, TestSize.Level1)
         EXPECT_EQ(RegisterGetName(i).empty(), false);
     }
 }
+
+/**
+ * @tc.name: GetArchName
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(RegisterTest, GetArchName, TestSize.Level1)
+{
+    RegisterGetSP(ArchType::ARCH_ARM);
+    EXPECT_STREQ(GetArchName(ArchType::ARCH_ARM).c_str(), "ARM");
+    RegisterGetSP(ArchType::ARCH_ARM64);
+    EXPECT_STREQ(GetArchName(ArchType::ARCH_ARM64).c_str(), "ARM64");
+    RegisterGetSP(ArchType::ARCH_X86);
+    EXPECT_STREQ(GetArchName(ArchType::ARCH_X86).c_str(), "X86_32");
+    RegisterGetSP(ArchType::ARCH_X86_64);
+    EXPECT_STREQ(GetArchName(ArchType::ARCH_X86_64).c_str(), "X86_64");
+    RegisterGetSP(ArchType::ARCH_UNKNOWN);
+    EXPECT_STREQ(GetArchName(ArchType::ARCH_UNKNOWN).c_str(), "Unsupport");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

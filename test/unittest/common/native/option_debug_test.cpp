@@ -35,7 +35,7 @@ public:
     void SetUp();
     void TearDown();
     const std::string TEST_LOG_MESSAGE = "<HELLO_TEST_LOG_MESSAGE>";
-    void LogLevelTest(std::vector<std::string> args, DebugLevel level);
+    void LogLevelTest(std::vector<std::string> args, DebugLevel level, bool result = true);
     default_random_engine rnd_;
 };
 
@@ -63,11 +63,14 @@ void OptionDebugTest::TearDown()
     Option::ClearMainOptions();
 }
 
-void OptionDebugTest::LogLevelTest(std::vector<std::string> args, const DebugLevel testlevel)
+void OptionDebugTest::LogLevelTest(std::vector<std::string> args, const DebugLevel testlevel, bool result)
 {
     // backup
     DebugLevel oldLevel = DebugLogger::GetInstance()->GetLogLevel();
-    EXPECT_EQ(Command::DispatchCommands(args), true);
+    EXPECT_EQ(Command::DispatchCommands(args), result);
+    if (!result) {
+        return;
+    }
 
     const std::string logMessage =
         TEST_LOG_MESSAGE + std::to_string(rnd_()) + "_" + std::to_string(testlevel);
@@ -140,6 +143,36 @@ HWTEST_F(OptionDebugTest, much, TestSize.Level1)
 }
 
 /**
+ * @tc.name: undebug
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionDebugTest, undebug, TestSize.Level1)
+{
+    LogLevelTest({"--debug"}, LEVEL_DEBUG, false);
+}
+
+/**
+ * @tc.name: unverbose
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionDebugTest, unverbose, TestSize.Level1)
+{
+    LogLevelTest({"--verbose"}, LEVEL_VERBOSE, false);
+}
+
+/**
+ * @tc.name: unmuch
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionDebugTest, unmuch, TestSize.Level1)
+{
+    LogLevelTest({"--much"}, LEVEL_MUCH, false);
+}
+
+/**
  * @tc.name: mixlog
  * @tc.desc:
  * @tc.type: FUNC
@@ -171,6 +204,16 @@ HWTEST_F(OptionDebugTest, logpath, TestSize.Level1)
 }
 
 /**
+ * @tc.name: unlogpath
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionDebugTest, unlogpath, TestSize.Level1)
+{
+    EXPECT_EQ(Command::DispatchCommands({"--logpath"}), false);
+}
+
+/**
  * @tc.name: logtag
  * @tc.desc:
  * @tc.type: FUNC
@@ -182,6 +225,16 @@ HWTEST_F(OptionDebugTest, logtag, TestSize.Level1)
 }
 
 /**
+ * @tc.name: unlogtag
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionDebugTest, unlogtag, TestSize.Level1)
+{
+    LogLevelTest({"--logtag"}, LEVEL_MUCH, false);
+}
+
+/**
  * @tc.name: logDisabled
  * @tc.desc:
  * @tc.type: FUNC
@@ -190,6 +243,18 @@ HWTEST_F(OptionDebugTest, logDisabled, TestSize.Level1)
 {
     // no log will save in log file.
     LogLevelTest({"--nodebug", TEST_CMD_NOTHING}, LEVEL_FATAL);
+    DebugLogger::GetInstance()->Disable(false);
+}
+
+/**
+ * @tc.name: unlogDisabled
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionDebugTest, unlogDisabled, TestSize.Level1)
+{
+    // no log will save in log file.
+    LogLevelTest({"--nodebug"}, LEVEL_FATAL, false);
     DebugLogger::GetInstance()->Disable(false);
 }
 
