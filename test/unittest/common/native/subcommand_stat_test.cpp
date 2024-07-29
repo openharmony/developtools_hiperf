@@ -962,7 +962,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d5, TestSize.Level1)
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // 10: sleep 10ms
     }
 
     std::string cmdstr = "stat -p ";
@@ -1000,7 +1000,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d6, TestSize.Level1)
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
     while (tid1 == 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // 10: sleep 10ms
     }
 
     std::string cmdstr = "stat -p ";
