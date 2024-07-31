@@ -14,6 +14,7 @@
  */
 
 #include "cpu_usage_test.h"
+#include "utilities_test.h"
 using namespace std;
 using namespace testing::ext;
 using namespace std::chrono;
@@ -40,6 +41,8 @@ public:
     float GetCpuUsageRatio(int pid);
 
     float GetAverageCpuUsage(pid_t pid, uint64_t timeOut);
+
+    void TestCpuUsage(const std::string &option, unsigned int expect, bool fixPid);
 };
 
 void CpuUsageTest::SetUpTestCase() {}
@@ -208,6 +211,24 @@ float CpuUsageTest::GetAverageCpuUsage(pid_t pid, uint64_t timeOut)
     return cpuUsage;
 }
 
+void CpuUsageTest::TestCpuUsage(const std::string &option, unsigned int expect, bool fixPid)
+{
+    std::string cmd = "hiperf record ";
+    if (fixPid) {
+        cmd += "--app ";
+        cmd += " " + TEST_PROCESSES;
+    }
+    cmd += " " + option;
+
+    std::thread perf(system, cmd.c_str());
+    perf.detach();
+    pid_t pid = GetPidByProcessName("hiperf");
+    uint64_t timeOut = 10000;
+    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
+
+    EXPECT_LE(cpuUsage, expect);
+}
+
 /**
  * @tc.name: recordCpuUsageF100_FP_SYSTEM
  * @tc.desc: test hiperf record system wide cpu usage within required limit
@@ -215,13 +236,7 @@ float CpuUsageTest::GetAverageCpuUsage(pid_t pid, uint64_t timeOut)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 100 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F100_FP_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 100 -s fp -d 10", F100_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -231,13 +246,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 500 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F500_FP_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 500 -s fp -d 10", F500_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -247,13 +256,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 1000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F1000_FP_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 1000 -s fp -d 10", F1000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -263,13 +266,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 2000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F2000_FP_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 2000 -s fp -d 10", F2000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -279,13 +276,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 4000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F4000_FP_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 4000 -s fp -d 10", F4000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -295,13 +286,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 8000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F8000_FP_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 8000 -s fp -d 10", F8000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -311,13 +296,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 100 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F100_DWARF_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 100 -s dwarf -d 10", F100_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -327,13 +306,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 500 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F500_DWARF_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 500 -s dwarf -d 10", F500_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -343,13 +316,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 1000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F1000_DWARF_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 1000 -s dwarf -d 10", F1000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -359,13 +326,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 2000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F2000_DWARF_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 2000 -s dwarf -d 10", F2000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -375,13 +336,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 4000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F4000_DWARF_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 4000 -s dwarf -d 10", F4000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -391,13 +346,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_SYSTEM, TestSize.Level1)
 {
-    std::string cmd = "hiperf record -a -f 8000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F8000_DWARF_CPU_LIMIT_SYSTEM);
+    TestCpuUsage("-a -f 8000 -s dwarf -d 10", F8000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -407,13 +356,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 100 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F100_FP_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 100 -s fp -d 10", F100_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -423,13 +366,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 500 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F500_FP_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 500 -s fp -d 10", F500_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -439,13 +376,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 1000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F1000_FP_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 1000 -s fp -d 10", F1000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -455,13 +386,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 2000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F2000_FP_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 2000 -s fp -d 10", F2000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -471,13 +396,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 4000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F4000_FP_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 4000 -s fp -d 10", F4000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -487,13 +406,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 8000 -s fp -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F8000_FP_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 8000 -s fp -d 10", F8000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -503,13 +416,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 100 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F100_DWARF_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 100 -s dwarf -d 10", F100_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -519,13 +426,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 500 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F500_DWARF_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 500 -s dwarf -d 10", F500_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -535,13 +436,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 1000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F1000_DWARF_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 1000 -s dwarf -d 10", F1000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -551,13 +446,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 2000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F2000_DWARF_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 2000 -s dwarf -d 10", F2000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -567,13 +456,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 4000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F4000_DWARF_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 4000 -s dwarf -d 10", F4000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -583,13 +466,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_PROCESS, TestSize.Level1)
 {
-    std::string cmd = "hiperf record --app com.ohos.systemui -f 8000 -s dwarf -d 10";
-    std::thread perf(system, cmd.c_str());
-    perf.detach();
-    pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
-    float cpuUsage = GetAverageCpuUsage(pid, timeOut);
-    EXPECT_LE(cpuUsage, F8000_DWARF_CPU_LIMIT_PROCESS);
+    TestCpuUsage("-f 8000 -s dwarf -d 10", F8000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 } // namespace HiPerf
 } // namespace Developtools
