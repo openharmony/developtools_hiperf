@@ -21,6 +21,7 @@
 #include <thread>
 
 #include "utilities.h"
+#include "utilities_test.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -425,7 +426,7 @@ HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level1)
 HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level1)
 {
     HiperfClient::RecordOption opt;
-    opt.SetAppPackage("com.ohos.launcher");
+    opt.SetAppPackage(TEST_PROCESSES);
 
     TestCaseOption(opt);
 }

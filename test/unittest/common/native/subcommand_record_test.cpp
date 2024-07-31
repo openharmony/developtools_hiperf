@@ -29,6 +29,7 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "utilities.h"
+#include "utilities_test.h"
 
 using namespace std::literals::chrono_literals;
 using namespace testing::ext;
@@ -125,7 +126,8 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 
     std::string cmdString = "record ";
     if (fixPid) {
-        cmdString += "--app com.ohos.launcher ";
+        cmdString += "--app ";
+        cmdString += " " + TEST_PROCESSES;
     }
     cmdString += " " + option;
     printf("command : %s\n", cmdString.c_str());
@@ -157,7 +159,7 @@ size_t SubCommandRecordTest::GetFileSize(const char* fileName)
 // app package name
 HWTEST_F(SubCommandRecordTest, PackageName, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2  --app com.ohos.launcher ", true, false);
+    ForkAndRunTest("-d 2 ", true, true);
 }
 
 HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level1)
@@ -1048,7 +1050,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_SYSTEM, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 100 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -f 100 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_PROCESS);
@@ -1061,7 +1063,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_PROCESS, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 500 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -f 500 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_PROCESS);
@@ -1074,7 +1076,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 1000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 --app -f 1000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_PROCESS);
@@ -1087,7 +1089,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 2000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -f 2000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_PROCESS);
@@ -1100,7 +1102,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 4000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -f 4000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_PROCESS);
@@ -1113,7 +1115,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 8000 -s dwarf", true, false);
+    ForkAndRunTest("-d 10 -f 8000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_PROCESS);
@@ -1126,7 +1128,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_PROCESS, TestSize.L
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 100 -s fp", true, false);
+    ForkAndRunTest("-d 10 -f 100 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F100_FP_PROCESS);
@@ -1139,7 +1141,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_PROCESS, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 500 -s fp", true, false);
+    ForkAndRunTest("-d 10 -f 500 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F500_FP_PROCESS);
@@ -1152,7 +1154,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_PROCESS, TestSize.Level
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 1000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -f 1000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_PROCESS);
@@ -1165,7 +1167,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 2000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -f 2000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_PROCESS);
@@ -1178,7 +1180,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 4000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -f 4000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_PROCESS);
@@ -1191,7 +1193,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app com.ohos.systemui -f 8000 -s fp", true, false);
+    ForkAndRunTest("-d 10 -f 8000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_PROCESS);
