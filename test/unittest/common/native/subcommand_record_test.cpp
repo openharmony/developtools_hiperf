@@ -868,7 +868,7 @@ HWTEST_F(SubCommandRecordTest, DataLimitErr, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, RecordCompress, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 -z ");
+    ForkAndRunTest("-d 2 -z -o /data/local/tmp/perf.data.tar.gz");
 }
 
 HWTEST_F(SubCommandRecordTest, Verbose, TestSize.Level1)
@@ -1076,7 +1076,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app -f 1000 -s dwarf", true, true);
+    ForkAndRunTest("-d 10 -f 1000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_PROCESS);
@@ -1237,6 +1237,16 @@ HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadName, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadNames, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 --exclude-thread test1,test2 ", true);
+}
+
+/**
+ * @tc.name: ExcludeTids
+ * @tc.desc: Test --exclude-tid
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ExcludeTids, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 -s dwarf -f 2000 --exclude-tid 200");
 }
 
 /**
@@ -1462,6 +1472,96 @@ HWTEST_F(SubCommandRecordTest, TraceCommand, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, TraceCommandErr, TestSize.Level1)
 {
     TestRecordCommand("-d 2 -s dwarf invalidcommand", false, false);
+}
+
+/**
+ * @tc.name: TestInputErr
+ * @tc.desc: Test input with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestInputErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -s dwarf -f 2000 --pipe_input", false, false);
+}
+
+/**
+ * @tc.name: TestOutputErr
+ * @tc.desc: Test output with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOutputErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -s dwarf -f 2000 --pipe_output", false, false);
+}
+
+/**
+ * @tc.name: TestBranchFilterErr
+ * @tc.desc: Test branch filter with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestBranchFilterErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -s dwarf -f 2000 -j", false, false);
+}
+
+/**
+ * @tc.name: TestCallStackErr
+ * @tc.desc: Test call stack with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestCallStackErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -f 2000 --call-stack", false, false);
+}
+
+/**
+ * @tc.name: TestEventGroupErr
+ * @tc.desc: Test event group with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestEventGroupErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -f 2000 -g", false, false);
+}
+
+/**
+ * @tc.name: TestExcludeThreadErr
+ * @tc.desc: Test exclude-thread with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestExcludeThreadErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -f 2000 --exclude-thread", false, false);
+}
+
+/**
+ * @tc.name: TestSymbolDirErr
+ * @tc.desc: Test symbol-dir with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestSymbolDirErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -f 2000 --symbol-dir", false, false);
+}
+
+/**
+ * @tc.name: TestControlErr
+ * @tc.desc: Test control with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestControlErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -f 2000 --control", false, false);
+}
+
+/**
+ * @tc.name: TestCmdlineSizeErr
+ * @tc.desc: Test cmdline-size with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestCmdlineSizeErr, TestSize.Level1)
+{
+    TestRecordCommand("-d 2 -a -f 2000 --cmdline-size", false, false);
 }
 } // namespace HiPerf
 } // namespace Developtools
