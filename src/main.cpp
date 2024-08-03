@@ -42,6 +42,10 @@ using namespace OHOS::Developtools::HiPerf;
 
 int main(const int argc, const char *argv[])
 {
+    if (argc < 0 || argc > 128) { // 128 : max input argument counts
+        printf("The number of input arguments exceeds the upper limit.\n");
+        return -1;
+    }
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
