@@ -189,6 +189,7 @@ bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
     if (map == nullptr) {
         return false;
     }
+    HLOGV("hap name:%s", map->name.c_str());
     // found it by name
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(map->name);
     if (symbolsFile == nullptr) {
@@ -885,7 +886,7 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
     for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
         if (symbolsFiles_[i]->filePath_ == map->name) {
             map->symbolFileIndex = static_cast<int32_t>(i);
-            HLOGV("already have '%s'", map->name.c_str());
+            HLOGV("already have '%s', symbol index:%zu", map->name.c_str(), i);
             return;
         }
     }
