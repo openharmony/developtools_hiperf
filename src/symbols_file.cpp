@@ -180,7 +180,6 @@ public:
     bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         std::string findPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
         if (findPath.empty() && elfFile_ == nullptr) { // elf not compressed in hap has been initialized before
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
@@ -216,7 +215,6 @@ public:
 protected:
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         std::lock_guard<std::mutex> lock(mutex_);
         if (debugInfoLoadResult_) {
             return true; // it must have been loaded
