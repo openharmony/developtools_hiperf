@@ -180,6 +180,7 @@ public:
     bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
+        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         std::string findPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
         if (findPath.empty() && elfFile_ == nullptr) { // elf not compressed in hap has been initialized before
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
@@ -215,6 +216,7 @@ public:
 protected:
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
+        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         std::lock_guard<std::mutex> lock(mutex_);
         if (debugInfoLoadResult_) {
             return true; // it must have been loaded
@@ -410,6 +412,9 @@ private:
 
         AdjustSymbols();
         HLOGD("%zu symbols loadded from elf '%s'.", symbols_.size(), elfPath.c_str());
+        for (auto symbol: symbols_) {
+            HLOGD("symbol %s", symbol.ToDebugString().c_str());
+        }
         if (buildId_.empty()) {
             HLOGD("buildId not found from elf '%s'.", elfPath.c_str());
             // don't failed. some time the lib have not got the build id
@@ -979,29 +984,30 @@ public:
 
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
+        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         if (debugInfoLoaded_) {
             return true;
         }
-        debugInfoLoaded_ = true;
         if (!onRecording_) {
             return true;
         }
 
-        if (!IsHapAbc()) {
+        if (!IsHapAbc() || map->IsMapExec()) {
             ElfFileSymbols::LoadDebugInfo(map, "");
         }
-
+        debugInfoLoaded_ = true;
         debugInfoLoadResult_ = true;
         return true;
     }
 
     bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
+        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         if (symbolsLoaded_ || !onRecording_) {
             return true;
         }
         symbolsLoaded_ = true;
-        if (!IsHapAbc()) {
+        if (!IsHapAbc() || map->IsMapExec()) {
             ElfFileSymbols::LoadSymbols(map, "");
         }
         return true;
