@@ -21,9 +21,9 @@
 using namespace OHOS::Developtools::HiPerf;
 
 #if defined(__aarch64__)
-const std::string TEST_PROCESSES = "com.ohos.sceneboard";
+static const std::string TEST_PROCESSES = "com.ohos.sceneboard";
 #else
-const std::string TEST_PROCESSES = "com.ohos.launcher";
+static const std::string TEST_PROCESSES = "com.ohos.launcher";
 #endif
 
 namespace HiperfClientDemo {
