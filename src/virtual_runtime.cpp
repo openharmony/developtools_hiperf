@@ -196,6 +196,7 @@ bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
         HLOGV("Failed to load CreateSymbolsFile for exec section in hap(%s)", map->name.c_str());
         return false;
     }
+    symbolsFile->SetMapsInfo(map);
     // update maps name if load debuginfo successfully
     if (!symbolsFile->LoadDebugInfo(map)) {
         HLOGV("Failed to load debuginfo for exec section in hap(%s)", map->name.c_str());
