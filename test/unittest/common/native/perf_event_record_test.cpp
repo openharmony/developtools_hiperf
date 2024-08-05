@@ -678,6 +678,29 @@ HWTEST_F(PerfEventRecordTest, SwitchCpuWide, TestSize.Level1)
     ASSERT_TRUE(record.GetBinary(buff));
     ASSERT_EQ(CompareByteStream((uint8_t *)&data, buff.data(), sizeof(data)), 0);
 }
+
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord, TestSize.Level1)
+{
+    struct PerfRecordSwitchCpuWidest {
+        perf_event_header h;
+        PerfRecordSwitchCpuWideData d;
+    };
+    PerfRecordSwitchCpuWidest data = {
+        {PERF_RECORD_SWITCH_CPU_WIDE, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordSwitchCpuWidest)},
+        {}};
+    perf_event_attr attr {};
+    attr.sample_type = UINT64_MAX;
+    for (size_t type = PERF_RECORD_MMAP; type <= PERF_RECORD_MAX; type++) {
+        if (type == PERF_RECORD_SAMPLE) {
+            continue;
+        }
+        std::unique_ptr<PerfEventRecord> perfEventRecord =
+            GetPerfEventRecord(static_cast<perf_event_type>(type), reinterpret_cast<uint8_t *>(&data), attr);
+        if (type < PERF_RECORD_NAMESPACES) {
+            ASSERT_EQ(perfEventRecord != nullptr, true);
+        }
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

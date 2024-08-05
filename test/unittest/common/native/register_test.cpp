@@ -75,13 +75,11 @@ HWTEST_F(RegisterTest, GetSupportedRegMask, TestSize.Level1)
  */
 HWTEST_F(RegisterTest, RegisterGetIP, TestSize.Level1)
 {
-#if defined(target_cpu_x86_64)
+    EXPECT_EQ(RegisterGetIP(ArchType::ARCH_X86), PERF_REG_X86_IP);
     EXPECT_EQ(RegisterGetIP(ArchType::ARCH_X86_64), PERF_REG_X86_IP);
-#elif defined(target_cpu_arm)
     EXPECT_EQ(RegisterGetIP(ArchType::ARCH_ARM), PERF_REG_ARM_PC);
-#elif defined(target_cpu_arm64)
     EXPECT_EQ(RegisterGetIP(ArchType::ARCH_ARM64), PERF_REG_ARM64_PC);
-#endif
+    EXPECT_EQ(RegisterGetIP(ArchType::ARCH_UNKNOWN), std::numeric_limits<size_t>::max());
 }
 
 /**

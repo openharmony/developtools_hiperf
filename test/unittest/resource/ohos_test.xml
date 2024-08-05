@@ -79,8 +79,6 @@
 
             <option name="push" value="testdata/perfnew.data -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/report_test.data -> /data/test/resource/testdata/" src="res"/>
-            <option name="push" value="testdata/invalid_gzip_perf.data.tar.gz -> /data/test/resource/testdata/" src="res"/>
-            <option name="push" value="testdata/invalid_perf.data.tar.gz -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/report_test_i.txt -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/report_test_diff.txt -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/report_test_sort1.txt -> /data/test/resource/testdata/" src="res"/>

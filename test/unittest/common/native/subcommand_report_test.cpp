@@ -215,7 +215,9 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level1)
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     const auto startTime = chrono::steady_clock::now();
-    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "invalid_perf.data.tar.gz"), false);
+    std::string cmd = "tar -czvf " + RESOURCE_PATH + "report_test.data.tar.gz " + RESOURCE_PATH + "report_test.data";
+    std::system(cmd.c_str());
+    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data.tar.gz"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
@@ -227,16 +229,16 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestOnSubCommand_gzip_fail1
+ * @tc.name: TestOnSubCommand_gzip
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     const auto startTime = chrono::steady_clock::now();
-    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "invalid_gzip_perf.data.tar.gz"), false);
+    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/perf.data.tar.gz"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
@@ -1247,6 +1249,28 @@ HWTEST_F(SubCommandReportTest, TestFpUnCompress, TestSize.Level1)
     EXPECT_EQ(FindExpectStr(stringOut, expectStr), false);
     const std::string expectPercentageStr = "|- 53.27% __kmalloc_reserve";
     EXPECT_EQ(FindExpectStr(stringOut, expectPercentageStr), true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_from_funcs_fail
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_from_funcs_fail, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
+                                       "report_test.data --from_funcs"),
+              false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools
