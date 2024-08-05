@@ -1059,9 +1059,6 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
             } else {
                 HLOGD("symbolsFile:%s is ABC :%d", symbolsFile->filePath_.c_str(), symbolsFile->IsAbc());
                 foundSymbols = symbolsFile->GetSymbolWithPcAndMap(ip, map);
-                if (!foundSymbols.IsValid()) {
-                    foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
-                }
             }
 
             if (foundSymbols.IsValid()) {
