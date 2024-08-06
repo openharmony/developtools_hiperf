@@ -99,7 +99,7 @@ const std::set<int> ALLOW_UIDS = {1201};
 
 const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
 static FILE *g_outputDump = nullptr;
-const uint64_t waitAppRunCheckTimeOut = 10;
+const uint64_t waitAppRunCheckTimeOut = 20;
 
 struct ThreadInfos {
     pid_t tid;

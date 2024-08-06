@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "utilities.h"
+
 #include <zlib.h>
 #include <thread>
 #if defined(CONFIG_HAS_SYSPARA) && defined(is_ohos) && is_ohos
@@ -20,16 +22,6 @@
 #endif
 #if defined(is_mingw) && is_mingw
 #include <io.h>
-#endif
-#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-#include "application_info.h"
-#include "bundle_mgr_proxy.h"
-#endif
-#if defined(is_ohos) && is_ohos
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
-using namespace OHOS;
-using namespace OHOS::AppExecFwk;
 #endif
 
 using namespace std::chrono;
