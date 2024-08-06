@@ -43,6 +43,7 @@ sources_base = [
   "unittest/common/native/report_test.cpp",
   "unittest/common/native/report_json_file_test.cpp",
   "unittest/common/native/unique_stack_table_test.cpp",
+  "unittest/common/native/spe_decoder_test.cpp",
 ]
 
 if (hiperf_debug) {
