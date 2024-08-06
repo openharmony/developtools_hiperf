@@ -221,9 +221,13 @@ std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
 
 PerfRecordAuxtrace::PerfRecordAuxtrace(uint8_t *p) : PerfEventRecord(p, "auxtrace")
 {
-    size_t copySize = header.size - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    if (header.size >= sizeof(header)) {
+        size_t copySize = header.size - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordAuxtrace retren failed !!!");
     }
     rawData_ = p + header.size;
 }
@@ -593,9 +597,14 @@ void PerfRecordSample::Clean()
 
 PerfRecordMmap::PerfRecordMmap(uint8_t *p) : PerfEventRecord(p, "mmap")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordMmap retren failed !!!");
     }
 }
 
@@ -645,9 +654,14 @@ void PerfRecordMmap::DumpLog(const std::string &prefix) const
 
 PerfRecordMmap2::PerfRecordMmap2(uint8_t *p) : PerfEventRecord(p, "mmap2")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordMmap2 retren failed !!!");
     }
 }
 
@@ -742,9 +756,14 @@ void PerfRecordMmap2::DumpLog(const std::string &prefix) const
 
 PerfRecordLost::PerfRecordLost(uint8_t *p) : PerfEventRecord(p, "lost")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordLost retren failed !!!");
     }
 }
 
@@ -770,9 +789,14 @@ void PerfRecordLost::DumpData(int indent) const
 
 PerfRecordComm::PerfRecordComm(uint8_t *p) : PerfEventRecord(p, "comm")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordComm retren failed !!!");
     }
 }
 
@@ -816,9 +840,14 @@ void PerfRecordComm::DumpLog(const std::string &prefix) const
 
 PerfRecordExit::PerfRecordExit(uint8_t *p) : PerfEventRecord(p, "exit")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordExit retren failed !!!");
     }
 }
 
@@ -844,9 +873,14 @@ void PerfRecordExit::DumpData(int indent) const
 
 PerfRecordThrottle::PerfRecordThrottle(uint8_t *p) : PerfEventRecord(p, "throttle")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordThrottle retren failed !!!");
     }
 }
 
@@ -872,9 +906,14 @@ void PerfRecordThrottle::DumpData(int indent) const
 
 PerfRecordUnthrottle::PerfRecordUnthrottle(uint8_t *p) : PerfEventRecord(p, "unthrottle")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordUnthrottle retren failed !!!");
     }
 }
 
@@ -899,9 +938,14 @@ void PerfRecordUnthrottle::DumpData(int indent) const
 
 PerfRecordFork::PerfRecordFork(uint8_t *p) : PerfEventRecord(p, "fork")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordFork retren failed !!!");
     }
 }
 
@@ -927,9 +971,14 @@ void PerfRecordFork::DumpData(int indent) const
 
 PerfRecordRead::PerfRecordRead(uint8_t *p) : PerfEventRecord(p, "read")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordRead retren failed !!!");
     }
 }
 
@@ -956,9 +1005,14 @@ void PerfRecordRead::DumpData(int indent) const
 
 PerfRecordAux::PerfRecordAux(uint8_t *p) : PerfEventRecord(p, "aux")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordAux retren failed !!!");
     }
 }
 
@@ -993,9 +1047,14 @@ void PerfRecordAux::DumpData(int indent) const
 
 PerfRecordItraceStart::PerfRecordItraceStart(uint8_t *p) : PerfEventRecord(p, "itraceStart")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordItraceStart retren failed !!!");
     }
 }
 
@@ -1020,9 +1079,14 @@ void PerfRecordItraceStart::DumpData(int indent) const
 
 PerfRecordLostSamples::PerfRecordLostSamples(uint8_t *p) : PerfEventRecord(p, "lostSamples")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordLostSamples retren failed !!!");
     }
 }
 
@@ -1047,9 +1111,14 @@ void PerfRecordLostSamples::DumpData(int indent) const
 
 PerfRecordSwitch::PerfRecordSwitch(uint8_t *p) : PerfEventRecord(p, "switch")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordSwitch retren failed !!!");
     }
 }
 
@@ -1069,9 +1138,14 @@ bool PerfRecordSwitch::GetBinary(std::vector<uint8_t> &buf) const
 
 PerfRecordSwitchCpuWide::PerfRecordSwitchCpuWide(uint8_t *p) : PerfEventRecord(p, "switchCpuWide")
 {
-    size_t copySize = GetSize() - sizeof(header);
-    if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-        HLOGE("memcpy_s retren failed !!!");
+    size_t dataSize = GetSize();
+    if (dataSize >= sizeof(header)) {
+        size_t copySize = dataSize - sizeof(header);
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
+            HLOGE("memcpy_s retren failed !!!");
+        }
+    } else {
+        HLOGE("PerfRecordSwitchCpuWide retren failed !!!");
     }
 }
 
