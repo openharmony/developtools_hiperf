@@ -57,7 +57,6 @@ static int SpeGetPayload(const unsigned char *buf, size_t len,
                          unsigned char extHdr, struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -81,7 +80,6 @@ static int SpeGetPayload(const unsigned char *buf, size_t len,
 static int SpeGetPad(struct SpePkt *packet)
 {
     if (packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -93,7 +91,6 @@ static int SpeGetAlignment(const unsigned char *buf, size_t len,
                            struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -109,7 +106,6 @@ static int SpeGetAlignment(const unsigned char *buf, size_t len,
 static int SpeGetEnd(struct SpePkt *packet)
 {
     if (packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -121,7 +117,6 @@ static int SpeGetTimestamp(const unsigned char *buf, size_t len,
                            struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -133,7 +128,6 @@ static int SpeGetEvents(const unsigned char *buf, size_t len,
                         struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -146,7 +140,6 @@ static int SpeGetDataSource(const unsigned char *buf, size_t len,
                             struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -158,7 +151,6 @@ static int SpeGetContext(const unsigned char *buf, size_t len,
                          struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -171,7 +163,6 @@ static int SpeGetOpType(const unsigned char *buf, size_t len,
                         struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -184,7 +175,6 @@ static int SpeGetCounter(const unsigned char *buf, size_t len,
                          const unsigned char extHdr, struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -202,7 +192,6 @@ static int SpeGetAddr(const unsigned char *buf, size_t len,
                       const unsigned char extHdr, struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -220,7 +209,6 @@ static int SpeDoGetPacket(const unsigned char *buf, size_t len,
                           struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -284,7 +272,6 @@ int SpeGetPacket(const unsigned char *buf, size_t len,
                  struct SpePkt *packet)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -304,7 +291,6 @@ static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
                            const char *fmt, ...)
 {
     if (*bufPtr == nullptr || bufLen == nullptr || fmt == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -351,7 +337,6 @@ static int SpePktDescEvent(const struct SpePkt *packet,
                            char *buf, size_t bufLen)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -409,7 +394,6 @@ static int SpePktDescOpType(const struct SpePkt *packet,
                             char *buf, size_t bufLen)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -509,7 +493,6 @@ static int SpePktDescAddr(const struct SpePkt *packet,
                           char *buf, size_t bufLen)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -559,7 +542,6 @@ static int SpePktDesCont(const struct SpePkt *packet,
                          char *buf, size_t bufLen)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -591,7 +573,6 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
                size_t bufLen)
 {
     if (buf == nullptr || packet == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -706,7 +687,6 @@ static u64 SpeCalcIp(int index, u64 payload)
 struct SpeDecoder *SpeDecoderNew(struct SpeParams *params)
 {
     if (params == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return NULL;
     }
@@ -725,7 +705,6 @@ struct SpeDecoder *SpeDecoderNew(struct SpeParams *params)
 void SpeDecoderFree(struct SpeDecoder *decoder)
 {
     if (decoder == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return;
     }
@@ -735,7 +714,6 @@ void SpeDecoderFree(struct SpeDecoder *decoder)
 static int SpeGetNextPacket(struct SpeDecoder *decoder)
 {
     if (decoder == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -895,7 +873,6 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
 int SpeDecode(struct SpeDecoder *decoder)
 {
     if (decoder == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
@@ -905,7 +882,6 @@ int SpeDecode(struct SpeDecoder *decoder)
 struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
 {
     if (speBuf == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return NULL;
     }
@@ -926,7 +902,6 @@ struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
 void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump)
 {
     if (buf == nullptr) {
-        printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return;
     }
