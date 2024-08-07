@@ -481,6 +481,7 @@ bool PerfFileWriter::AddSymbolsFeature(
     HLOGV("add feature symbolsFiles %zu", symbolsFiles.size());
     std::vector<SymbolFileStruct> symbolFileStructs {};
     for (auto &symbolsFile : symbolsFiles) {
+        HLOGV("add feature symbolsFile %s", symbolsFile->filePath_.c_str());
         if (symbolsFile->SymbolsLoaded()) {
             auto &symbolsFileStruct = symbolFileStructs.emplace_back();
             symbolsFile->ExportSymbolToFileFormat(symbolsFileStruct);
