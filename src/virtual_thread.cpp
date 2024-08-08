@@ -144,18 +144,6 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByFileInfo(const std::string name,
     return nullptr;
 }
 
-std::shared_ptr<DfxMap> VirtualThread::FindFirstMapByFileInfo(const std::string name) const
-{
-    for (const auto &map : memMaps_) {
-        if (map == nullptr || name != map->name) {
-            continue;
-        }
-        return map;
-    }
-    HLOGM("not found map for %s ", name.c_str());
-    return nullptr;
-}
-
 SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) const
 {
     if (map == nullptr) {

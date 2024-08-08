@@ -119,7 +119,6 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf.uncompress.data" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/fp.compress.data" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/fp.uncompress.data" desc="the binary file for test, the file is self-developed"/>
-                <filteritem type="filepath" name="test/unittest/resource/testdata/spe_perf.data" desc="the binary file for test, the file is self-developed"/>
                 <filteritem type="filepath" name="demo/js/entry/src/main/resources/base/media/icon.png" desc="the binary file, the file is self-picture"/>
                 <filteritem type="filepath" name="figures/hiperf_architecture.png" desc="the binary file, the file is self-picture"/>
                 <filteritem type="filepath" name="figures/hiperf_architecture_zh.png" desc="the binary file, the file is self-picture"/>

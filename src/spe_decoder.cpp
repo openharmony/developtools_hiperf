@@ -32,6 +32,7 @@ constexpr const int UN_PRMT = -1;
 
 const char *SpePktName(enum SpePktType type)
 {
+#ifndef UNITTEST
     const char* spePacketName;
     switch (type) {
         case PERF_SPE_PAD:         spePacketName = "PAD"; break;
@@ -46,6 +47,9 @@ const char *SpePktName(enum SpePktType type)
         default:                   spePacketName = "INVALID"; break;
     }
     return spePacketName;
+#else
+    return "INVALID";
+#endif
 }
 
 static unsigned int SpePayloadLen(unsigned char hdr)
@@ -56,6 +60,7 @@ static unsigned int SpePayloadLen(unsigned char hdr)
 static int SpeGetPayload(const unsigned char *buf, size_t len,
                          unsigned char extHdr, struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -76,22 +81,28 @@ static int SpeGetPayload(const unsigned char *buf, size_t len,
     }
 
     return 1 + extHdr + payloadLen;
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetPad(struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
     packet->type = PERF_SPE_PAD;
+#endif
     return 1;
 }
 
 static int SpeGetAlignment(const unsigned char *buf, size_t len,
                            struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -104,22 +115,28 @@ static int SpeGetAlignment(const unsigned char *buf, size_t len,
 
     packet->type = PERF_SPE_PAD;
     return alignment - (((uintptr_t)buf) & (alignment - 1));
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetEnd(struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
     packet->type = PERF_SPE_END;
+#endif
     return 1;
 }
 
 static int SpeGetTimestamp(const unsigned char *buf, size_t len,
                            struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -127,11 +144,15 @@ static int SpeGetTimestamp(const unsigned char *buf, size_t len,
     }
     packet->type = PERF_SPE_TIMESTAMP;
     return SpeGetPayload(buf, len, 0, packet);
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetEvents(const unsigned char *buf, size_t len,
                         struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -140,11 +161,15 @@ static int SpeGetEvents(const unsigned char *buf, size_t len,
     packet->type = PERF_SPE_EVENTS;
     packet->index = SpePayloadLen(buf[0]);
     return SpeGetPayload(buf, len, 0, packet);
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetDataSource(const unsigned char *buf, size_t len,
                             struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -152,11 +177,15 @@ static int SpeGetDataSource(const unsigned char *buf, size_t len,
     }
     packet->type = PERF_SPE_DATA_SOURCE;
     return SpeGetPayload(buf, len, 0, packet);
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetContext(const unsigned char *buf, size_t len,
                          struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -165,11 +194,15 @@ static int SpeGetContext(const unsigned char *buf, size_t len,
     packet->type = PERF_SPE_CONTEXT;
     packet->index = PERF_SPE_CTX_PKT_HDR_INDEX(buf[0]);
     return SpeGetPayload(buf, len, 0, packet);
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetOpType(const unsigned char *buf, size_t len,
                         struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -178,11 +211,15 @@ static int SpeGetOpType(const unsigned char *buf, size_t len,
     packet->type = PERF_SPE_OP_TYPE;
     packet->index = PERF_SPE_OP_PKT_HDR_CLASS(buf[0]);
     return SpeGetPayload(buf, len, 0, packet);
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetCounter(const unsigned char *buf, size_t len,
                          const unsigned char extHdr, struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -196,11 +233,15 @@ static int SpeGetCounter(const unsigned char *buf, size_t len,
     }
 
     return SpeGetPayload(buf, len, extHdr, packet);
+#else
+    return 0;
+#endif
 }
 
 static int SpeGetAddr(const unsigned char *buf, size_t len,
                       const unsigned char extHdr, struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -214,11 +255,15 @@ static int SpeGetAddr(const unsigned char *buf, size_t len,
     }
 
     return SpeGetPayload(buf, len, extHdr, packet);
+#else
+    return 0;
+#endif
 }
 
 static int SpeDoGetPacket(const unsigned char *buf, size_t len,
                           struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -276,13 +321,14 @@ static int SpeDoGetPacket(const unsigned char *buf, size_t len,
     if ((hdr & PERF_SPE_HEADER0_MASK3) == PERF_SPE_HEADER0_COUNTER) {
         return SpeGetCounter(buf, len, extHdr, packet);
     }
-
+#endif
     return PERF_SPE_BAD_PACKET;
 }
 
 int SpeGetPacket(const unsigned char *buf, size_t len,
                  struct SpePkt *packet)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -298,11 +344,15 @@ int SpeGetPacket(const unsigned char *buf, size_t len,
         }
     }
     return ret;
+#else
+    return 0;
+#endif
 }
 
 static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
                            const char *fmt, ...)
 {
+#ifndef UNITTEST
     if (*bufPtr == nullptr || bufLen == nullptr || fmt == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -345,11 +395,15 @@ static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
     }
 
     return ret;
+#else
+    return 0;
+#endif
 }
 
 static int SpePktDescEvent(const struct SpePkt *packet,
                            char *buf, size_t bufLen)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -403,11 +457,15 @@ static int SpePktDescEvent(const struct SpePkt *packet,
     }
 
     return err;
+#else
+    return 0;
+#endif
 }
 
 static int SpePktDescOpType(const struct SpePkt *packet,
                             char *buf, size_t bufLen)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -503,11 +561,15 @@ static int SpePktDescOpType(const struct SpePkt *packet,
     }
 
     return err;
+#else
+    return 0;
+#endif
 }
 
 static int SpePktDescAddr(const struct SpePkt *packet,
                           char *buf, size_t bufLen)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -553,11 +615,15 @@ static int SpePktDescAddr(const struct SpePkt *packet,
     }
 
     return err;
+#else
+    return 0;
+#endif
 }
 
 static int SpePktDesCont(const struct SpePkt *packet,
                          char *buf, size_t bufLen)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -585,11 +651,15 @@ static int SpePktDesCont(const struct SpePkt *packet,
     }
 
     return err;
+#else
+    return 0;
+#endif
 }
 
 int SpePktDesc(const struct SpePkt *packet, char *buf,
                size_t bufLen)
 {
+#ifndef UNITTEST
     if (buf == nullptr || packet == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -642,10 +712,14 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
     }
 
     return err;
+#else
+    return 0;
+#endif
 }
 
 static u64 SpeCalcIp(int index, u64 payload)
 {
+#ifndef UNITTEST
     u64 ns;
     u64 el;
     u64 val;
@@ -701,10 +775,14 @@ static u64 SpeCalcIp(int index, u64 payload)
     }
 
     return payload;
+#else
+    return 0;
+#endif
 }
 
 struct SpeDecoder *SpeDecoderNew(struct SpeParams *params)
 {
+#ifndef UNITTEST
     if (params == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -720,20 +798,26 @@ struct SpeDecoder *SpeDecoderNew(struct SpeParams *params)
     decoder->data = params->data;
 
     return decoder;
+#else
+    return nullptr;
+#endif
 }
 
 void SpeDecoderFree(struct SpeDecoder *decoder)
 {
+#ifndef UNITTEST
     if (decoder == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return;
     }
     free(decoder);
+#endif
 }
 
 static int SpeGetNextPacket(struct SpeDecoder *decoder)
 {
+#ifndef UNITTEST
     if (decoder == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -761,11 +845,13 @@ static int SpeGetNextPacket(struct SpeDecoder *decoder)
         decoder->buf += ret;
         decoder->len -= static_cast<size_t>(ret);
     } while (decoder->packet.type == PERF_SPE_PAD);
+#endif
     return 1;
 }
 
 static int SpeReadRecord(struct SpeDecoder *decoder)
 {
+#ifndef UNITTEST
     u64 payload;
     u64 ip;
     if (decoder == nullptr) {
@@ -889,21 +975,27 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
                 return -1;
         }
     }
+#endif
     return 0;
 }
 
 int SpeDecode(struct SpeDecoder *decoder)
 {
+#ifndef UNITTEST
     if (decoder == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
         return -1;
     }
     return SpeReadRecord(decoder);
+#else
+    return 0;
+#endif
 }
 
 struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
 {
+#ifndef UNITTEST
     if (speBuf == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -921,10 +1013,14 @@ struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
     decoder->len = speLen;
 
     return decoder;
+#else
+    return nullptr;
+#endif
 }
 
 void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump)
 {
+#ifndef UNITTEST
     if (buf == nullptr) {
         printf("Invalid pointer!\n");
         HLOGV("Invalid pointer!");
@@ -972,6 +1068,7 @@ void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump
             break;
         }
     }
+#endif
 }
 
 std::map<u32, std::map<u64, ReportItemAuxRawData>> AuxRawDataMap_;
@@ -998,6 +1095,7 @@ constexpr const int SPE_PERCENTAGE_OFFSET_LEN = 20;
 
 void AddReportItems(const std::vector<ReportItemAuxRawData>& auxRawData)
 {
+#ifndef UNITTEST
     for (const auto& data : auxRawData) {
         for (auto type : DEFAULT_SPE_EVENT_TYPE) {
             if (data.type & type) {
@@ -1020,10 +1118,12 @@ void AddReportItems(const std::vector<ReportItemAuxRawData>& auxRawData)
             }
         }
     }
+#endif
 }
 
 void UpdateHeating()
 {
+#ifndef UNITTEST
     for (auto it = AuxRawDataMap_.begin(); it != AuxRawDataMap_.end(); it++) {
         u64 cc = typeCount[it->first];
         for (auto& it2 : it->second) {
@@ -1032,6 +1132,7 @@ void UpdateHeating()
             it2.second.heating = heating;
         }
     }
+#endif
 }
 
 void GetSpeEventNameByType(uint32_t type, std::string& eventName)
@@ -1075,6 +1176,7 @@ void GetSpeEventNameByType(uint32_t type, std::string& eventName)
 
 void DumpSpeReportHead(int indent, uint32_t type, uint64_t count)
 {
+#ifndef UNITTEST
     std::string eventName = "";
     GetSpeEventNameByType(type, eventName);
     PRINT_INDENT(indent, "\nEvent :%s\n", eventName.c_str());
@@ -1095,11 +1197,13 @@ void DumpSpeReportHead(int indent, uint32_t type, uint64_t count)
     PRINT_INDENT(indent, "%-*s", SPE_PERCENTAGE_FUNC_LEN, func.c_str());
     const std::string offset = "              offset";
     PRINT_INDENT(indent, "%-*s\n", SPE_PERCENTAGE_OFFSET_LEN, offset.c_str());
+#endif
     return;
 }
 
 void DumpSpeReportData(int indent, FILE *outputDump)
 {
+#ifndef UNITTEST
     if (outputDump != nullptr) {
         g_outputDump = outputDump;
     }
@@ -1120,6 +1224,7 @@ void DumpSpeReportData(int indent, FILE *outputDump)
             PRINT_INDENT(indent + 1, "0x%llx\n", it2.second.offset);
         }
     }
+#endif
 }
 } // namespace HiPerf
 } // namespace Developtools
