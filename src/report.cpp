@@ -350,25 +350,6 @@ void Report::OutputStdStatistics(ReportEventConfigItem &config)
     fprintf(output_, "%" PRIu64 "\n", config.eventCount_);
 }
 
-bool Report::OutputStdStatistics(ReportEventConfigItem &config, ReportEventConfigItem &otherConfig)
-{
-    if (config != otherConfig) {
-        fprintf(output_, "diff config unable compare\n");
-        return false;
-    }
-    fprintf(output_, "Event: %s (type %" PRIu32 " id %" PRIu64 ")", config.eventName_.c_str(),
-            config.type_, config.config_);
-    fprintf(output_, "Samples Count: %" PRIu64 " vs %" PRIu64 "\n", config.sampleCount_,
-            otherConfig.sampleCount_);
-    if (config.coutMode_) {
-        fprintf(output_, "Time in ns: ");
-    } else {
-        fprintf(output_, "Event Count: ");
-    }
-    fprintf(output_, "%" PRIu64 " vs %" PRIu64 "\n", config.eventCount_, otherConfig.eventCount_);
-    return true;
-}
-
 void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
 {
     // head print

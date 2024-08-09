@@ -102,7 +102,7 @@ ohos_unittest("hiperf_unittest") {
   cflags = [
     "-Dprivate=public",  #allow test code access private members
   ]
-
+  cflags += [ "-DUNITTEST" ]
   sources = sources_interface
   sources += sources_base
   if (is_linux) {
