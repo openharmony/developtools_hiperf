@@ -18,7 +18,9 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#include "hiperf_hilog.h"
 #include "utilities.h"
+
 using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
@@ -125,20 +127,14 @@ bool PerfFileWriter::WriteRecord(const PerfEventRecord &record)
 
     HLOGV("write '%s'", record.GetName().c_str());
 
-    if (record.GetSize() > RECORD_SIZE_LIMIT) {
-        HLOGD("%s record size exceed limit", record.GetName().c_str());
-        return false;
-    }
+    CHECK_TRUE(record.GetSize() > RECORD_SIZE_LIMIT, false, 1,
+               "%s record size exceed limit", record.GetName().c_str());
     // signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0xb64eb195
     static std::vector<u8> buf(RECORD_SIZE_LIMIT);
 
-    if (!record.GetBinary(buf)) {
-        return false;
-    }
+    CHECK_TRUE(!record.GetBinary(buf), false, 0, "");
 
-    if (!Write(buf.data(), record.GetSize())) {
-        return false;
-    }
+    CHECK_TRUE(!Write(buf.data(), record.GetSize()), false, 0, "");
     dataSection_.size += record.GetSize();
 
     ++recordCount_;
@@ -193,9 +189,7 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
                     auto record = GetPerfSampleFromCacheMain(static_cast<perf_event_type>(header->type),
                                                              data, defaultEventAttr_);
                     // skip unknown record
-                    if (record == nullptr) {
-                        return true;
-                    }
+                    CHECK_TRUE(record == nullptr, true, 0, "");
                     remainingSize = remainingSize - header->size - speSize;
                     // call callback to process, do not destroy the record
                     callback(std::move(record));
@@ -216,10 +210,7 @@ bool PerfFileWriter::Read(void *buf, size_t len)
     HLOG_ASSERT(fp_ != nullptr);
     HLOG_ASSERT(len > 0);
 
-    if (fread(buf, len, 1, fp_) != 1) {
-        HLOGD("failed to read file");
-        return false;
-    }
+    CHECK_TRUE(fread(buf, len, 1, fp_) != 1, false, 1, "failed to read file");
     return true;
 }
 
@@ -249,10 +240,7 @@ bool PerfFileWriter::Write(const void *buf, size_t len)
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
-    if (len != 0u && fwrite(buf, len, 1, fp_) != 1) {
-        HLOGD("PerfFileWriter fwrite fail ");
-        return false;
-    }
+    CHECK_TRUE(len != 0u && fwrite(buf, len, 1, fp_) != 1, false, 1, "PerfFileWriter fwrite fail ");
 #ifdef HIPERF_DEBUG_TIME
     writeTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
@@ -261,9 +249,7 @@ bool PerfFileWriter::Write(const void *buf, size_t len)
 
 bool PerfFileWriter::WriteAttrAndId(const std::vector<AttrWithId> &attrIds)
 {
-    if (attrIds.empty()) {
-        return false;
-    }
+    CHECK_TRUE(attrIds.empty(), false, 0, "");
 
     // Skip file header part.
     if (fp_ == nullptr) {
@@ -274,23 +260,17 @@ bool PerfFileWriter::WriteAttrAndId(const std::vector<AttrWithId> &attrIds)
 
     // Write id section.
     uint64_t idSectionOffset;
-    if (!GetFilePos(idSectionOffset)) {
-        return false;
-    }
+    CHECK_TRUE(!GetFilePos(idSectionOffset), false, 0, "");
 
     HLOGD("attrIds %zu", attrIds.size());
     for (auto &attrId : attrIds) {
         HLOGD(" attrIds ids %zu", attrId.ids.size());
-        if (!Write(attrId.ids.data(), attrId.ids.size() * sizeof(uint64_t))) {
-            return false;
-        }
+        CHECK_TRUE(!Write(attrId.ids.data(), attrId.ids.size() * sizeof(uint64_t)), false, 0, "");
     }
 
     // Write attr section.
     uint64_t attrSectionOffset;
-    if (!GetFilePos(attrSectionOffset)) {
-        return false;
-    }
+    CHECK_TRUE(!GetFilePos(attrSectionOffset), false, 0, "");
     for (auto &attrId : attrIds) {
         perf_file_attr fileAttr;
         fileAttr.attr = attrId.attr;
@@ -322,9 +302,7 @@ bool PerfFileWriter::WriteAttrAndId(const std::vector<AttrWithId> &attrIds)
 static bool LeftLessRight(const std::unique_ptr<PerfFileSection> &l,
                           const std::unique_ptr<PerfFileSection> &r)
 {
-    if (l == nullptr || r == nullptr) {
-        return false;
-    }
+    CHECK_TRUE(l == nullptr || r == nullptr, false, 0, "");
     return l->featureId_ < r->featureId_;
 }
 // to write perf_file_header to file
@@ -344,9 +322,7 @@ bool PerfFileWriter::WriteHeader()
         HLOGD("fseek return error ");
         return false;
     }
-    if (!Write(&header_, sizeof(header_))) {
-        return false;
-    }
+    CHECK_TRUE(!Write(&header_, sizeof(header_)), false, 0, "");
     return true;
 }
 
@@ -357,10 +333,7 @@ bool PerfFileWriter::WriteFeatureData()
         HLOGD("fseek SEEK_END return error ");
         return false;
     }
-    if ((featureOffset = ftell(fp_)) == -1) {
-        HLOGD("ftell return error ");
-        return false;
-    }
+    CHECK_TRUE((featureOffset = ftell(fp_)) == -1, false, 1, "ftell return error ");
 
     for (size_t i = 0; i < sizeof(header_.features); i++) {
         if (header_.features[i] != 0) {
@@ -384,14 +357,10 @@ bool PerfFileWriter::WriteFeatureData()
         i++;
 
         // write features heads
-        if (!Write(&featureSection->header, sizeof(featureSection->header))) {
-            return false;
-        }
+        CHECK_TRUE(!Write(&featureSection->header, sizeof(featureSection->header)), false, 0, "");
     }
     long offset = ftell(fp_);
-    if (offset < 0) {
-        return false;
-    }
+    CHECK_TRUE(offset < 0, false, 0, "");
     HLOGV("features data at file '0x%lx'", offset);
 
     i = 0;

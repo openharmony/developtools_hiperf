@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "debug_logger.h"
+#include "hiperf_hilog.h"
 #include "utilities.h"
 
 const uint16_t ONE_HUNDRED = 100;
@@ -222,9 +223,7 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
 void SubCommandStat::InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
                                 const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance)
 {
-    if (newPerMap == nullptr) {
-        return;
-    }
+    CHECK_TRUE(newPerMap == nullptr, , 0, "");
     newPerMap->cpu = summary.cpu;
     if (g_reportCpuFlag && !g_reportThreadFlag) {
         return;
@@ -345,9 +344,7 @@ std::string SubCommandStat::GetCommentConfigName(
     const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName)
 {
     std::string commentConfigName = "";
-    if (countEvent == nullptr || eventName.length() == 0) {
-        return commentConfigName;
-    }
+    CHECK_TRUE(countEvent == nullptr || eventName.length() == 0, commentConfigName, 0, "");
     if (countEvent->userOnly) {
         commentConfigName = eventName + ":u";
     } else if (countEvent->kernelOnly) {
@@ -360,9 +357,7 @@ std::string SubCommandStat::GetCommentConfigName(
 
 void SubCommandStat::MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
 {
-    if (reportSum == nullptr || reportSum->commentSum == 0) {
-        return;
-    }
+    CHECK_TRUE(reportSum == nullptr || reportSum->commentSum == 0, , 0, "");
     if (reportSum->configName == "sw-task-clock") {
         commentStr = StringPrintf("%lf cpus used", reportSum->commentSum);
         return;
@@ -581,9 +576,7 @@ bool SubCommandStat::FindRunningTime(
 bool SubCommandStat::FindPercoreRunningTime(PerfEvents::Summary &summary, double &running_time_int_sec,
                                             double &main_scale)
 {
-    if (summary.eventCount == 0) {
-        return false;
-    }
+    CHECK_TRUE(summary.eventCount == 0, false, 0, "");
     running_time_int_sec = summary.eventCount / 1e9;
     if (summary.timeRunning < summary.timeEnabled && summary.timeRunning != 0) {
         main_scale = static_cast<double>(summary.timeEnabled) / summary.timeRunning;
@@ -638,9 +631,7 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     if (HelpOption()) {
         return true;
     }
-    if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
-        return false;
-    }
+    CHECK_TRUE(!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_), false, 0, "");
     // check option
     if (!CheckSelectCpuPidOption()) {
         return false;
@@ -649,10 +640,7 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         HLOGV("CheckOptions() failed");
         return false;
     }
-    if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
-        HLOGV("CheckAppIsRunning() failed");
-        return false;
-    }
+    CHECK_TRUE(!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_), false, 1, "CheckAppIsRunning() failed");
 
     perfEvents_.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
@@ -667,10 +655,7 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     }
     pids.insert(pids.end(), selectTids_.begin(), selectTids_.end());
     perfEvents_.SetPid(pids);
-    if (!CheckOptionPidAndApp(pids)) {
-        HLOGV("CheckOptionPidAndApp() failed");
-        return false;
-    }
+    CHECK_TRUE(!CheckOptionPidAndApp(pids), false, 1, "CheckOptionPidAndApp() failed");
     SetPerfEvent();
     if (!PrepairEvents()) {
         HLOGV("PrepairEvents() failed");

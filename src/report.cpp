@@ -26,6 +26,8 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "hiperf_hilog.h"
+
 using namespace std::placeholders;
 namespace OHOS {
 namespace Developtools {
@@ -397,10 +399,7 @@ bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, ui
     float num = 100.0;
     HLOGV("frame %f indent %d at %s", heat, indent, funcName.data());
 
-    if (heat < option_.callStackHeatLimit_) {
-        // don't print this three anymore
-        return false;
-    }
+    CHECK_TRUE(heat < option_.callStackHeatLimit_, false, 0, ""); // don't print this three anymore
 
     if (heat == num) {
         fprintf(output_, "%*s", indent, "   ");
@@ -452,10 +451,8 @@ void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFram
                    g
     */
     // this is the first call frame
-    if (!OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount)) {
-        // this tree will skipped.
-        return;
-    }
+    // this tree will skipped.
+    CHECK_TRUE(!OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount), , 0, "");
 
     // print it self
     if (callFrame.selfEventCount_ != 0 and callFrame.selfEventCount_ != callFrame.eventCount_) {

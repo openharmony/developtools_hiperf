@@ -24,6 +24,8 @@
 #include <io.h>
 #endif
 
+#include "hiperf_hilog.h"
+
 using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
@@ -168,10 +170,7 @@ bool StdoutRecord::Start()
 
     // we save the stdout
     stdoutFile_ = OHOS::UniqueFd(dup(STDOUT_FILENO));
-    if (stdoutFile_ == -1) {
-        HLOGF("std dup failed");
-        return false;
-    }
+    CHECK_TRUE(stdoutFile_ == -1, false, 1, "std dup failed");
 
     // setup temp file as stdout
     if (dup2(fileno(recordFile_), STDOUT_FILENO) != -1) {
@@ -231,9 +230,7 @@ bool IsHexDigits(const std::string &str)
     if (prefix.compare(0, prefix.size(), effectStr.substr(0, prefix.size())) == 0) {
         effectStr = effectStr.substr(prefix.size(), effectStr.size() - prefix.size());
     }
-    if (effectStr.empty()) {
-        return false;
-    }
+    CHECK_TRUE(effectStr.empty(), false, 0, "");
     std::size_t start {0};
     for (; start < effectStr.size(); ++start) {
         if (effectStr[start] == '0') {
@@ -344,9 +341,7 @@ bool PowerOfTwo(uint64_t n)
 bool ReadIntFromProcFile(const std::string &path, int &value)
 {
     std::string s = ReadFileToString(path);
-    if (s.empty()) {
-        return false;
-    }
+    CHECK_TRUE(s.empty(), false, 0, "");
     value = std::stoi(s);
     return true;
 }
@@ -452,13 +447,9 @@ std::vector<std::string> GetEntriesInDir(const std::string &basePath)
 {
     std::vector<std::string> result;
     std::string resolvedPath = CanonicalizeSpecPath(basePath.c_str());
-    if (resolvedPath.empty()) {
-        return result;
-    }
+    CHECK_TRUE(resolvedPath.empty(), result, 0, "");
     DIR *dir = opendir(resolvedPath.c_str());
-    if (dir == nullptr) {
-        return result;
-    }
+    CHECK_TRUE(dir == nullptr, result, 0, "");
     dirent *entry;
     while ((entry = readdir(dir)) != nullptr) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
@@ -608,10 +599,8 @@ bool IsRestarted(const std::string &appPackage)
         CollectPidsByAppname(newPids, appPackage);
         std::set_intersection(oldPids.begin(), oldPids.end(),
             newPids.begin(), newPids.end(), std::back_insert_iterator(intersection));
-        if (intersection.empty()) {
-            // app names are same, no intersection, means app restarted
-            return true;
-        }
+        // app names are same, no intersection, means app restarted
+        CHECK_TRUE(intersection.empty(), true, 0, "");
         intersection.clear();
         newPids.clear();
         std::this_thread::sleep_for(milliseconds(CHECK_FREQUENCY));
@@ -668,13 +657,9 @@ bool IsSupportNonDebuggableApp()
         return true;
     }
     // user mode
-    if (!IsBeta()) {
-        return false;
-    }
+    CHECK_TRUE(!IsBeta(), false, 0, "");
     // restricted aplication for beta
-    if (!IsAllowProfilingUid()) {
-        return false;
-    }
+    CHECK_TRUE(!IsAllowProfilingUid(), false, 0, "");
     return true;
 }
 
@@ -696,9 +681,7 @@ bool LittleMemory()
     while (getline(file, line)) {
         if (line.find("MemTotal:") != std::string::npos) {
             int memSize = stoi(line.substr(line.find(":") + 1));
-            if (memSize < (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE)) {
-                return true;
-            }
+            CHECK_TRUE(memSize < (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE), true, 0, "");
         }
     }
     return false;
@@ -712,10 +695,7 @@ bool IsBeta()
         return true;
     }
     // default release when usertype param is invalid
-    if (userTypeRsp.empty()) {
-        HLOGE("GetUserType is empty [%s]", userTypeRsp.c_str());
-        return true;
-    }
+    CHECK_TRUE(userTypeRsp.empty(), true, 1, "GetUserType is empty [%s]", userTypeRsp.c_str());
     return false;
 }
 
@@ -724,9 +704,7 @@ bool IsAllowProfilingUid()
 #if (defined(is_linux) && is_linux) || (defined(is_ohos) && is_ohos)
     static unsigned int curUid = getuid();
     HLOGD("curUid is %d\n", curUid);
-    if (ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end()) {
-        return true;
-    }
+    CHECK_TRUE(ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end(), true, 0, "");
     return false;
 #else
     return false;
