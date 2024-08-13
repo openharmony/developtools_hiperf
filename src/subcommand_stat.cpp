@@ -223,7 +223,7 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
 void SubCommandStat::InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
                                 const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance)
 {
-    CHECK_TRUE(newPerMap == nullptr, , 0, "");
+    CHECK_TRUE(newPerMap == nullptr, NO_RETVAL, 0, "");
     newPerMap->cpu = summary.cpu;
     if (g_reportCpuFlag && !g_reportThreadFlag) {
         return;
@@ -357,7 +357,7 @@ std::string SubCommandStat::GetCommentConfigName(
 
 void SubCommandStat::MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
 {
-    CHECK_TRUE(reportSum == nullptr || reportSum->commentSum == 0, , 0, "");
+    CHECK_TRUE(reportSum == nullptr || reportSum->commentSum == 0, NO_RETVAL, 0, "");
     if (reportSum->configName == "sw-task-clock") {
         commentStr = StringPrintf("%lf cpus used", reportSum->commentSum);
         return;

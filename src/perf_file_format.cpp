@@ -176,7 +176,7 @@ PerfFileSectionString::PerfFileSectionString(FEATURE id, const char *buf, size_t
     : PerfFileSection(id)
 {
     Init(buf, size);
-    CHECK_TRUE(!Read(stdString_), , 0, ""); // or throw ...
+    CHECK_TRUE(!Read(stdString_), NO_RETVAL, 0, ""); // or throw ...
 }
 
 PerfFileSectionString::PerfFileSectionString(FEATURE id, const std::string &charString)
@@ -383,7 +383,7 @@ PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t
     : PerfFileSection(id)
 {
     Init(buf, size);
-    CHECK_TRUE(!Read(nrCpusAvailable_) || !Read(nrCpusOnline_), , 0, "");
+    CHECK_TRUE(!Read(nrCpusAvailable_) || !Read(nrCpusOnline_), NO_RETVAL, 0, "");
 }
 
 PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailable,
@@ -417,7 +417,7 @@ PerfFileSectionU64::PerfFileSectionU64(FEATURE id, const char *buf, size_t size)
     : PerfFileSection(id)
 {
     Init(buf, size);
-    CHECK_TRUE(!Read(value_), , 0, "");
+    CHECK_TRUE(!Read(value_), NO_RETVAL, 0, "");
 }
 
 PerfFileSectionU64::PerfFileSectionU64(FEATURE id, uint64_t v) : PerfFileSection(id)
@@ -457,9 +457,9 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
     constexpr uint32_t maxIds = 600;
     Init(buf, size);
     uint32_t nr = 0;
-    CHECK_TRUE(!Read(nr), , 0, "");
+    CHECK_TRUE(!Read(nr), NO_RETVAL, 0, "");
     uint32_t attrSize = 0;
-    CHECK_TRUE(!Read(attrSize), , 0, "");
+    CHECK_TRUE(!Read(attrSize), NO_RETVAL, 0, "");
     if (attrSize != sizeof(perf_event_attr)) { // only for log or debug
         HLOGW("perf_event_attr version is different, attrSize %d vs %zu", attrSize,
               sizeof(perf_event_attr));
@@ -488,9 +488,9 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
         } else if (nrIds > maxIds) {
             HLOGW("nrIds is too large ! %u", nrIds);
         }
-        CHECK_TRUE(!Read(eventDesc.name), , 0, "");
+        CHECK_TRUE(!Read(eventDesc.name), NO_RETVAL, 0, "");
         eventDesc.ids.resize(nrIds, 0);
-        CHECK_TRUE(!Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds), , 0, "");
+        CHECK_TRUE(!Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds), NO_RETVAL, 0, "");
         eventDesces_.emplace_back(std::move(eventDesc));
     }
     HLOGV("read complete. %zu events", eventDesces_.size());

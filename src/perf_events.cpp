@@ -865,7 +865,8 @@ void PerfEvents::SetSampleFrequency(unsigned int frequency)
     }
     int maxRate = 0;
     static bool printFlag = false;
-    CHECK_TRUE(!ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", maxRate), , LOG_TYPE_PRINTF,
+    CHECK_TRUE(!ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", maxRate),
+               NO_RETVAL, LOG_TYPE_PRINTF,
                "read perf_event_max_sample_rate fail.\n");
     if (sampleFreq_ > static_cast<unsigned int>(maxRate)) {
         sampleFreq_ = static_cast<unsigned int>(maxRate);
@@ -1407,7 +1408,7 @@ bool PerfEvents::GetRecordFromMmap(MmapFd &mmap)
 
 void PerfEvents::GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size)
 {
-    CHECK_TRUE(mmap.bufSize == 0, , 0, "");
+    CHECK_TRUE(mmap.bufSize == 0, NO_RETVAL, 0, "");
     pos = pos % mmap.bufSize;
     size_t tailSize = mmap.bufSize - pos;
     size_t copySize = std::min(size, tailSize);

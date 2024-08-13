@@ -452,7 +452,8 @@ void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFram
     */
     // this is the first call frame
     // this tree will skipped.
-    CHECK_TRUE(!OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount), , 0, "");
+    CHECK_TRUE(!OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount),
+               NO_RETVAL, 0, "");
 
     // print it self
     if (callFrame.selfEventCount_ != 0 and callFrame.selfEventCount_ != callFrame.eventCount_) {

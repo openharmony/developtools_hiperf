@@ -118,6 +118,7 @@ static inline std::string StringFormat(const char* fmt, ...)
     return buf;
 }
 
+#define NO_RETVAL /* retval */
 #define LOG_TYPE_PRINTF 2
 #define LOG_TYPE_WITH_HILOG 3
 #define CHECK_TRUE(expr, retval, log, fmt, ...)                                                    \
