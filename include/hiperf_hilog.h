@@ -16,6 +16,9 @@
 #ifndef HIPERF_HILOG
 #define HIPERF_HILOG
 
+#include <securec.h>
+#include <stdarg.h>
+
 #ifndef CONFIG_NO_HILOG
 #define HILOG_PUBLIC  "{public}"
 #define HILOG_NEWLINE ""
@@ -99,5 +102,39 @@ static constexpr OHOS::HiviewDFX::HiLogLabel HIPERF_HILOG_LABLE[] = {
 #define HIPERF_HILOGD(module, ...) printf(FORMATTED(__VA_ARGS__))
 
 #endif // CONFIG_NO_HILOG
+
+static inline std::string StringFormat(const char* fmt, ...)
+{
+    va_list vargs;
+    char buf[1024] = {0};
+    std::string format(fmt);
+    va_start(vargs, fmt);
+    if (vsnprintf_s(buf, sizeof(buf), sizeof(buf) - 1, format.c_str(), vargs) < 0) {
+        va_end(vargs);
+        return "";
+    }
+
+    va_end(vargs);
+    return buf;
+}
+
+#define LOG_TYPE_PRINTF 2
+#define LOG_TYPE_WITH_HILOG 3
+#define CHECK_TRUE(expr, retval, log, fmt, ...)                                                    \
+    do {                                                                                           \
+        if (expr) {                                                                                \
+            if (log == 1) {                                                                        \
+                std::string str = StringFormat(fmt, ##__VA_ARGS__);                                \
+                HLOGE("%s", str.c_str());                                                          \
+            } else if (log == LOG_TYPE_PRINTF) {                                                   \
+                printf("%s", StringFormat(fmt, ##__VA_ARGS__).c_str());                            \
+            } else if (log == LOG_TYPE_WITH_HILOG) {                                               \
+                std::string str = StringFormat(fmt, ##__VA_ARGS__);                                \
+                HLOGE("%s", str.c_str());                                                          \
+                HIPERF_HILOGE(MODULE_DEFAULT, "%s", str.c_str());                                  \
+            }                                                                                      \
+            return retval;                                                                         \
+        }                                                                                          \
+    } while (0)
 
 #endif // HIPERF_HILOG

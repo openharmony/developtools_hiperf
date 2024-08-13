@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "hiperf_hilog.h"
 #include "utilities.h"
 
 using namespace std::chrono;
@@ -47,10 +48,8 @@ std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &file
             fclose(fp);
             reader->fp_ = nullptr;
 
-            if (!UncompressFile(fileName, ".perf.data")) {
-                HLOGE("Fail to UncompressFile(%s)", fileName.c_str());
-                return nullptr;
-            }
+            CHECK_TRUE(!UncompressFile(fileName, ".perf.data"), nullptr, 1,
+                       "Fail to UncompressFile(%s)", fileName.c_str());
 
             // open the uncompressed hidden file .perf.data
             FILE *fp2 = fopen(".perf.data", "rb");
@@ -71,9 +70,7 @@ std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &file
         return nullptr;
     }
 end:
-    if (!reader->ReadAttrSection()) {
-        return nullptr;
-    }
+    CHECK_TRUE(!reader->ReadAttrSection(), nullptr, 0, "");
     return reader;
 }
 
@@ -142,23 +139,16 @@ bool PerfFileReader::ReadAttrSection()
         HLOGW("attr size %" PRId64 " doesn't match expected size %zu", header_.attrSize,
               sizeof(perf_file_attr));
     }
-    if (header_.attrSize == 0) {
-        return false;
-    }
+    CHECK_TRUE(header_.attrSize == 0, false, 0, "");
     int attrCount = header_.attrs.size / header_.attrSize;
-    if (attrCount == 0) {
-        HLOGE("no attr in file");
-        return false;
-    }
+    CHECK_TRUE(attrCount == 0, false, 1, "no attr in file");
     if (fseek(fp_, header_.attrs.offset, SEEK_SET) != 0) {
         HLOGE("fseek() failed");
         return false;
     }
     for (int i = 0; i < attrCount; ++i) {
         std::vector<char> buf(header_.attrSize);
-        if (!Read(buf.data(), buf.size())) {
-            return false;
-        }
+        CHECK_TRUE(!Read(buf.data(), buf.size()), false, 0, "");
         // size of perf_event_attr change between different linux kernel versions.
         // can not memcpy to perf_file_attr as a whole
         perf_file_attr attr {};
@@ -179,9 +169,7 @@ bool PerfFileReader::ReadAttrSection()
     // read ids for attr
     for (size_t i = 0; i < vecAttr_.size(); ++i) {
         std::vector<uint64_t> ids;
-        if (!ReadIdsForAttr(vecAttr_[i], &ids)) {
-            return false;
-        }
+        CHECK_TRUE(!ReadIdsForAttr(vecAttr_[i], &ids), false, 0, "");
         vecAttrIds_.push_back(ids);
 
         // map ids to attr index
@@ -201,13 +189,9 @@ bool PerfFileReader::ReadIdsForAttr(const perf_file_attr &attr, std::vector<uint
             HLOGE("fseek() failed");
             return false;
         }
-        if (ids == nullptr) {
-            return false;
-        }
+        CHECK_TRUE(ids == nullptr, false, 0, "");
         ids->resize(count);
-        if (!Read(ids->data(), attr.ids.size)) {
-            return false;
-        }
+        CHECK_TRUE(!Read(ids->data(), attr.ids.size), false, 0, "");
     }
     return true;
 }
@@ -233,10 +217,7 @@ bool PerfFileReader::ReadDataSection(ProcessRecordCB &callback)
     HLOGD("dataSection_ at offset %" PRId64 " + %" PRId64 "", header_.data.offset,
           header_.data.size);
 
-    if (!ReadRecord(callback)) {
-        printf("some record format is error!\n");
-        return false;
-    };
+    CHECK_TRUE(!ReadRecord(callback), false, LOG_TYPE_PRINTF, "some record format is error!\n");
 
 #ifdef HIPERF_DEBUG_TIME
     printf("readRecordTime: %" PRId64 " ms\n",
@@ -249,9 +230,7 @@ bool PerfFileReader::ReadDataSection(ProcessRecordCB &callback)
 
 const perf_event_attr *PerfFileReader::GetDefaultAttr()
 {
-    if (vecAttr_.empty()) {
-        return nullptr;
-    }
+    CHECK_TRUE(vecAttr_.empty(), nullptr, 0, "");
     return &(vecAttr_[0].attr);
 }
 
@@ -266,10 +245,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
     uint64_t remainingSize = header_.data.size;
     size_t recordNumber = 0;
     const perf_event_attr *attr = GetDefaultAttr();
-    if (attr == nullptr) {
-        HLOGE("attr is null");
-        return false;
-    }
+    CHECK_TRUE(attr == nullptr, false, 1, "attr is null");
     while (remainingSize > 0) {
         if (remainingSize < sizeof(perf_event_header)) {
             HLOGW("not enough sizeof perf_event_header");
@@ -367,10 +343,7 @@ bool PerfFileReader::Read(char *buf, uint64_t offset, size_t len)
         return false;
     }
 
-    if (fread(buf, len, 1, fp_) != 1) {
-        printf("failed to read file: %d", errno);
-        return false;
-    }
+    CHECK_TRUE(fread(buf, len, 1, fp_) != 1, false, LOG_TYPE_PRINTF, "failed to read file: %d", errno);
     HLOGM("offset %" PRIx64 " len %zu buf %x %x %x %x", offset, len, buf[0], buf[1], buf[2],
           buf[3]);
     return true;
@@ -422,28 +395,21 @@ bool PerfFileReader::ReadFeatureSection()
 
     for (FEATURE feature : features_) {
         perf_file_section sectionHeader;
-        if (!Read((char *)&sectionHeader, featureSectionOffsetRead, sizeof(sectionHeader))) {
-            // read failed ??
-            printf("file format not correct. featureSectionOffsetRead '0x%" PRIx64 "\n",
-                   featureSectionOffsetRead);
-            return false;
-        }
+        // read failed ??
+        CHECK_TRUE(!Read((char *)&sectionHeader, featureSectionOffsetRead, sizeof(sectionHeader)),
+                   false, LOG_TYPE_PRINTF,
+                   "file format not correct. featureSectionOffsetRead '0x%" PRIx64 "\n", featureSectionOffsetRead);
 
         HLOGV("process feature %d:%s", feature, PerfFileSection::GetFeatureName(feature).c_str());
         HLOGV(" sectionHeader -> read offset '0x%" PRIx64 " size '0x%" PRIx64 "'",
               sectionHeader.offset, sectionHeader.size);
-        if (sectionHeader.size == 0 or sectionHeader.size > fileSize_) {
-            HLOGE("sectionHeader.size %" PRIu64 " is not correct", sectionHeader.size);
-            return false;
-        }
+        CHECK_TRUE(sectionHeader.size == 0 or sectionHeader.size > fileSize_, false, 1,
+                   "sectionHeader.size %" PRIu64 " is not correct", sectionHeader.size);
 
         std::vector<char> buf(sectionHeader.size);
-        if (!Read(&buf[0], sectionHeader.offset, buf.size())) {
-            // read failed ??
-            printf("file format not correct. featureSectionDataOffset '0x%" PRIx64 "\n",
-                   sectionHeader.offset);
-            return false;
-        }
+        // read failed ??
+        CHECK_TRUE(!Read(&buf[0], sectionHeader.offset, buf.size()), false, LOG_TYPE_PRINTF,
+                   "file format not correct. featureSectionDataOffset '0x%" PRIx64 "\n", sectionHeader.offset);
         if (IsFeatrureStringSection(feature)) {
             perfFileSections_.emplace_back(
                 std::make_unique<PerfFileSectionString>(feature, (char *)&buf[0], buf.size()));

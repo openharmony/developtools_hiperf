@@ -23,6 +23,7 @@
 #include <memory>
 
 #include "debug_logger.h"
+#include "hiperf_hilog.h"
 #include "option.h"
 #include "perf_event_record.h"
 #include "perf_events.h"
@@ -415,10 +416,7 @@ void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
         std::string resolvedPath = CanonicalizeSpecPath(userData.c_str());
         std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvedPath.c_str(), "wb"), fclose);
         std::vector<u8> buf(RECORD_SIZE_LIMIT);
-        if (!recordSample->GetBinary(buf)) {
-            HLOGE("export user sample data failed");
-            return;
-        }
+        CHECK_TRUE(!recordSample->GetBinary(buf), , 1, "export user sample data failed");
         fwrite(buf.data(), sizeof(u8), recordSample->GetSize(), fpUserData.get());
 
         HLOGD("export user data index %d time %llu", exportSampleIndex_, recordSample->data_.time);
@@ -442,10 +440,7 @@ void SubCommandDump::DumpDataPortion(int indent)
 {
     int recordCount = 0;
     auto recordcCallback = [&](std::unique_ptr<PerfEventRecord> record) {
-        if (record == nullptr) {
-            // return false in callback can stop the read process
-            return false;
-        }
+        CHECK_TRUE(record == nullptr, false, 0, ""); // return false in callback can stop the read process
 
         // for UT
         if (exportSampleIndex_ > 0) {

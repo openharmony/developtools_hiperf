@@ -17,6 +17,9 @@
 #include <linux/perf_event.h>
 #include "ring_buffer.h"
 #include "perf_event_record.h"
+#if defined(is_ohos) && is_ohos
+#include "hiperf_hilog.h"
+#endif
 
 namespace OHOS {
 namespace Developtools {
@@ -84,9 +87,7 @@ void RingBuffer::EndWrite()
 
 uint8_t *RingBuffer::GetReadData()
 {
-    if (buf_ == nullptr || buf_.get() == nullptr) {
-        return nullptr;
-    }
+    CHECK_TRUE(buf_ == nullptr || buf_.get() == nullptr, nullptr, 0, "");
     size_t writeHead = head_.load(std::memory_order_acquire);
     size_t readHead = tail_.load(std::memory_order_relaxed);
     if (writeHead == readHead) {
@@ -102,18 +103,14 @@ uint8_t *RingBuffer::GetReadData()
     if (writePos <= readPos) {
         // |<---data2--->writePos---readPos<---data1--->|
         if (buf_.get()[readPos] == MARGIN_BYTE) {
-            if (writePos == 0) {
-                return nullptr;
-            }
+            CHECK_TRUE(writePos == 0, nullptr, 0, "");
             readSize_ = (size_ - readPos);
             readPos = 0;
         }
     }
     // else |---readPos<---data--->writePos---|
     perf_event_header *header = reinterpret_cast<perf_event_header *>(buf_.get() + readPos);
-    if (header == nullptr) {
-        return nullptr;
-    }
+    CHECK_TRUE(header == nullptr, nullptr, 0, "");
 
     if (header->type == PERF_RECORD_AUXTRACE) {
         struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>(header + 1);

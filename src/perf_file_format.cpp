@@ -15,6 +15,7 @@
 #include "perf_file_format.h"
 
 #include "debug_logger.h"
+#include "hiperf_hilog.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -100,14 +101,10 @@ bool PerfFileSection::Write(const char *buf, size_t size)
 
 bool PerfFileSection::Write(const char *buf, size_t size, size_t max)
 {
-    if (offset_ + size > maxSize_) {
-        HLOGE("write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
-        return false;
-    }
-    if (offset_ + max > maxSize_) {
-        HLOGE("write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
-        return false;
-    }
+    CHECK_TRUE(offset_ + size > maxSize_, false, 1,
+               "write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
+    CHECK_TRUE(offset_ + max > maxSize_, false, 1,
+               "write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
     std::copy(buf, buf + size, wBuffer_ + offset_);
     if (size >= max) {
         offset_ += size;
@@ -133,21 +130,13 @@ bool PerfFileSection::Read(uint64_t &value)
 bool PerfFileSection::Read(std::string &value)
 {
     uint32_t size = 0;
-    if (!Read(size)) {
-        return false;
-    }
+    CHECK_TRUE(!Read(size), false, 0, "");
     // if size large than buf size or 0 size ?
     // don't assert for fuzz test
-    if (size == 0 or size > maxSize_) {
-        return false;
-    }
+    CHECK_TRUE(size == 0 or size > maxSize_, false, 0, "");
     char buf[size];
-    if (!Read(buf, size)) {
-        return false;
-    }
-    if (buf[size - 1] != 0) {
-        return false;
-    }
+    CHECK_TRUE(!Read(buf, size), false, 0, "");
+    CHECK_TRUE(buf[size - 1] != 0, false, 0, "");
     value = buf;
     HLOGDUMMY("Read String size %u buf : %s", size, value.c_str());
     return true;
@@ -187,9 +176,7 @@ PerfFileSectionString::PerfFileSectionString(FEATURE id, const char *buf, size_t
     : PerfFileSection(id)
 {
     Init(buf, size);
-    if (!Read(stdString_)) {
-        return; // or throw ...
-    }
+    CHECK_TRUE(!Read(stdString_), , 0, ""); // or throw ...
 }
 
 PerfFileSectionString::PerfFileSectionString(FEATURE id, const std::string &charString)
@@ -200,9 +187,7 @@ PerfFileSectionString::PerfFileSectionString(FEATURE id, const std::string &char
 
 bool PerfFileSectionString::GetBinary(char *buf, size_t size)
 {
-    if (size < GetSize()) {
-        return false;
-    }
+    CHECK_TRUE(size < GetSize(), false, 0, "");
 
     Init(buf, size);
     Write(stdString_);
@@ -303,10 +288,8 @@ bool PerfFileSectionSymbolsFiles::GetBinary(char *buf, size_t size)
     HLOG_ASSERT(size >= GetSize());
 
     Init(buf, size);
-    if (!Write((uint32_t)symbolFileStructs_.size())) {
-        HLOGE("PerfFileSectionSymbolsFiles write failed with %zu.", symbolFileStructs_.size());
-        return false;
-    }
+    CHECK_TRUE(!Write((uint32_t)symbolFileStructs_.size()), false, 1,
+               "PerfFileSectionSymbolsFiles write failed with %zu.", symbolFileStructs_.size());
     for (auto &symbolFileStruct : symbolFileStructs_) {
         Write(symbolFileStruct.filePath_);
         Write(symbolFileStruct.symbolType_);
@@ -400,9 +383,7 @@ PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t
     : PerfFileSection(id)
 {
     Init(buf, size);
-    if (!Read(nrCpusAvailable_) || !Read(nrCpusOnline_)) {
-        return;
-    }
+    CHECK_TRUE(!Read(nrCpusAvailable_) || !Read(nrCpusOnline_), , 0, "");
 }
 
 PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailable,
@@ -413,9 +394,7 @@ PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailabl
 
 bool PerfFileSectionNrCpus::GetBinary(char *buf, size_t size)
 {
-    if (size < GetSize()) {
-        return false;
-    }
+    CHECK_TRUE(size < GetSize(), false, 0, "");
 
     Init(buf, size);
     Write(nrCpusAvailable_);
@@ -438,9 +417,7 @@ PerfFileSectionU64::PerfFileSectionU64(FEATURE id, const char *buf, size_t size)
     : PerfFileSection(id)
 {
     Init(buf, size);
-    if (!Read(value_)) {
-        return;
-    }
+    CHECK_TRUE(!Read(value_), , 0, "");
 }
 
 PerfFileSectionU64::PerfFileSectionU64(FEATURE id, uint64_t v) : PerfFileSection(id)
@@ -450,9 +427,7 @@ PerfFileSectionU64::PerfFileSectionU64(FEATURE id, uint64_t v) : PerfFileSection
 
 bool PerfFileSectionU64::GetBinary(char *buf, size_t size)
 {
-    if (size < GetSize()) {
-        return false;
-    }
+    CHECK_TRUE(size < GetSize(), false, 0, "");
 
     Init(buf, size);
     Write(value_);
@@ -482,13 +457,9 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
     constexpr uint32_t maxIds = 600;
     Init(buf, size);
     uint32_t nr = 0;
-    if (!Read(nr)) {
-        return;
-    }
+    CHECK_TRUE(!Read(nr), , 0, "");
     uint32_t attrSize = 0;
-    if (!Read(attrSize)) {
-        return;
-    }
+    CHECK_TRUE(!Read(attrSize), , 0, "");
     if (attrSize != sizeof(perf_event_attr)) { // only for log or debug
         HLOGW("perf_event_attr version is different, attrSize %d vs %zu", attrSize,
               sizeof(perf_event_attr));
@@ -517,13 +488,9 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
         } else if (nrIds > maxIds) {
             HLOGW("nrIds is too large ! %u", nrIds);
         }
-        if (!Read(eventDesc.name)) {
-            return;
-        }
+        CHECK_TRUE(!Read(eventDesc.name), , 0, "");
         eventDesc.ids.resize(nrIds, 0);
-        if (!Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds)) {
-            return;
-        }
+        CHECK_TRUE(!Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds), , 0, "");
         eventDesces_.emplace_back(std::move(eventDesc));
     }
     HLOGV("read complete. %zu events", eventDesces_.size());
@@ -531,33 +498,18 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
 
 bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
 {
-    if (size < GetSize()) {
-        return false;
-    }
+    CHECK_TRUE(size < GetSize(), false, 0, "");
     Init(buf, size);
 
-    if (!Write(static_cast<uint32_t>(eventDesces_.size()))) {
-        return false;
-    }
-    if (!Write(static_cast<uint32_t>(sizeof(perf_event_attr)))) {
-        return false;
-    }
+    CHECK_TRUE(!Write(static_cast<uint32_t>(eventDesces_.size())), false, 0, "");
+    CHECK_TRUE(!Write(static_cast<uint32_t>(sizeof(perf_event_attr))), false, 0, "");
     for (auto &eventDesc : eventDesces_) {
-        if (!Write(reinterpret_cast<char*>(&(eventDesc.attr)), sizeof(perf_event_attr))) {
-            return false;
-        }
-        if (!Write(static_cast<uint32_t>(eventDesc.ids.size()))) {
-            return false;
-        }
-        if (!Write(eventDesc.name)) {
-            return false;
-        }
+        CHECK_TRUE(!Write(reinterpret_cast<char*>(&(eventDesc.attr)), sizeof(perf_event_attr)), false, 0, "");
+        CHECK_TRUE(!Write(static_cast<uint32_t>(eventDesc.ids.size())), false, 0, "");
+        CHECK_TRUE(!Write(eventDesc.name), false, 0, "");
         // clang-format off
-        if (!Write(reinterpret_cast<char*>(eventDesc.ids.data()),
-                   sizeof(uint64_t) * eventDesc.ids.size())) {
-            // clang-format on
-            return false;
-        }
+        CHECK_TRUE(!Write(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * eventDesc.ids.size()),
+                   false, 0, ""); // clang-format on
     }
     return true;
 }

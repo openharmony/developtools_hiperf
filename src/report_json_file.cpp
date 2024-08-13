@@ -23,6 +23,8 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "hiperf_hilog.h"
+
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -217,9 +219,7 @@ void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, ui
 {
     auto &config = GetConfig(id);
     std::set<int> RepeatFunctionId;
-    if (frames.size() == 0) {
-        return; // do nothing with no frame
-    }
+    CHECK_TRUE(frames.size() == 0, , 0, ""); // do nothing with no frame
     auto &process = GetOrCreateMapItem(config.processes_, pid);
     auto &thread = GetOrCreateMapItem(process.threads_, tid);
     auto it = frames.begin();
@@ -330,9 +330,7 @@ void ReportJsonFile::OutputJsonRuntimeInfo()
 
 bool ReportJsonFile::OutputJson(FILE *output)
 {
-    if (output == nullptr) {
-        return false;
-    }
+    CHECK_TRUE(output == nullptr, false, 0, "");
     output_ = output;
     if (fprintf(output, "{") < 0) {
         return false;

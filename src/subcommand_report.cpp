@@ -26,6 +26,7 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "hiperf_hilog.h"
 #include "perf_events.h"
 #include "register.h"
 #include "utilities.h"
@@ -359,9 +360,7 @@ void SubCommandReport::LoadEventDesc()
 {
     const PerfFileSection *featureSection =
         recordFileReader_->GetFeatureSection(FEATURE::EVENT_DESC);
-    if (featureSection == nullptr) {
-        return;
-    }
+    CHECK_TRUE(featureSection == nullptr, , 0, "");
     const PerfFileSectionEventDesc &sectionEventdesc =
         *static_cast<const PerfFileSectionEventDesc *>(featureSection);
     HLOGV("Event descriptions: %zu", sectionEventdesc.eventDesces_.size());
@@ -466,10 +465,7 @@ bool SubCommandReport::LoadPerfData()
         return false;
     }
 
-    if (!recordFileReader_->ReadFeatureSection()) {
-        printf("record format error.\n");
-        return false;
-    }
+    CHECK_TRUE(!recordFileReader_->ReadFeatureSection(), false, LOG_TYPE_PRINTF, "record format error.\n");
     if (jsonFormat_) {
         reportJsonFile_ =
             std::make_unique<ReportJsonFile>(recordFileReader_, GetReport().virtualRuntime_);
@@ -608,17 +604,12 @@ bool SubCommandReport::OnSubCommand(std::vector<std::string> &args)
         // we are in diff mode
         index_ = SECOND;
         // load again with second file
-        if (!LoadPerfData()) {
-            return false;
-        }
+        CHECK_TRUE(!LoadPerfData(), false, 0, "");
         // back to first
         index_ = FIRST;
     }
     printf("prepare report\n");
-    if (!OutputReport()) {
-        HLOGD("OutputReport failed");
-        return false;
-    }
+    CHECK_TRUE(!OutputReport(), false, 1, "OutputReport failed");
 #ifdef HIPERF_DEBUG_TIME
     printf("SymbolicRecordTimes: %0.3f ms\n",
            GetReport(FIRST).virtualRuntime_.symbolicRecordTimes_.count() / MS_DURATION);

@@ -31,6 +31,7 @@
 
 #include "spe_decoder.h"
 #include "debug_logger.h"
+#include "hiperf_hilog.h"
 #include "register.h"
 #include "subcommand_dump.h"
 #include "symbols_file.h"
@@ -399,14 +400,9 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
                           bool followGroup)
 {
     HLOG_ASSERT(!excludeUser or !excludeKernel);
-    if (followGroup && eventGroupItem_.empty()) {
-        HLOGE("no group leader create before");
-        return false;
-    }
+    CHECK_TRUE(followGroup && eventGroupItem_.empty(), false, 1, "no group leader create before");
     // found the event name
-    if (!IsEventSupport(type, config)) {
-        return false;
-    }
+    CHECK_TRUE(!IsEventSupport(type, config), false, 0, "");
     HLOGV("type %d config %llu excludeUser %d excludeKernel %d followGroup %d", type, config,
           excludeUser, excludeKernel, followGroup);
 
@@ -557,16 +553,10 @@ static void RecoverCaptureSig()
 bool PerfEvents::PrepareTracking(void)
 {
     // 1. prepare cpu pid
-    if (!PrepareFdEvents()) {
-        HLOGE("PrepareFdEvents() failed");
-        return false;
-    }
+    CHECK_TRUE(!PrepareFdEvents(), false, 1, "PrepareFdEvents() failed");
 
     // 2. create events
-    if (!CreateFdEvents()) {
-        HLOGE("CreateFdEvents() failed");
-        return false;
-    }
+    CHECK_TRUE(!CreateFdEvents(), false, 1, "CreateFdEvents() failed");
 
     HLOGV("success");
     prepared_ = true;
@@ -709,39 +699,27 @@ bool PerfEvents::StopTracking(void)
                 trackedCommand_->Stop();
             }
         }
-        if (!PerfEventsEnable(false)) {
-            HLOGE("StopTracking : PerfEventsEnable(false) failed");
-            return false;
-        }
+        CHECK_TRUE(!PerfEventsEnable(false), false, 1, "StopTracking : PerfEventsEnable(false) failed");
     }
     return true;
 }
 
 bool PerfEvents::PauseTracking(void)
 {
-    if (!startedTracking_) {
-        return false;
-    }
+    CHECK_TRUE(!startedTracking_, false, 0, "");
     return PerfEventsEnable(false);
 }
 
 bool PerfEvents::ResumeTracking(void)
 {
-    if (!startedTracking_) {
-        return false;
-    }
+    CHECK_TRUE(!startedTracking_, false, 0, "");
     return PerfEventsEnable(true);
 }
 
 bool PerfEvents::EnableTracking()
 {
-    if (startedTracking_) {
-        return true;
-    }
-    if (!PerfEventsEnable(true)) {
-        HLOGE("PerfEvents::PerfEventsEnable() failed");
-        return false;
-    }
+    CHECK_TRUE(startedTracking_, true, 0, "");
+    CHECK_TRUE(!PerfEventsEnable(true), false, 1, "PerfEvents::PerfEventsEnable() failed");
 
     if (trackedCommand_) {
         // start tracked Command
@@ -887,10 +865,8 @@ void PerfEvents::SetSampleFrequency(unsigned int frequency)
     }
     int maxRate = 0;
     static bool printFlag = false;
-    if (!ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", maxRate)) {
-        printf("read perf_event_max_sample_rate fail.\n");
-        return;
-    }
+    CHECK_TRUE(!ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", maxRate), , LOG_TYPE_PRINTF,
+               "read perf_event_max_sample_rate fail.\n");
     if (sampleFreq_ > static_cast<unsigned int>(maxRate)) {
         sampleFreq_ = static_cast<unsigned int>(maxRate);
         if (!printFlag) {
@@ -1031,10 +1007,7 @@ bool PerfEvents::PrepareFdEvents(void)
 bool PerfEvents::CreateFdEvents(void)
 {
     // must be some events , or will failed
-    if (eventGroupItem_.empty()) {
-        printf("no event select.\n");
-        return false;
-    }
+    CHECK_TRUE(eventGroupItem_.empty(), false, LOG_TYPE_PRINTF, "no event select.\n");
 
     // create each fd by cpu and process user select
     /*
@@ -1147,10 +1120,7 @@ bool PerfEvents::CreateFdEvents(void)
         }
     }
 
-    if (fdNumber == 0) {
-        HLOGE("open %d fd for %d events", fdNumber, eventNumber);
-        return false;
-    }
+    CHECK_TRUE(fdNumber == 0, false, 1, "open %d fd for %d events", fdNumber, eventNumber);
 
     HLOGD("will try read %u events from %u fd (%zu groups):", eventNumber, fdNumber,
           eventGroupItem_.size());
@@ -1224,9 +1194,7 @@ bool PerfEvents::CreateSpeMmap(const FdItem &item, const perf_event_attr &attr)
     if (it == cpuMmap_.end()) {
         void *rbuf = mmap(nullptr, (1 + auxMmapPages_) * pageSize_, (PROT_READ | PROT_WRITE), MAP_SHARED,
                           item.fd.Get(), 0);
-        if (rbuf == MMAP_FAILED) {
-            return false;
-        }
+        CHECK_TRUE(rbuf == MMAP_FAILED, false, 0, "");
         void *auxRbuf = mmap(nullptr, auxMmapPages_ * pageSize_, (PROT_READ | PROT_WRITE), MAP_SHARED,
                              item.fd.Get(), 0);
         MmapFd mmapItem;
@@ -1439,9 +1407,7 @@ bool PerfEvents::GetRecordFromMmap(MmapFd &mmap)
 
 void PerfEvents::GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size)
 {
-    if (mmap.bufSize == 0) {
-        return;
-    }
+    CHECK_TRUE(mmap.bufSize == 0, , 0, "");
     pos = pos % mmap.bufSize;
     size_t tailSize = mmap.bufSize - pos;
     size_t copySize = std::min(size, tailSize);
@@ -1535,9 +1501,7 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
     mmap.header.size -= stackSize - newStackSize; // reduce the stack size
     uint8_t *buf = recordBuf_->AllocForWrite(mmap.header.size);
     // copy1: new_header
-    if (buf == nullptr) {
-        return false;
-    }
+    CHECK_TRUE(buf == nullptr, false, 0, "");
     if (memcpy_s(buf, sizeof(perf_event_header), &(mmap.header), sizeof(perf_event_header)) != 0) {
         HLOGEP("memcpy_s %p to %p failed. size %zd", &(mmap.header), buf,
                sizeof(perf_event_header));
