@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,31 +29,32 @@ namespace HiPerf {
 #define PERF_SAMPLE_SERVER_PID (1U << 31)
 
 struct sample_id {
-    u32 pid;
-    u32 tid;       /* if PERF_SAMPLE_TID set */
-    u64 time;      /* if PERF_SAMPLE_TIME set */
-    u64 id;        /* if PERF_SAMPLE_ID set */
-    u64 stream_id; /* if PERF_SAMPLE_STREAM_ID set  */
-    u32 cpu, res;  /* if PERF_SAMPLE_CPU set */
-    u64 id2;       /* if PERF_SAMPLE_IDENTIFIER set */
+    u32 pid = 0;
+    u32 tid = 0;       /* if PERF_SAMPLE_TID set */
+    u64 time = 0;      /* if PERF_SAMPLE_TIME set */
+    u64 id = 0;        /* if PERF_SAMPLE_ID set */
+    u64 stream_id = 0; /* if PERF_SAMPLE_STREAM_ID set  */
+    u32 cpu = 0;
+    u32 res = 0;  /* if PERF_SAMPLE_CPU set */
+    u64 id2 = 0;       /* if PERF_SAMPLE_IDENTIFIER set */
 };
 
 // If PERF_FORMAT_GROUP was not specified
 struct read_format {
-    __u64 value;        /* The value of the event */
-    __u64 timeEnabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
-    __u64 timeRunning; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
-    __u64 id;           /* if PERF_FORMAT_ID */
+    __u64 value = 0;        /* The value of the event */
+    __u64 timeEnabled = 0; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
+    __u64 timeRunning = 0; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
+    __u64 id = 0;           /* if PERF_FORMAT_ID */
 };
 
 struct PerfRecordAuxtraceData {
-    u64 size;
-    u64 offset;
-    u64 reference;
-    u32 idx;
-    u32 tid;
-    u32 cpu;
-    u32 reserved__;
+    u64 size = 0;
+    u64 offset = 0;
+    u64 reference = 0;
+    u32 idx = 0;
+    u32 tid = 0;
+    u32 cpu = 0;
+    u32 reserved__ = 0;
 };
 
 /*
@@ -70,11 +71,12 @@ struct PerfRecordAuxtraceData {
             the allocated memory.
 */
 struct PerfRecordMmapData {
-    u32 pid, tid;
-    u64 addr;
-    u64 len;
-    u64 pgoff;
-    char filename[KILO];
+    u32 pid = 0;
+    u32 tid = 0;
+    u64 addr = 0;
+    u64 len = 0;
+    u64 pgoff = 0;
+    char filename[KILO] = {0};
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -127,8 +129,8 @@ struct PerfRecordMmap2Data {
     lost   is the number of events that were lost.
 */
 struct PerfRecordLostData {
-    u64 id;
-    u64 lost;
+    u64 id = 0;
+    u64 lost = 0;
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -141,9 +143,9 @@ struct PerfRecordLostData {
     comm   is a string containing the new name of the process.
 */
 struct PerfRecordCommData {
-    u32 pid;
-    u32 tid;
-    char comm[KILO];
+    u32 pid = 0;
+    u32 tid = 0;
+    char comm[KILO] = {0};
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -151,48 +153,52 @@ struct PerfRecordCommData {
 
 // This record indicates a sample.
 struct PerfRecordSampleData {
-    u64 sample_id; /* if PERF_SAMPLE_IDENTIFIER */
-    u64 ip;        /* if PERF_SAMPLE_IP */
-    u32 pid, tid;  /* if PERF_SAMPLE_TID */
-    u64 time;      /* if PERF_SAMPLE_TIME */
-    u64 addr;      /* if PERF_SAMPLE_ADDR */
-    u64 id;        /* if PERF_SAMPLE_ID */
-    u64 stream_id; /* if PERF_SAMPLE_STREAM_ID */
-    u32 cpu, res;  /* if PERF_SAMPLE_CPU */
-    u64 period;    /* if PERF_SAMPLE_PERIOD */
+    u64 sample_id = 0; /* if PERF_SAMPLE_IDENTIFIER */
+    u64 ip = 0;        /* if PERF_SAMPLE_IP */
+    u32 pid = 0;
+    u32 tid = 0;  /* if PERF_SAMPLE_TID */
+    u64 time = 0;      /* if PERF_SAMPLE_TIME */
+    u64 addr = 0;      /* if PERF_SAMPLE_ADDR */
+    u64 id = 0;        /* if PERF_SAMPLE_ID */
+    u64 stream_id = 0; /* if PERF_SAMPLE_STREAM_ID */
+    u32 cpu = 0;
+    u32 res = 0;  /* if PERF_SAMPLE_CPU */
+    u64 period = 0;    /* if PERF_SAMPLE_PERIOD */
     struct read_format v;
     /* if PERF_SAMPLE_READ */
-    u64 nr;                        /* if PERF_SAMPLE_CALLCHAIN */
-    u64 *ips;                      /* if PERF_SAMPLE_CALLCHAIN */
-    u32 raw_size;                  /* if PERF_SAMPLE_RAW */
-    u8 *raw_data;                  /* if PERF_SAMPLE_RAW */
-    u64 bnr;                       /* if PERF_SAMPLE_BRANCH_STACK */
-    struct perf_branch_entry *lbr; /* if PERF_SAMPLE_BRANCH_STACK */
-    u64 user_abi;                  /* if PERF_SAMPLE_REGS_USER */
-    u64 reg_mask;
-    u64 reg_nr;
-    u64 *user_regs;   /* if PERF_SAMPLE_REGS_USER */
-    u64 stack_size;   /* if PERF_SAMPLE_STACK_USER */
-    u8 *stack_data;   /* if PERF_SAMPLE_STACK_USER */
-    u64 dyn_size;     /* if PERF_SAMPLE_STACK_USER && stack_size != 0 */
-    u64 weight;       /* if PERF_SAMPLE_WEIGHT */
-    u64 data_src;     /* if PERF_SAMPLE_DATA_SRC */
-    u64 transaction;  /* if PERF_SAMPLE_TRANSACTION */
-    u64 intr_abi;     /* if PERF_SAMPLE_REGS_INTR */
+    u64 nr = 0;                        /* if PERF_SAMPLE_CALLCHAIN */
+    u64 *ips = nullptr;                /* if PERF_SAMPLE_CALLCHAIN */
+    u32 raw_size = 0;                  /* if PERF_SAMPLE_RAW */
+    u8 *raw_data = nullptr;                  /* if PERF_SAMPLE_RAW */
+    u64 bnr = 0;                       /* if PERF_SAMPLE_BRANCH_STACK */
+    struct perf_branch_entry *lbr = nullptr; /* if PERF_SAMPLE_BRANCH_STACK */
+    u64 user_abi = 0;                  /* if PERF_SAMPLE_REGS_USER */
+    u64 reg_mask = 0;
+    u64 reg_nr = 0;
+    u64 *user_regs = nullptr;   /* if PERF_SAMPLE_REGS_USER */
+    u64 stack_size = 0;   /* if PERF_SAMPLE_STACK_USER */
+    u8 *stack_data = nullptr;   /* if PERF_SAMPLE_STACK_USER */
+    u64 dyn_size = 0;     /* if PERF_SAMPLE_STACK_USER && stack_size != 0 */
+    u64 weight = 0;       /* if PERF_SAMPLE_WEIGHT */
+    u64 data_src = 0;     /* if PERF_SAMPLE_DATA_SRC */
+    u64 transaction = 0;  /* if PERF_SAMPLE_TRANSACTION */
+    u64 intr_abi = 0;     /* if PERF_SAMPLE_REGS_INTR */
     u64 intr_regs[0]; /* if PERF_SAMPLE_REGS_INTR */
-    u64 phys_addr;    /* if PERF_SAMPLE_PHYS_ADDR */
-    u64 cgroup;       /* if PERF_SAMPLE_CGROUP */
-    u64 server_nr;    /* if PERF_SAMPLE_SERVER_PID */
-    u64 *server_pids; /* if PERF_SAMPLE_SERVER_PID */
+    u64 phys_addr = 0;    /* if PERF_SAMPLE_PHYS_ADDR */
+    u64 cgroup = 0;       /* if PERF_SAMPLE_CGROUP */
+    u64 server_nr = 0;    /* if PERF_SAMPLE_SERVER_PID */
+    u64 *server_pids = 0; /* if PERF_SAMPLE_SERVER_PID */
 };
 
 /*
     This record indicates a process exit event.
 */
 struct PerfRecordExitData {
-    u32 pid, ppid;
-    u32 tid, ptid;
-    u64 time;
+    u32 pid = 0;
+    u32 ppid = 0;
+    u32 tid = 0;
+    u32 ptid = 0;
+    u64 time = 0;
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -202,9 +208,9 @@ struct PerfRecordExitData {
     This record indicates a throttle/unthrottle event.
 */
 struct PerfRecordThrottleData {
-    u64 time;
-    u64 id;
-    u64 stream_id;
+    u64 time = 0;
+    u64 id = 0;
+    u64 stream_id = 0;
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -214,9 +220,11 @@ struct PerfRecordThrottleData {
     This record indicates a fork event.
 */
 struct PerfRecordForkData {
-    u32 pid, ppid;
-    u32 tid, ptid;
-    u64 time;
+    u32 pid = 0;
+    u32 ppid = 0;
+    u32 tid = 0;
+    u32 ptid = 0;
+    u64 time = 0;
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -228,7 +236,7 @@ struct PerfRecordForkData {
     been lost.
 */
 struct PerfRecordLostSamplesData {
-    u64 lost;
+    u64 lost = 0;
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -246,8 +254,8 @@ struct PerfRecordLostSamplesData {
             trace.
 */
 struct PerfRecordItraceStartData {
-    u32 pid;
-    u32 tid;
+    u32 pid = 0;
+    u32 tid = 0;
 };
 
 /*
@@ -270,9 +278,9 @@ struct PerfRecordItraceStartData {
                 overwritten previous data.
 */
 struct PerfRecordAuxData {
-    u64 aux_offset;
-    u64 aux_size;
-    u64 flags;
+    u64 aux_offset = 0;
+    u64 aux_size = 0;
+    u64 flags = 0;
     struct sample_id sample_id;
 };
 
@@ -280,7 +288,8 @@ struct PerfRecordAuxData {
     This record indicates a read event.
 */
 struct PerfRecordReadData {
-    u32 pid, tid;
+    u32 pid = 0;
+    u32 tid = 0;
     read_format values;
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
@@ -318,8 +327,8 @@ struct PerfRecordSwitchData {
             or next (if switching out) thread on the CPU.
 */
 struct PerfRecordSwitchCpuWideData {
-    u32 next_prev_pid;
-    u32 next_prev_tid;
+    u32 next_prev_pid = 0;
+    u32 next_prev_tid = 0;
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
@@ -354,12 +363,12 @@ struct PerfRecordSwitchCpuWideData {
             Cgroup namespace
 */
 struct PerfRecordNamespacesData {
-    u32 pid;
-    u32 tid;
-    u64 nr_namespaces;
+    u32 pid = 0;
+    u32 tid = 0;
+    u64 nr_namespaces = 0;
     struct name_space {
-        u64 dev;
-        u64 inode;
+        u64 dev = 0;
+        u64 inode = 0;
     } namespaces[0];
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
