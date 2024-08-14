@@ -779,7 +779,7 @@ void SubCommandRecord::SetSavedCmdlinesSize()
 
 void SubCommandRecord::RecoverSavedCmdlinesSize()
 {
-    CHECK_TRUE(oldCmdlinesSize_ == 0, , 0, "");
+    CHECK_TRUE(oldCmdlinesSize_ == 0, NO_RETVAL, 0, "");
     if (!WriteIntToProcFile(SAVED_CMDLINES_SIZE, oldCmdlinesSize_)) {
         printf("Failed to recover value of %s.\n", SAVED_CMDLINES_SIZE.c_str());
     }
@@ -915,7 +915,7 @@ bool SubCommandRecord::PrepareVirtualRuntime()
 
 void SubCommandRecord::WriteCommEventBeforeSampling()
 {
-    CHECK_TRUE(restart_, , 0, "");
+    CHECK_TRUE(restart_, NO_RETVAL, 0, "");
     for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
         virtualRuntime_.GetThread(it->first, it->first);
         for (auto tid : it->second) {
@@ -968,7 +968,7 @@ bool SubCommandRecord::IsSamplingRunning()
 void SubCommandRecord::ClientCommandHandle()
 {
     using namespace HiperfClient;
-    CHECK_TRUE(!IsSamplingRunning(), , 0, "");
+    CHECK_TRUE(!IsSamplingRunning(), NO_RETVAL, 0, "");
     // tell the caller if Exist
     ClientCommandResponse(true);
 
@@ -1630,7 +1630,7 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 
 void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
 {
-    CHECK_TRUE(sample == nullptr, , 0, "");
+    CHECK_TRUE(sample == nullptr, NO_RETVAL, 0, "");
     perf_callchain_context context = sample->inKernel() ? PERF_CONTEXT_KERNEL
                                                         : PERF_CONTEXT_USER;
     pid_t serverPid;

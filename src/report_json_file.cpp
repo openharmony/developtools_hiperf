@@ -219,7 +219,7 @@ void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, ui
 {
     auto &config = GetConfig(id);
     std::set<int> RepeatFunctionId;
-    CHECK_TRUE(frames.size() == 0, , 0, ""); // do nothing with no frame
+    CHECK_TRUE(frames.size() == 0, NO_RETVAL, 0, ""); // do nothing with no frame
     auto &process = GetOrCreateMapItem(config.processes_, pid);
     auto &thread = GetOrCreateMapItem(process.threads_, tid);
     auto it = frames.begin();

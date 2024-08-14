@@ -357,7 +357,7 @@ void VirtualRuntime::UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offs
 
 void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
 {
-    CHECK_TRUE(recordSample == nullptr, , 0, "");
+    CHECK_TRUE(recordSample == nullptr, NO_RETVAL, 0, "");
     u64 nr = recordSample->data_.nr;
     if (nr == 0) {
         collectSymbolCallBack_(recordSample);
@@ -375,7 +375,7 @@ void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
         table = std::make_shared<UniqueStackTable>(pid);
         processStackMap_[pid] = table;
     }
-    CHECK_TRUE(table == nullptr, , 0, "");
+    CHECK_TRUE(table == nullptr, NO_RETVAL, 0, "");
     while (table->PutIpsInTable(&stackId, ips, nr) == 0) {
         // try expand hashtable if collison can not resolved
         if (!table->Resize()) {
@@ -769,7 +769,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
     if (recordCallBack_) {
         if (NeedAdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size)) {
             FixHMBundleMmap(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size);
-            CHECK_TRUE(!CheckValidSandBoxMmap(recordMmap2), , 0, "");
+            CHECK_TRUE(!CheckValidSandBoxMmap(recordMmap2), NO_RETVAL, 0, "");
         }
     }
     auto map = UpdateThreadMaps(recordMmap2.data_.pid, recordMmap2.data_.tid, recordMmap2.data_.filename,
@@ -858,7 +858,7 @@ void VirtualRuntime::SetRecordMode(RecordCallBack recordCallBack)
 
 void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
 {
-    CHECK_TRUE(map == nullptr || map->symbolFileIndex != -1, , 0, "");
+    CHECK_TRUE(map == nullptr || map->symbolFileIndex != -1, NO_RETVAL, 0, "");
     HLOGD("try to find symbols for file: %s", map->name.c_str());
     for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
         if (symbolsFiles_[i]->filePath_ == map->name) {
