@@ -774,7 +774,7 @@ HWTEST_F(ReportTest, AddReportItemBranch, TestSize.Level1)
     };
     PerfRecordSampleMock sample(false, 0, 0, 1);
     sample.data_.bnr = 3;
-    sample.data_.lbr = new perf_branch_entry[sample.data_.bnr];
+    sample.data_.lbr = new PerfBranchEntry[sample.data_.bnr];
     sample.data_.lbr[0].to = 0x123400;
     sample.data_.lbr[0].from = 0x432100;
     sample.data_.lbr[1].to = 0x123401;

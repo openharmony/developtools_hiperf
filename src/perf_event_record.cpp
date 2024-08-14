@@ -416,8 +416,8 @@ PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
     }
     PopFromBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr);
     if (data_.bnr > 0) {
-        data_.lbr = reinterpret_cast<perf_branch_entry *>(p);
-        p += data_.bnr * sizeof(perf_branch_entry);
+        data_.lbr = reinterpret_cast<PerfBranchEntry *>(p);
+        p += data_.bnr * sizeof(PerfBranchEntry);
     }
     PopFromBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi);
     if (data_.user_abi > 0) {
@@ -474,8 +474,8 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     }
     PushToBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr);
     if (data_.bnr > 0) {
-        std::copy(data_.lbr, data_.lbr + data_.bnr, reinterpret_cast<perf_branch_entry *>(p));
-        p += data_.bnr * sizeof(perf_branch_entry);
+        std::copy(data_.lbr, data_.lbr + data_.bnr, reinterpret_cast<PerfBranchEntry *>(p));
+        p += data_.bnr * sizeof(PerfBranchEntry);
     }
     PushToBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi);
     if (data_.user_abi > 0 && data_.reg_nr > 0) {
@@ -561,8 +561,7 @@ void PerfRecordSample::DumpData(int indent) const
         PRINT_INDENT(indent, "branch_stack nr=%lld\n", data_.bnr);
         for (uint64_t i = 0; i < data_.bnr; ++i) {
             auto &item = data_.lbr[i];
-            PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx %s%s\n", item.from, item.to,
-                         item.mispred ? "mispred" : "", item.predicted ? "predicted" : "");
+            PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx, flags 0x%llx\n", item.from, item.to, item.flags);
         }
     }
     if (sampleType_ & PERF_SAMPLE_REGS_USER) {

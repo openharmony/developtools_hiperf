@@ -1452,7 +1452,7 @@ size_t PerfEvents::GetStackSizePosInSampleRecord(MmapFd &mmap)
     if (mmap.attr->sample_type & PERF_SAMPLE_BRANCH_STACK) {
         uint64_t bnr = 0;
         GetRecordFieldFromMmap(mmap, &bnr, mmap.mmapPage->data_tail + pos, sizeof(bnr));
-        pos += (sizeof(bnr) + bnr * sizeof(perf_branch_entry));
+        pos += (sizeof(bnr) + bnr * sizeof(PerfBranchEntry));
     }
     if (mmap.attr->sample_type & PERF_SAMPLE_REGS_USER) {
         uint64_t user_abi = 0;
