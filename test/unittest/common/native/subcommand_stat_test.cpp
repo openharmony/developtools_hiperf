@@ -2199,6 +2199,69 @@ HWTEST_F(SubCommandStatTest, CheckOptionPidAndApp, TestSize.Level1)
     pids.push_back(700011); // 700011: invalid pid
     EXPECT_EQ(stat.CheckOptionPidAndApp(pids), false);
 }
+
+/**
+ * @tc.name: TestOnSubCommand_restart_fail
+ * @tc.desc: --restart
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_restart_fail, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand("stat --restart"), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+}
+
+/**
+ * @tc.name: TestOnSubCommand_app_running
+ * @tc.desc: --app
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_app_running, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand("stat --app com.app.notrunning -d 2"), false);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+}
+
+/**
+ * @tc.name: CheckPidAndApp
+ * @tc.desc: -p
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckPidAndApp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand("stat -p 700001 -d 2"), true);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
