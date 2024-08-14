@@ -700,6 +700,10 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord, TestSize.Level1)
             ASSERT_EQ(perfEventRecord != nullptr, true);
         }
     }
+    std::unique_ptr<PerfEventRecord> perfEventRecord =
+        GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
+                           reinterpret_cast<uint8_t *>(&data), attr);
+    ASSERT_EQ(perfEventRecord != nullptr, true);
 }
 } // namespace HiPerf
 } // namespace Developtools
