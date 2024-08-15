@@ -151,6 +151,12 @@ struct PerfRecordCommData {
 #endif
 };
 
+struct PerfBranchEntry {
+    u64 from = 0;
+    u64 to = 0;
+    u64 flags = 0;
+};
+
 // This record indicates a sample.
 struct PerfRecordSampleData {
     u64 sample_id = 0; /* if PERF_SAMPLE_IDENTIFIER */
@@ -171,7 +177,7 @@ struct PerfRecordSampleData {
     u32 raw_size = 0;                  /* if PERF_SAMPLE_RAW */
     u8 *raw_data = nullptr;                  /* if PERF_SAMPLE_RAW */
     u64 bnr = 0;                       /* if PERF_SAMPLE_BRANCH_STACK */
-    struct perf_branch_entry *lbr = nullptr; /* if PERF_SAMPLE_BRANCH_STACK */
+    struct PerfBranchEntry *lbr = nullptr; /* if PERF_SAMPLE_BRANCH_STACK */
     u64 user_abi = 0;                  /* if PERF_SAMPLE_REGS_USER */
     u64 reg_mask = 0;
     u64 reg_nr = 0;
