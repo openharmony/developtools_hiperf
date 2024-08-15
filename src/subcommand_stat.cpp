@@ -628,10 +628,10 @@ void SubCommandStat::SetPerfEvent()
 
 bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 {
-    if (HelpOption()) {
-        return true;
+    CHECK_TRUE(HelpOption(), true, 0, "");
+    if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
+        return false;
     }
-    CHECK_TRUE(!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_), false, 0, "");
     // check option
     if (!CheckSelectCpuPidOption()) {
         return false;
@@ -640,7 +640,10 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         HLOGV("CheckOptions() failed");
         return false;
     }
-    CHECK_TRUE(!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_), false, 1, "CheckAppIsRunning() failed");
+    if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
+        HLOGV("CheckAppIsRunning() failed");
+        return false;
+    }
 
     perfEvents_.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
@@ -655,7 +658,10 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     }
     pids.insert(pids.end(), selectTids_.begin(), selectTids_.end());
     perfEvents_.SetPid(pids);
-    CHECK_TRUE(!CheckOptionPidAndApp(pids), false, 1, "CheckOptionPidAndApp() failed");
+    if (!CheckOptionPidAndApp(pids)) {
+        HLOGV("CheckOptionPidAndApp() failed");
+        return false;
+    }
     SetPerfEvent();
     if (!PrepairEvents()) {
         HLOGV("PrepairEvents() failed");
