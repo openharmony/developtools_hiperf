@@ -1250,6 +1250,16 @@ HWTEST_F(SubCommandRecordTest, ExcludeTids, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ExcludeThread
+ * @tc.desc: Test --exclude-thread
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ExcludeThread, TestSize.Level1)
+{
+    ForkAndRunTest("-d 2 -s dwarf -f 2000 --exclude-thread com.app.test");
+}
+
+/**
  * @tc.name: ExcludeMixedThreadName
  * @tc.desc: Test --exclude-thread option mixed correct name and error name
  * @tc.type: FUNC
