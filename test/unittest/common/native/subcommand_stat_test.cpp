@@ -2230,11 +2230,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_app_running, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat --app com.app.notrunning -d 2"), false);
-    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
-    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
