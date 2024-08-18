@@ -1392,7 +1392,7 @@ void PerfEvents::ReadRecordsFromMmaps()
         u64 auxSize = 0;
         MoveRecordToBuf(*MmapRecordHeap_.front(), auxEvent, auxOffset, auxSize, pid, tid);
         if (isSpe_ && auxEvent) {
-            ReadRecordsFromSpeMmaps(*MmapRecordHeap_.front(), auxOffset. auxSize, pid, tid);
+            ReadRecordsFromSpeMmaps(*MmapRecordHeap_.front(), auxOffset, auxSize, pid, tid);
             enableFlag = true;
         }
     }
