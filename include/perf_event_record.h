@@ -41,6 +41,7 @@ namespace HiPerf {
 using namespace OHOS::HiviewDFX;
 
 static constexpr uint32_t RECORD_SIZE_LIMIT = 65535;
+static constexpr uint32_t RECORD_SIZE_LIMIT_SPE = 524288; // auxMmapPages_ * pageSize_
 
 enum perf_event_hiperf_ext_type {
     PERF_RECORD_AUXTRACE = 71,

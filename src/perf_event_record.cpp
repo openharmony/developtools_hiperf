@@ -255,8 +255,11 @@ bool PerfRecordAuxtrace::GetBinary1(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
+    size_t copySize = header.size - GetHeaderSize();
+    if (memcpy_s(p, sizeof(data_), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s return failed");
+        return false;
+    }
     return true;
 }
 
@@ -269,10 +272,16 @@ bool PerfRecordAuxtrace::GetBinary(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + header.size - GetHeaderSize(), p);
+    size_t copySize = header.size - GetHeaderSize();
+    if (memcpy_s(p, sizeof(data_), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s return failed");
+        return false;
+    }
     p += header.size - GetHeaderSize();
-    std::copy(static_cast<uint8_t *>(rawData_), static_cast<uint8_t *>(rawData_) + data_.size, p);
+    if (memcpy_s(p, data_.size, static_cast<uint8_t *>(rawData_), data_.size) != 0) {
+        HLOGE("memcpy_s return failed");
+        return false;
+    }
     return true;
 }
 
@@ -287,7 +296,7 @@ void PerfRecordAuxtrace::DumpData(int indent) const
 
 void PerfRecordAuxtrace::DumpLog(const std::string &prefix) const
 {
-    HLOGV("size 0x%llx, offset 0x%llx, reference 0x%llx, idx %u, tid %u, cpu %u\n",
+    HLOGV("size %llu, offset 0x%llx, reference 0x%llx, idx %u, tid %u, cpu %u\n",
           data_.size, data_.offset, data_.reference, data_.idx, data_.tid, data_.cpu);
 }
 
@@ -1039,7 +1048,7 @@ bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordAux::DumpData(int indent) const
 {
-    PRINT_INDENT(indent, "aux_offset 0x%llx, aux_size 0x%llx, flags 0x%llx\n  pid 0x%u  tid 0x%u, time 0x%llu",
+    PRINT_INDENT(indent, "aux_offset 0x%llx aux_size 0x%llx flags 0x%llx pid %u tid %u time %llu",
                  data_.aux_offset, data_.aux_size, data_.flags, data_.sample_id.pid, data_.sample_id.tid,
                  data_.sample_id.time);
 }

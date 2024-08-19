@@ -71,7 +71,7 @@ void PerfEvents::SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, u32 si
         copySize = min(traceSize, left);
         src = PTR_ADD(dataPage, offset);
         if (memcpy_s(buf, left, src, copySize) != 0) {
-            HLOGV("SpeReadData memcpy_s failed. ");
+            HLOGV("SpeReadData memcpy_s failed.");
         }
 
         traceSize -= copySize;
@@ -89,7 +89,7 @@ static u64 arm_spe_reference()
     return static_cast<uint64_t>(ts.tv_sec) ^ static_cast<uint64_t>(ts.tv_nsec);
 }
 
-void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxSize, u32 pid, u32 tid)
+void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxSize, u32 pid, u32 tid)
 {
     if (mmapFd.mmapPage == nullptr || mmapFd.auxBuf == nullptr) {
         printf("ReadRecordsFromSpeMmaps mmapFd.mmapPage == nullptr, mmapFd.fd: %d", mmapFd.fd);
@@ -97,11 +97,19 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxSize, u32 pid, u
     }
     perf_event_mmap_page *userPage = reinterpret_cast<perf_event_mmap_page *>(mmapFd.mmapPage);
     void *auxPage = mmapFd.auxBuf;
+    userPage->aux_tail = auxOffset - auxSize;
     u64 auxHead = userPage->aux_head;
     u64 auxTail = userPage->aux_tail;
+    HLOGD("mmap cpu %d, aux_head: %llu, aux_tail:%llu, auxOffset:%llu, auxSize:%llu",
+          mmapFd.cpu, auxHead, auxTail, auxOffset, auxSize);
     if (auxHead <= auxTail) {
         return;
     }
+    if (auxSize > auxMmapPages_ * pageSize_) {
+        userPage->aux_tail += auxSize;
+        return;
+    }
+
     int cpu = mmapFd.cpu;
     __sync_synchronize();
     PerfRecordAuxtrace auxtraceRecord = PerfRecordAuxtrace(auxSize, auxTail,
@@ -113,7 +121,10 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxSize, u32 pid, u
         return;
     }
     auxtraceRecord.GetBinary1(vbuf);
-    std::copy(vbuf.begin(), vbuf.begin() + auxtraceRecord.header.size, buf);
+    if (memcpy_s(buf, auxtraceRecord.header.size, vbuf.data(), auxtraceRecord.header.size) != 0) {
+        HLOGE("memcpy_s return failed");
+        return;
+    }
     buf += auxtraceRecord.header.size;
 
     while (auxSize > 0) {
@@ -125,7 +136,6 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxSize, u32 pid, u
         SpeReadData(auxPage, &auxTail, buf, readSize);
         __sync_synchronize();
         userPage->aux_tail += readSize;
-        auxHead = userPage->aux_head;
         auxTail = userPage->aux_tail;
         buf += readSize;
         auxSize -= readSize;
@@ -1306,12 +1316,14 @@ size_t PerfEvents::CalcBufferSize()
 
 inline bool PerfEvents::IsRecordInMmap(int timeout)
 {
+    HLOGV("enter");
     if (pollFds_.size() > 0) {
         if (poll(static_cast<struct pollfd*>(pollFds_.data()), pollFds_.size(), timeout) <= 0) {
             // time out try again
             return false;
         }
     }
+    HLOGV("poll record from mmap");
     return true;
 }
 
@@ -1338,7 +1350,7 @@ void PerfEvents::ReadRecordsFromMmaps()
     if (MmapRecordHeap_.empty()) {
         return;
     }
-
+    bool enableFlag = false;
     if (MmapRecordHeap_.size() > 1) {
         for (const auto &it : MmapRecordHeap_) {
             GetRecordFromMmap(*it);
@@ -1352,10 +1364,12 @@ void PerfEvents::ReadRecordsFromMmaps()
             bool auxEvent = false;
             u32 pid = 0;
             u32 tid = 0;
+            u64 auxOffset = 0;
             u64 auxSize = 0;
-            MoveRecordToBuf(*MmapRecordHeap_[heapSize - 1], auxEvent, auxSize, pid, tid);
+            MoveRecordToBuf(*MmapRecordHeap_[heapSize - 1], auxEvent, auxOffset, auxSize, pid, tid);
             if (isSpe_ && auxEvent) {
-                ReadRecordsFromSpeMmaps(*MmapRecordHeap_[heapSize - 1], auxSize, pid, tid);
+                ReadRecordsFromSpeMmaps(*MmapRecordHeap_[heapSize - 1], auxOffset, auxSize, pid, tid);
+                enableFlag = true;
             }
             if (GetRecordFromMmap(*MmapRecordHeap_[heapSize - 1])) {
                 std::push_heap(MmapRecordHeap_.begin(), MmapRecordHeap_.begin() + heapSize,
@@ -1370,11 +1384,17 @@ void PerfEvents::ReadRecordsFromMmaps()
         bool auxEvent = false;
         u32 pid = 0;
         u32 tid = 0;
+        u64 auxOffset = 0;
         u64 auxSize = 0;
-        MoveRecordToBuf(*MmapRecordHeap_.front(), auxEvent, auxSize, pid, tid);
+        MoveRecordToBuf(*MmapRecordHeap_.front(), auxEvent, auxOffset, auxSize, pid, tid);
         if (isSpe_ && auxEvent) {
-            ReadRecordsFromSpeMmaps(*MmapRecordHeap_.front(), auxSize, pid, tid);
+            ReadRecordsFromSpeMmaps(*MmapRecordHeap_.front(), auxOffset, auxSize, pid, tid);
+            enableFlag = true;
         }
+    }
+    if (isSpe_ && enableFlag) {
+        PerfEventsEnable(false);
+        PerfEventsEnable(true);
     }
     MmapRecordHeap_.clear();
     {
@@ -1526,7 +1546,7 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
     return true;
 }
 
-void PerfEvents::MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxSize, u32 &pid, u32 &tid)
+void PerfEvents::MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxOffset, u64 &auxSize, u32 &pid, u32 &tid)
 {
     uint8_t *buf = nullptr;
     if (mmap.header.type == PERF_RECORD_SAMPLE) {
@@ -1550,9 +1570,11 @@ void PerfEvents::MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxSize, u
     if (mmap.header.type == PERF_RECORD_AUX) {
         isAuxEvent = true;
         // in AUX : header + u64 aux_offset + u64 aux_size
+        uint64_t auxOffsetPos = sizeof(perf_event_header);
         uint64_t auxSizePos = sizeof(perf_event_header) + sizeof(uint64_t);
         uint64_t pidPos = auxSizePos + sizeof(uint64_t) * 2; // 2 : offset
         uint64_t tidPos = pidPos + sizeof(uint32_t);
+        GetRecordFieldFromMmap(mmap, &auxOffset, mmap.mmapPage->data_tail + auxOffsetPos, sizeof(auxOffset));
         GetRecordFieldFromMmap(mmap, &auxSize, mmap.mmapPage->data_tail + auxSizePos, sizeof(auxSize));
         GetRecordFieldFromMmap(mmap, &pid, mmap.mmapPage->data_tail + pidPos, sizeof(pid));
         GetRecordFieldFromMmap(mmap, &tid, mmap.mmapPage->data_tail + tidPos, sizeof(tid));

@@ -125,12 +125,12 @@ bool PerfFileWriter::WriteRecord(const PerfEventRecord &record)
         return false;
     }
 
-    HLOGV("write '%s'", record.GetName().c_str());
+    HLOGV("write '%s', size %zu", record.GetName().c_str(), record.GetSize());
 
-    CHECK_TRUE(record.GetSize() > RECORD_SIZE_LIMIT, false, 1,
+    CHECK_TRUE(record.GetSize() > RECORD_SIZE_LIMIT_SPE, false, 1,
                "%s record size exceed limit", record.GetName().c_str());
     // signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0xb64eb195
-    static std::vector<u8> buf(RECORD_SIZE_LIMIT);
+    static std::vector<u8> buf(RECORD_SIZE_LIMIT_SPE);
 
     CHECK_TRUE(!record.GetBinary(buf), false, 0, "");
 
@@ -158,7 +158,7 @@ bool PerfFileWriter::ReadDataSection(ProcessRecordCB &callback)
 bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
 {
     // record size can not exceed 64K
-    HIPERF_BUF_ALIGN uint8_t buf[RECORD_SIZE_LIMIT];
+    HIPERF_BUF_ALIGN static uint8_t buf[RECORD_SIZE_LIMIT_SPE];
     // diff with reader
     uint64_t remainingSize = dataSection_.size;
     size_t recordNumber = 0;
@@ -171,7 +171,7 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
             return false;
         } else {
             perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
-            HLOG_ASSERT(header->size < sizeof(buf));
+            HLOG_ASSERT(header->size < RECORD_SIZE_LIMIT);
             if (remainingSize >= header->size) {
                 size_t headerSize = sizeof(perf_event_header);
                 if (Read(buf + headerSize, header->size - headerSize)) {
