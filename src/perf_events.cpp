@@ -106,7 +106,6 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxS
         return;
     }
     if (auxSize > auxMmapPages_ * pageSize_) {
-        HLOGE("auxSize : %llu exceed max size:%zu", auxSize, auxMmapPages_ * pageSize_);
         userPage->aux_tail += auxSize;
         return;
     }
