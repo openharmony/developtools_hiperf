@@ -97,6 +97,7 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxS
     }
     perf_event_mmap_page *userPage = reinterpret_cast<perf_event_mmap_page *>(mmapFd.mmapPage);
     void *auxPage = mmapFd.auxBuf;
+    userPage->aux_tail = auxOffset - auxSize;
     u64 auxHead = userPage->aux_head;
     u64 auxTail = userPage->aux_tail;
     HLOGD("mmap cpu %d, aux_head: %llu, aux_tail:%llu, auxOffset:%llu, auxSize:%llu",
@@ -109,15 +110,12 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxS
         userPage->aux_tail += auxSize;
         return;
     }
-    userPage->aux_tail = auxOffset - auxSize;
-    auxTail = userPage->aux_tail;
-    HLOGD("mmap cpu %d, aux_head: %llu, aux_tail:%llu, auxOffset:%llu, auxSize:%llu",
-          mmapFd.cpu, auxHead, auxTail, auxOffset, auxSize);
+
     int cpu = mmapFd.cpu;
     __sync_synchronize();
     PerfRecordAuxtrace auxtraceRecord = PerfRecordAuxtrace(auxSize, auxTail,
                                                            arm_spe_reference(), cpu, tid, cpu, pid);
-    static std::vector<u8> vbuf(RECORD_SIZE_LIMIT_SPE);
+    static std::vector<u8> vbuf(RECORD_SIZE_LIMIT);
     uint8_t *buf;
     if ((buf = recordBuf_->AllocForWrite(auxtraceRecord.header.size + auxSize)) == nullptr) {
         HLOGD("alloc buffer failed: PerfRecordAuxtrace record, readSize: %llu", auxSize);
@@ -139,7 +137,6 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxS
         SpeReadData(auxPage, &auxTail, buf, readSize);
         __sync_synchronize();
         userPage->aux_tail += readSize;
-        auxHead = userPage->aux_head;
         auxTail = userPage->aux_tail;
         buf += readSize;
         auxSize -= readSize;
