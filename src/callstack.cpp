@@ -773,7 +773,7 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
     *val = 0;
 
     /* Check overflow. */
-    CHECK_TRUE(unwindInfoPtr == nullptr || (addr + sizeof(uintptr_t) < addr), -1, 1,
+    CHECK_TRUE(unwindInfoPtr == nullptr || addr + sizeof(uintptr_t) < addr, -1, 1,
                "unwindInfoPtr is null or address overflow at 0x%" UNW_WORD_PFLAG " increase 0x%zu",
                addr, sizeof(uintptr_t));
 
