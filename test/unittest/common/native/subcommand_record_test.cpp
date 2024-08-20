@@ -590,7 +590,7 @@ HWTEST_F(SubCommandRecordTest, SelectTidInputErr, TestSize.Level1)
 // cpu off
 HWTEST_F(SubCommandRecordTest, CpuOff, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 --offcpu ");
+    ForkAndRunTest("-d 2 --offcpu -o /data/local/tmp/offcpu_perf.data");
 }
 
 HWTEST_F(SubCommandRecordTest, BranchFilterAny, TestSize.Level1)

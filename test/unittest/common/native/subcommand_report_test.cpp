@@ -1272,6 +1272,26 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_from_funcs_fail, TestSize.Level1
         printf("output:\n%s", stringOut.c_str());
     }
 }
+
+/**
+ * @tc.name: TestOnSubCommand_offcpu
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_offcpu, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    const auto startTime = chrono::steady_clock::now();
+    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/offcpu_perf.data"), true);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - startTime);
+    EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
+    std::string stringOut = stdoutRecord.Stop();
+    if (HasFailure()) {
+        printf("output:\n%s", stringOut.c_str());
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
