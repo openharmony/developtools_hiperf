@@ -96,6 +96,9 @@ uint64_t GetBranchSampleType(const std::string &name)
         {"any_call", PERF_SAMPLE_BRANCH_ANY_CALL},
         {"any_ret", PERF_SAMPLE_BRANCH_ANY_RETURN},
         {"ind_call", PERF_SAMPLE_BRANCH_IND_CALL},
+        {"call", PERF_SAMPLE_BRANCH_CALL},
+        {"cond", PERF_SAMPLE_BRANCH_COND},
+        {"ind_jmp", PERF_SAMPLE_BRANCH_IND_JUMP},
     };
 
     auto it = mapBranchSampleType.find(name);

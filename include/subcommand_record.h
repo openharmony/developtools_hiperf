@@ -116,6 +116,8 @@ public:
         "           any_call: any function call or system call\n"
         "           any_ret: any function return or system call return\n"
         "           ind_call: any indirect branch\n"
+        "           ind_jmp: any indirect jump\n"
+        "           cond: conditional branches\n"
         "           call: direct calls, including far (to/from kernel) calls\n"
         "           u: only when the branch target is at the user level\n"
         "           k: only when the branch target is in the kernel\n"
