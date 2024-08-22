@@ -121,7 +121,7 @@ public:
         "           call: direct calls, including far (to/from kernel) calls\n"
         "           u: only when the branch target is at the user level\n"
         "           k: only when the branch target is in the kernel\n"
-        "         requires at least one of any, any_call, any_ret, ind_call\n"
+        "         requires at least one of any, any_call, any_ret, ind_call, ind_jmp, cond, call\n"
         "   -s / --call-stack <fp|dwarf[,size]>\n"
         "         Setup and enable call stack (stack chain/backtrace) recording, Default is 'fp'.\n"
         "           the value can be:\n"
