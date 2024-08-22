@@ -68,8 +68,9 @@ const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT_CHECK = 1000ms;
 constexpr uint64_t MASK_ALIGNED_8 = 7;
 constexpr size_t MAX_DWARF_CALL_CHAIN = 2;
 constexpr uint64_t TYPE_PERF_SAMPLE_BRANCH = PERF_SAMPLE_BRANCH_ANY | PERF_SAMPLE_BRANCH_ANY_CALL |
-                                             PERF_SAMPLE_BRANCH_ANY_RETURN |
-                                             PERF_SAMPLE_BRANCH_IND_CALL;
+                                             PERF_SAMPLE_BRANCH_ANY_RETURN | PERF_SAMPLE_BRANCH_IND_JUMP |
+                                             PERF_SAMPLE_BRANCH_IND_CALL | PERF_SAMPLE_BRANCH_COND |
+                                             PERF_SAMPLE_BRANCH_CALL;
 
 int GetClockId(const std::string &name)
 {
@@ -96,9 +97,9 @@ uint64_t GetBranchSampleType(const std::string &name)
         {"any_call", PERF_SAMPLE_BRANCH_ANY_CALL},
         {"any_ret", PERF_SAMPLE_BRANCH_ANY_RETURN},
         {"ind_call", PERF_SAMPLE_BRANCH_IND_CALL},
-        {"call", PERF_SAMPLE_BRANCH_CALL},
-        {"cond", PERF_SAMPLE_BRANCH_COND},
         {"ind_jmp", PERF_SAMPLE_BRANCH_IND_JUMP},
+        {"cond", PERF_SAMPLE_BRANCH_COND},
+        {"call", PERF_SAMPLE_BRANCH_CALL},
     };
 
     auto it = mapBranchSampleType.find(name);
@@ -667,8 +668,8 @@ bool SubCommandRecord::ParseBranchSampleType(const std::vector<std::string> &vec
             }
         }
         if ((branchSampleType_ & TYPE_PERF_SAMPLE_BRANCH) == 0) {
-            printf(
-                "Invalid -j value, requires at least one of any, any_call, any_ret, ind_call.\n");
+            printf("Invalid -j value, requires at least one of"
+                   "any, any_call, any_ret, ind_call, ind_jmp, cond, call.\n");
             return false;
         }
     }
