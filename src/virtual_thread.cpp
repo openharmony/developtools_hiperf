@@ -183,7 +183,6 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) co
 void VirtualThread::ReportVaddrMapMiss(uint64_t vaddr) const
 {
 #ifdef HIPERF_DEBUG
-
     if (DebugLogger::logDisabled_) {
         return;
     }
