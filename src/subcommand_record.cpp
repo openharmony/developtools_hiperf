@@ -512,6 +512,11 @@ bool SubCommandRecord::CheckTargetProcessOptions()
                    VectorToString(trackedCommand_).c_str());
             return false;
         }
+        if (!IsRoot()) {
+            printf("%s options needs root privilege, please check usage\n",
+                   VectorToString(trackedCommand_).c_str());
+            return false;
+        }
         hasTarget = true;
     }
     if (appPackage_ != "") {

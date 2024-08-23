@@ -73,7 +73,11 @@ int main(const int argc, const char *argv[])
 
 // register all the main command
 #ifdef HIPERF_DEBUG
-    RegisterMainCommandDebug();
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        RegisterMainCommandDebug();
+    }
+#endif
 #endif
 
     // register all the sub command

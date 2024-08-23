@@ -183,6 +183,7 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) co
 void VirtualThread::ReportVaddrMapMiss(uint64_t vaddr) const
 {
 #ifdef HIPERF_DEBUG
+
     if (DebugLogger::logDisabled_) {
         return;
     }
@@ -241,9 +242,7 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
             }
         }
     } else {
-#ifdef HIPERF_DEBUG
-        ReportVaddrMapMiss(vaddr);
-#endif
+        HLOGV("vaddr %" PRIx64 " not found in any map", vaddr);
     }
     return false;
 }
