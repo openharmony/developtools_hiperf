@@ -189,6 +189,7 @@ PerfEvents::~PerfEvents()
 bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
 {
     unique_ptr<perf_event_attr> attr = PerfEvents::CreateDefaultAttr(type, config);
+    CHECK_TRUE(attr == nullptr, false, 0, "");
     UniqueFd fd = Open(*attr.get());
     if (fd < 0) {
         printf("event not support %s\n", GetStaticConfigName(type, config).c_str());
@@ -211,6 +212,7 @@ bool PerfEvents::SetBranchSampleType(uint64_t value)
         // cpu-clcles event must be supported
         unique_ptr<perf_event_attr> attr =
             PerfEvents::CreateDefaultAttr(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+        CHECK_TRUE(attr == nullptr, false, 0, "");
         attr->sample_type |= PERF_SAMPLE_BRANCH_STACK;
         attr->branch_sample_type = value;
         if (!IsEventAttrSupport(*attr.get())) {
@@ -246,7 +248,7 @@ bool PerfEvents::AddOffCpuEvent()
 bool PerfEvents::AddEvents(const std::vector<std::string> &eventStrings, bool group)
 {
     bool followGroup = false;
-    HLOGV(" %s %s", VectorToString(eventStrings).c_str(), followGroup ? "followGroup" : "");
+    HLOGV(" %s", VectorToString(eventStrings).c_str());
 
     for (std::string eventString : eventStrings) {
         if (!AddEvent(eventString, followGroup)) {
@@ -465,12 +467,10 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
         }
 
         eventItem.attr.watermark = 1;
-        if (eventItem.attr.watermark == 1) {
-            eventItem.attr.wakeup_watermark = (mmapPages_ * pageSize_) >> 1;
-            static constexpr unsigned int maxWakeupMark = 1024 * 1024;
-            if (eventItem.attr.wakeup_watermark > maxWakeupMark) {
-                eventItem.attr.wakeup_watermark = maxWakeupMark;
-            }
+        eventItem.attr.wakeup_watermark = (mmapPages_ * pageSize_) >> 1;
+        static constexpr unsigned int maxWakeupMark = 1024 * 1024;
+        if (eventItem.attr.wakeup_watermark > maxWakeupMark) {
+            eventItem.attr.wakeup_watermark = maxWakeupMark;
         }
 
         // for a group of events, only enable comm/mmap on the first event
@@ -657,9 +657,6 @@ bool PerfEvents::StartTracking(bool immediately)
             HLOGE("PerfEvents::EnableTracking() failed");
             return false;
         }
-    }
-
-    if (immediately) {
         printf("Profiling duration is %.3f seconds.\n", float(timeOut_.count()) / THOUSANDS);
         printf("Start Profiling...\n");
     }
@@ -874,11 +871,11 @@ void PerfEvents::SetSampleFrequency(unsigned int frequency)
         sampleFreq_ = frequency;
     }
     int maxRate = 0;
-    static bool printFlag = false;
     CHECK_TRUE(!ReadIntFromProcFile("/proc/sys/kernel/perf_event_max_sample_rate", maxRate),
                NO_RETVAL, LOG_TYPE_PRINTF,
                "read perf_event_max_sample_rate fail.\n");
     if (sampleFreq_ > static_cast<unsigned int>(maxRate)) {
+        static bool printFlag = false;
         sampleFreq_ = static_cast<unsigned int>(maxRate);
         if (!printFlag) {
             printf("Adjust sampling frequency to maximum allowed frequency %d.\n", maxRate);
@@ -1167,7 +1164,7 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
                 countEvents_[configName]->userOnly = eventItem.attr.exclude_kernel;
                 countEvents_[configName]->kernelOnly = eventItem.attr.exclude_user;
             }
-            std::unique_ptr<CountEvent> &countEvent = countEvents_[configName];
+            const std::unique_ptr<CountEvent> &countEvent = countEvents_[configName];
             HLOGM("eventItem.fdItems:%zu", eventItem.fdItems.size());
             for (const auto &fditem : eventItem.fdItems) {
                 if (read(fditem.fd, &readNoGroupValue, sizeof(readNoGroupValue)) > 0) {
@@ -1508,7 +1505,7 @@ bool PerfEvents::CutStackAndMove(MmapFd &mmap)
     size_t dynSizePos = stackSizePos + sizeof(uint64_t) + stackSize;
     uint64_t dynSize = 0;
     GetRecordFieldFromMmap(mmap, &dynSize, mmap.mmapPage->data_tail + dynSizePos, sizeof(dynSize));
-    uint64_t newStackSize = std::min((dynSize + alignSize >= 1 ? dynSize + alignSize - 1 : 0) &
+    uint64_t newStackSize = std::min((dynSize + alignSize - 1) &
                                      (~(alignSize >= 1 ? alignSize - 1 : 0)), stackSize);
     if (newStackSize >= stackSize) {
         return false;

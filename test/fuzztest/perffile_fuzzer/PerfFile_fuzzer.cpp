@@ -44,15 +44,17 @@ public:
 
         std::unique_ptr<PerfFileReaderFuzzer> reader =
             std::make_unique<PerfFileReaderFuzzer>(resolvedPath, fp);
-
         if (!reader->ReadFileHeader()) {
             printf("head read error\n");
+            (void)fclose(fp);
             return nullptr;
         }
         if (!reader->ReadAttrSection()) {
             printf("attr read error\n");
+            (void)fclose(fp);
             return nullptr;
         }
+        (void)fclose(fp);
         return reader;
     };
 };

@@ -307,7 +307,6 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
     std::string mapPath = StringPrintf("/proc/%d/maps", devhost);
     std::string mapContent = ReadFileToString(mapPath);
     std::string filename;
-    uint64_t begin, end, offset;
     if (mapContent.size() > 0) {
         std::istringstream s(mapContent);
         std::string line;
@@ -326,6 +325,7 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
             if (addrRanges.size() != mmapAddrRangeToken) {
                 continue;
             }
+            uint64_t begin, end, offset;
             // 2fe40000 / 311e1000
             try {
                 begin = std::stoull(addrRanges[0], nullptr, NUMBER_FORMAT_HEX_BASE);

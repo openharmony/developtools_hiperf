@@ -166,7 +166,7 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
         if (remainingSize < sizeof(perf_event_header)) {
             HLOGW("not enough sizeof(perf_event_header).");
             return false;
-        } else if (Read(buf, sizeof(perf_event_header)) <= 0) {
+        } else if (!Read(buf, sizeof(perf_event_header))) {
             HLOGW("read perf_event_header failed.");
             return false;
         } else {

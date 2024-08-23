@@ -78,6 +78,7 @@ constexpr const int MULTIPLE_SIZE = 1024;
 constexpr const uint16_t CHECK_FREQUENCY = 100; //
 constexpr const uint8_t CHECK_TIMEOUT = 30;
 constexpr const int INDENT_TWO = 2;
+constexpr const float ALMOST_ZERO = 0.001;
 #if !is_mingw
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -165,7 +166,7 @@ void HexDump(const void *buf, size_t size, size_t max_size = 0);
 
 std::string &StringTrim(std::string &s);
 
-std::vector<std::string> StringSplit(std::string source, const std::string split = ",");
+std::vector<std::string> StringSplit(std::string source, const std::string &split = ",");
 
 size_t SubStringCount(const std::string &source, const std::string &sub);
 

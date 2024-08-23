@@ -411,7 +411,7 @@ std::string SubCommandStat::GetDetailComments(const std::unique_ptr<PerfEvents::
     if (configName == GetCommentConfigName(countEvent, "hw-cpu-cycles")) {
         if (findRunningTime) {
             double hz = 0;
-            if (running_time_in_sec != 0) {
+            if (abs(running_time_in_sec) > ALMOST_ZERO) {
                 hz = summary.eventCount / (running_time_in_sec / scale);
             }
             comment += hz / 1e9;
@@ -492,7 +492,7 @@ void SubCommandStat::GetComments(const std::map<std::string, std::unique_ptr<Per
                 ((group_id == it->second->id) ||
                  (IsMonitoredAtAllTime(main_scale) && IsMonitoredAtAllTime(scale)))) {
                 double hz = 0;
-                if (running_time_in_sec != 0) {
+                if (abs(running_time_in_sec) > ALMOST_ZERO) {
                     hz = it->second->eventCount / (running_time_in_sec / scale);
                 }
                 comments[configName] = StringPrintf("%lf GHz", hz / 1e9);
