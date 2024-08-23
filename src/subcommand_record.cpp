@@ -668,7 +668,7 @@ bool SubCommandRecord::ParseBranchSampleType(const std::vector<std::string> &vec
             }
         }
         if ((branchSampleType_ & TYPE_PERF_SAMPLE_BRANCH) == 0) {
-            printf("Invalid -j value, requires at least one of"
+            printf("Invalid -j value, requires at least one of "
                    "any, any_call, any_ret, ind_call, ind_jmp, cond, call.\n");
             return false;
         }
