@@ -241,7 +241,7 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
             }
         }
     } else {
-        HLOGV("vaddr %" PRIx64 " not found in any map", vaddr);
+        HLOGV("not found in any map");
     }
     return false;
 }
