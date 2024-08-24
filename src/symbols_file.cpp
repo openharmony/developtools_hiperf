@@ -916,7 +916,7 @@ public:
             HLOGD("loadOffSet %u", (uint32_t)loadOffSet_);
             if (abcDataPtr_ != nullptr) {
                 isHapAbc_ = true;
-                HLOGD("input abcDataPtr : %s, isAbc: %d", abcDataPtr_.get(), isHapAbc_);
+                HLOGD("symbol file : %s, isAbc: %d", filePath_.c_str(), isHapAbc_);
             }
         } else {
             loadOffSet_ = map_->offset;
@@ -928,8 +928,8 @@ public:
                 return false;
             }
             isHapAbc_ = true;
-            HLOGD("symbol file name %s loadOffSet %u abcDataSize_ %u abcDataPtr_ %s",
-                  filePath_.c_str(), (uint32_t)loadOffSet_, (uint32_t)abcDataSize_, abcDataPtr_.get());
+            HLOGD("symbol file name %s loadOffSet %u abcDataSize_ %u",
+                  filePath_.c_str(), (uint32_t)loadOffSet_, (uint32_t)abcDataSize_);
         }
         auto ret = DfxArk::ArkCreateJsSymbolExtractor(&arkExtractorptr_);
         if (ret < 0) {
