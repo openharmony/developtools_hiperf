@@ -672,15 +672,9 @@ bool IsExistDebugByApp(const std::string& bundleName)
 
 bool IsExistDebugByPid(const std::vector<pid_t> pids)
 {
-    if (pids.empty()) {
-        HLOGE("IsExistDebugByPid: pids is empty.");
-        return true;
-    }
+    CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
     for (auto pid : pids) {
-        if (pid <= 0) {
-            printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
-            return false;
-        }
+        CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
         std::string bundleName = GetProcessName(pid);
         if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
             HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
@@ -694,31 +688,15 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids)
 bool IsDebugableApp(const std::string& bundleName)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    if (bundleName.empty()) {
-        printf("bundleName is empty!\n");
-        return false;
-    }
+    CHECK_TRUE(bundleName.empty(), false, LOG_TYPE_PRINTF, "bundleName is empty!\n");
     sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (sam == nullptr) {
-        printf("GetSystemAbilityManager failed!\n");
-        return false;
-    }
+    CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
     sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (remoteObject == nullptr) {
-        printf("Get BundleMgr SA failed!\n");
-        return false;
-    }
+    CHECK_TRUE(remoteObject == nullptr, false, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
     sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
-    if (proxy == nullptr) {
-        printf("iface_cast failed!\n");
-        return false;
-    }
-
+    CHECK_TRUE(proxy == nullptr, false, LOG_TYPE_PRINTF, "iface_cast failed!\n");
     int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
-    if (uid < 0) {
-        HLOGE("Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
-        return false;
-    }
+    CHECK_TRUE(uid < 0, false, 1, "Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
     return true;
 #else
     return false;
