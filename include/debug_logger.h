@@ -75,9 +75,6 @@ const std::string DEFAULT_LOG_PATH = "hiperf_log.txt";
 #define HILOG_TAG_NAME HILOG_BASE_TAG "_" HILOG_TAG
 #endif
 
-#define SHORT_FILENAME                                                                             \
-    (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-
 const std::map<DebugLevel, const std::string> DebugLevelMap = {
     {LEVEL_MUCH, "M"},    {LEVEL_VERBOSE, "V"}, {LEVEL_DEBUG, "D"}, {LEVEL_INFO, "I"},
     {LEVEL_WARNING, "W"}, {LEVEL_ERROR, "E"},   {LEVEL_FATAL, "F"},
@@ -185,15 +182,27 @@ private:
 #define LOG_LEVEL_FATAL   "F:"
 
 #ifndef HLOG
+#ifdef IS_RELEASE_VERSION
+#define HLOG(level, format, ...)                                                                   \
+    do {                                                                                           \
+        if (__builtin_expect(!DebugLogger::logDisabled_, false)) {                                 \
+            DebugLogger::GetInstance()->Log(                                                       \
+                level, HILOG_TAG,                                                                  \
+                HILOG_TAG_NAME "/" LOG_LEVEL(level) "<%ld>%s:" format "\n", gettid(),              \
+                __FUNCTION__, ##__VA_ARGS__);                                                      \
+        }                                                                                          \
+    } while (0)
+#else
 #define HLOG(level, format, ...)                                                                   \
     do {                                                                                           \
         if (__builtin_expect(!DebugLogger::logDisabled_, false)) {                                 \
             DebugLogger::GetInstance()->Log(                                                       \
                 level, HILOG_TAG,                                                                  \
                 HILOG_TAG_NAME "/" LOG_LEVEL(level) "<%ld>[%s:%d]%s:" format "\n", gettid(),       \
-                SHORT_FILENAME, __LINE__, __FUNCTION__, ##__VA_ARGS__);                            \
+                __FILE_NAME__, __LINE__, __FUNCTION__, ##__VA_ARGS__);                            \
         }                                                                                          \
     } while (0)
+#endif
 #endif
 
 // only log first n times
@@ -266,8 +275,12 @@ private:
 #endif
 
 #ifndef HLOGF
+#ifdef IS_RELEASE_VERSION
+#define HLOGF(format, ...) HLOG(LEVEL_FATAL, "FATAL error occured, " format, ##__VA_ARGS__)
+#else
 #define HLOGF(format, ...)                                                                         \
-    HLOG(LEVEL_FATAL, "FATAL error at %s:%d " format, __FILE__, __LINE__, ##__VA_ARGS__)
+    HLOG(LEVEL_FATAL, "FATAL error at %s:%d " format, __FILE_NAME__, __LINE__, ##__VA_ARGS__)
+#endif
 #endif
 
 #ifndef HLOG_ASSERT_MESSAGE

@@ -32,6 +32,10 @@ config("hiperf_inner_config") {
     cflags -= [ "-Werror" ]
   }
 
+  if (build_variant == "user") {
+    cflags += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   if (is_mingw) {
     # lld: error: unable to find library -latomic
     # lld: error: unable to find library -ldl
