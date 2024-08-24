@@ -27,12 +27,13 @@
 #define HILOG_NEWLINE "\n"
 #endif
 
-#define FILENAME                                                                                   \
-    (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-
-#define FORMATTED(fmt, ...)                                                                         \
-    "[%" HILOG_PUBLIC "s:%" HILOG_PUBLIC "d] %" HILOG_PUBLIC "s# " fmt HILOG_NEWLINE, FILENAME,    \
+#ifdef IS_RELEASE_VERSION
+#define FORMATTED(fmt, ...) "[%" HILOG_PUBLIC "s]" fmt HILOG_NEWLINE, __FUNCTION__, ##__VA_ARGS__
+#else
+#define FORMATTED(fmt, ...)                                                                             \
+    "[%" HILOG_PUBLIC "s:%" HILOG_PUBLIC "d] %" HILOG_PUBLIC "s# " fmt HILOG_NEWLINE, __FILE_NAME__,    \
         __LINE__, __FUNCTION__, ##__VA_ARGS__
+#endif
 
 #ifndef CONFIG_NO_HILOG
 #include "hilog/log.h"
