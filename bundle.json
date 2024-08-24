@@ -22,6 +22,7 @@
         "hilog",
         "napi",
         "samgr",
+        "ipc",
         "c_utils",
         "bundle_framework",
         "faultloggerd",

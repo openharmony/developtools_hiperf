@@ -25,6 +25,16 @@
 #endif
 
 #include "hiperf_hilog.h"
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+#include "application_info.h"
+#include "bundle_mgr_proxy.h"
+#endif
+#if defined(is_ohos) && is_ohos
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+using namespace OHOS;
+using namespace OHOS::AppExecFwk;
+#endif
 
 using namespace std::chrono;
 namespace OHOS {
@@ -648,6 +658,71 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
         selectPids.push_back(appPid);
     }
     return true;
+}
+
+bool IsExistDebugByApp(const std::string& bundleName)
+{
+    if (!IsSupportNonDebuggableApp() && !bundleName.empty() && !IsDebugableApp(bundleName)) {
+        HLOGE("--app option only support debug aplication.");
+        printf("--app option only support debug aplication\n");
+        return false;
+    }
+    return true;
+}
+
+bool IsExistDebugByPid(const std::vector<pid_t> pids)
+{
+    if (pids.empty()) {
+        HLOGE("IsExistDebugByPid: pids is empty.");
+        return true;
+    }
+    for (auto pid : pids) {
+        if (pid <= 0) {
+            printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
+            return false;
+        }
+        std::string bundleName = GetProcessName(pid);
+        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
+            HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
+            printf("-p option only support debug aplication\n");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IsDebugableApp(const std::string& bundleName)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    if (bundleName.empty()) {
+        printf("bundleName is empty!\n");
+        return false;
+    }
+    sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sam == nullptr) {
+        printf("GetSystemAbilityManager failed!\n");
+        return false;
+    }
+    sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        printf("Get BundleMgr SA failed!\n");
+        return false;
+    }
+    sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
+    if (proxy == nullptr) {
+        printf("iface_cast failed!\n");
+        return false;
+    }
+
+    int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
+    if (uid < 0) {
+        HLOGE("Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
 }
 
 bool IsSupportNonDebuggableApp()
