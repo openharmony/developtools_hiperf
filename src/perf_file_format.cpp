@@ -105,6 +105,7 @@ bool PerfFileSection::Write(const char *buf, size_t size, size_t max)
                "write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
     CHECK_TRUE(offset_ + max > maxSize_, false, 1,
                "write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
+    CHECK_TRUE(wBuffer_ == nullptr, false, 0, "");
     std::copy(buf, buf + size, wBuffer_ + offset_);
     if (size >= max) {
         offset_ += size;
@@ -370,6 +371,7 @@ bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
 
 size_t PerfFileSectionUniStackTable::GetSize()
 {
+    CHECK_TRUE(processStackTable_ == nullptr, 0, 0, "");
     size_t size = 0;
     // section header info size
     size += sizeof(uint32_t); // how many tables/process
