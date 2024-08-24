@@ -203,6 +203,7 @@ ohos_source_set("hiperf_platform_common") {
       "faultloggerd:libunwinder_static",
       "hilog:libhilog",
       "init:libbegetutil",
+      "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
     if (bundle_framework_enable) {

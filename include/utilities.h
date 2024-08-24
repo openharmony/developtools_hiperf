@@ -334,6 +334,9 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
 bool IsRestarted(const std::string &appPackage);
 void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage);
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
+bool IsExistDebugByApp(const std::string& bundleName);
+bool IsExistDebugByPid(const std::vector<pid_t> pids);
+bool IsDebugableApp(const std::string& bundleName);
 bool IsSupportNonDebuggableApp();
 const std::string GetUserType();
 bool IsArkJsFile(const std::string& filepath);

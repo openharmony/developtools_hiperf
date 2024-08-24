@@ -25,6 +25,16 @@
 #endif
 
 #include "hiperf_hilog.h"
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+#include "application_info.h"
+#include "bundle_mgr_proxy.h"
+#endif
+#if defined(is_ohos) && is_ohos
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+using namespace OHOS;
+using namespace OHOS::AppExecFwk;
+#endif
 
 using namespace std::chrono;
 namespace OHOS {
@@ -648,6 +658,49 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
         selectPids.push_back(appPid);
     }
     return true;
+}
+
+bool IsExistDebugByApp(const std::string& bundleName)
+{
+    if (!IsSupportNonDebuggableApp() && !bundleName.empty() && !IsDebugableApp(bundleName)) {
+        HLOGE("--app option only support debug aplication.");
+        printf("--app option only support debug aplication\n");
+        return false;
+    }
+    return true;
+}
+
+bool IsExistDebugByPid(const std::vector<pid_t> pids)
+{
+    CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
+    for (auto pid : pids) {
+        CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
+        std::string bundleName = GetProcessName(pid);
+        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
+            HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
+            printf("-p option only support debug aplication\n");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IsDebugableApp(const std::string& bundleName)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    CHECK_TRUE(bundleName.empty(), false, LOG_TYPE_PRINTF, "bundleName is empty!\n");
+    sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
+    sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    CHECK_TRUE(remoteObject == nullptr, false, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
+    sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
+    CHECK_TRUE(proxy == nullptr, false, LOG_TYPE_PRINTF, "iface_cast failed!\n");
+    int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
+    CHECK_TRUE(uid < 0, false, 1, "Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
+    return true;
+#else
+    return false;
+#endif
 }
 
 bool IsSupportNonDebuggableApp()
