@@ -21,71 +21,99 @@ namespace Developtools {
 namespace HiPerf {
 static bool OnVerboseLevel(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() == 0) {
-        return false;
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        if (debugLevel.size() == 0) {
+            return false;
+        }
+        DebugLogger::GetInstance()->SetLogLevel(LEVEL_VERBOSE);
+        DebugLogger::GetInstance()->Disable(false);
     }
-    DebugLogger::GetInstance()->SetLogLevel(LEVEL_VERBOSE);
-    DebugLogger::GetInstance()->Disable(false);
+#endif
     return true;
 }
 
 static bool OnMuchLevel(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() == 0) {
-        return false;
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        if (debugLevel.size() == 0) {
+            return false;
+        }
+        DebugLogger::GetInstance()->SetLogLevel(LEVEL_MUCH);
+        DebugLogger::GetInstance()->Disable(false);
     }
-    DebugLogger::GetInstance()->SetLogLevel(LEVEL_MUCH);
-    DebugLogger::GetInstance()->Disable(false);
+#endif
     return true;
 }
 
 static bool OnDebugLevel(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() == 0) {
-        return false;
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        if (debugLevel.size() == 0) {
+            return false;
+        }
+        DebugLogger::GetInstance()->SetLogLevel(LEVEL_DEBUG);
+        DebugLogger::GetInstance()->Disable(false);
     }
-    DebugLogger::GetInstance()->SetLogLevel(LEVEL_DEBUG);
-    DebugLogger::GetInstance()->Disable(false);
+#endif
     return true;
 }
 
 static bool OnNoDebug(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() == 0) {
-        return false;
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        if (debugLevel.size() == 0) {
+            return false;
+        }
+        DebugLogger::GetInstance()->Disable();
     }
-    DebugLogger::GetInstance()->Disable();
+#endif
     return true;
 }
 
 static bool OnMixLogOutput(const std::vector<std::string> &debugLevel)
 {
-    if (debugLevel.size() == 0) {
-        return false;
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        if (debugLevel.size() == 0) {
+            return false;
+        }
+        DebugLogger::GetInstance()->SetMixLogOutput(true);
     }
-    DebugLogger::GetInstance()->SetMixLogOutput(true);
+#endif
     return true;
 }
 
 static bool OnLogPath(std::vector<std::string> &args)
 {
-    if (args.size() > 0) {
-        DebugLogger::GetInstance()->SetLogPath(args[0]);
-        args.erase(args.begin());
-    } else {
-        return false;
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        if (args.size() > 0) {
+            DebugLogger::GetInstance()->SetLogPath(args[0]);
+            args.erase(args.begin());
+        } else {
+            return false;
+        }
     }
+#endif
     return true;
 }
 
 static bool OnLogTag(std::vector<std::string> &args)
 {
-    if (args.size() > 0) {
-        DebugLogger::GetInstance()->SetLogTags(args[0]);
-        args.erase(args.begin());
-    } else {
-        return false;
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        if (args.size() > 0) {
+            DebugLogger::GetInstance()->SetLogTags(args[0]);
+            args.erase(args.begin());
+        } else {
+            return false;
+        }
     }
+#endif
     return true;
 }
 #if is_ohos && !is_double_framework

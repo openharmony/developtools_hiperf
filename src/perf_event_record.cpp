@@ -632,9 +632,13 @@ bool PerfRecordMmap::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordMmap::DumpData(int indent) const
 {
-    PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
-                 data_.addr, data_.len);
-    PRINT_INDENT(indent, "pgoff 0x%llx, filename %s\n", data_.pgoff, data_.filename);
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
+                     data_.addr, data_.len);
+        PRINT_INDENT(indent, "pgoff 0x%llx, filename %s\n", data_.pgoff, data_.filename);
+    }
+#endif
 }
 
 void PerfRecordMmap::DumpLog(const std::string &prefix) const
@@ -726,12 +730,16 @@ bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const
 
 void PerfRecordMmap2::DumpData(int indent) const
 {
-    PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
-                 data_.addr, data_.len);
-    PRINT_INDENT(indent, "pgoff 0x%llx, maj %u, min %u, ino %llu, ino_generation %llu\n",
-                 data_.pgoff, data_.maj, data_.min, data_.ino, data_.ino_generation);
-    PRINT_INDENT(indent, "prot %u, flags %u, filename %s\n", data_.prot, data_.flags,
-                 data_.filename);
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
+                     data_.addr, data_.len);
+        PRINT_INDENT(indent, "pgoff 0x%llx, maj %u, min %u, ino %llu, ino_generation %llu\n",
+                     data_.pgoff, data_.maj, data_.min, data_.ino, data_.ino_generation);
+        PRINT_INDENT(indent, "prot %u, flags %u, filename %s\n", data_.prot, data_.flags,
+                     data_.filename);
+    }
+#endif
 }
 void PerfRecordMmap2::DumpLog(const std::string &prefix) const
 {
