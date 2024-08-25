@@ -343,7 +343,7 @@ bool IsArkJsFile(const std::string& filepath);
 std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname);
-bool checkApplicationEncryped(int pid);
+bool IsApplicationEncryped(const int pid);
 
 template <typename Func>
 class ScopeGuard {
