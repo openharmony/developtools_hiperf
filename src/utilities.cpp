@@ -681,7 +681,10 @@ bool IsExistDebugByApp(const std::string& bundleName)
 
 bool IsExistDebugByPid(const std::vector<pid_t> pids)
 {
-    CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
+    if (pids.empty()) {
+        HLOGE("IsExistDebugByPid: pids is empty.");
+        return true;
+    }
     for (auto pid : pids) {
         if (pid <= 0) {
             printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
