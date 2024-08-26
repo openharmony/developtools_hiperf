@@ -988,9 +988,7 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
     DfxSymbol vaddrSymbol(ip, thread.name_);
     int64_t mapIndex = thread.FindMapIndexByAddr(ip);
     if (mapIndex < 0) {
-#ifdef HIPERF_DEBUG
-        thread.ReportVaddrMapMiss(ip);
-#endif
+        HLOGV("not found in any map");
         return vaddrSymbol;
     }
 
@@ -1076,9 +1074,7 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
             HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip, map->name.c_str());
         }
     } else {
-#ifdef HIPERF_DEBUG
-        thread.ReportVaddrMapMiss(ip);
-#endif
+        HLOGV("not found in any map");
     }
     return vaddrSymbol;
 }

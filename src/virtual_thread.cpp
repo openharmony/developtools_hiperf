@@ -253,9 +253,7 @@ bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) con
             }
         }
     } else {
-#ifdef HIPERF_DEBUG
-        ReportVaddrMapMiss(vaddr);
-#endif
+        HLOGV("not found in any map");
     }
     return false;
 }

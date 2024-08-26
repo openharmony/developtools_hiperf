@@ -786,6 +786,11 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
             printf("You cannot specify a cmd and --app at the same time\n");
             return false;
         }
+        if (!IsRoot()) {
+            printf("%s options needs root privilege, please check usage\n",
+                   VectorToString(trackedCommand_).c_str());
+            return false;
+        }
     }
     if (checkAppMs_ < MIN_CHECK_APP_MS || checkAppMs_ > MAX_CHECK_APP_MS) {
         printf("Invalid --chkms value '%d', the milliseconds should be in %d~%d \n", checkAppMs_,
