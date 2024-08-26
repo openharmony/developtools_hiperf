@@ -98,11 +98,17 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option --app failed");
         return false;
     }
+    if (!IsExistDebugByApp(appPackage_)) {
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
         HLOGD("get option -p failed");
+        return false;
+    }
+    if (!IsExistDebugByPid(selectPids_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
