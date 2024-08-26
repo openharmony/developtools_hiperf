@@ -683,7 +683,10 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids)
 {
     CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
     for (auto pid : pids) {
-        CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
+        if (pid <= 0) {
+            printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
+            return false;
+        }
         std::string bundleName = GetProcessName(pid);
         if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
             HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
@@ -697,15 +700,30 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids)
 bool IsDebugableApp(const std::string& bundleName)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    CHECK_TRUE(bundleName.empty(), false, LOG_TYPE_PRINTF, "bundleName is empty!\n");
+    if (bundleName.empty()) {
+        HLOGD("bundleName is empty!\n");
+        return false;
+    }
     sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
+    if (sam == nullptr) {
+        printf("GetSystemAbilityManager failed!\n");
+        return false;
+    }
     sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    CHECK_TRUE(remoteObject == nullptr, false, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
+    if (remoteObject == nullptr) {
+        printf("Get BundleMgr SA failed!\n");
+        return false;
+    }
     sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
-    CHECK_TRUE(proxy == nullptr, false, LOG_TYPE_PRINTF, "iface_cast failed!\n");
+    if (proxy == nullptr) {
+        printf("iface_cast failed!\n");
+        return false;
+    }
     int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
-    CHECK_TRUE(uid < 0, false, 1, "Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
+    if (uid < 0) {
+        HLOGE("Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
+        return false;
+    }
     return true;
 #else
     return false;
