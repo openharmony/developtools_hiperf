@@ -123,7 +123,7 @@ size_t SubStringCount(const std::string &source, const std::string &sub)
     return count;
 }
 
-std::vector<std::string> StringSplit(std::string source, const std::string split)
+std::vector<std::string> StringSplit(std::string source, const std::string &split)
 {
     std::vector<std::string> result;
 
@@ -796,12 +796,12 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
     if (!needCheck) {
         return false;
     }
-    std::string path = "/data/storage/el1/bundle";
-    std::string newpath = "/data/app/el1/bundle/public/";
+    const std::string path = "/data/storage/el1/bundle";
     std::string newFileName = filename;
     size_t pos = newFileName.find(path);
     if (pos != std::string::npos) {
         if (access(filename.c_str(), F_OK) != 0) {
+            const std::string newpath = "/data/app/el1/bundle/public/";
             // /data/storage/el1/bundle/libs/arm64/libentry.so
             newFileName.replace(pos, path.length(), newpath + threadname);
             if (access(newFileName.c_str(), F_OK) != 0) {

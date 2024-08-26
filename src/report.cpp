@@ -401,7 +401,7 @@ bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, ui
 
     CHECK_TRUE(heat < option_.callStackHeatLimit_, false, 0, ""); // don't print this three anymore
 
-    if (heat == num) {
+    if (abs(heat - num) < ALMOST_ZERO) {
         fprintf(output_, "%*s", indent, "   ");
         fprintf(output_, "%*s  ", FULL_PERCENTAGE_NUM_LEN, " ");
     } else {

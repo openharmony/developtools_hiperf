@@ -790,6 +790,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace)
 #if defined(is_ohos) && is_ohos
         recordAuxTrace.DumpLog(__FUNCTION__);
         SpeDecoder *decoder = SpeDecoderDataNew(recordAuxTrace.rawData_, recordAuxTrace.data_.size);
+        CHECK_TRUE(decoder == nullptr, NO_RETVAL, 0, "");
         std::vector<SpeRecord> records;
         while (true) {
             int ret = SpeDecode(decoder);
@@ -829,6 +830,7 @@ void VirtualRuntime::SymbolSpeRecord(PerfRecordAuxtrace &recordAuxTrace)
 #if defined(is_ohos) && is_ohos
     recordAuxTrace.DumpLog(__FUNCTION__);
     SpeDecoder *decoder = SpeDecoderDataNew(recordAuxTrace.rawData_, recordAuxTrace.data_.size);
+    CHECK_TRUE(decoder == nullptr, NO_RETVAL, 0, "");
     while (true) {
         int ret = SpeDecode(decoder);
         if (ret <= 0) {

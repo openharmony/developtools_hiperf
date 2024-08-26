@@ -54,7 +54,7 @@ bool ReportProtobufFileWriter::Write(const void *buffer, int size)
 {
     if (protobufFileStream_->is_open()) {
         try {
-            protobufFileStream_->write((const char *)buffer, size);
+            protobufFileStream_->write(static_cast<const char *>(buffer), size);
             HLOGM("writed %d bytes", size);
             return true;
         } catch (std::ofstream::failure &writeErr) {

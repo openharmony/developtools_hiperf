@@ -105,8 +105,6 @@ HWTEST_F(ReportTest, ReportItemCallFrameSame, TestSize.Level1)
     ReportItemCallFrame aDiffDso("a", 0, "aa1234", 0, 1234);
     ReportItemCallFrame b("b", 0x0, "bb", 0, 0);
 
-    EXPECT_EQ(a == a, true);
-    EXPECT_EQ(a != a, false);
     EXPECT_EQ(a == aDuplicated, true);
     EXPECT_EQ(a == a2, false);
     EXPECT_EQ(a == aDiffAddr, false);
@@ -182,8 +180,6 @@ HWTEST_F(ReportTest, ReportItemSame, TestSize.Level1)
     ReportItem aDiffVaddr(1, 2, "comm", "dso", "func", 0x1230, 1000);
     ReportItem aDiffEventCount(1, 2, "comm", "dso", "func", 0x123, 10000);
 
-    EXPECT_EQ(a == a, true);
-    EXPECT_EQ(a != a, false);
     EXPECT_EQ(a == aDuplicated, true);
 
     EXPECT_EQ(a == aDiffPid, false);
