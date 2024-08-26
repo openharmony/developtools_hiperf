@@ -1248,17 +1248,17 @@ void VirtualRuntime::LoadVdso()
     VirtualThread myThread(getpid(), symbolsFiles_);
     myThread.ParseMap();
     for (const auto &map : myThread.GetMaps()) {
-        if (map->name == MMAP_VDSO_NAME) {
+        if (map->IsVdsoMap()) {
             std::string memory(map->end - map->begin, '\0');
             std::copy(reinterpret_cast<char *>((map->begin)), reinterpret_cast<char *>((map->end)),
                       &memory[0]);
             std::string tempPath("/data/local/tmp/");
-            std::string tempFileName = tempPath + MMAP_VDSO_NAME;
+            std::string tempFileName = tempPath + map->name;
             if (!WriteStringToFile(tempFileName, memory)) {
                 printf("vdso temp file create fail at %s\n", tempFileName.c_str());
             } else {
                 HLOGD("vdso temp file create at %s:%zu", tempFileName.c_str(), memory.size());
-                auto symbolsFile = SymbolsFile::CreateSymbolsFile(MMAP_VDSO_NAME);
+                auto symbolsFile = SymbolsFile::CreateSymbolsFile(map->name);
                 symbolsFile->setSymbolsFilePath(tempPath); // also load from search path
                 symbolsFiles_.emplace_back(std::move(symbolsFile));
                 return;

@@ -1316,6 +1316,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     RecoverSavedCmdlinesSize();
     OnlineReportData();
     CloseClientThread();
+    RemoveVdsoTmpFile();
     return true;
 }
 
@@ -1333,6 +1334,20 @@ void SubCommandRecord::CloseClientThread()
         if (isFifoServer_) {
             remove(CONTROL_FIFO_FILE_C2S.c_str());
             remove(CONTROL_FIFO_FILE_S2C.c_str());
+        }
+    }
+}
+
+void SubCommandRecord::RemoveVdsoTmpFile()
+{
+    std::vector<std::string> fileName = {"/data/local/tmp/shmm", "/data/local/tmp/[vdso]"};
+    for (auto name : fileName) {
+        if (access(name.c_str(), F_OK) == 0) {
+            if (remove(name.c_str()) != 0) {
+                char errInfo[ERRINFOLEN] = { 0 };
+                strerror_r(errno, errInfo, ERRINFOLEN);
+                HLOGE("remove file %s failed,errno:%d,errinfo:%s", name.c_str(), errno, errInfo);
+            }
         }
     }
 }
