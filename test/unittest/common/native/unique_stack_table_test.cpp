@@ -88,8 +88,6 @@ HWTEST_F(UniqueStackTableTest, Test_Normal, TestSize.Level1)
     EXPECT_NE(stackIdpart.value, 0);
     EXPECT_NE(stackIdpart1.value, 0);
 
-    EXPECT_EQ(0, 0);
-
     std::vector<u64> checkbaseips;
     std::vector<u64> checkpartips;
     std::vector<u64> checkpartips1;
