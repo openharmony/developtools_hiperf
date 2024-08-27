@@ -42,6 +42,11 @@ using namespace OHOS::Developtools::HiPerf;
 
 int main(const int argc, const char *argv[])
 {
+    if (!GetDeveloperMode()) {
+        printf("error: not in developermode, exit");
+        return -1;
+    }
+
     if (argc < 0 || argc > 128) { // 128 : max input argument counts
         printf("The number of input arguments exceeds the upper limit.\n");
         return -1;

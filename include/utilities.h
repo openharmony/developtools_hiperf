@@ -336,6 +336,7 @@ void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage);
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsSupportNonDebuggableApp();
 const std::string GetUserType();
+bool GetDeveloperMode();
 bool IsArkJsFile(const std::string& filepath);
 std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
