@@ -882,6 +882,50 @@ bool IsHiviewCall()
     return false;
 #endif
 }
+
+bool IsApplicationEncryped(const int pid)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    if (pid <= 0) {
+        printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
+        return false;
+    }
+    std::string bundleName = GetProcessName(pid);
+    if (bundleName.empty()) {
+        HLOGD("bundleName is empty,pid is %d", pid);
+        return false;
+    }
+    sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sam == nullptr) {
+        printf("GetSystemAbilityManager failed!\n");
+        return false;
+    }
+    sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        printf("Get BundleMgr SA failed!\n");
+        return false;
+    }
+    sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
+    if (proxy == nullptr) {
+        printf("iface_cast failed!\n");
+        return false;
+    }
+
+    AppExecFwk::ApplicationInfo appInfo;
+    bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO,
+                                         AppExecFwk::Constants::ANY_USERID, appInfo);
+    if (!ret) {
+        HLOGD("%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
+        return false;
+    }
+    bool isEncrypted = (appInfo.applicationReservedFlag &
+                        static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
+    HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);
+    return isEncrypted;
+#else
+    return false;
+#endif
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

@@ -936,7 +936,12 @@ public:
             return isHapAbc_;
         }
         hapExtracted_ = true;
-        HLOGD("the symbol file is %s.", filePath_.c_str());
+        HLOGD("the symbol file is %s, pid is %d.", filePath_.c_str(), pid_);
+        if (IsApplicationEncryped(pid_)) {
+            HLOGD("no need to parse js symbols");
+            return false;
+        }
+
         if (StringEndsWith(filePath_, ".hap") && map_->IsMapExec()) {
             HLOGD("map is exec not abc file , the symbol file is:%s", map_->name.c_str());
             return false;
