@@ -64,7 +64,8 @@ void PerfEvents::SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, u32 si
     u32 offset = static_cast<u32>(*dataTail);
     u32 copySize;
     u32 traceSize = size;
-
+    CHECK_TRUE(size > (auxMmapPages_ * pageSize_ + sizeof(struct PerfRecordAuxtraceData)),
+               NO_RETVAL, 1, "buf size invalid");
     while (traceSize > 0) {
         offset = CALC_OFFSET(offset, auxMmapPages_ * pageSize_);
         left = static_cast<u32>(auxMmapPages_ * pageSize_ - offset);
