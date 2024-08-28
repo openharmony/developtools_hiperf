@@ -334,6 +334,7 @@ private:
     bool CheckTargetPids();
     bool CheckReportOption();
     void WriteCommEventBeforeSampling();
+    void RemoveVdsoTmpFile();
 
     VirtualRuntime virtualRuntime_;
 #if USE_COLLECT_SYMBOLIC
