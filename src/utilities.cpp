@@ -695,9 +695,12 @@ bool IsDebugableApp(const std::string& bundleName)
     CHECK_TRUE(remoteObject == nullptr, false, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
     sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
     CHECK_TRUE(proxy == nullptr, false, LOG_TYPE_PRINTF, "iface_cast failed!\n");
-    int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
-    CHECK_TRUE(uid < 0, false, 1, "Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
-    return true;
+    AppExecFwk::ApplicationInfo appInfo;
+    bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::GET_APPLICATION_INFO_WITH_DISABLE,
+                                         AppExecFwk::Constants::ANY_USERID, appInfo);
+    CHECK_TRUE(!ret, false, 1, "%s GetApplicationInfo failed!", bundleName.c_str());
+    HLOGD("bundleName is %s,appProvisionType: %s", bundleName.c_str(), appInfo.appProvisionType.c_str());
+    return appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
 #else
     return false;
 #endif
