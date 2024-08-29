@@ -722,12 +722,15 @@ bool IsDebugableApp(const std::string& bundleName)
         printf("iface_cast failed!\n");
         return false;
     }
-    int uid = proxy->GetUidByDebugBundleName(bundleName, Constants::ANY_USERID);
-    if (uid < 0) {
-        HLOGE("Get application info failed, bundleName:%s, uid is %d.", bundleName.c_str(), uid);
+    AppExecFwk::ApplicationInfo appInfo;
+    bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::GET_APPLICATION_INFO_WITH_DISABLE,
+                                         AppExecFwk::Constants::ANY_USERID, appInfo);
+    if (!ret) {
+        HLOGE("Get application info failed, bundleName:%s.", bundleName.c_str());
         return false;
     }
-    return true;
+    HLOGD("bundleName is %s,appProvisionType: %s", bundleName.c_str(), appInfo.appProvisionType.c_str());
+    return appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
 #else
     return false;
 #endif
