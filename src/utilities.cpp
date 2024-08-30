@@ -677,7 +677,7 @@ const std::string GetUserType()
 bool GetDeveloperMode()
 {
 #if defined(is_ohos) && is_ohos
-    bool developerMode = OHOS::system::GetBoolParameter("const.security.developermode.state", true);
+    bool developerMode = OHOS::system::GetBoolParameter("const.security.developermode.state", false);
     HLOGD("GetDeveloperMode: developerMode is %d", developerMode);
     return developerMode;
 #else
