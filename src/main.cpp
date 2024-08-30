@@ -42,7 +42,7 @@ using namespace OHOS::Developtools::HiPerf;
 
 int main(const int argc, const char *argv[])
 {
-    if (!GetDeveloperMode()) {
+    if (!IsAllowProfilingUid() && !GetDeveloperMode()) {
         printf("error: not in developermode, exit");
         return -1;
     }
@@ -66,6 +66,14 @@ int main(const int argc, const char *argv[])
     vector<string> args;
     for (int i = 1; i < argc; i++) {
         args.push_back(argv[i]);
+    }
+
+
+    if (!GetDeveloperMode()) {
+        if (find(args.begin(), args.end(), "record") == args.end() ||
+            find(args.begin(), args.end(), "--pipe_output") == args.end())
+        printf("error: not in developermode, exit");
+        return -1;
     }
 
     if (args.empty()) {
