@@ -670,7 +670,7 @@ bool IsExistDebugByApp(const std::string& bundleName)
     return true;
 }
 
-bool IsExistDebugByPid(const std::vector<pid_t> pids)
+bool IsExistDebugByPid(const std::vector<pid_t> &pids)
 {
     CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
     for (auto pid : pids) {
