@@ -31,7 +31,7 @@ bool UniqueStackTable::Init()
     }
 
     availableNodes_ = totalNodes_;
-    hashModulus_ = availableNodes_ >= 1 ? availableNodes_ - 1 : 0;
+    hashModulus_ = availableNodes_ > 1 ? availableNodes_ - 1 : 1;
     hashStep_ = (totalNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM));
     tableBuf_ = std::make_unique<uint8_t[]>(tableSize_);
 
@@ -71,7 +71,7 @@ bool UniqueStackTable::Resize()
     availableIndex_ += availableNodes_;
     totalNodes_ = ((newtableSize / sizeof(Node)) >> 1) << 1; // make it even.
     availableNodes_ = totalNodes_ - oldNumNodes;
-    hashModulus_ = availableNodes_ >= 1 ? availableNodes_ - 1 : 0;
+    hashModulus_ = availableNodes_ > 1 ? availableNodes_ - 1 : 1;
     hashStep_ = availableNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM);
     HLOGI("After resize, totalNodes_: %u, availableNodes_: %u, availableIndex_: %u hashStep_: %" PRIu64 "",
         totalNodes_, availableNodes_, availableIndex_, hashStep_);
