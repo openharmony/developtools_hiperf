@@ -731,6 +731,17 @@ const std::string GetUserType()
 #endif
 }
 
+bool GetDeveloperMode()
+{
+#if defined(is_ohos) && is_ohos
+    bool developerMode = OHOS::system::GetBoolParameter("const.security.developermode.state", false);
+    HLOGD("GetDeveloperMode: developerMode is %d", developerMode);
+    return developerMode;
+#else
+    return true;
+#endif
+}
+
 bool LittleMemory()
 {
     std::ifstream file("/proc/meminfo");
