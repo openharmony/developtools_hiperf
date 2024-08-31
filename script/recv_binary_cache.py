@@ -103,7 +103,6 @@ class GetLibFiles(object):
                 if req_build_id == build_id:
                     self.copy_to_binary_cache(
                         os.path.join(root, filename), bin_file)
-                    break
 
     def copy_to_binary_cache(self, from_path, target_file):
         if target_file[0] == '/':
