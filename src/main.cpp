@@ -43,7 +43,7 @@ using namespace OHOS::Developtools::HiPerf;
 int main(const int argc, const char *argv[])
 {
     if (!GetDeveloperMode() && !IsAllowProfilingUid()) {
-        printf("error: not in developermode, exit\n");
+        printf("error: not in developermode, exit.\n");
         return -1;
     }
 
