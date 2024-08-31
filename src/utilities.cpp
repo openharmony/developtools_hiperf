@@ -335,9 +335,10 @@ bool WriteStringToFile(const std::string &fileName, const std::string &value)
 
 bool IsRoot()
 {
-#if is_linux || is_ohos
-    static bool isRoot = (getuid() == 0);
-    return isRoot;
+#if defined(is_ohos) && is_ohos
+    std::string debugMode = "0";
+    debugMode = OHOS::system::GetParameter("const.debuggable", debugMode);
+    return debugMode == "1";
 #else
     return true;
 #endif
@@ -709,7 +710,7 @@ bool IsDebugableApp(const std::string& bundleName)
 bool IsSupportNonDebuggableApp()
 {
     // root first
-    if (IsRoot() || IsHiviewCall()) {
+    if (IsRoot()) {
         return true;
     }
     // user mode
