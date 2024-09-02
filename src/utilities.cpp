@@ -664,8 +664,8 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
 bool IsExistDebugByApp(const std::string& bundleName)
 {
     if (!IsSupportNonDebuggableApp() && !bundleName.empty() && !IsDebugableApp(bundleName)) {
-        HLOGE("--app option only support debug aplication.");
-        printf("--app option only support debug aplication\n");
+        HLOGE("--app option only support debug application.");
+        printf("--app option only support debug application\n");
         return false;
     }
     return true;
@@ -678,8 +678,8 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids)
         CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
         std::string bundleName = GetProcessName(pid);
         if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
-            HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
-            printf("-p option only support debug aplication\n");
+            HLOGE("-p option only support debug application for %s", bundleName.c_str());
+            printf("-p option only support debug application\n");
             return false;
         }
     }
