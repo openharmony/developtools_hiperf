@@ -1076,7 +1076,7 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Le
  */
 HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.Level1)
 {
-    ForkAndRunTest("-d 10 --app -f 1000 -s dwarf", true, true);
+    ForkAndRunTest("-d 10 -f 1000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
     EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_PROCESS);
