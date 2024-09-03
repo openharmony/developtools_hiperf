@@ -809,6 +809,10 @@ bool SubCommandRecord::PreparePerfEvent()
     perfEvents_.SetRecordCallBack(processRecord);
 
     if (selectEvents_.size() > 0 && selectEvents_[0] == "arm_spe_0") {
+        if (!IsRoot()) {
+            printf("%s options needs root privilege, please check usage\n", selectEvents_[0].c_str());
+            return false;
+        }
         selectEvents_.insert(selectEvents_.begin(), "sw-dummy");
         perfEvents_.isSpe_ = true;
         perfEvents_.SetConfig(speOptMap_);
