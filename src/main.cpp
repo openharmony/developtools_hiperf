@@ -42,6 +42,11 @@ using namespace OHOS::Developtools::HiPerf;
 
 int main(const int argc, const char *argv[])
 {
+    if (!GetDeveloperMode() && !IsAllowProfilingUid()) {
+        printf("error: not in developermode, exit.\n");
+        return -1;
+    }
+
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 

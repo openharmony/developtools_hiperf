@@ -336,9 +336,10 @@ bool WriteStringToFile(const std::string &fileName, const std::string &value)
 
 bool IsRoot()
 {
-#if is_linux || is_ohos
-    static bool isRoot = (getuid() == 0);
-    return isRoot;
+#if defined(is_ohos) && is_ohos
+    std::string debugMode = "0";
+    debugMode = OHOS::system::GetParameter("const.debuggable", debugMode);
+    return debugMode == "1";
 #else
     return true;
 #endif
@@ -672,8 +673,8 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
 bool IsExistDebugByApp(const std::string& bundleName)
 {
     if (!IsSupportNonDebuggableApp() && !bundleName.empty() && !IsDebugableApp(bundleName)) {
-        HLOGE("--app option only support debug aplication.");
-        printf("--app option only support debug aplication\n");
+        HLOGE("--app option only support debug application.");
+        printf("--app option only support debug application\n");
         return false;
     }
     return true;
@@ -692,8 +693,8 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids)
         }
         std::string bundleName = GetProcessName(pid);
         if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
-            HLOGE("-p option only support debug aplication for %s", bundleName.c_str());
-            printf("-p option only support debug aplication\n");
+            HLOGE("-p option only support debug application for %s", bundleName.c_str());
+            printf("-p option only support debug application\n");
             return false;
         }
     }
@@ -739,7 +740,7 @@ bool IsDebugableApp(const std::string& bundleName)
 bool IsSupportNonDebuggableApp()
 {
     // root first
-    if (IsRoot() || IsHiviewCall()) {
+    if (IsRoot()) {
         return true;
     }
     // user mode
@@ -761,6 +762,17 @@ const std::string GetUserType()
     return userType;
 #else
     return "";
+#endif
+}
+
+bool GetDeveloperMode()
+{
+#if defined(is_ohos) && is_ohos
+    bool developerMode = OHOS::system::GetBoolParameter("const.security.developermode.state", false);
+    HLOGD("GetDeveloperMode: developerMode is %d", developerMode);
+    return developerMode;
+#else
+    return true;
 #endif
 }
 
