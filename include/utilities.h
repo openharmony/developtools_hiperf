@@ -339,6 +339,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids);
 bool IsDebugableApp(const std::string& bundleName);
 bool IsSupportNonDebuggableApp();
 const std::string GetUserType();
+bool GetDeveloperMode();
 bool IsArkJsFile(const std::string& filepath);
 std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
