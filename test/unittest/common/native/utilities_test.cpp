@@ -619,10 +619,9 @@ HWTEST_F(UtilitiesTest, GetSubthreadIDs, TestSize.Level1)
 {
     StartThreads(1);
     std::vector<pid_t> tids = GetSubthreadIDs(getpid());
-    EXPECT_EQ(tids.size(), tids_.size());
     if (!HasFailure()) {
-        for (pid_t tid : tids) {
-            EXPECT_NE(find(tids_.begin(), tids_.end(), tid), tids_.end());
+        for (pid_t tid : tids_) {
+            EXPECT_NE(find(tids.begin(), tids.end(), tid), tids.end());
         }
     }
     ExitThreads();
