@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("../hiperf.gni")
 
-module_output_path = "developtools/hiperf"
+module_output_path = "hiperf/hiperf"
 
 sources_base = [
   "unittest/common/native/hiperf_client_test.cpp",
