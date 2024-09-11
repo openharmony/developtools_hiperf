@@ -20,10 +20,4 @@
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 
-#if defined(__aarch64__)
-const std::string TEST_PROCESSES = "com.ohos.sceneboard";
-#else
-const std::string TEST_PROCESSES = "com.ohos.launcher";
-#endif
-
 #endif // HIPERF_UTILITIES_TEST_H
