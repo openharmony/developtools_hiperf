@@ -108,6 +108,10 @@ bool PerfFileSection::Write(const char *buf, size_t size, size_t max)
         HLOGE("write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
         return false;
     }
+    if (wBuffer_ == nullptr) {
+        HLOGE("Buffer_ is nullptr");
+        return false;
+    }
     std::copy(buf, buf + size, wBuffer_ + offset_);
     if (size >= max) {
         offset_ += size;
@@ -387,6 +391,10 @@ bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
 
 size_t PerfFileSectionUniStackTable::GetSize()
 {
+    if (processStackTable_ == nullptr) {
+        HLOGE("processStackTable_ is nullptr");
+        return 0;
+    }
     size_t size = 0;
     // section header info size
     size += sizeof(uint32_t); // how many tables/process
