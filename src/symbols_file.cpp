@@ -633,6 +633,9 @@ public:
 
     bool LoadKernelSyms()
     {
+        if (!IsRoot()) {
+            return false;
+        }
         HLOGD("try read /proc/kallsyms");
         if (access("/proc/kallsyms", R_OK) != 0) {
             printf("No vmlinux path is given, and kallsyms cannot be opened\n");
@@ -641,11 +644,6 @@ public:
         bool hasChangeKptr = false;
         std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
         if (oldKptrRestrict.front() != '0') {
-            if (!IsSupportNonDebuggableApp()) {
-                HLOGD("user mode do not load kernel syms");
-                printf("Hiperf is not running as root mode. Do not need load kernel syms\n");
-                return false;
-            }
             printf("/proc/sys/kernel/kptr_restrict is NOT 0, will try set it to 0.\n");
             hasChangeKptr = WriteStringToFile(KPTR_RESTRICT, "0");
             if (!hasChangeKptr) {
@@ -738,6 +736,9 @@ public:
 
     bool LoadKernelSyms()
     {
+        if (!IsRoot()) {
+            return false;
+        }
         // find real proc path by filePath_
         std::string procPath;
         if (filePath_ == SYSMGR_FILE_NAME) {
@@ -753,11 +754,6 @@ public:
         bool hasChangeKptr = false;
         std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
         if (oldKptrRestrict.front() != '0') {
-            if (!IsSupportNonDebuggableApp()) {
-                HLOGD("user mode do not load kernel syms");
-                printf("Hiperf is not running as root mode. Do not need load kernel syms\n");
-                return false;
-            }
             printf("/proc/sys/kernel/kptr_restrict is NOT 0, will try set it to 0.\n");
             hasChangeKptr = WriteStringToFile(KPTR_RESTRICT, "0");
             if (!hasChangeKptr) {
