@@ -55,6 +55,9 @@ int main(const int argc, const char *argv[])
         printf("setgid failed errno: %d.\n", errno);
     }
     WriteStringToFile("/proc/self/oom_score_adj", "0");
+    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "ignore SIGPIPE failed.");
+    }
     HIPERF_HILOGI(MODULE_DEFAULT, "hiperf start.");
 #endif
 
