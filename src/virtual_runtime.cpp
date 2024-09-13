@@ -323,6 +323,10 @@ void VirtualRuntime::UpdateKernelSymbols()
     if (symbolsPaths_.size() > 0) {
         kernelFile->setSymbolsFilePath(symbolsPaths_); // also load from search path
     }
+    if (!IsRoot()) {
+        HLOGD("user mode do not load kernel syms");
+        printf("Hiperf is not running as root mode. Do not need load kernel syms\n");
+    }
     if (kernelFile->LoadSymbols()) {
         auto record = std::make_unique<PerfRecordMmap>(
             true, 0, 0, kernelFile->textExecVaddr_, kernelFile->textExecVaddrRange_,
