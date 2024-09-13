@@ -23,6 +23,7 @@ config("hiperf_client_napi_config") {
 }
 
 ohos_shared_library("hiperf_client_napi") {
+  branch_protector_ret = "pac_ret"
   install_enable = true
 
   configs = [ ":hiperf_client_napi_config" ]
