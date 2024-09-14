@@ -17,7 +17,7 @@
 #include "command.h"
 #include "subcommand_dump.h"
 #include "subcommand_record.h"
-#include "utilities_test.h"
+#include "test_utilities.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -95,9 +95,12 @@ HWTEST_F(SpeDecoderTest, TestGetSpeEventNameByType, TestSize.Level1)
 HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
-
+    std::string testProcesses = "com.ohos.sceneboard";
+    if (!CheckTestApp()) {
+        testProcesses = "com.ohos.launcher";
+    }
     std::string cmdString = "record -e arm_spe_0/load_filter=1,min_latency=100/ -d 10 --app ";
-    cmdString += " " + TEST_PROCESSES;
+    cmdString += " " + testProcesses;
     printf("command : %s\n", cmdString.c_str());
 
     // it need load some symbols and much more log

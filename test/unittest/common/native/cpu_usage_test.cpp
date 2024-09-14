@@ -14,7 +14,7 @@
  */
 
 #include "cpu_usage_test.h"
-#include "utilities_test.h"
+#include "test_utilities.h"
 using namespace std;
 using namespace testing::ext;
 using namespace std::chrono;
@@ -43,13 +43,20 @@ public:
     float GetAverageCpuUsage(pid_t pid, uint64_t timeOut);
 
     void TestCpuUsage(const std::string &option, unsigned int expect, bool fixPid);
+
+    std::string testProcesses = "com.ohos.sceneboard";
 };
 
 void CpuUsageTest::SetUpTestCase() {}
 
 void CpuUsageTest::TearDownTestCase() {}
 
-void CpuUsageTest::SetUp() {}
+void CpuUsageTest::SetUp()
+{
+    if (!HiPerf::CheckTestApp()) {
+        testProcesses = "com.ohos.launcher";
+    }
+}
 
 void CpuUsageTest::TearDown() {}
 
@@ -216,7 +223,7 @@ void CpuUsageTest::TestCpuUsage(const std::string &option, unsigned int expect, 
     std::string cmd = "hiperf record ";
     if (fixPid) {
         cmd += "--app ";
-        cmd += " " + TEST_PROCESSES;
+        cmd += " " + testProcesses;
     }
     cmd += " " + option;
 

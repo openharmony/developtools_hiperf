@@ -28,8 +28,8 @@
 
 #include "command.h"
 #include "debug_logger.h"
+#include "test_utilities.h"
 #include "utilities.h"
-#include "utilities_test.h"
 
 using namespace std::literals::chrono_literals;
 using namespace testing::ext;
@@ -81,7 +81,11 @@ public:
     static void TestRecordCommand(const std::string &option, bool expect = true, bool fixPid = true);
 
     size_t GetFileSize(const char* fileName);
+
+    static std::string testProcesses;
 };
+
+std::string SubCommandRecordTest::testProcesses = "com.ohos.sceneboard";
 
 void SubCommandRecordTest::SetUpTestCase() {}
 
@@ -89,6 +93,9 @@ void SubCommandRecordTest::TearDownTestCase() {}
 
 void SubCommandRecordTest::SetUp()
 {
+    if (!CheckTestApp()) {
+        SubCommandRecordTest::testProcesses = "com.ohos.launcher";
+    }
     SubCommand::ClearSubCommands(); // clear the subCommands left from other UT
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
     SubCommandRecord::RegisterSubCommandRecord();
@@ -127,7 +134,7 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
     std::string cmdString = "record ";
     if (fixPid) {
         cmdString += "--app ";
-        cmdString += " " + TEST_PROCESSES;
+        cmdString += " " + testProcesses;
     }
     cmdString += " " + option;
     printf("command : %s\n", cmdString.c_str());
@@ -556,7 +563,7 @@ HWTEST_F(SubCommandRecordTest, SelectPidInputErr, TestSize.Level1)
     TestRecordCommand("-d 2 -p abc ", false, false);
 }
 
-HWTEST_F(SubCommandRecordTest, SelectPidInputConfict, TestSize.Level1)
+HWTEST_F(SubCommandRecordTest, SelectPidInputConflict, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 -a -p 1 ", false, false);
 }
