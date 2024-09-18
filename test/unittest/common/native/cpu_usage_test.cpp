@@ -28,7 +28,7 @@ public:
     void SetUp();
     void TearDown();
 
-    pid_t GetPidByProcessName(std::string procName);
+    pid_t GetPidByProcessName(const std::string& procName);
 
     int GetVmRSSLine(pid_t pid);
 
@@ -53,17 +53,17 @@ void CpuUsageTest::TearDownTestCase() {}
 
 void CpuUsageTest::SetUp()
 {
-    if (!HiPerf::CheckTestApp()) {
+    if (!HiPerf::CheckTestApp(testProcesses)) {
         testProcesses = "com.ohos.launcher";
     }
 }
 
 void CpuUsageTest::TearDown() {}
 
-pid_t CpuUsageTest::GetPidByProcessName(std::string procName)
+pid_t CpuUsageTest::GetPidByProcessName(const std::string& procName)
 {
     FILE *fp = nullptr;
-    char buf[100];
+    char buf[100]; // 100: buf size
     pid_t pid = -1;
     std::string cmd = "pidof " + procName;
     if ((fp = popen(cmd.c_str(), "r")) != nullptr) {

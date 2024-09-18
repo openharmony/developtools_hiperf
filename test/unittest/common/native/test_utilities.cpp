@@ -19,11 +19,11 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-bool CheckTestApp()
+bool CheckTestApp(const std::string& appName)
 {
     FILE *fp = nullptr;
-    char buf[100];
-    std::string cmd = "pidof com.ohos.sceneboard";
+    char buf[128] = {0}; // 128: buf size
+    std::string cmd = "pidof " + appName;
     if ((fp = popen(cmd.c_str(), "r")) != nullptr) {
         if (fgets(buf, sizeof(buf), fp) == nullptr) {
             pclose(fp);

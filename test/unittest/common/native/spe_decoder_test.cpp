@@ -96,7 +96,7 @@ HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     std::string testProcesses = "com.ohos.sceneboard";
-    if (!CheckTestApp()) {
+    if (!CheckTestApp(testProcesses)) {
         testProcesses = "com.ohos.launcher";
     }
     std::string cmdString = "record -e arm_spe_0/load_filter=1,min_latency=100/ -d 10 --app ";

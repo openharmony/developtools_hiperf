@@ -18,7 +18,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-bool CheckTestApp();
+bool CheckTestApp(const std::string& appName);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

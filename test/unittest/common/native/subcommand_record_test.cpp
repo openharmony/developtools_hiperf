@@ -93,7 +93,7 @@ void SubCommandRecordTest::TearDownTestCase() {}
 
 void SubCommandRecordTest::SetUp()
 {
-    if (!CheckTestApp()) {
+    if (!CheckTestApp(SubCommandRecordTest::testProcesses)) {
         SubCommandRecordTest::testProcesses = "com.ohos.launcher";
     }
     SubCommand::ClearSubCommands(); // clear the subCommands left from other UT
