@@ -1290,7 +1290,7 @@ void SubCommandRecord::CloseClientThread()
 
 void SubCommandRecord::RemoveVdsoTmpFile()
 {
-    std::vector<std::string> fileName = {"/data/local/tmp/shmm", "/data/local/tmp/[vdso]"};
+    std::vector<std::string> fileName = {"/data/local/tmp/[shmm]", "/data/local/tmp/[vdso]"};
     for (auto name : fileName) {
         if (access(name.c_str(), F_OK) == 0) {
             if (remove(name.c_str()) != 0) {
