@@ -664,8 +664,9 @@ bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPa
 bool IsExistDebugByApp(const std::string& bundleName)
 {
     std::string bundleNameTmp = bundleName;
-    if (StringEndsWith(bundleNameTmp, ":render")) {
-        bundleNameTmp = StringReplace(bundleNameTmp, ":render", "");
+    auto pos = bundleNameTmp.find(":");
+    if (pos != std::string::npos) {
+        bundleNameTmp = bundleNameTmp.substr(0, pos);
     }
     if (!IsSupportNonDebuggableApp() && !bundleNameTmp.empty() && !IsDebugableApp(bundleNameTmp)) {
         HLOGE("--app option only support debug application.");
@@ -681,8 +682,9 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids)
     for (auto pid : pids) {
         CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
         std::string bundleName = GetProcessName(pid);
-        if (StringEndsWith(bundleName, ":render")) {
-            bundleName = StringReplace(bundleName, ":render", "");
+        auto pos = bundleName.find(":");
+        if (pos != std::string::npos) {
+            bundleName = bundleName.substr(0, pos);
         }
         if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
             HLOGE("-p option only support debug application for %s", bundleName.c_str());
