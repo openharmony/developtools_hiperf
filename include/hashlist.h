@@ -892,7 +892,10 @@ Val& HashList<Key, Val>::operator[](const Key &key)
     } else {
         pnode = valueTab_[key];
     }
-    if (pnode) {
+    if (pnode == nullptr) {
+        static Val val = Val();
+        return val;
+    } else {
         MoveToHead(pnode);
     }
     return pnode->val_;
@@ -979,8 +982,10 @@ void HashList<Key, Val>::pop_back()
         return;
     }
     LinkNode<Key, Val>* pnode = LinkNode<Key, Val>::GetLinkNode(dataHead_.prev_);
-    valueTab_.erase(pnode->key_);
-    ReclaimNode(pnode);
+    if (pnode != nullptr) {
+        valueTab_.erase(pnode->key_);
+        ReclaimNode(pnode);
+    }
 }
 
 template<typename Key, typename Val>
@@ -1091,10 +1096,12 @@ auto HashList<Key, Val>::AllocateNode(const Key &key)
     }
     LinkNode<Key, Val> *pnode = LinkNode<Key, Val>::GetLinkNode(freeHead_.next_);
     freeHead_.next_ = freeHead_.next_->next_;
-    pnode->link_.next_ = nullptr;
-    pnode->link_.prev_ = nullptr;
-    pnode->key_ = key;
-    pnode->val_ = Val();
+    if (pnode != nullptr) {
+        pnode->link_.next_ = nullptr;
+        pnode->link_.prev_ = nullptr;
+        pnode->key_ = key;
+        pnode->val_ = Val();
+    }
     return pnode;
 }
 
