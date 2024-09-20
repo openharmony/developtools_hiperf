@@ -343,7 +343,7 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
             const std::string anonPrefix = "[anon:[";
             const std::string anonPostfix = "]]";
             filename = mapTokens[MMAP_LINE_TOKEN_INDEX_NAME];
-            if (filename == "shmm") {
+            if (filename == "[shmm]") {
                 continue;
             }
             if (filename.find(anonPrefix) != std::string::npos) {
