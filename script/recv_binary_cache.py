@@ -36,11 +36,12 @@ class GetLibFiles(object):
             os.makedirs(self.local_cache_dir)
         self.binary_map = {}
 
-    def recv_binary_cache(self, perf_data, lib_dirs):
+    def recv_binary_cache(self, perf_data, lib_dirs, copy):
         self.get_used_binaries(perf_data)
         self.copy_binaries_from_lib_dirs(lib_dirs)
         self.hdc = HdcInterface()
-        self.recv_binaries_from_device()
+        if copy:
+            self.recv_binaries_from_device()
         self.recv_kernel_symbols()
 
     def get_used_binaries(self, perf_data):
@@ -209,11 +210,14 @@ def main():
     parser.add_argument('-l', '--local_lib_dir', type=dir_check, nargs='+',
                         help="""Path to find debug version of local shared
                          libraries used in the app.""", action='append')
+    parser.add_argument('-c', '--copy_symbol_from_device', default='0',
+                        help=""" Copy symbol files from device.""")
     args = parser.parse_args()
 
     recver = GetLibFiles()
     lib_dirs = get_arg_list(args.local_lib_dir)
-    recver.recv_binary_cache(args.perf_data, lib_dirs)
+    recver.recv_binary_cache(args.perf_data, lib_dirs,
+                             args.copy_symbol_from_device == '1' or args.copy_symbol_from_device == 'true')
 
 
 if __name__ == '__main__':
