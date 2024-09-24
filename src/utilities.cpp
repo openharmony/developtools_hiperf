@@ -49,38 +49,38 @@ static const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
 std::string CanonicalizeSpecPath(const char* src)
 {
     if (src == nullptr) {
-        fprintf(stderr, "Error: CanonicalizeSpecPath failed");
+        HLOGE("Error: CanonicalizeSpecPath failed");
         return "";
     } else if (strlen(src) >= PATH_MAX) {
-        fprintf(stderr, "Error: CanonicalizeSpecPath %s failed", src);
+        HLOGE("Error: CanonicalizeSpecPath %s failed", src);
         return "";
     }
     char resolvedPath[PATH_MAX] = { 0 };
 #if defined(_WIN32)
     if (!_fullpath(resolvedPath, src, PATH_MAX)) {
-        fprintf(stderr, "Error: _fullpath %s failed", src);
+        HLOGE("Error: _fullpath %s failed", src);
         return "";
     }
 #else
     if (access(src, F_OK) == 0) {
         if (strstr(src, "/proc/") == src && strstr(src, "/data/storage") != nullptr) { // for sandbox
             if (strncpy_s(resolvedPath, sizeof(resolvedPath), src, strlen(src)) == -1) {
-                fprintf(stderr, "Error: strncpy_s %s failed", src);
+                HLOGE("Error: strncpy_s %s failed", src);
                 return "";
             }
         } else if (realpath(src, resolvedPath) == nullptr) {
-            fprintf(stderr, "Error: realpath %s failed", src);
+            HLOGE("Error: realpath %s failed", src);
             return "";
         }
     } else {
         std::string fileName(src);
         if (fileName.find("..") == std::string::npos) {
             if (sprintf_s(resolvedPath, PATH_MAX, "%s", src) == -1) {
-                fprintf(stderr, "Error: sprintf_s %s failed", src);
+                HLOGE("Error: sprintf_s %s failed", src);
                 return "";
             }
         } else {
-            fprintf(stderr, "Error: find .. %s failed", src);
+            HLOGE("Error: find .. %s failed", src);
             return "";
         }
     }
