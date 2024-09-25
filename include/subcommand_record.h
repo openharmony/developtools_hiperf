@@ -183,6 +183,8 @@ public:
         "         the value should be between 512 and 4096\n"
         "   --report\n"
         "         Report with callstack after record. Conflicts with the -a option.\n"
+        "   --dumpoptions\n"
+        "         Dump command options.\n"
         )
     // clang-format on
     {

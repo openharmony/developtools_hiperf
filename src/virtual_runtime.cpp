@@ -1172,7 +1172,7 @@ bool VirtualRuntime::SetSymbolsPaths(const std::vector<std::string> &symbolsPath
         symbolsPaths_ = symbolsPaths;
     } else {
         if (!symbolsPaths.empty()) {
-            printf("some symbols path unable access\n");
+            HLOGE("some symbols path unable access");
         }
     }
     return accessible;
