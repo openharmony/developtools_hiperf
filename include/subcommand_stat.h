@@ -80,6 +80,8 @@ public:
         "         Record will exit if the process is not started within 30 seconds.\n"
         "   --verbose\n"
         "         Show more detailed reports.\n"
+        "   --dumpoptions\n"
+        "         Dump command options.\n"
                      // clang-format on
                      ),
           targetSystemWide_(false)
