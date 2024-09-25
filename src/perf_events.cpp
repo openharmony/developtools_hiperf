@@ -1112,10 +1112,9 @@ bool PerfEvents::CreateFdEvents(void)
 
                     // if sampling, mmap ring buffer
                     if (recordCallBack_) {
-                        if (isSpe_) {
-                            CreateSpeMmap(fdItem, eventItem.attr);
-                        } else {
-                            CreateMmap(fdItem, eventItem.attr);
+                        if (!(isSpe_ ? CreateSpeMmap(fdItem, eventItem.attr) : CreateMmap(fdItem, eventItem.attr))) {
+                            printf("create mmap fail\n");
+                            return false;
                         }
                     }
                     // update group leader
@@ -1203,7 +1202,7 @@ bool PerfEvents::CreateSpeMmap(const FdItem &item, const perf_event_attr &attr)
     if (it == cpuMmap_.end()) {
         void *rbuf = mmap(nullptr, (1 + auxMmapPages_) * pageSize_, (PROT_READ | PROT_WRITE), MAP_SHARED,
                           item.fd.Get(), 0);
-        CHECK_TRUE(rbuf == MMAP_FAILED, false, 0, "");
+        CHECK_TRUE(rbuf == MMAP_FAILED, false, 1, "");
         void *auxRbuf = mmap(nullptr, auxMmapPages_ * pageSize_, (PROT_READ | PROT_WRITE), MAP_SHARED,
                              item.fd.Get(), 0);
         MmapFd mmapItem;
