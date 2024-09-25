@@ -96,6 +96,8 @@ public:
         "           report file name. if empty will use stdout print\n"
         "   --hide_count\n"
         "           will not show count in report\n"
+        "   --dumpoptions\n"
+        "           Dump command options.\n"
         "\n"
         ), recordFile_ {"perf.data", ""} // default file path is perf.data
     // clang-format on
