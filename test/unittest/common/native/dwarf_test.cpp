@@ -183,6 +183,16 @@ HWTEST_F(DwarfTest, GetSize, TestSize.Level1)
     }
 }
 
+HWTEST_F(DwarfTest, ToString, TestSize.Level1)
+{
+    for (std::size_t j = 0; j < num; ++j) {
+        dw_encode_t dwe = ehas[0] | vfs[j];
+        DwarfEncoding dw {dwe, data[j]};
+        EXPECT_TRUE(!dw.ToString().empty());
+        printf("%s\n", dw.ToString().c_str());
+    }
+}
+
 HWTEST_F(DwarfTest, IsOmit, TestSize.Level1)
 {
     for (std::size_t i = 0; i < ehas.size(); ++i) {

@@ -35,13 +35,13 @@ public:
     static void CompareEventDesc(const std::vector<AttrWithId> &a,
                                  const std::vector<AttrWithId> &b);
 
-    static const int BIGK = 1024;
+    static const uint32_t BIGK = 1024;
+    static const uint32_t TESTNUMBER1 = 1;
+    static const uint32_t TESTNUMBER2 = 2;
+    static const uint32_t TESTNUMBER3 = 3;
+    static const uint32_t TESTNUMBER4 = 4;
+    static const uint32_t TESTNUMBER5 = 5;
     static const int TWO = 2;
-    static const int TESTNUMBER1 = 1;
-    static const int TESTNUMBER2 = 2;
-    static const int TESTNUMBER3 = 3;
-    static const int TESTNUMBER4 = 4;
-    static const int TESTNUMBER5 = 5;
 };
 
 void PerfFileFormatTest::SetUpTestCase() {}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,18 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef HIPERF_UTILITIES_TEST_H
-#define HIPERF_UTILITIES_TEST_H
+#ifndef HIPERF_SPE_DECODER_TEST_H
+#define HIPERF_SPE_DECODER_TEST_H
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 
-#if defined(__aarch64__)
-const std::string TEST_PROCESSES = "com.ohos.sceneboard";
-#else
-const std::string TEST_PROCESSES = "com.ohos.launcher";
-#endif
+#include "spe_decoder.h"
 
-#endif // HIPERF_UTILITIES_TEST_H
+#endif // HIPERF_SPE_DECODER_TEST_H

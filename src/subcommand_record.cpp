@@ -68,8 +68,9 @@ const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT_CHECK = 1000ms;
 constexpr uint64_t MASK_ALIGNED_8 = 7;
 constexpr size_t MAX_DWARF_CALL_CHAIN = 2;
 constexpr uint64_t TYPE_PERF_SAMPLE_BRANCH = PERF_SAMPLE_BRANCH_ANY | PERF_SAMPLE_BRANCH_ANY_CALL |
-                                             PERF_SAMPLE_BRANCH_ANY_RETURN |
-                                             PERF_SAMPLE_BRANCH_IND_CALL;
+                                             PERF_SAMPLE_BRANCH_ANY_RETURN | PERF_SAMPLE_BRANCH_IND_JUMP |
+                                             PERF_SAMPLE_BRANCH_IND_CALL | PERF_SAMPLE_BRANCH_COND |
+                                             PERF_SAMPLE_BRANCH_CALL;
 
 int GetClockId(const std::string &name)
 {
@@ -96,6 +97,9 @@ uint64_t GetBranchSampleType(const std::string &name)
         {"any_call", PERF_SAMPLE_BRANCH_ANY_CALL},
         {"any_ret", PERF_SAMPLE_BRANCH_ANY_RETURN},
         {"ind_call", PERF_SAMPLE_BRANCH_IND_CALL},
+        {"ind_jmp", PERF_SAMPLE_BRANCH_IND_JUMP},
+        {"cond", PERF_SAMPLE_BRANCH_COND},
+        {"call", PERF_SAMPLE_BRANCH_CALL},
     };
 
     auto it = mapBranchSampleType.find(name);
@@ -342,13 +346,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         printf("-a option is conflict with --dedup_stack.\n");
         return false;
     }
-    if (!Option::GetOptionTrackedCommand(args, trackedCommand_)) {
-        return false;
-    }
-    if (!args.empty()) {
-        printf("'%s' option usage error, please check usage.\n", VectorToString(args).c_str());
-        return false;
-    }
+    CHECK_TRUE(!Option::GetOptionTrackedCommand(args, trackedCommand_), false, 0, "");
+    CHECK_TRUE(!args.empty(), false, LOG_TYPE_PRINTF,
+               "'%s' option usage error, please check usage.\n", VectorToString(args).c_str());
     return true;
 }
 
@@ -496,10 +496,7 @@ bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
     if (!GetOptions(args)) {
         return false;
     }
-    if (!args.empty()) {
-        printf("unknown option %s\n", args.begin()->c_str());
-        return false;
-    }
+    CHECK_TRUE(!args.empty(), false, LOG_TYPE_PRINTF, "unknown option %s\n", args.begin()->c_str());
     if (controlCmd_.empty()) {
         if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
             return false;
@@ -515,11 +512,8 @@ bool SubCommandRecord::CheckTargetProcessOptions()
         hasTarget = true;
     }
     if (!selectPids_.empty() || !selectTids_.empty()) {
-        if (hasTarget) {
-            printf("-p/-t %s options conflict, please check usage\n",
-                   VectorToString(selectPids_).c_str());
-            return false;
-        }
+        CHECK_TRUE(hasTarget, false, LOG_TYPE_PRINTF,
+                   "-p/-t %s options conflict, please check usage\n", VectorToString(selectPids_).c_str());
         hasTarget = true;
     }
     if (!trackedCommand_.empty()) {
@@ -547,9 +541,7 @@ bool SubCommandRecord::CheckTargetProcessOptions()
         return false;
     }
     if (controlCmd_ == CONTROL_CMD_PREPARE) {
-        if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
-            return false;
-        }
+        CHECK_TRUE(!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_), false, 0, "");
     }
     return CheckTargetPids();
 }
@@ -687,8 +679,8 @@ bool SubCommandRecord::ParseBranchSampleType(const std::vector<std::string> &vec
             }
         }
         if ((branchSampleType_ & TYPE_PERF_SAMPLE_BRANCH) == 0) {
-            printf(
-                "Invalid -j value, requires at least one of any, any_call, any_ret, ind_call.\n");
+            printf("Invalid -j value, requires at least one of "
+                   "any, any_call, any_ret, ind_call, ind_jmp, cond, call.\n");
             return false;
         }
     }
@@ -711,10 +703,7 @@ bool SubCommandRecord::SetPerfLimit(const std::string& file, int value, std::fun
     const std::string& param)
 {
     int oldValue = 0;
-    if (!ReadIntFromProcFile(file, oldValue)) {
-        printf("read %s fail.\n", file.c_str());
-        return false;
-    }
+    CHECK_TRUE(!ReadIntFromProcFile(file, oldValue), false, LOG_TYPE_PRINTF, "read %s fail.\n", file.c_str());
 
     if (cmp(oldValue, value)) {
         HLOGI("cmp return true.");
@@ -728,10 +717,8 @@ bool SubCommandRecord::SetPerfLimit(const std::string& file, int value, std::fun
         }
     }
 
-    if (!OHOS::system::SetParameter(param, std::to_string(value))) {
-        printf("set parameter %s fail.\n", param.c_str());
-        return false;
-    }
+    CHECK_TRUE(!OHOS::system::SetParameter(param, std::to_string(value)), false, LOG_TYPE_PRINTF,
+               "set parameter %s fail.\n", param.c_str());
     isNeedSetPerfHarden_ = true;
     return true;
 }
@@ -747,10 +734,8 @@ bool SubCommandRecord::SetPerfMaxSampleRate()
     auto cmp = [](int oldValue, int newValue) { return oldValue == newValue; };
     int frequency = frequency_ != 0 ? frequency_ : PerfEvents::DEFAULT_SAMPLE_FREQUNCY;
     int maxRate = 0;
-    if (!ReadIntFromProcFile(PERF_EVENT_MAX_SAMPLE_RATE, maxRate)) {
-        printf("read %s fail.\n", PERF_EVENT_MAX_SAMPLE_RATE.c_str());
-        return false;
-    }
+    CHECK_TRUE(!ReadIntFromProcFile(PERF_EVENT_MAX_SAMPLE_RATE, maxRate), false, LOG_TYPE_PRINTF,
+               "read %s fail.\n", PERF_EVENT_MAX_SAMPLE_RATE.c_str());
     if (maxRate > frequency) {
         return true;
     }
@@ -775,16 +760,12 @@ bool SubCommandRecord::SetPerfHarden()
 
     std::string perfHarden = OHOS::system::GetParameter(PERF_DISABLE_PARAM, "1");
     if (perfHarden == "1") {
-        if (!OHOS::system::SetParameter(PERF_DISABLE_PARAM, "0")) {
-            printf("set parameter security.perf_harden to 0 fail.");
-            return false;
-        }
+        CHECK_TRUE(!OHOS::system::SetParameter(PERF_DISABLE_PARAM, "0"), false, LOG_TYPE_PRINTF,
+                   "set parameter security.perf_harden to 0 fail.");
     }
 
-    if (!OHOS::system::SetParameter(PERF_DISABLE_PARAM, "1")) {
-        printf("set parameter security.perf_harden to 1 fail.");
-        return false;
-    }
+    CHECK_TRUE(!OHOS::system::SetParameter(PERF_DISABLE_PARAM, "1"), false, LOG_TYPE_PRINTF,
+               "set parameter security.perf_harden to 1 fail.");
     return true;
 }
 
@@ -794,12 +775,9 @@ bool SubCommandRecord::TraceOffCpu()
     int enable = -1;
     std::string node = SCHED_SWITCH;
     const std::string nodeDebug = SCHED_SWITCH_DEBUG;
-    if (!ReadIntFromProcFile(node.c_str(), enable) and
-        !ReadIntFromProcFile(nodeDebug.c_str(), enable)) {
-        printf("Cannot trace off CPU, event sched:sched_switch is not available (%s or %s)\n",
-            node.c_str(), nodeDebug.c_str());
-        return false;
-    }
+    CHECK_TRUE(!ReadIntFromProcFile(node.c_str(), enable) and !ReadIntFromProcFile(nodeDebug.c_str(), enable),
+               false, LOG_TYPE_PRINTF, "Cannot trace off CPU, event sched:sched_switch is not available (%s or %s)\n",
+               node.c_str(), nodeDebug.c_str());
 
     return true;
 }
@@ -816,9 +794,7 @@ void SubCommandRecord::SetSavedCmdlinesSize()
 
 void SubCommandRecord::RecoverSavedCmdlinesSize()
 {
-    if (oldCmdlinesSize_ == 0) {
-        return;
-    }
+    CHECK_TRUE(oldCmdlinesSize_ == 0, NO_RETVAL, 0, "");
     if (!WriteIntToProcFile(SAVED_CMDLINES_SIZE, oldCmdlinesSize_)) {
         printf("Failed to recover value of %s.\n", SAVED_CMDLINES_SIZE.c_str());
     }
@@ -875,28 +851,16 @@ bool SubCommandRecord::PreparePerfEvent()
         selectEvents_.push_back("hw-cpu-cycles");
     }
 
-    if (!perfEvents_.AddEvents(selectEvents_)) {
-        HLOGE("Fail to AddEvents events");
-        return false;
-    }
+    CHECK_TRUE(!perfEvents_.AddEvents(selectEvents_), false, 1, "Fail to AddEvents events");
     for (auto &group : selectGroups_) {
-        if (!perfEvents_.AddEvents(group, true)) {
-            HLOGE("Fail to AddEvents groups");
-            return false;
-        }
+        CHECK_TRUE(!perfEvents_.AddEvents(group, true), false, 1, "Fail to AddEvents groups");
     }
     // cpu off add after default event (we need both sched_switch and user selected events)
     if (offCPU_) {
-        if (std::find(selectEvents_.begin(), selectEvents_.end(), "sched_switch") !=
-            selectEvents_.end()) {
-            printf("--offcpu is not supported event sched_switch\n");
-            return false;
-        }
+        CHECK_TRUE(std::find(selectEvents_.begin(), selectEvents_.end(), "sched_switch") != selectEvents_.end(),
+                   false, LOG_TYPE_PRINTF, "--offcpu is not supported event sched_switch\n");
         // insert a sched_switch event to trace offcpu event
-        if (!perfEvents_.AddOffCpuEvent()) {
-            HLOGE("Fail to AddEOffCpuvent");
-            return false;
-        }
+        CHECK_TRUE(!perfEvents_.AddOffCpuEvent(), false, 1, "Fail to AddEOffCpuvent");
     }
 
     return true;
@@ -906,29 +870,15 @@ bool SubCommandRecord::PrepareSysKernel()
 {
     SetHM();
     SetSavedCmdlinesSize();
-    if (!SetPerfMaxSampleRate()) {
-        HLOGE("Fail to call SetPerfMaxSampleRate(%d)", frequency_);
-        return false;
-    }
-    if (!SetPerfCpuMaxPercent()) {
-        HLOGE("Fail to set perf event cpu limit to %d\n", cpuPercent_);
-        return false;
-    }
+    CHECK_TRUE(!SetPerfMaxSampleRate(), false, 1, "Fail to call SetPerfMaxSampleRate(%d)", frequency_);
 
-    if (!SetPerfEventMlock()) {
-        HLOGE("Fail to set perf event mlock limit\n");
-        return false;
-    }
+    CHECK_TRUE(!SetPerfCpuMaxPercent(), false, 1, "Fail to set perf event cpu limit to %d\n", cpuPercent_);
 
-    if (!SetPerfHarden()) {
-        HLOGE("Fail to set perf event harden\n");
-        return false;
-    }
+    CHECK_TRUE(!SetPerfEventMlock(), false, 1, "Fail to set perf event mlock limit\n");
 
-    if (offCPU_ && !TraceOffCpu()) {
-        HLOGE("Fail to TraceOffCpu");
-        return false;
-    }
+    CHECK_TRUE(!SetPerfHarden(), false, 1, "Fail to set perf event harden\n");
+
+    CHECK_TRUE(offCPU_ && !TraceOffCpu(), false, 1, "Fail to TraceOffCpu");
 
     return true;
 }
@@ -980,13 +930,18 @@ bool SubCommandRecord::PrepareVirtualRuntime()
 
 void SubCommandRecord::WriteCommEventBeforeSampling()
 {
-    if (restart_) {
-        return;
-    }
+    CHECK_TRUE(restart_, NO_RETVAL, 0, "");
     for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
         virtualRuntime_.GetThread(it->first, it->first);
         for (auto tid : it->second) {
             virtualRuntime_.GetThread(it->first, tid);
+        }
+    }
+    if (mapPids_.empty()) {
+        if (!selectPids_.empty()) {
+            for (auto pid : selectPids_) {
+                virtualRuntime_.GetThread(pid, pid);
+            }
         }
     }
 }
@@ -1035,9 +990,7 @@ bool SubCommandRecord::IsSamplingRunning()
 void SubCommandRecord::ClientCommandHandle()
 {
     using namespace HiperfClient;
-    if (!IsSamplingRunning()) {
-        return;
-    }
+    CHECK_TRUE(!IsSamplingRunning(), NO_RETVAL, 0, "");
     // tell the caller if Exist
     ClientCommandResponse(true);
 
@@ -1094,9 +1047,7 @@ bool SubCommandRecord::ProcessControl()
     }
 
     if (controlCmd_ == CONTROL_CMD_PREPARE) {
-        if (!CreateFifoServer()) {
-            return false;
-        }
+        CHECK_TRUE(!CreateFifoServer(), false, 0, "");
         return true;
     }
 
@@ -1259,11 +1210,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     }
 
     // prepar some attr before CreateInitRecordFile
-    if (!perfEvents_.PrepareTracking()) {
-        HLOGE("Fail to prepare tracking ");
-        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to prepare tracking ");
-        return false;
-    }
+    CHECK_TRUE(!perfEvents_.PrepareTracking(), false, LOG_TYPE_WITH_HILOG, "Fail to prepare tracking ");
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents prepared");
 
     if (!CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
@@ -1275,6 +1222,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     if (!PrepareVirtualRuntime()) {
         return false;
     }
+
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord virtualRuntime prepared");
 
     // make a thread wait the other command
@@ -1289,9 +1237,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     if (isDataSizeLimitStop_) {
         // mmap record size has been larger than limit, dont start sampling.
     } else if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
-        if (!perfEvents_.StartTracking(isFifoServer_)) {
-            return false;
-        }
+        CHECK_TRUE(!perfEvents_.StartTracking(isFifoServer_), false, 0, "");
     } else {
         if (!perfEvents_.StartTracking((!isFifoServer_) && (clientPipeInput_ == -1))) {
             return false;
@@ -1354,10 +1300,7 @@ void SubCommandRecord::RemoveVdsoTmpFile()
 
 bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
 {
-    if (record == nullptr) {
-        HLOGE("record is null");
-        return false;
-    }
+    CHECK_TRUE(record == nullptr, false, 1, "record is null");
 #if HIDEBUG_RECORD_NOT_PROCESS
     // some times we want to check performance
     // but we still want to see the record number
@@ -1412,9 +1355,7 @@ bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record, bool 
 #endif
     if (dataSizeLimit_ > 0u) {
         if (dataSizeLimit_ <= fileWriter_->GetDataSize()) {
-            if (isDataSizeLimitStop_) {
-                return false;
-            }
+            CHECK_TRUE(isDataSizeLimitStop_, false, 0, "");
             printf("record size %" PRIu64 " is large than limit %" PRIu64 ". stop sampling.\n",
                 fileWriter_->GetDataSize(), dataSizeLimit_);
             perfEvents_.StopTracking();
@@ -1587,11 +1528,7 @@ void SubCommandRecord::AddDevhostFeature()
 bool SubCommandRecord::AddFeatureRecordFile()
 {
     // VERSION
-
-    if (!AddCpuFeature()) {
-        return false;
-    }
-
+    CHECK_TRUE(!AddCpuFeature(), false, 0, "");
     AddMemTotalFeature();
 
     AddCommandLineFeature();
@@ -1619,13 +1556,9 @@ bool SubCommandRecord::CreateInitRecordFile(bool compressData)
         return false;
     }
 
-    if (!fileWriter_->WriteAttrAndId(perfEvents_.GetAttrWithId())) {
-        return false;
-    }
+    CHECK_TRUE(!fileWriter_->WriteAttrAndId(perfEvents_.GetAttrWithId()), false, 0, "");
 
-    if (!AddFeatureRecordFile()) {
-        return false;
-    }
+    CHECK_TRUE(!AddFeatureRecordFile(), false, 0, "");
 
     HLOGD("create new record file %s", outputFilename_.c_str());
     return true;
@@ -1678,10 +1611,7 @@ bool SubCommandRecord::PostProcessRecordFile()
 
         // lte FinishWriteRecordFile write matched only symbols
         delayUnwind_ = false;
-        if (!FinishWriteRecordFile()) {
-            HLOGE("Fail to finish record file %s", outputFilename_.c_str());
-            return false;
-        }
+        CHECK_TRUE(!FinishWriteRecordFile(), false, 1, "Fail to finish record file %s", outputFilename_.c_str());
 
         remove(tempFileName.c_str());
     }
@@ -1715,9 +1645,7 @@ void SubCommandRecord::SymbolicHits()
 
 bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 {
-    if (record == nullptr) {
-        return false;
-    }
+    CHECK_TRUE(record == nullptr, false, 0, "");
     if (record->GetType() == PERF_RECORD_SAMPLE) {
         PerfRecordSample *sample = static_cast<PerfRecordSample *>(record.get());
 #if USE_COLLECT_SYMBOLIC
@@ -1739,9 +1667,7 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 
 void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
 {
-    if (sample == nullptr) {
-        return;
-    }
+    CHECK_TRUE(sample == nullptr, NO_RETVAL, 0, "");
     perf_callchain_context context = sample->inKernel() ? PERF_CONTEXT_KERNEL
                                                         : PERF_CONTEXT_USER;
     pid_t serverPid;
@@ -1813,22 +1739,13 @@ bool SubCommandRecord::FinishWriteRecordFile()
         disableUnwind_ = true;
 #endif
 #if !HIDEBUG_SKIP_SAVE_SYMBOLS
-        if (!fileWriter_->AddSymbolsFeature(virtualRuntime_.GetSymbolsFiles())) {
-            HLOGE("Fail to AddSymbolsFeature");
-            return false;
-        }
+        CHECK_TRUE(!fileWriter_->AddSymbolsFeature(virtualRuntime_.GetSymbolsFiles()),
+                   false, 1, "Fail to AddSymbolsFeature");
 #endif
     }
 #endif
-
-    if (dedupStack_ &&
-        !fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable())) {
-        return false;
-    }
-    if (!fileWriter_->Close()) {
-        HLOGE("Fail to close record file %s", outputFilename_.c_str());
-        return false;
-    }
+    CHECK_TRUE(dedupStack_ && !fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable()), false, 0, "");
+    CHECK_TRUE(!fileWriter_->Close(), false, 1, "Fail to close record file %s", outputFilename_.c_str());
 #ifdef HIPERF_DEBUG_TIME
     saveFeatureTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif

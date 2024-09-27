@@ -550,11 +550,11 @@ private:
     void StatLoop();
     bool IsRecordInMmap(int timeout);
     void ReadRecordsFromMmaps();
-    void ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxSize, u32 pid, u32 tid);
+    void ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxSize, u32 pid, u32 tid);
     void SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, u32 size);
     bool GetRecordFromMmap(MmapFd &mmap);
     void GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size);
-    void MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxSize, u32 &pid, u32 &tid);
+    void MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxOffset, u64 &auxSize, u32 &pid, u32 &tid);
     size_t GetCallChainPosInSampleRecord(const perf_event_attr &attr);
     size_t GetStackSizePosInSampleRecord(MmapFd &mmap);
     bool CutStackAndMove(MmapFd &mmap);

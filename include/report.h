@@ -542,7 +542,6 @@ private:
     void PrepareConsole();
 
     void OutputStdStatistics(ReportEventConfigItem &config);
-    bool OutputStdStatistics(ReportEventConfigItem &config, ReportEventConfigItem &otherConfig);
 
     void OutputStdHead(ReportEventConfigItem &config, bool diffMode = false);
 

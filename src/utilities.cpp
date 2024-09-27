@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "utilities.h"
+
 #include <zlib.h>
 #include <thread>
 #if defined(CONFIG_HAS_SYSPARA) && defined(is_ohos) && is_ohos
@@ -21,6 +23,8 @@
 #if defined(is_mingw) && is_mingw
 #include <io.h>
 #endif
+
+#include "hiperf_hilog.h"
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
 #include "application_info.h"
 #include "bundle_mgr_proxy.h"
@@ -119,7 +123,7 @@ size_t SubStringCount(const std::string &source, const std::string &sub)
     return count;
 }
 
-std::vector<std::string> StringSplit(std::string source, const std::string split)
+std::vector<std::string> StringSplit(std::string source, const std::string &split)
 {
     std::vector<std::string> result;
 
@@ -176,10 +180,7 @@ bool StdoutRecord::Start()
 
     // we save the stdout
     stdoutFile_ = OHOS::UniqueFd(dup(STDOUT_FILENO));
-    if (stdoutFile_ == -1) {
-        HLOGF("std dup failed");
-        return false;
-    }
+    CHECK_TRUE(stdoutFile_ == -1, false, 1, "std dup failed");
 
     // setup temp file as stdout
     if (dup2(fileno(recordFile_), STDOUT_FILENO) != -1) {
@@ -239,9 +240,7 @@ bool IsHexDigits(const std::string &str)
     if (prefix.compare(0, prefix.size(), effectStr.substr(0, prefix.size())) == 0) {
         effectStr = effectStr.substr(prefix.size(), effectStr.size() - prefix.size());
     }
-    if (effectStr.empty()) {
-        return false;
-    }
+    CHECK_TRUE(effectStr.empty(), false, 0, "");
     std::size_t start {0};
     for (; start < effectStr.size(); ++start) {
         if (effectStr[start] == '0') {
@@ -353,9 +352,7 @@ bool PowerOfTwo(uint64_t n)
 bool ReadIntFromProcFile(const std::string &path, int &value)
 {
     std::string s = ReadFileToString(path);
-    if (s.empty()) {
-        return false;
-    }
+    CHECK_TRUE(s.empty(), false, 0, "");
     value = std::stoi(s);
     return true;
 }
@@ -461,13 +458,9 @@ std::vector<std::string> GetEntriesInDir(const std::string &basePath)
 {
     std::vector<std::string> result;
     std::string resolvedPath = CanonicalizeSpecPath(basePath.c_str());
-    if (resolvedPath.empty()) {
-        return result;
-    }
+    CHECK_TRUE(resolvedPath.empty(), result, 0, "");
     DIR *dir = opendir(resolvedPath.c_str());
-    if (dir == nullptr) {
-        return result;
-    }
+    CHECK_TRUE(dir == nullptr, result, 0, "");
     dirent *entry;
     while ((entry = readdir(dir)) != nullptr) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
@@ -617,10 +610,8 @@ bool IsRestarted(const std::string &appPackage)
         CollectPidsByAppname(newPids, appPackage);
         std::set_intersection(oldPids.begin(), oldPids.end(),
             newPids.begin(), newPids.end(), std::back_insert_iterator(intersection));
-        if (intersection.empty()) {
-            // app names are same, no intersection, means app restarted
-            return true;
-        }
+        // app names are same, no intersection, means app restarted
+        CHECK_TRUE(intersection.empty(), true, 0, "");
         intersection.clear();
         newPids.clear();
         std::this_thread::sleep_for(milliseconds(CHECK_FREQUENCY));
@@ -685,17 +676,11 @@ bool IsExistDebugByApp(const std::string& bundleName)
     return true;
 }
 
-bool IsExistDebugByPid(const std::vector<pid_t> pids)
+bool IsExistDebugByPid(const std::vector<pid_t> &pids)
 {
-    if (pids.empty()) {
-        HLOGE("IsExistDebugByPid: pids is empty.");
-        return true;
-    }
+    CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
     for (auto pid : pids) {
-        if (pid <= 0) {
-            printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
-            return false;
-        }
+        CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
         std::string bundleName = GetProcessName(pid);
         auto pos = bundleName.find(":");
         if (pos != std::string::npos) {
@@ -713,32 +698,17 @@ bool IsExistDebugByPid(const std::vector<pid_t> pids)
 bool IsDebugableApp(const std::string& bundleName)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    if (bundleName.empty()) {
-        HLOGD("bundleName is empty!\n");
-        return false;
-    }
+    CHECK_TRUE(bundleName.empty(), false, LOG_TYPE_PRINTF, "bundleName is empty!\n");
     sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (sam == nullptr) {
-        printf("GetSystemAbilityManager failed!\n");
-        return false;
-    }
+    CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
     sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (remoteObject == nullptr) {
-        printf("Get BundleMgr SA failed!\n");
-        return false;
-    }
+    CHECK_TRUE(remoteObject == nullptr, false, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
     sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
-    if (proxy == nullptr) {
-        printf("iface_cast failed!\n");
-        return false;
-    }
+    CHECK_TRUE(proxy == nullptr, false, LOG_TYPE_PRINTF, "iface_cast failed!\n");
     AppExecFwk::ApplicationInfo appInfo;
     bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::GET_APPLICATION_INFO_WITH_DISABLE,
                                          AppExecFwk::Constants::ANY_USERID, appInfo);
-    if (!ret) {
-        HLOGE("Get application info failed, bundleName:%s.", bundleName.c_str());
-        return false;
-    }
+    CHECK_TRUE(!ret, false, 1, "%s GetApplicationInfo failed!", bundleName.c_str());
     HLOGD("bundleName is %s,appProvisionType: %s", bundleName.c_str(), appInfo.appProvisionType.c_str());
     return appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
 #else
@@ -753,13 +723,9 @@ bool IsSupportNonDebuggableApp()
         return true;
     }
     // user mode
-    if (!IsBeta()) {
-        return false;
-    }
+    CHECK_TRUE(!IsBeta(), false, 0, "");
     // restricted aplication for beta
-    if (!IsAllowProfilingUid()) {
-        return false;
-    }
+    CHECK_TRUE(!IsAllowProfilingUid(), false, 0, "");
     return true;
 }
 
@@ -792,9 +758,7 @@ bool LittleMemory()
     while (getline(file, line)) {
         if (line.find("MemTotal:") != std::string::npos) {
             int memSize = stoi(line.substr(line.find(":") + 1));
-            if (memSize < (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE)) {
-                return true;
-            }
+            CHECK_TRUE(memSize < (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE), true, 0, "");
         }
     }
     return false;
@@ -808,10 +772,7 @@ bool IsBeta()
         return true;
     }
     // default release when usertype param is invalid
-    if (userTypeRsp.empty()) {
-        HLOGE("GetUserType is empty [%s]", userTypeRsp.c_str());
-        return true;
-    }
+    CHECK_TRUE(userTypeRsp.empty(), true, 1, "GetUserType is empty [%s]", userTypeRsp.c_str());
     return false;
 }
 
@@ -820,9 +781,7 @@ bool IsAllowProfilingUid()
 #if (defined(is_linux) && is_linux) || (defined(is_ohos) && is_ohos)
     static unsigned int curUid = getuid();
     HLOGD("curUid is %d\n", curUid);
-    if (ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end()) {
-        return true;
-    }
+    CHECK_TRUE(ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end(), true, 0, "");
     return false;
 #else
     return false;
@@ -861,12 +820,12 @@ bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname)
     if (!needCheck) {
         return false;
     }
-    std::string path = "/data/storage/el1/bundle";
-    std::string newpath = "/data/app/el1/bundle/public/";
+    const std::string path = "/data/storage/el1/bundle";
     std::string newFileName = filename;
     size_t pos = newFileName.find(path);
     if (pos != std::string::npos) {
         if (access(filename.c_str(), F_OK) != 0) {
+            const std::string newpath = "/data/app/el1/bundle/public/";
             // /data/storage/el1/bundle/libs/arm64/libentry.so
             newFileName.replace(pos, path.length(), newpath + threadname);
             if (access(newFileName.c_str(), F_OK) != 0) {
@@ -910,38 +869,20 @@ bool IsHiviewCall()
 bool IsApplicationEncryped(const int pid)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    if (pid <= 0) {
-        printf("Invalid -p value '%d', the pid should be larger than 0\n", pid);
-        return false;
-    }
+    CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
     std::string bundleName = GetProcessName(pid);
-    if (bundleName.empty()) {
-        HLOGD("bundleName is empty,pid is %d", pid);
-        return false;
-    }
+    CHECK_TRUE(bundleName.empty(), false, 1, "bundleName is empty,pid is %d", pid);
     sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (sam == nullptr) {
-        printf("GetSystemAbilityManager failed!\n");
-        return false;
-    }
+    CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
     sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (remoteObject == nullptr) {
-        printf("Get BundleMgr SA failed!\n");
-        return false;
-    }
+    CHECK_TRUE(remoteObject == nullptr, false, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
     sptr<BundleMgrProxy> proxy = iface_cast<BundleMgrProxy>(remoteObject);
-    if (proxy == nullptr) {
-        printf("iface_cast failed!\n");
-        return false;
-    }
+    CHECK_TRUE(proxy == nullptr, false, LOG_TYPE_PRINTF, "iface_cast failed!\n");
 
     AppExecFwk::ApplicationInfo appInfo;
     bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO,
                                          AppExecFwk::Constants::ANY_USERID, appInfo);
-    if (!ret) {
-        HLOGD("%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
-        return false;
-    }
+    CHECK_TRUE(!ret, false, 1, "%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
     bool isEncrypted = (appInfo.applicationReservedFlag &
                         static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
     HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);

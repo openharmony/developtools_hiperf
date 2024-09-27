@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "debug_logger.h"
+#include "hiperf_hilog.h"
 #include "utilities.h"
 
 const uint16_t ONE_HUNDRED = 100;
@@ -228,9 +229,7 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
 void SubCommandStat::InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
                                 const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance)
 {
-    if (newPerMap == nullptr) {
-        return;
-    }
+    CHECK_TRUE(newPerMap == nullptr, NO_RETVAL, 0, "");
     newPerMap->cpu = summary.cpu;
     if (g_reportCpuFlag && !g_reportThreadFlag) {
         return;
@@ -351,9 +350,7 @@ std::string SubCommandStat::GetCommentConfigName(
     const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName)
 {
     std::string commentConfigName = "";
-    if (countEvent == nullptr || eventName.length() == 0) {
-        return commentConfigName;
-    }
+    CHECK_TRUE(countEvent == nullptr || eventName.length() == 0, commentConfigName, 0, "");
     if (countEvent->userOnly) {
         commentConfigName = eventName + ":u";
     } else if (countEvent->kernelOnly) {
@@ -366,9 +363,7 @@ std::string SubCommandStat::GetCommentConfigName(
 
 void SubCommandStat::MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
 {
-    if (reportSum == nullptr || reportSum->commentSum == 0) {
-        return;
-    }
+    CHECK_TRUE(reportSum == nullptr || reportSum->commentSum == 0, NO_RETVAL, 0, "");
     if (reportSum->configName == "sw-task-clock") {
         commentStr = StringPrintf("%lf cpus used", reportSum->commentSum);
         return;
@@ -422,7 +417,7 @@ std::string SubCommandStat::GetDetailComments(const std::unique_ptr<PerfEvents::
     if (configName == GetCommentConfigName(countEvent, "hw-cpu-cycles")) {
         if (findRunningTime) {
             double hz = 0;
-            if (running_time_in_sec != 0) {
+            if (abs(running_time_in_sec) > ALMOST_ZERO) {
                 hz = summary.eventCount / (running_time_in_sec / scale);
             }
             comment += hz / 1e9;
@@ -503,7 +498,7 @@ void SubCommandStat::GetComments(const std::map<std::string, std::unique_ptr<Per
                 ((group_id == it->second->id) ||
                  (IsMonitoredAtAllTime(main_scale) && IsMonitoredAtAllTime(scale)))) {
                 double hz = 0;
-                if (running_time_in_sec != 0) {
+                if (abs(running_time_in_sec) > ALMOST_ZERO) {
                     hz = it->second->eventCount / (running_time_in_sec / scale);
                 }
                 comments[configName] = StringPrintf("%lf GHz", hz / 1e9);
@@ -587,9 +582,7 @@ bool SubCommandStat::FindRunningTime(
 bool SubCommandStat::FindPercoreRunningTime(PerfEvents::Summary &summary, double &running_time_int_sec,
                                             double &main_scale)
 {
-    if (summary.eventCount == 0) {
-        return false;
-    }
+    CHECK_TRUE(summary.eventCount == 0, false, 0, "");
     running_time_int_sec = summary.eventCount / 1e9;
     if (summary.timeRunning < summary.timeEnabled && summary.timeRunning != 0) {
         main_scale = static_cast<double>(summary.timeEnabled) / summary.timeRunning;
@@ -641,9 +634,7 @@ void SubCommandStat::SetPerfEvent()
 
 bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 {
-    if (HelpOption()) {
-        return true;
-    }
+    CHECK_TRUE(HelpOption(), true, 0, "");
     if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
         return false;
     }

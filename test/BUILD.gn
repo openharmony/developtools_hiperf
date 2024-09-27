@@ -43,6 +43,7 @@ sources_base = [
   "unittest/common/native/report_test.cpp",
   "unittest/common/native/report_json_file_test.cpp",
   "unittest/common/native/unique_stack_table_test.cpp",
+  "unittest/common/native/spe_decoder_test.cpp",
 ]
 
 if (hiperf_debug) {
@@ -95,13 +96,13 @@ ohos_unittest("hiperf_unittest") {
   resource_config_file = "unittest/resource/ohos_test.xml"
   deps = common_deps
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "faultloggerd:libunwinder_static",
     "hilog:libhilog",
   ]
   cflags = [
     "-Dprivate=public",  #allow test code access private members
   ]
-
   sources = sources_interface
   sources += sources_base
   if (is_linux) {
@@ -128,6 +129,7 @@ ohos_fuzztest("CommandLineFuzzTest") {
   cflags = fuzz_cflags
   deps = fuzz_deps
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
   ]
@@ -144,7 +146,10 @@ ohos_fuzztest("LibReportFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/libreport_fuzzer/LibReport_fuzzer.cpp" ]
 }
@@ -155,9 +160,26 @@ ohos_fuzztest("ClientApiFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = fuzz_deps
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/clientapi_fuzzer/ClientApi_fuzzer.cpp" ]
+}
+
+ohos_fuzztest("SpeDecoderFuzzTest") {
+  module_out_path = hiperf_fuzz_test_output_path
+  fuzz_config_file = "${hiperf_path}/test/fuzztest/spedecoder_fuzzer"
+  configs = [ ":hiperf_test_config" ]
+  cflags = fuzz_cflags
+  deps = fuzz_deps
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
+  defines = [ "FUZZER_TEST" ]
+  sources = [ "fuzztest/spedecoder_fuzzer/SpeDecoder_fuzzer.cpp" ]
 }
 
 ohos_fuzztest("PerfFileFuzzTest") {
@@ -168,11 +190,27 @@ ohos_fuzztest("PerfFileFuzzTest") {
   cflags = fuzz_cflags
   deps = fuzz_deps
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/perffile_fuzzer/PerfFile_fuzzer.cpp" ]
+}
+
+ohos_fuzztest("PerfFileFormatFuzzTest") {
+  module_out_path = hiperf_fuzz_test_output_path
+  fuzz_config_file = "${hiperf_path}/test/fuzztest/perffileformat_fuzzer"
+  configs = [ ":hiperf_test_config" ]
+  cflags = fuzz_cflags
+  deps = fuzz_deps
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "faultloggerd:libunwinder_static",
+    "hilog:libhilog",
+  ]
+  defines = [ "FUZZER_TEST" ]
+  sources = [ "fuzztest/perffileformat_fuzzer/PerfFileFormat_fuzzer.cpp" ]
 }
 
 group("hiperf_fuzztest") {
@@ -181,7 +219,9 @@ group("hiperf_fuzztest") {
     ":ClientApiFuzzTest",
     ":CommandLineFuzzTest",
     ":LibReportFuzzTest",
+    ":PerfFileFormatFuzzTest",
     ":PerfFileFuzzTest",
+    ":SpeDecoderFuzzTest",
   ]
 }
 

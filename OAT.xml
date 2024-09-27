@@ -56,7 +56,7 @@ Note:If the text contains special characters, please escape them according to th
 <configuration>
     <oatconfig>
         <filefilterlist>
-            <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
+            <filefilter name="defaultPolicyFilter" desc="Filters for compatibility, license header policies">
                 <filteritem type="filepath" name="test/unittest/resource/testdata/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/dwarf/.*" desc="test resource file, no license header"/>
                 <filteritem type="filepath" name="test/unittest/resource/testdata/report/.*" desc="test resource file, no license header"/>
