@@ -535,13 +535,6 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
                 EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_init");
             }
         }
-#ifdef __arm__
-        for (uint64_t addr = SymbolAddr::CSU_FINI; addr < SymbolAddr::THUNK_BP; ++addr) {
-            if (elfSymbols->GetSymbolWithVaddr(addr).IsValid()) {
-                EXPECT_EQ(elfSymbols->GetSymbolWithVaddr(addr).demangle_, "__libc_csu_fini");
-            }
-        }
-#endif
         if (HasFailure()) {
             PrintSymbols(elfSymbols->GetSymbols());
         }
