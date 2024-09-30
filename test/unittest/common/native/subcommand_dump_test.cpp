@@ -819,6 +819,17 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressFpSymbol, TestSize.Level1)
     std::string symbol = "0xffffffc0100030c4 : el0_sync_compat";
     EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
 }
+
+HWTEST_F(SubCommandDumpTest, DumpOutputFail, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "dump -o /root/output.txt";
+    EXPECT_EQ(Command::DispatchCommand(cmdString), false);
+    std::string stringOut = stdoutRecord.Stop();
+    std::string symbol = "unable open file";
+    EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

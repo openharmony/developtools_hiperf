@@ -25,6 +25,7 @@
 #endif
 
 #include "dfx_map.h"
+#include "hiperf_hilog.h"
 #include "register.h"
 #include "spe_decoder.h"
 #include "symbols_file.h"
@@ -192,16 +193,12 @@ bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
     HLOGV("hap name:%s", map->name.c_str());
     // found it by name
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(map->name);
-    if (symbolsFile == nullptr) {
-        HLOGV("Failed to load CreateSymbolsFile for exec section in hap(%s)", map->name.c_str());
-        return false;
-    }
+    CHECK_TRUE(symbolsFile == nullptr, false, 1,
+               "Failed to load CreateSymbolsFile for exec section in hap(%s)", map->name.c_str());
     symbolsFile->SetMapsInfo(map);
     // update maps name if load debuginfo successfully
-    if (!symbolsFile->LoadDebugInfo(map)) {
-        HLOGV("Failed to load debuginfo for exec section in hap(%s)", map->name.c_str());
-        return false;
-    }
+    CHECK_TRUE(!symbolsFile->LoadDebugInfo(map), false, 1,
+               "Failed to load debuginfo for exec section in hap(%s)", map->name.c_str());
 
     if (!loadSymboleWhenNeeded_) { // todo misspelling
         symbolsFile->LoadSymbols(map);
@@ -326,6 +323,10 @@ void VirtualRuntime::UpdateKernelSymbols()
     if (symbolsPaths_.size() > 0) {
         kernelFile->setSymbolsFilePath(symbolsPaths_); // also load from search path
     }
+    if (!IsRoot()) {
+        HLOGD("user mode do not load kernel syms");
+        printf("Hiperf is not running as root mode. Do not need load kernel syms\n");
+    }
     if (kernelFile->LoadSymbols()) {
         auto record = std::make_unique<PerfRecordMmap>(
             true, 0, 0, kernelFile->textExecVaddr_, kernelFile->textExecVaddrRange_,
@@ -360,9 +361,7 @@ void VirtualRuntime::UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offs
 
 void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
 {
-    if (recordSample == nullptr) {
-        return;
-    }
+    CHECK_TRUE(recordSample == nullptr, NO_RETVAL, 0, "");
     u64 nr = recordSample->data_.nr;
     if (nr == 0) {
         collectSymbolCallBack_(recordSample);
@@ -380,9 +379,7 @@ void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
         table = std::make_shared<UniqueStackTable>(pid);
         processStackMap_[pid] = table;
     }
-    if (table == nullptr) {
-        return;
-    }
+    CHECK_TRUE(table == nullptr, NO_RETVAL, 0, "");
     while (table->PutIpsInTable(&stackId, ips, nr) == 0) {
         // try expand hashtable if collison can not resolved
         if (!table->Resize()) {
@@ -508,10 +505,7 @@ void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t 
 bool VirtualRuntime::RecoverCallStack(PerfRecordSample &recordSample)
 {
     auto StackTable = processStackMap_.find(recordSample.data_.pid);
-    if (StackTable == processStackMap_.end()) {
-        HLOGV("not found %" PRIu32 " pid", recordSample.data_.pid);
-        return false;
-    }
+    CHECK_TRUE(StackTable == processStackMap_.end(), false, 1, "not found %" PRIu32 " pid", recordSample.data_.pid);
     recordSample.ips_.clear();
     if (StackTable->second != nullptr) {
         StackTable->second->GetIpsByStackId(recordSample.stackId_, recordSample.ips_);
@@ -690,10 +684,7 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
     if ((recordMmap2.data_.prot & PROT_EXEC) != 0) {
         // fake first segment, when second segment come.
         auto symFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, recordMmap2.data_.filename);
-        if (symFile == nullptr) {
-            HLOGD("CheckValidSandBoxMmap Failed to create symbolFile!");
-            return false;
-        }
+        CHECK_TRUE(symFile == nullptr, false, 1, "CheckValidSandBoxMmap Failed to create symbolFile!");
 
         std::shared_ptr<DfxMap> curMap;
         if (strstr(recordMmap2.data_.filename, ".hap") != nullptr) {
@@ -707,10 +698,7 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
             curMap->prevMap = prevMap;
         }
 
-        if (!symFile->LoadDebugInfo(curMap)) {
-            HLOGD("CheckValidSandBoxMmap Failed to load debuginfo!");
-            return false;
-        }
+        CHECK_TRUE(!symFile->LoadDebugInfo(curMap), false, 1, "CheckValidSandBoxMmap Failed to load debuginfo!");
 
         if (!loadSymboleWhenNeeded_) {
             symFile->LoadSymbols(curMap);
@@ -785,9 +773,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
     if (recordCallBack_) {
         if (NeedAdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size)) {
             FixHMBundleMmap(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size);
-            if (!CheckValidSandBoxMmap(recordMmap2)) {
-                return;
-            }
+            CHECK_TRUE(!CheckValidSandBoxMmap(recordMmap2), NO_RETVAL, 0, "");
         }
     }
     auto map = UpdateThreadMaps(recordMmap2.data_.pid, recordMmap2.data_.tid, recordMmap2.data_.filename,
@@ -808,6 +794,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace)
 #if defined(is_ohos) && is_ohos
         recordAuxTrace.DumpLog(__FUNCTION__);
         SpeDecoder *decoder = SpeDecoderDataNew(recordAuxTrace.rawData_, recordAuxTrace.data_.size);
+        CHECK_TRUE(decoder == nullptr, NO_RETVAL, 0, "");
         std::vector<SpeRecord> records;
         while (true) {
             int ret = SpeDecode(decoder);
@@ -847,6 +834,7 @@ void VirtualRuntime::SymbolSpeRecord(PerfRecordAuxtrace &recordAuxTrace)
 #if defined(is_ohos) && is_ohos
     recordAuxTrace.DumpLog(__FUNCTION__);
     SpeDecoder *decoder = SpeDecoderDataNew(recordAuxTrace.rawData_, recordAuxTrace.data_.size);
+    CHECK_TRUE(decoder == nullptr, NO_RETVAL, 0, "");
     while (true) {
         int ret = SpeDecode(decoder);
         if (ret <= 0) {
@@ -876,13 +864,7 @@ void VirtualRuntime::SetRecordMode(RecordCallBack recordCallBack)
 
 void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
 {
-    if (map == nullptr) {
-        return;
-    }
-    if (map->symbolFileIndex != -1) {
-        // in cache
-        return;
-    }
+    CHECK_TRUE(map == nullptr || map->symbolFileIndex != -1, NO_RETVAL, 0, "");
     HLOGD("try to find symbols for file: %s", map->name.c_str());
     for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
         if (symbolsFiles_[i]->filePath_ == map->name) {
@@ -993,9 +975,7 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
     }
 
     auto map = thread.GetMaps()[mapIndex];
-    if (map == nullptr) {
-        return vaddrSymbol;
-    }
+    CHECK_TRUE(map == nullptr, vaddrSymbol, 0, "");
     HLOGM("found addr 0x%" PRIx64 " in kthread map 0x%" PRIx64 " - 0x%" PRIx64 " from %s",
             ip, map->begin, map->end, map->name.c_str());
     // found symbols by file name
@@ -1083,17 +1063,13 @@ bool VirtualRuntime::GetSymbolCache(uint64_t fileVaddr, DfxSymbol &symbol,
                                     const perf_callchain_context &context)
 {
     if (context == PERF_CONTEXT_MAX and kThreadSymbolCache_.count(fileVaddr)) {
-        if (kThreadSymbolCache_.find(symbol.fileVaddr_) == kThreadSymbolCache_.end()) {
-            return false;
-        }
+        CHECK_TRUE(kThreadSymbolCache_.find(symbol.fileVaddr_) == kThreadSymbolCache_.end(), false, 0, "");
         symbol = kThreadSymbolCache_[symbol.fileVaddr_];
         symbol.hit_++;
         HLOGV("hit kernel thread cache 0x%" PRIx64 " %d", fileVaddr, symbol.hit_);
         return true;
     } else if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(fileVaddr)) {
-        if (kernelSymbolCache_.find(symbol.fileVaddr_) == kernelSymbolCache_.end()) {
-            return false;
-        }
+        CHECK_TRUE(kernelSymbolCache_.find(symbol.fileVaddr_) == kernelSymbolCache_.end(), false, 0, "");
         symbol = kernelSymbolCache_[symbol.fileVaddr_];
         symbol.hit_++;
         HLOGV("hit kernel cache 0x%" PRIx64 " %d", fileVaddr, symbol.hit_);
@@ -1159,9 +1135,7 @@ DfxSymbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid, const per
 bool VirtualRuntime::SetSymbolsPaths(const std::vector<std::string> &symbolsPaths)
 {
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
-    if (symbolsFile == nullptr) {
-        return false;
-    }
+    CHECK_TRUE(symbolsFile == nullptr, false, 0, "");
     // we need check if the path is accessible
     bool accessible = symbolsFile->setSymbolsFilePath(symbolsPaths);
     if (accessible) {

@@ -78,6 +78,7 @@ constexpr const int MULTIPLE_SIZE = 1024;
 constexpr const uint16_t CHECK_FREQUENCY = 100; //
 constexpr const uint8_t CHECK_TIMEOUT = 30;
 constexpr const int INDENT_TWO = 2;
+constexpr const float ALMOST_ZERO = 0.001;
 #if !is_mingw
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -99,7 +100,7 @@ const std::set<int> ALLOW_UIDS = {1201};
 
 const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
 static FILE *g_outputDump = nullptr;
-const uint64_t waitAppRunCheckTimeOut = 10;
+const uint64_t waitAppRunCheckTimeOut = 20;
 
 struct ThreadInfos {
     pid_t tid;
@@ -165,7 +166,7 @@ void HexDump(const void *buf, size_t size, size_t max_size = 0);
 
 std::string &StringTrim(std::string &s);
 
-std::vector<std::string> StringSplit(std::string source, const std::string split = ",");
+std::vector<std::string> StringSplit(std::string source, const std::string &split = ",");
 
 size_t SubStringCount(const std::string &source, const std::string &sub);
 
@@ -335,7 +336,7 @@ bool IsRestarted(const std::string &appPackage);
 void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage);
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName);
-bool IsExistDebugByPid(const std::vector<pid_t> pids);
+bool IsExistDebugByPid(const std::vector<pid_t> &pids);
 bool IsDebugableApp(const std::string& bundleName);
 bool IsSupportNonDebuggableApp();
 const std::string GetUserType();

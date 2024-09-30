@@ -128,7 +128,7 @@ private:
     uint32_t totalNodes_ = 0;
     // current available node count, include index 0
     uint32_t availableNodes_ = 0;
-    uint32_t hashModulus_ = 0;
+    uint32_t hashModulus_ = 1;
     // 0 for reserved, start from 1
     uint32_t availableIndex_ = 1;
     // for de-conflict

@@ -30,7 +30,7 @@ static std::unique_ptr<HiperfClient::Client> g_hiperfClient =
 static std::unique_ptr<HiperfClient::RecordOption> g_hiperfRecordOption =
     std::make_unique<HiperfClient::RecordOption>();
 
-static std::vector<std::string> StringSplit(std::string source, const std::string split = ",")
+static std::vector<std::string> StringSplit(std::string source, const std::string &split = ",")
 {
     size_t pos = 0;
     std::vector<std::string> result;
@@ -51,7 +51,7 @@ static std::vector<std::string> StringSplit(std::string source, const std::strin
     return result;
 }
 
-static std::vector<int> StringSplitToInt(std::string source, const std::string split = ",")
+static std::vector<int> StringSplitToInt(std::string source, const std::string &split = ",")
 {
     size_t pos = 0;
     std::vector<int> result;

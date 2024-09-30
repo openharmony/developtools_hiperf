@@ -204,8 +204,8 @@ private:
 
 // NRCPUS: A structure defining the number of CPUs.
 class PerfFileSectionNrCpus : public PerfFileSection {
-    uint32_t nrCpusAvailable_; /* CPUs not yet onlined */
-    uint32_t nrCpusOnline_;
+    uint32_t nrCpusAvailable_ = 0; /* CPUs not yet onlined */
+    uint32_t nrCpusOnline_ = 0;
 
 public:
     PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t size);

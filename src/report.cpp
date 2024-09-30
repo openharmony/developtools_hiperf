@@ -26,6 +26,8 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "hiperf_hilog.h"
+
 using namespace std::placeholders;
 namespace OHOS {
 namespace Developtools {
@@ -350,25 +352,6 @@ void Report::OutputStdStatistics(ReportEventConfigItem &config)
     fprintf(output_, "%" PRIu64 "\n", config.eventCount_);
 }
 
-bool Report::OutputStdStatistics(ReportEventConfigItem &config, ReportEventConfigItem &otherConfig)
-{
-    if (config != otherConfig) {
-        fprintf(output_, "diff config unable compare\n");
-        return false;
-    }
-    fprintf(output_, "Event: %s (type %" PRIu32 " id %" PRIu64 ")", config.eventName_.c_str(),
-            config.type_, config.config_);
-    fprintf(output_, "Samples Count: %" PRIu64 " vs %" PRIu64 "\n", config.sampleCount_,
-            otherConfig.sampleCount_);
-    if (config.coutMode_) {
-        fprintf(output_, "Time in ns: ");
-    } else {
-        fprintf(output_, "Event Count: ");
-    }
-    fprintf(output_, "%" PRIu64 " vs %" PRIu64 "\n", config.eventCount_, otherConfig.eventCount_);
-    return true;
-}
-
 void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
 {
     // head print
@@ -416,12 +399,9 @@ bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, ui
     float num = 100.0;
     HLOGV("frame %f indent %d at %s", heat, indent, funcName.data());
 
-    if (heat < option_.callStackHeatLimit_) {
-        // don't print this three anymore
-        return false;
-    }
+    CHECK_TRUE(heat < option_.callStackHeatLimit_, false, 0, ""); // don't print this three anymore
 
-    if (heat == num) {
+    if (abs(heat - num) < ALMOST_ZERO) {
         fprintf(output_, "%*s", indent, "   ");
         fprintf(output_, "%*s  ", FULL_PERCENTAGE_NUM_LEN, " ");
     } else {
@@ -471,10 +451,9 @@ void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFram
                    g
     */
     // this is the first call frame
-    if (!OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount)) {
-        // this tree will skipped.
-        return;
-    }
+    // this tree will skipped.
+    CHECK_TRUE(!OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount),
+               NO_RETVAL, 0, "");
 
     // print it self
     if (callFrame.selfEventCount_ != 0 and callFrame.selfEventCount_ != callFrame.eventCount_) {

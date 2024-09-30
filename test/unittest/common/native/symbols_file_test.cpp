@@ -248,46 +248,46 @@ HWTEST_F(SymbolsFileTest, SymbolsFileDefaultVirtual, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
 {
-    if (access("/sys/kernel/notes", F_OK) != 0) {
+    if (access("/sys/kernel/notes", F_OK) == 0) {
+        // read from kernel runtime
+        std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
+        ScopeDebugLevel tempLogLevel(LEVEL_VERBOSE);
+        ASSERT_EQ(symbolsFile->LoadSymbols(), true);
+
+        const std::vector<DfxSymbol> &symbols = symbolsFile->GetSymbols();
+        EXPECT_EQ(symbols.empty(), false);
+
+        std::string modulesMap = ReadFileToString("/proc/modules");
+        int lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
+        if (lines < 0) {
+            return;
+        }
+        std::set<std::string> modulesCount;
+        for (auto &symbol : symbols) {
+            if (symbol.module_.length()) {
+                modulesCount.emplace(symbol.module_);
+            }
+        }
+
+        // add [kernel.kallsyms]
+        if (modulesCount.size() != lines + 1u) {
+            printf("warn: modulesCount != lines + 1, modulesCount: %zu\n", modulesCount.size());
+        }
+        if (HasFailure()) {
+            for (auto &module : modulesCount) {
+                printf("%s\n", module.c_str());
+            }
+        }
+
+        // try vmlinux
+        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX), true);
+        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED), true);
+        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_NOBUILDID), true);
+        // will be load from runtime, still return true
+        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
+    } else {
         printf("cannot access /sys/kernel/notes\n");
-        return;
     }
-    // read from kernel runtime
-    std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
-    ScopeDebugLevel tempLogLevel(LEVEL_VERBOSE);
-    ASSERT_EQ(symbolsFile->LoadSymbols(), true);
-
-    const std::vector<DfxSymbol> &symbols = symbolsFile->GetSymbols();
-    EXPECT_EQ(symbols.empty(), false);
-
-    std::string modulesMap = ReadFileToString("/proc/modules");
-    int lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
-    if (lines < 0) {
-        return;
-    }
-    std::set<std::string> modulesCount;
-    for (auto &symbol : symbols) {
-        if (symbol.module_.length()) {
-            modulesCount.emplace(symbol.module_);
-        }
-    }
-
-    // add [kernel.kallsyms]
-    if (modulesCount.size() != lines + 1u) {
-        printf("warn: modulesCount != lines + 1\n");
-    }
-    if (HasFailure()) {
-        for (auto &module : modulesCount) {
-            printf("%s\n", module.c_str());
-        }
-    }
-
-    // try vmlinux
-    EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX), true);
-    EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED), true);
-    EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_NOBUILDID), true);
-    // will be load from runtime, still return true
-    EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
 }
 
 /**
@@ -338,29 +338,28 @@ HWTEST_F(SymbolsFileTest, LoadElfSymbols, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level1)
 {
-    if (access("/sys/kernel/notes", F_OK) != 0) {
-        printf("cannot access /sys/kernel/notes\n");
-        return;
-    }
-
-    auto symbols = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
-    if ((0 == getuid())) {
-        HLOGD("in root mode");
-        EXPECT_EQ(symbols->LoadSymbols(), true);
-        CheckSymbols(symbols);
-    } else {
-        EXPECT_EQ(symbols->LoadSymbols(), true);
-        if (!KptrRestrict()) {
-            HLOGD("NOT KptrRestrict");
-            if (!symbols->GetSymbols().empty()) {
-                CheckSymbols(symbols);
-            } else {
-                printf("we found this issue in linux-5.10\n");
-            }
+    if (access("/sys/kernel/notes", F_OK) == 0) {
+        auto symbols = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
+        if ((0 == getuid())) {
+            HLOGD("in root mode");
+            EXPECT_EQ(symbols->LoadSymbols(), true);
+            CheckSymbols(symbols);
         } else {
-            HLOGD("KptrRestrict");
-            ASSERT_EQ(symbols->GetSymbols().empty(), true);
+            EXPECT_EQ(symbols->LoadSymbols(), true);
+            if (!KptrRestrict()) {
+                HLOGD("NOT KptrRestrict");
+                if (!symbols->GetSymbols().empty()) {
+                    CheckSymbols(symbols);
+                } else {
+                    printf("we found this issue in linux-5.10\n");
+                }
+            } else {
+                HLOGD("KptrRestrict");
+                ASSERT_EQ(symbols->GetSymbols().empty(), true);
+            }
         }
+    } else {
+        printf("cannot access /sys/kernel/notes\n");
     }
 }
 

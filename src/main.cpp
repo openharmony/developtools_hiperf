@@ -47,6 +47,10 @@ int main(const int argc, const char *argv[])
         return -1;
     }
 
+    if (argc < 0 || argc > 128) { // 128 : max input argument counts
+        printf("The number of input arguments exceeds the upper limit.\n");
+        return -1;
+    }
     std::ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
@@ -55,6 +59,9 @@ int main(const int argc, const char *argv[])
         printf("setgid failed errno: %d.\n", errno);
     }
     WriteStringToFile("/proc/self/oom_score_adj", "0");
+    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "ignore SIGPIPE failed.");
+    }
     HIPERF_HILOGI(MODULE_DEFAULT, "hiperf start.");
 #endif
 

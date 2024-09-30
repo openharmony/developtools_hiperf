@@ -34,11 +34,11 @@ public:
     void TearDown();
 
     static void TestEventDescInit(std::vector<AttrWithId> &eventDesc);
-    static const int TESTNUMBER1 = 1;
-    static const int TESTNUMBER2 = 2;
-    static const int TESTNUMBER3 = 3;
-    static const int TESTNUMBER4 = 4;
-    static const int TESTNUMBER5 = 5;
+    static const uint32_t TESTNUMBER1 = 1;
+    static const uint32_t TESTNUMBER2 = 2;
+    static const uint32_t TESTNUMBER3 = 3;
+    static const uint32_t TESTNUMBER4 = 4;
+    static const uint32_t TESTNUMBER5 = 5;
 };
 
 void PerfFileWriterTest::SetUpTestCase() {}

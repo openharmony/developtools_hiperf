@@ -144,18 +144,6 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByFileInfo(const std::string name,
     return nullptr;
 }
 
-std::shared_ptr<DfxMap> VirtualThread::FindFirstMapByFileInfo(const std::string name) const
-{
-    for (const auto &map : memMaps_) {
-        if (map == nullptr || name != map->name) {
-            continue;
-        }
-        return map;
-    }
-    HLOGM("not found map for %s ", name.c_str());
-    return nullptr;
-}
-
 SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) const
 {
     if (map == nullptr) {
@@ -317,7 +305,6 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
     std::string mapPath = StringPrintf("/proc/%d/maps", devhost);
     std::string mapContent = ReadFileToString(mapPath);
     std::string filename;
-    uint64_t begin, end, offset;
     if (mapContent.size() > 0) {
         std::istringstream s(mapContent);
         std::string line;
@@ -336,6 +323,7 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
             if (addrRanges.size() != mmapAddrRangeToken) {
                 continue;
             }
+            uint64_t begin, end, offset;
             // 2fe40000 / 311e1000
             try {
                 begin = std::stoull(addrRanges[0], nullptr, NUMBER_FORMAT_HEX_BASE);

@@ -31,7 +31,10 @@ ohos_shared_library("hiperf_client") {
   if (is_linux) {
     defines += [ "CONFIG_NO_HILOG" ]
   } else {
-    external_deps = [ "hilog:libhilog" ]
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "hilog:libhilog",
+    ]
   }
 
   subsystem_name = "developtools"
@@ -46,7 +49,10 @@ ohos_static_library("hiperf_client_static") {
   if (is_linux) {
     defines += [ "CONFIG_NO_HILOG" ]
   } else {
-    external_deps = [ "hilog:libhilog" ]
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "hilog:libhilog",
+    ]
   }
 
   subsystem_name = "developtools"

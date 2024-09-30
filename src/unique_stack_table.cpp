@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 #include "unique_stack_table.h"
+
+#include "hiperf_hilog.h"
+
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -28,7 +31,7 @@ bool UniqueStackTable::Init()
     }
 
     availableNodes_ = totalNodes_;
-    hashModulus_ = availableNodes_ >= 1 ? availableNodes_ - 1 : 0;
+    hashModulus_ = availableNodes_ > 1 ? availableNodes_ - 1 : 1;
     hashStep_ = (totalNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM));
     tableBuf_ = std::make_unique<uint8_t[]>(tableSize_);
 
@@ -39,10 +42,7 @@ bool UniqueStackTable::Init()
 
 bool UniqueStackTable::Resize()
 {
-    if (tableBuf_ == nullptr) {
-        HLOGE("Hashtable not exist, fatal error!");
-        return 0;
-    }
+    CHECK_TRUE(tableBuf_ == nullptr, 0, 1, "Hashtable not exist, fatal error!");
     uint32_t oldNumNodes = totalNodes_;
 
     HLOGI("Before resize, totalNodes_: %u, availableNodes_: %u, availableIndex_: %u  hashStep_: %" PRIu64 "",
@@ -71,7 +71,7 @@ bool UniqueStackTable::Resize()
     availableIndex_ += availableNodes_;
     totalNodes_ = ((newtableSize / sizeof(Node)) >> 1) << 1; // make it even.
     availableNodes_ = totalNodes_ - oldNumNodes;
-    hashModulus_ = availableNodes_ >= 1 ? availableNodes_ - 1 : 0;
+    hashModulus_ = availableNodes_ > 1 ? availableNodes_ - 1 : 1;
     hashStep_ = availableNodes_ / (deconflictTimes_ * HASH_STEP_BASE_MULTIPLE + HASH_STEP_BASE_NUM);
     HLOGI("After resize, totalNodes_: %u, availableNodes_: %u, availableIndex_: %u hashStep_: %" PRIu64 "",
         totalNodes_, availableNodes_, availableIndex_, hashStep_);
@@ -131,13 +131,9 @@ uint64_t UniqueStackTable::PutIpsInTable(StackId *stackId, u64 *ips, u64 nr)
             continue;
         }
         prev = PutIpInSlot(pc, prev);
-        if (prev == 0) {
-            return 0;
-        }
+        CHECK_TRUE(prev == 0, 0, 0, "");
     }
-    if (stackId == nullptr) {
-        return 0;
-    }
+    CHECK_TRUE(stackId == nullptr, 0, 0, "");
     stackId->section.id = prev;
     stackId->section.nr = nr;
     return prev;
@@ -145,10 +141,7 @@ uint64_t UniqueStackTable::PutIpsInTable(StackId *stackId, u64 *ips, u64 nr)
 
 size_t UniqueStackTable::GetWriteSize()
 {
-    if (tableBuf_ == nullptr) {
-        HLOGE("Hashtable not exist, fatal error!");
-        return 0;
-    }
+    CHECK_TRUE(tableBuf_ == nullptr, 0, 1, "Hashtable not exist, fatal error!");
     size_t size = 0;
     size += sizeof(pid_);
     size += sizeof(tableSize_);
@@ -162,21 +155,15 @@ size_t UniqueStackTable::GetWriteSize()
 Node* UniqueStackTable::GetFrame(uint64_t stackId)
 {
     Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
-    if (stackId >= totalNodes_) {
-        // should not occur
-        HLOGE("Failed to find frame by index: %" PRIu64 "", stackId);
-        return nullptr;
-    }
+    // should not occur
+    CHECK_TRUE(stackId >= totalNodes_, nullptr, 1, "Failed to find frame by index: %" PRIu64 "", stackId);
 
     return reinterpret_cast<Node *>(&tableHead[stackId]);
 }
 
 bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
 {
-    if (tableBuf_ == nullptr) {
-        HLOGE("Hashtable not exist, failed to find frame!");
-        return false;
-    }
+    CHECK_TRUE(tableBuf_ == nullptr, false, 1, "Hashtable not exist, failed to find frame!");
     uint64_t nr = stackId.section.nr;
     uint64_t tailIdx = stackId.section.id;
 
@@ -196,9 +183,7 @@ bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
 bool UniqueStackTable::ImportNode(uint32_t index, const Node& node)
 {
     Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
-    if (index >= tableSize_) {
-        return false;
-    }
+    CHECK_TRUE(index >= tableSize_, false, 0, "");
     tableHead[index].value = node.value;
     return true;
 }

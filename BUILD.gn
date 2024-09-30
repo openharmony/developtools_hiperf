@@ -32,6 +32,10 @@ config("hiperf_inner_config") {
     cflags -= [ "-Werror" ]
   }
 
+  if (build_variant == "user") {
+    cflags += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   if (is_mingw) {
     # lld: error: unable to find library -latomic
     # lld: error: unable to find library -ldl
@@ -156,21 +160,14 @@ sources_platform_linux = [
 common_deps = [
   ":support_elf",
   ":support_protobuf",
-  "//third_party/bounds_checking_function:libsec_static",
   "//third_party/zlib:libz",
 ]
 
 common_configs = [
   ":hiperf_inner_config",
-  "//third_party/bounds_checking_function:libsec_public_config",
   "../../commonlibrary/c_utils/base:utils_config",
   "//third_party/googletest:gtest_config",
 ]
-
-if (is_ohos) {
-  common_deps += [ "//third_party/bounds_checking_function:libsec_shared" ]
-  common_deps -= [ "//third_party/bounds_checking_function:libsec_static" ]
-}
 
 if (hiperf_target_static) {
   common_deps -= [ ":support_protobuf" ]
@@ -224,6 +221,7 @@ ohos_source_set("hiperf_platform_common") {
     external_deps = [ "faultloggerd:unwinder_host" ]
     defines += [ "CONFIG_NO_HILOG" ]
   }
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
   sources = sources_platform_common
 }
 
@@ -247,7 +245,7 @@ ohos_source_set("hiperf_platform_linux") {
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
-
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
   public_configs += [ ":platform_linux_config" ]
   configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
 
@@ -284,17 +282,14 @@ ohos_source_set("support_protobuf") {
   #protobuf
   public_configs = common_configs
   public_configs += [ ":protobuf_config" ]
-  public_deps = [
-    ":proto_file_cpp",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+  public_deps = [ ":proto_file_cpp" ]
 
   if (is_ohos) {
     external_deps = [ "faultloggerd:libunwinder_static" ]
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
-
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
   sources = [ "./src/report_protobuf_file.cpp" ]
 }
 
@@ -395,6 +390,7 @@ ohos_executable("hiperf") {
   }
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "faultloggerd:libunwinder_static",
     "hilog:libhilog",
   ]
@@ -407,11 +403,10 @@ ohos_executable("hiperf_host") {
   sources = [ "./src/main.cpp" ]
   deps = [ ":hiperf_platform_common" ]
 
-  if (use_musl) {
-    static_link = true
-  }
-
-  external_deps = [ "faultloggerd:unwinder_host" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "faultloggerd:unwinder_host",
+  ]
 
   subsystem_name = "developtools"
   part_name = "hiperf"
@@ -459,7 +454,10 @@ ohos_source_set("hiperf_platform_host") {
   subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
   public_deps = [ ":hiperf_platform_common" ]
-  external_deps = [ "faultloggerd:unwinder_host" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "faultloggerd:unwinder_host",
+  ]
 }
 
 ohos_shared_library("hiperf_host_lib") {

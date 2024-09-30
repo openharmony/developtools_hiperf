@@ -20,6 +20,12 @@
 
 using namespace OHOS::Developtools::HiPerf;
 
+#if defined(__aarch64__)
+static const std::string TEST_PROCESSES = "com.ohos.sceneboard";
+#else
+static const std::string TEST_PROCESSES = "com.ohos.launcher";
+#endif
+
 namespace HiperfClientDemo {
 void TestCodeThread(int id)
 {
@@ -28,7 +34,6 @@ void TestCodeThread(int id)
     constexpr uint32_t k10 = 10 * k;
     constexpr uint32_t two = 2;
     constexpr uint64_t thousand = 1000;
-    const std::string testProcesses = "com.ohos.sceneboard";
 
     std::vector<std::unique_ptr<char[]>> mems;
     printf("TestCodeThread %d:++\n", id);
@@ -65,7 +70,7 @@ int main()
     printf("demo start\n");
     HiperfClient::RecordOption opt;
     const int timeout = 30;
-    opt.SetAppPackage(testProcesses);
+    opt.SetAppPackage(TEST_PROCESSES);
     opt.SetTimeStopSec(timeout);
     if (myHiperf.Start(opt)) {
         printf("demo start successfully\n");
