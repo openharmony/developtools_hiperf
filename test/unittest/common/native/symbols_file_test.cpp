@@ -271,7 +271,7 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
 
         // add [kernel.kallsyms]
         if (modulesCount.size() != lines + 1u) {
-            printf("warn: modulesCount != lines + 1, modulesCount: %zu\n", modulesCount.size());
+            printf("warn: modulesCount != lines + 1\n");
         }
         if (HasFailure()) {
             for (auto &module : modulesCount) {
