@@ -95,7 +95,6 @@
             <option name="push" value="testdata/dwarf.uncompress.data -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/fp.compress.data -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/fp.uncompress.data -> /data/test/resource/testdata/" src="res"/>
-            <option name="push" value="testdata/spe_perf.data -> /data/test/resource/testdata/" src="res"/>
         </preparer>
     </target>
 </configuration>
