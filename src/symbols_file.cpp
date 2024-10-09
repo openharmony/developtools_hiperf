@@ -910,7 +910,8 @@ public:
         CHECK_TRUE(StringEndsWith(filePath_, ".hap") && map_->IsMapExec(), false, 1,
                    "map is exec not abc file , the symbol file is:%s", map_->name.c_str());
 
-        if (StringEndsWith(filePath_, ".hap") || StringEndsWith(filePath_, ".hsp")) {
+        if (StringEndsWith(filePath_, ".hap") || StringEndsWith(filePath_, ".hsp") ||
+            StringEndsWith(filePath_, ".hqf")) {
             dfxExtractor_ = std::make_unique<DfxExtractor>(filePath_);
             CHECK_TRUE(!dfxExtractor_->GetHapAbcInfo(loadOffSet_, abcDataPtr_, abcDataSize_), false, 1,
                        "failed to call GetHapAbcInfo, the symbol file is:%s", filePath_.c_str());
