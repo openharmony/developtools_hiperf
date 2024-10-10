@@ -652,6 +652,7 @@ bool PerfEvents::StartTracking(bool immediately)
     }
 
     HLOGD("step: 1. enable event");
+    HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 1. enable event");
     trackingStartTime_ = steady_clock::now();
     if (immediately) {
         if (!EnableTracking()) {
@@ -671,6 +672,7 @@ bool PerfEvents::StartTracking(bool immediately)
     }
 
     HLOGD("step: 2. thread loop");
+    HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 2. thread loop");
     if (recordCallBack_) {
         RecordLoop();
     } else {
@@ -678,6 +680,7 @@ bool PerfEvents::StartTracking(bool immediately)
     }
 
     HLOGD("step: 3. disable event");
+    HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 3. disable event");
     if (!PerfEventsEnable(false)) {
         HLOGE("PerfEvents::PerfEventsEnable() failed");
     }
@@ -689,11 +692,14 @@ bool PerfEvents::StartTracking(bool immediately)
 
     RecoverCaptureSig();
 
+    HLOGD("step: 4. wait record thread");
+    HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 4. wait record thread");
     if (recordCallBack_) {
         WaitRecordThread();
     }
 
-    HLOGD("step: 4. exit");
+    HLOGD("step: 5. exit");
+    HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 5. exit");
     return true;
 }
 

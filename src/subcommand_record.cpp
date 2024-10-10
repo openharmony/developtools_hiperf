@@ -1236,7 +1236,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
 
     //write comm event
     WriteCommEventBeforeSampling();
-
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord StartTracking");
     // start tracking
     if (isDataSizeLimitStop_) {
         // mmap record size has been larger than limit, dont start sampling.
@@ -1267,6 +1267,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     OnlineReportData();
     CloseClientThread();
     RemoveVdsoTmpFile();
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord finish");
     return true;
 }
 
@@ -1512,6 +1513,7 @@ void SubCommandRecord::AddCommandLineFeature()
     std::string fullCommandline =
         ReadFileToString("/proc/self/cmdline").c_str() + Command::fullArgument;
     fileWriter_->AddStringFeature(FEATURE::CMDLINE, fullCommandline);
+    HIPERF_HILOGI(MODULE_DEFAULT, "cmd : %{public}s", fullCommandline.c_str());
 }
 
 void SubCommandRecord::AddCpuOffFeature()
