@@ -847,7 +847,8 @@ bool IsArkJsFile(const std::string& filepath)
     return (StringEndsWith(filepath, ".hap") ||
             StringStartsWith(filepath, "[anon:ArkTS Code") ||
             StringEndsWith(filepath, ".hsp") ||
-            StringEndsWith(filepath, ".abc"));
+            StringEndsWith(filepath, ".abc") ||
+            StringEndsWith(filepath, ".hqf"));
 }
 
 bool IsHiviewCall()
