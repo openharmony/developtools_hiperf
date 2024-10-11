@@ -825,9 +825,9 @@ struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
     return decoder;
 }
 
-void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump)
+bool SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump)
 {
-    CHECK_TRUE(buf == nullptr, NO_RETVAL, 1, "Invalid pointer!");
+    CHECK_TRUE(buf == nullptr, false, 1, "Invalid pointer!");
     if (outputDump != nullptr) {
         g_outputDump = outputDump;
     }
@@ -870,6 +870,7 @@ void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump
             break;
         }
     }
+    return true;
 }
 
 std::map<u32, std::map<u64, ReportItemAuxRawData>> AuxRawDataMap_;
