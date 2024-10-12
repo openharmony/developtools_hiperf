@@ -290,7 +290,9 @@ void PerfRecordAuxtrace::DumpData(int indent) const
     PRINT_INDENT(indent, "size 0x%llx, offset 0x%llx, reference 0x%llx, idx %u, tid %u, cpu %u, pid %u\n",
                  data_.size, data_.offset, data_.reference, data_.idx, data_.tid, data_.cpu, data_.reserved__);
 #if defined(is_ohos) && is_ohos
-    SpeDumpRawData(rawData_, data_.size, indent, g_outputDump);
+    if (!SpeDumpRawData(rawData_, data_.size, indent, g_outputDump)) {
+        HLOGE("SpeDumpRawData failed");
+    }
 #endif
 }
 

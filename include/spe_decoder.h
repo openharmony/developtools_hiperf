@@ -291,7 +291,7 @@ void SpeDecoderFree(struct SpeDecoder *decoder);
 int SpeDecode(struct SpeDecoder *decoder);
 
 int SpePktDesc(const struct SpePkt *packet, char *buf, size_t len);
-void SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump);
+bool SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump);
 
 struct ReportItemAuxRawData {
     u32 type;

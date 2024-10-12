@@ -202,8 +202,8 @@ HWTEST_F(SpeDecoderTest, TestSpeDecoder, TestSize.Level1)
         VirtualRuntime virtualRuntime;
         DfxSymbol symbol = virtualRuntime.GetSymbol(pc, 101, 102); // 101: pid, 102: tid
         struct ReportItemAuxRawData reportItem = {rec.type, 0.0f, 1, symbol.comm_.data(), pc,
-                                                    symbol.module_.data(), symbol.GetName().data(),
-                                                    symbol.fileVaddr_};
+                                                  symbol.module_.data(), symbol.GetName().data(),
+                                                  symbol.fileVaddr_};
         auxRawData.emplace_back(reportItem);
     }
     AddReportItems(auxRawData);
@@ -421,7 +421,7 @@ HWTEST_F(SpeDecoderTest, TestSpeDumpRawData1, TestSize.Level1)
         0xa0, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x71,
         0x0f, 0x75, 0x21, 0x6d, 0x90, 0x08, 0x00, 0x00};
-    SpeDumpRawData(rawData, dataDize, 1, nullptr);
+    EXPECT_EQ(SpeDumpRawData(rawData, dataDize, 1, nullptr), true);
 }
 
 /**
@@ -446,7 +446,7 @@ HWTEST_F(SpeDecoderTest, TestSpeDumpRawData2, TestSize.Level1)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    SpeDumpRawData(rawData, dataDize, 1, nullptr);
+    EXPECT_EQ(SpeDumpRawData(rawData, dataDize, 1, nullptr), true);
 }
 } // namespace HiPerf
 } // namespace Developtools
