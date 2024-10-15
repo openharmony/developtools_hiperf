@@ -1111,13 +1111,14 @@ bool PerfEvents::CreateFdEvents(void)
                     fdNumber++;
 
                     // if sampling, mmap ring buffer
+                    bool createMmapSucc = true;
                     if (recordCallBack_) {
-                        bool createMmap = isSpe_ ?
+                        createMmapSucc = isSpe_ ?
                             CreateSpeMmap(fdItem, eventItem.attr) : CreateMmap(fdItem, eventItem.attr);
-                        if (!createMmap) {
-                            printf("create mmap fail\n");
-                            return false;
-                        }
+                    }
+                    if (!createMmapSucc) {
+                        printf("create mmap fail\n");
+                        return false;
                     }
                     // update group leader
                     int groupFdCacheNum = groupFdCache[icpu][ipid];
