@@ -902,9 +902,11 @@ public:
         }
         hapExtracted_ = true;
         HLOGD("the symbol file is %s, pid is %d.", filePath_.c_str(), pid_);
-        if (IsApplicationEncryped(pid_)) {
-            HLOGD("no need to parse js symbols");
-            return false;
+        if (IsRoot()) {
+            if (IsApplicationEncryped(pid_)) {
+                HLOGD("no need to parse js symbols");
+                return false;
+            }
         }
 
         CHECK_TRUE(StringEndsWith(filePath_, ".hap") && map_->IsMapExec(), false, 1,
