@@ -1118,6 +1118,7 @@ bool PerfEvents::CreateFdEvents(void)
                     }
                     if (!createMmapSucc) {
                         printf("create mmap fail\n");
+                        HIPERF_HILOGI(MODULE_DEFAULT, "create mmap fail");
                         return false;
                     }
                     // update group leader
