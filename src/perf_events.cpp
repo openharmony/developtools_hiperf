@@ -1112,7 +1112,8 @@ bool PerfEvents::CreateFdEvents(void)
 
                     // if sampling, mmap ring buffer
                     if (recordCallBack_) {
-                        bool createMmap = (isSpe_ ? CreateSpeMmap(fdItem, eventItem.attr) : CreateMmap(fdItem, eventItem.attr));
+                        bool createMmap = isSpe_ ?
+                            CreateSpeMmap(fdItem, eventItem.attr) : CreateMmap(fdItem, eventItem.attr);
                         if (!createMmap) {
                             printf("create mmap fail\n");
                             return false;
