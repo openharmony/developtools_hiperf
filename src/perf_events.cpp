@@ -1117,12 +1117,15 @@ bool PerfEvents::CreateFdEvents(void)
                     fdNumber++;
 
                     // if sampling, mmap ring buffer
+                    bool createMmapSucc = true;
                     if (recordCallBack_) {
-                        if (isSpe_) {
-                            CreateSpeMmap(fdItem, eventItem.attr);
-                        } else {
-                            CreateMmap(fdItem, eventItem.attr);
-                        }
+                        createMmapSucc = isSpe_ ?
+                            CreateSpeMmap(fdItem, eventItem.attr) : CreateMmap(fdItem, eventItem.attr);
+                    }
+                    if (!createMmapSucc) {
+                        printf("create mmap fail\n");
+                        HIPERF_HILOGI(MODULE_DEFAULT, "create mmap fail");
+                        return false;
                     }
                     // update group leader
                     int groupFdCacheNum = groupFdCache[icpu][ipid];
@@ -1209,7 +1212,7 @@ bool PerfEvents::CreateSpeMmap(const FdItem &item, const perf_event_attr &attr)
     if (it == cpuMmap_.end()) {
         void *rbuf = mmap(nullptr, (1 + auxMmapPages_) * pageSize_, (PROT_READ | PROT_WRITE), MAP_SHARED,
                           item.fd.Get(), 0);
-        CHECK_TRUE(rbuf == MMAP_FAILED, false, 0, "");
+        CHECK_TRUE(rbuf == MMAP_FAILED, false, 1, "");
         void *auxRbuf = mmap(nullptr, auxMmapPages_ * pageSize_, (PROT_READ | PROT_WRITE), MAP_SHARED,
                              item.fd.Get(), 0);
         MmapFd mmapItem;
