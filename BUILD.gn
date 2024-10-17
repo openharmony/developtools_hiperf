@@ -160,7 +160,6 @@ sources_platform_linux = [
 common_deps = [
   ":support_elf",
   ":support_protobuf",
-  "//third_party/zlib:libz",
 ]
 
 common_configs = [
@@ -221,7 +220,10 @@ ohos_source_set("hiperf_platform_common") {
     external_deps = [ "faultloggerd:unwinder_host" ]
     defines += [ "CONFIG_NO_HILOG" ]
   }
-  external_deps += [ "bounds_checking_function:libsec_shared" ]
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "zlib:libz"
+  ]
   sources = sources_platform_common
 }
 
@@ -245,7 +247,10 @@ ohos_source_set("hiperf_platform_linux") {
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
-  external_deps += [ "bounds_checking_function:libsec_shared" ]
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "zlib:libz"
+  ]
   public_configs += [ ":platform_linux_config" ]
   configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
 
