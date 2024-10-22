@@ -222,7 +222,7 @@ ohos_source_set("hiperf_platform_common") {
   }
   external_deps += [
     "bounds_checking_function:libsec_shared",
-    "zlib:libz"
+    "zlib:libz",
   ]
   sources = sources_platform_common
 }
@@ -249,7 +249,7 @@ ohos_source_set("hiperf_platform_linux") {
   }
   external_deps += [
     "bounds_checking_function:libsec_shared",
-    "zlib:libz"
+    "zlib:libz",
   ]
   public_configs += [ ":platform_linux_config" ]
   configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
