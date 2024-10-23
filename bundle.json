@@ -28,10 +28,10 @@
         "faultloggerd",
         "init",
         "ability_base",
-        "bounds_checking_function"
+        "bounds_checking_function",
+        "zlib"
       ],
       "third_party": [
-        "zlib",
         "protobuf",
         "libunwind"
       ]
