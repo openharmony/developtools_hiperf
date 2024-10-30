@@ -112,5 +112,5 @@ int main(const int argc, const char *argv[])
 #endif
 
     HLOGD("normal exit.");
-    return 0;
+    _exit(0);
 }
