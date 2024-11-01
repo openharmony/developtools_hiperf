@@ -964,8 +964,7 @@ bool SubCommandRecord::ClientCommandResponse(const std::string& str)
     if (size != str.size()) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HLOGD("Server:%s -> %d : %zd %d:%s", str.c_str(), clientPipeOutput_, size, errno,
-                errInfo);
+        HLOGD("Server:%s -> %d : %zd %d:%s", str.c_str(), clientPipeOutput_, size, errno, errInfo);
         return false;
     }
     return true;
