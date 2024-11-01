@@ -41,6 +41,7 @@
 #include "hiperf_hilog.h"
 #include "unwinder_config.h"
 #include "utilities.h"
+#include "ipc_utilities.h"
 
 using namespace OHOS::HiviewDFX;
 using namespace std::chrono;

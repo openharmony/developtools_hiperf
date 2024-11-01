@@ -271,7 +271,8 @@ private:
     std::thread clientCommandHanle_;
     bool clientExit_ = false;
     void ClientCommandHandle();
-    bool ClientCommandResponse(bool OK);
+    bool ClientCommandResponse(bool ok);
+    bool ClientCommandResponse(const std::string& str);
     bool IsSamplingRunning();
     // for cmdline client
     std::string controlCmd_ = {};
@@ -283,7 +284,10 @@ private:
     bool CreateFifoServer();
     bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
     bool WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut);
+    void WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply);
     void CloseClientThread();
+    bool allowIpc_ = true;
+    std::string HandleAppInfo();
 
     bool PreparePerfEvent();
     bool PrepareSysKernel();

@@ -19,6 +19,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "debug_logger.h"
+#include "ipc_utilities.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -78,6 +79,7 @@ bool TrackedCommand::CreateChildProcess()
     if (!InitSignalPipes(startFd, ackFd)) {
         return false;
     }
+    CheckIpcBeforeFork();
     pid_t pid = fork();
     if (pid == -1) {
         HLOGE("fork() failed in TrackedCommand::CreateChildProcess()");

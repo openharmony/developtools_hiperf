@@ -99,7 +99,8 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option --app failed");
         return false;
     }
-    if (!IsExistDebugByApp(appPackage_)) {
+    std::string err = "";
+    if (!IsExistDebugByApp(appPackage_, err)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
@@ -109,7 +110,7 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option -p failed");
         return false;
     }
-    if (!IsExistDebugByPid(selectPids_)) {
+    if (!IsExistDebugByPid(selectPids_, err)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
