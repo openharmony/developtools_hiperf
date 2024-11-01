@@ -953,9 +953,9 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
     }
 }
 
-bool SubCommandRecord::ClientCommandResponse(bool ok)
+bool SubCommandRecord::ClientCommandResponse(bool response)
 {
-    return ClientCommandResponse(ok ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
+    return ClientCommandResponse(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
 }
 
 bool SubCommandRecord::ClientCommandResponse(const std::string& str)

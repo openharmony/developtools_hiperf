@@ -31,12 +31,12 @@
 
 namespace OHOS::Developtools::HiPerf {
 
-static std::atomic<bool> haveIpc = false;
+static std::atomic<bool> g_haveIpc = false;
 
 bool IsDebugableApp(const std::string& bundleName)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    haveIpc.store(true);
+    g_haveIpc.store(true);
     CHECK_TRUE(bundleName.empty(), false, LOG_TYPE_PRINTF, "bundleName is empty!\n");
     sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
@@ -58,7 +58,7 @@ bool IsDebugableApp(const std::string& bundleName)
 bool IsApplicationEncryped(const int pid)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    haveIpc.store(true);
+    g_haveIpc.store(true);
     CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
     std::string bundleName = GetProcessName(pid);
     CHECK_TRUE(bundleName.empty(), false, 1, "bundleName is empty,pid is %d", pid);
@@ -84,7 +84,7 @@ bool IsApplicationEncryped(const int pid)
 
 void CheckIpcBeforeFork()
 {
-    if (haveIpc.load()) {
+    if (g_haveIpc.load()) {
         HIPERF_HILOGW(MODULE_DEFAULT, "fork after ipc!");
     }
 }
