@@ -77,7 +77,7 @@ int main()
     }
     auto it = []() {
         TestCodeThread(0);
-    }
+    };
     std::thread workload(it);
     sleep(waitTime);
     // try for each thread times

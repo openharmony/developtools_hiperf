@@ -115,24 +115,25 @@ config("hiperf_inner_config") {
 }
 
 sources_platform_common = [
-  "./src/perf_file_format.cpp",
   "./src/command.cpp",
-  "./src/subcommand.cpp",
-  "./src/option.cpp",
-  "./src/utilities.cpp",
-  "./src/symbols_file.cpp",
-  "./src/virtual_runtime.cpp",
-  "./src/virtual_thread.cpp",
-  "./src/perf_file_reader.cpp",
-  "./src/perf_event_record.cpp",
   "./src/dwarf_encoding.cpp",
-  "./src/subcommand_help.cpp",
-  "./src/subcommand_dump.cpp",
-  "./src/subcommand_report.cpp",
+  "./src/ipc_utilities.cpp",
+  "./src/option.cpp",
+  "./src/perf_event_record.cpp",
+  "./src/perf_file_format.cpp",
+  "./src/perf_file_reader.cpp",
+  "./src/register.cpp",
   "./src/report.cpp",
   "./src/report_json_file.cpp",
-  "./src/register.cpp",
+  "./src/subcommand.cpp",
+  "./src/subcommand_dump.cpp",
+  "./src/subcommand_help.cpp",
+  "./src/subcommand_report.cpp",
+  "./src/symbols_file.cpp",
   "./src/unique_stack_table.cpp",
+  "./src/utilities.cpp",
+  "./src/virtual_runtime.cpp",
+  "./src/virtual_thread.cpp",
 ]
 
 if (is_ohos) {

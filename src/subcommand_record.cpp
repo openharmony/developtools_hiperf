@@ -32,6 +32,7 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "hiperf_client.h"
+#include "ipc_utilities.h"
 #if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
@@ -212,6 +213,10 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--exclude-hiperf", excludeHiperf_)) {
         return false;
     }
+    if (!Option::GetOptionValue(args, "--control", controlCmd_)) {
+        return false;
+    }
+    allowIpc_ = controlCmd_ != CONTROL_CMD_PREPARE;
     if (!Option::GetOptionValue(args, "-z", compressData_)) {
         return false;
     }
@@ -257,7 +262,8 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--app", appPackage_)) {
         return false;
     }
-    if (!IsExistDebugByApp(appPackage_)) {
+    std::string err = "";
+    if (allowIpc_ && !IsExistDebugByApp(appPackage_, err)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--chkms", checkAppMs_)) {
@@ -272,7 +278,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
         return false;
     }
-    if (!IsExistDebugByPid(selectPids_)) {
+    if (allowIpc_ && !IsExistDebugByPid(selectPids_, err)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
@@ -328,9 +334,6 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--pipe_output", clientPipeOutput_)) {
-        return false;
-    }
-    if (!Option::GetOptionValue(args, "--control", controlCmd_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--dedup_stack", dedupStack_)) {
@@ -950,30 +953,21 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
     }
 }
 
-bool SubCommandRecord::ClientCommandResponse(bool OK)
+bool SubCommandRecord::ClientCommandResponse(bool response)
 {
-    using namespace HiperfClient;
-    if (OK) {
-        size_t size = write(clientPipeOutput_, ReplyOK.c_str(), ReplyOK.size());
-        if (size != ReplyOK.size()) {
-            char errInfo[ERRINFOLEN] = { 0 };
-            strerror_r(errno, errInfo, ERRINFOLEN);
-            HLOGD("Server:%s -> %d : %zd %d:%s", ReplyOK.c_str(), clientPipeOutput_, size, errno,
-                  errInfo);
-            return false;
-        }
-        return true;
-    } else {
-        size_t size = write(clientPipeOutput_, ReplyFAIL.c_str(), ReplyFAIL.size());
-        if (size != ReplyFAIL.size()) {
-            char errInfo[ERRINFOLEN] = { 0 };
-            strerror_r(errno, errInfo, ERRINFOLEN);
-            HLOGD("Server:%s -> %d : %zd %d:%s", ReplyFAIL.c_str(), clientPipeOutput_, size, errno,
-                  errInfo);
-            return false;
-        }
-        return true;
+    return ClientCommandResponse(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
+}
+
+bool SubCommandRecord::ClientCommandResponse(const std::string& str)
+{
+    size_t size = write(clientPipeOutput_, str.c_str(), str.size());
+    if (size != str.size()) {
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HLOGD("Server:%s -> %d : %zd %d:%s", str.c_str(), clientPipeOutput_, size, errno, errInfo);
+        return false;
     }
+    return true;
 }
 
 bool SubCommandRecord::IsSamplingRunning()
@@ -1103,7 +1097,10 @@ bool SubCommandRecord::CreateFifoServer()
         return false;
     }
 
+    CheckIpcBeforeFork();
     pid_t pid = fork();
+    allowIpc_ = true;
+
     if (pid == -1) {
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("fork failed. %d:%s", errno, errInfo);
@@ -1118,12 +1115,24 @@ bool SubCommandRecord::CreateFifoServer()
             HLOGE("open fifo file(%s) failed. %d:%s", CONTROL_FIFO_FILE_S2C.c_str(), errno, errInfo);
             return false;
         }
+        std::string err = HandleAppInfo();
+        if (!err.empty()) {
+            ClientCommandResponse(err);
+            return false;
+        }
         nullFd_ = open("/dev/null", O_WRONLY);
         (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
     } else {            // parent process
         isFifoClient_ = true;
         int fd = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
-        if (fd == -1 or !WaitFifoReply(fd, CONTROL_WAITREPY_TOMEOUT)) {
+        std::string reply = "";
+        if (fd != -1) {
+            WaitFifoReply(fd, CONTROL_WAITREPY_TOMEOUT, reply);
+        }
+        if (fd == -1 or reply != HiperfClient::ReplyOK) {
+            if (reply != HiperfClient::ReplyOK) {
+                printf("%s\n", reply.c_str());
+            }
             close(fd);
             kill(pid, SIGKILL);
             remove(CONTROL_FIFO_FILE_C2S.c_str());
@@ -1169,11 +1178,18 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd, const std::c
 
 bool SubCommandRecord::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut)
 {
+    std::string reply;
+    WaitFifoReply(fd, timeOut, reply);
+    return reply == HiperfClient::ReplyOK;
+}
+
+void SubCommandRecord::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply)
+{
     struct pollfd pollFd {
         fd, POLLIN, 0
     };
     int polled = poll(&pollFd, 1, timeOut.count());
-    std::string reply;
+    reply.clear();
     if (polled > 0) {
         while (true) {
             char c;
@@ -1192,11 +1208,6 @@ bool SubCommandRecord::WaitFifoReply(int fd, const std::chrono::milliseconds &ti
     } else {
         HLOGD("wait fifo file(%s) failed", CONTROL_FIFO_FILE_S2C.c_str());
     }
-
-    if (reply == HiperfClient::ReplyOK) {
-        return true;
-    }
-    return false;
 }
 
 bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
@@ -1906,6 +1917,18 @@ bool SubCommandRecord::OnlineReportData()
     HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s report result %" HILOG_PUBLIC "s",
                   __FUNCTION__, ret ? "success" : "fail");
     return ret;
+}
+
+std::string SubCommandRecord::HandleAppInfo()
+{
+    std::string err = "";
+    if (!IsExistDebugByApp(appPackage_, err)) {
+        return err;
+    }
+    if (!IsExistDebugByPid(selectPids_, err)) {
+        return err;
+    }
+    return err;
 }
 } // namespace HiPerf
 } // namespace Developtools
