@@ -1930,6 +1930,18 @@ std::string SubCommandRecord::HandleAppInfo()
     }
     return err;
 }
+
+void SubCommandRecord::AddReportArgs(CommandReporter& reporter)
+{
+    if (targetSystemWide_) {
+        reporter.targetProcess_ = "ALL";
+    } else if (!appPackage_.empty()) {
+        reporter.targetProcess_ = appPackage_;
+    } else {
+        reporter.targetProcess_ = VectorToString<pid_t>(selectPids_);
+    }
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

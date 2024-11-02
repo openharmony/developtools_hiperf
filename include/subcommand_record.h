@@ -197,6 +197,9 @@ public:
     bool ParseOption(std::vector<std::string> &args) override;
     void DumpOptions(void) const override;
 
+    // add args for hisysevent
+    void AddReportArgs(CommandReporter& reporter) override;
+
     static bool RegisterSubCommandRecord(void);
     std::map<const std::string, unsigned long long> speOptMap_ = {
         {"branch_filter", 0},   {"load_filter", 0},
@@ -363,6 +366,10 @@ private:
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
     bool OnlineReportData();
+
+    FRIEND_TEST(SubCommandRecordTest, ReportSampleAll);
+    FRIEND_TEST(SubCommandRecordTest, ReportSamplePid);
+    FRIEND_TEST(SubCommandRecordTest, ReportSampleApp);
 };
 } // namespace HiPerf
 } // namespace Developtools

@@ -189,6 +189,28 @@ if (is_ohos && hiperf_use_syspara) {
   common_configs += [ ":hiperf_syspara_config" ]
 }
 
+ohos_source_set("hiperf_enable_hisysevent") {
+  part_name = "hiperf"
+  subsystem_name = "developtools"
+  use_exceptions = true
+  public_deps = common_deps
+  public_configs = common_configs
+
+  sources = [ "./src/command_reporter.cpp" ]
+  external_deps = [ "hisysevent:libhisysevent" ]
+  defines = [ "ENABLE_HISYSEVENT" ]
+}
+
+ohos_source_set("hiperf_disable_hisysevent") {
+  part_name = "hiperf"
+  subsystem_name = "developtools"
+  use_exceptions = true
+  public_deps = common_deps
+  public_configs = common_configs
+
+  sources = [ "./src/command_reporter.cpp" ]
+}
+
 ohos_source_set("hiperf_platform_common") {
   part_name = "hiperf"
   subsystem_name = "developtools"
@@ -384,6 +406,7 @@ ohos_executable("hiperf") {
     ":hiperf_etc",
     ":hiperf_platform_common",
     ":hiperf_platform_linux",
+    ":hiperf_enable_hisysevent",
   ]
 
   if (hiperf_target_static) {
@@ -407,7 +430,10 @@ ohos_executable("hiperf") {
 
 ohos_executable("hiperf_host") {
   sources = [ "./src/main.cpp" ]
-  deps = [ ":hiperf_platform_common" ]
+  deps = [
+    ":hiperf_platform_common",
+    ":hiperf_disable_hisysevent"
+  ]
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
@@ -467,7 +493,10 @@ ohos_source_set("hiperf_platform_host") {
 }
 
 ohos_shared_library("hiperf_host_lib") {
-  public_deps = [ ":hiperf_platform_host" ]
+  public_deps = [
+    ":hiperf_platform_host",
+    ":hiperf_disable_hisysevent"
+  ]
   output_name = "hiperf_report"
 
   ldflags = [ "-static-libstdc++" ]

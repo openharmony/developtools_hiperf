@@ -28,6 +28,7 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
         fullArgument.append(" ");
         fullArgument.append(arg);
     }
+    CommandReporter reporter(fullArgument);
     HLOGD("args:%s", VectorToString(arguments).c_str());
     while (!arguments.empty()) {
         // we need found main command args first
@@ -48,6 +49,7 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
             // if it is an sub command
             auto subCommand = SubCommand::FindSubCommand(arguments.front());
             if (subCommand != nullptr) {
+                reporter.mainCommand_ = arguments.front();
                 // this is an sub command which we support
 
                 // remove the subcmd name
@@ -56,6 +58,8 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
                 // if we found the sub command , after it processed , we will exit
                 HLOGD("OnSubCommandOptions -> %s", subCommand->Name().c_str());
                 if (subCommand->OnSubCommandOptions(arguments)) {
+                    subCommand->AddReportArgs(reporter);
+                    reporter.ReportCommand();
                     // if some help cmd ?
                     if (subCommand->OnPreSubCommand()) {
                         return true;

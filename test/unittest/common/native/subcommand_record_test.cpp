@@ -1580,6 +1580,52 @@ HWTEST_F(SubCommandRecordTest, TestCmdlineSizeErr, TestSize.Level1)
 {
     TestRecordCommand("-d 2 -a -f 2000 --cmdline-size", false, false);
 }
+
+/**
+ * @tc.name: AddReportArgs
+ * @tc.desc: Test AddReportArgs with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ReportSampleAll, TestSize.Level1)
+{
+    SubCommandRecord command;
+    command.targetSystemWide_ = true;
+
+    CommandReporter reporter("record");
+    command.AddReportArgs(reporter);
+    EXPECT_EQ(reporter.targetProcess_, "ALL");
+}
+
+/**
+ * @tc.name: AddReportArgs
+ * @tc.desc: Test AddReportArgs with -p
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ReportSamplePid, TestSize.Level1)
+{
+    SubCommandRecord command;
+    command.selectPids_ = {1, 2, 3};
+
+    CommandReporter reporter("record");
+    command.AddReportArgs(reporter);
+    EXPECT_EQ(reporter.targetProcess_, "ALL");
+}
+
+/**
+ * @tc.name: AddReportArgs
+ * @tc.desc: Test AddReportArgs with --app
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ReportSampleApp, TestSize.Level1)
+{
+    SubCommandRecord command;
+    command.targetSystemWide_ = true;
+
+    CommandReporter reporter("record");
+    command.AddReportArgs(reporter);
+    EXPECT_EQ(reporter.targetProcess_, "ALL");
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

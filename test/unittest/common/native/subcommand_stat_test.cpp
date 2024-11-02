@@ -2258,6 +2258,51 @@ HWTEST_F(SubCommandStatTest, CheckPidAndApp, TestSize.Level1)
         printf("output:\n%s", stringOut.c_str());
     }
 }
+
+/**
+ * @tc.name: AddReportArgs
+ * @tc.desc: Test AddReportArgs with -a
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, ReportSampleAll, TestSize.Level1)
+{
+    SubCommandStat command;
+    command.targetSystemWide_ = true;
+
+    CommandReporter reporter("stat");
+    command.AddReportArgs(reporter);
+    EXPECT_EQ(reporter.targetProcess_, "ALL");
+}
+
+/**
+ * @tc.name: AddReportArgs
+ * @tc.desc: Test AddReportArgs with -p
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, ReportSamplePid, TestSize.Level1)
+{
+    SubCommandStat command;
+    command.selectPids_ = {1, 2, 3};
+
+    CommandReporter reporter("stat");
+    command.AddReportArgs(reporter);
+    EXPECT_EQ(reporter.targetProcess_, "ALL");
+}
+
+/**
+ * @tc.name: AddReportArgs
+ * @tc.desc: Test AddReportArgs with --app
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, ReportSampleApp, TestSize.Level1)
+{
+    SubCommandStat command;
+    command.targetSystemWide_ = true;
+
+    CommandReporter reporter("stat");
+    command.AddReportArgs(reporter);
+    EXPECT_EQ(reporter.targetProcess_, "ALL");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
