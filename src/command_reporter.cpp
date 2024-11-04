@@ -16,9 +16,9 @@
 #include "command_reporter.h"
 
 #ifdef ENABLE_HISYSEVENT
+#include "hiperf_hilog.h"
 #include "hisysevent.h"
 #include "utilities.h"
-#include "hiperf_hilog.h"
 #endif
 
 namespace OHOS::Developtools::HiPerf {
