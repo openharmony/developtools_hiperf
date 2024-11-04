@@ -2297,7 +2297,7 @@ HWTEST_F(SubCommandStatTest, ReportSamplePid, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, ReportSampleApp, TestSize.Level1)
 {
     SubCommandStat command;
-    command.targetSystemWide_ = true;
+    command.appPackage_ = "com.test.app";
 
     CommandReporter reporter("stat");
     command.AddReportArgs(reporter);
