@@ -28,12 +28,18 @@ public:
 
     std::string mainCommand_ = "";
     std::string subCommand_ = "";
+    std::string caller_ = "";
     std::string targetProcess_ = "";
     int32_t errorCode_ = 0;
     std::string errorMessage_ = "";
 
 private:
     bool isReported = false;
+
+    CommandReporter(const CommandReporter&) = delete;
+    CommandReporter& operator=(const CommandReporter&) = delete;
+    CommandReporter(CommandReporter&&) = delete;
+    CommandReporter& operator=(CommandReporter&&) = delete;
 };
 
 } // namespace OHOS::Developtools::HiPerf

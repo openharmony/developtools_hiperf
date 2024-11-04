@@ -17,12 +17,18 @@
 
 #ifdef ENABLE_HISYSEVENT
 #include "hisysevent.h"
-#include "debug_logger.h"
+#include "utilities.h"
+#include "hiperf_hilog.h"
 #endif
 
 namespace OHOS::Developtools::HiPerf {
 
-CommandReporter::CommandReporter(const std::string& fullArgument) : subCommand_(fullArgument) {}
+CommandReporter::CommandReporter(const std::string& fullArgument) : subCommand_(fullArgument)
+{
+#ifdef ENABLE_HISYSEVENT
+    caller_ = GetProcessName(getppid());
+#endif
+}
 
 CommandReporter::~CommandReporter()
 {
@@ -33,20 +39,21 @@ void CommandReporter::ReportCommand()
 {
 #ifdef ENABLE_HISYSEVENT
     if (isReported) {
-        HLOGW("command has been reported");
+        HIPERF_HILOGD(MODULE_DEFAULT, "command has been reported");
         return;
     }
 
     int32_t ret = HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, "HIPERF_USAGE",
+        OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE",
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         "MAIN_CMD", mainCommand_,
         "SUB_CMD", subCommand_,
+        "CALLER", caller_,
         "TARGET_PROCESS", targetProcess_,
         "ERROR_CODE", errorCode_,
         "ERROR_MESSAGE", errorMessage_);
     if (ret != 0) {
-        HLOGE("hisysevent report failed, err:%d", ret);
+        HIPERF_HILOGE(MODULE_DEFAULT, "hisysevent report failed, err:%{public}d", ret);
     }
 #endif
     isReported = true;

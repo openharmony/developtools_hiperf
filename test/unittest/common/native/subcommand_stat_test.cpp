@@ -2286,7 +2286,7 @@ HWTEST_F(SubCommandStatTest, ReportSamplePid, TestSize.Level1)
 
     CommandReporter reporter("stat");
     command.AddReportArgs(reporter);
-    EXPECT_EQ(reporter.targetProcess_, "ALL");
+    EXPECT_EQ(reporter.targetProcess_, "1,2,3");
 }
 
 /**
@@ -2301,7 +2301,7 @@ HWTEST_F(SubCommandStatTest, ReportSampleApp, TestSize.Level1)
 
     CommandReporter reporter("stat");
     command.AddReportArgs(reporter);
-    EXPECT_EQ(reporter.targetProcess_, "ALL");
+    EXPECT_EQ(reporter.targetProcess_, "com.test.app");
 }
 } // namespace HiPerf
 } // namespace Developtools

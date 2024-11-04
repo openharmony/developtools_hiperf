@@ -197,7 +197,11 @@ ohos_source_set("hiperf_enable_hisysevent") {
   public_configs = common_configs
 
   sources = [ "./src/command_reporter.cpp" ]
-  external_deps = [ "hisysevent:libhisysevent" ]
+  external_deps = [
+    "hisysevent:libhisysevent",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
   defines = [ "ENABLE_HISYSEVENT" ]
 }
 

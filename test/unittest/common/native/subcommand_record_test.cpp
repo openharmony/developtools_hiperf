@@ -1608,7 +1608,7 @@ HWTEST_F(SubCommandRecordTest, ReportSamplePid, TestSize.Level1)
 
     CommandReporter reporter("record");
     command.AddReportArgs(reporter);
-    EXPECT_EQ(reporter.targetProcess_, "ALL");
+    EXPECT_EQ(reporter.targetProcess_, "1,2,3");
 }
 
 /**
@@ -1619,11 +1619,11 @@ HWTEST_F(SubCommandRecordTest, ReportSamplePid, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, ReportSampleApp, TestSize.Level1)
 {
     SubCommandRecord command;
-    command.targetSystemWide_ = true;
+    command.appPackage_ = "com.test.app";
 
     CommandReporter reporter("record");
     command.AddReportArgs(reporter);
-    EXPECT_EQ(reporter.targetProcess_, "ALL");
+    EXPECT_EQ(reporter.targetProcess_, "com.test.app");
 }
 
 } // namespace HiPerf
