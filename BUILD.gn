@@ -116,6 +116,7 @@ config("hiperf_inner_config") {
 
 sources_platform_common = [
   "./src/command.cpp",
+  "./src/command_reporter.cpp",
   "./src/dwarf_encoding.cpp",
   "./src/ipc_utilities.cpp",
   "./src/option.cpp",
@@ -189,32 +190,6 @@ if (is_ohos && hiperf_use_syspara) {
   common_configs += [ ":hiperf_syspara_config" ]
 }
 
-ohos_source_set("hiperf_enable_hisysevent") {
-  part_name = "hiperf"
-  subsystem_name = "developtools"
-  use_exceptions = true
-  public_deps = common_deps
-  public_configs = common_configs
-
-  sources = [ "./src/command_reporter.cpp" ]
-  external_deps = [
-    "hisysevent:libhisysevent",
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-  defines = [ "ENABLE_HISYSEVENT" ]
-}
-
-ohos_source_set("hiperf_disable_hisysevent") {
-  part_name = "hiperf"
-  subsystem_name = "developtools"
-  use_exceptions = true
-  public_deps = common_deps
-  public_configs = common_configs
-
-  sources = [ "./src/command_reporter.cpp" ]
-}
-
 ohos_source_set("hiperf_platform_common") {
   part_name = "hiperf"
   subsystem_name = "developtools"
@@ -228,6 +203,7 @@ ohos_source_set("hiperf_platform_common") {
       "c_utils:utils",
       "faultloggerd:libunwinder_static",
       "hilog:libhilog",
+      "hisysevent:libhisysevent",
       "init:libbegetutil",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
@@ -410,7 +386,6 @@ ohos_executable("hiperf") {
     ":hiperf_etc",
     ":hiperf_platform_common",
     ":hiperf_platform_linux",
-    ":hiperf_enable_hisysevent",
   ]
 
   if (hiperf_target_static) {
@@ -434,10 +409,7 @@ ohos_executable("hiperf") {
 
 ohos_executable("hiperf_host") {
   sources = [ "./src/main.cpp" ]
-  deps = [
-    ":hiperf_platform_common",
-    ":hiperf_disable_hisysevent"
-  ]
+  deps = [ ":hiperf_platform_common" ]
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
@@ -497,10 +469,7 @@ ohos_source_set("hiperf_platform_host") {
 }
 
 ohos_shared_library("hiperf_host_lib") {
-  public_deps = [
-    ":hiperf_platform_host",
-    ":hiperf_disable_hisysevent"
-  ]
+  public_deps = [ ":hiperf_platform_host" ]
   output_name = "hiperf_report"
 
   ldflags = [ "-static-libstdc++" ]

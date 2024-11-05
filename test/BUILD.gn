@@ -67,7 +67,6 @@ common_deps = [
   "${hiperf_path}/:hiperf_platform_common",
   "${hiperf_path}/:hiperf_platform_host",
   "${hiperf_path}/:hiperf_platform_linux",
-  "${hiperf_path}/:hiperf_disable_hisysevent",
   "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static",
   "//third_party/googletest:gmock_main",
   "//third_party/googletest:gtest_main",
@@ -121,7 +120,6 @@ fuzz_deps = [
   "${hiperf_path}/:hiperf_platform_common",
   "${hiperf_path}/:hiperf_platform_host",
   "${hiperf_path}/:hiperf_platform_linux",
-  "${hiperf_path}/:hiperf_disable_hisysevent",
   "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static",
 ]
 

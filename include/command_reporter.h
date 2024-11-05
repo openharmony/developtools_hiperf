@@ -16,6 +16,7 @@
 #define COMMAND_REPORTER_H_
 
 #include <string>
+#include <gtest/gtest_prod.h>
 
 namespace OHOS::Developtools::HiPerf {
 
@@ -34,12 +35,19 @@ public:
     std::string errorMessage_ = "";
 
 private:
-    bool isReported = false;
+    bool isReported_ = false;
 
     CommandReporter(const CommandReporter&) = delete;
     CommandReporter& operator=(const CommandReporter&) = delete;
     CommandReporter(CommandReporter&&) = delete;
     CommandReporter& operator=(CommandReporter&&) = delete;
+
+    FRIEND_TEST(SubCommandRecordTest, ReportSampleAll);
+    FRIEND_TEST(SubCommandRecordTest, ReportSamplePid);
+    FRIEND_TEST(SubCommandRecordTest, ReportSampleApp);
+    FRIEND_TEST(SubCommandStatTest, ReportSampleAll);
+    FRIEND_TEST(SubCommandStatTest, ReportSamplePid);
+    FRIEND_TEST(SubCommandStatTest, ReportSampleApp);
 };
 
 } // namespace OHOS::Developtools::HiPerf

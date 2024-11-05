@@ -15,7 +15,7 @@
 
 #include "command_reporter.h"
 
-#ifdef ENABLE_HISYSEVENT
+#if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #include "hisysevent.h"
 #include "utilities.h"
@@ -25,7 +25,7 @@ namespace OHOS::Developtools::HiPerf {
 
 CommandReporter::CommandReporter(const std::string& fullArgument) : subCommand_(fullArgument)
 {
-#ifdef ENABLE_HISYSEVENT
+#if defined(is_ohos) && is_ohos
     caller_ = GetProcessName(getppid());
 #endif
 }
@@ -37,8 +37,8 @@ CommandReporter::~CommandReporter()
 
 void CommandReporter::ReportCommand()
 {
-#ifdef ENABLE_HISYSEVENT
-    if (isReported) {
+#if defined(is_ohos) && is_ohos
+    if (isReported_) {
         HIPERF_HILOGD(MODULE_DEFAULT, "command has been reported");
         return;
     }
@@ -56,7 +56,7 @@ void CommandReporter::ReportCommand()
         HIPERF_HILOGE(MODULE_DEFAULT, "hisysevent report failed, err:%{public}d", ret);
     }
 #endif
-    isReported = true;
+    isReported_ = true;
 }
 
 } // namespace OHOS::Developtools::HiPerf

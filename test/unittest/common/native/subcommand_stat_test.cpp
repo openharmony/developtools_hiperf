@@ -2270,6 +2270,7 @@ HWTEST_F(SubCommandStatTest, ReportSampleAll, TestSize.Level1)
     command.targetSystemWide_ = true;
 
     CommandReporter reporter("stat");
+    reporter.isReported_ = true;
     command.AddReportArgs(reporter);
     EXPECT_EQ(reporter.targetProcess_, "ALL");
 }
@@ -2285,6 +2286,7 @@ HWTEST_F(SubCommandStatTest, ReportSamplePid, TestSize.Level1)
     command.selectPids_ = {1, 2, 3};
 
     CommandReporter reporter("stat");
+    reporter.isReported_ = true;
     command.AddReportArgs(reporter);
     EXPECT_EQ(reporter.targetProcess_, "1,2,3");
 }
@@ -2300,6 +2302,7 @@ HWTEST_F(SubCommandStatTest, ReportSampleApp, TestSize.Level1)
     command.appPackage_ = "com.test.app";
 
     CommandReporter reporter("stat");
+    reporter.isReported_ = true;
     command.AddReportArgs(reporter);
     EXPECT_EQ(reporter.targetProcess_, "com.test.app");
 }
