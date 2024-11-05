@@ -31,7 +31,7 @@ namespace Developtools {
 namespace HiPerf {
 const int FETURE_MAX = 256;
 const int SIZE_FETURE_COUNT = 8;
-constexpr const char UNCOMPRESS_TMP_FILE[] = "/data/local/tmp/.perf.data";
+constexpr char UNCOMPRESS_TMP_FILE[] = "/data/local/tmp/.perf.data";
 
 std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &fileName)
 {
