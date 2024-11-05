@@ -31,6 +31,7 @@ namespace Developtools {
 namespace HiPerf {
 const int FETURE_MAX = 256;
 const int SIZE_FETURE_COUNT = 8;
+constexpr const char UNCOMPRESS_TMP_FILE[] = "/data/local/tmp/.perf.data";
 
 std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &fileName)
 {
@@ -48,11 +49,11 @@ std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &file
             fclose(fp);
             reader->fp_ = nullptr;
 
-            CHECK_TRUE(!UncompressFile(fileName, ".perf.data"), nullptr, 1,
+            CHECK_TRUE(!UncompressFile(fileName, UNCOMPRESS_TMP_FILE), nullptr, 1,
                        "Fail to UncompressFile(%s)", fileName.c_str());
 
             // open the uncompressed hidden file .perf.data
-            FILE *fp2 = fopen(".perf.data", "rb");
+            FILE *fp2 = fopen(UNCOMPRESS_TMP_FILE, "rb");
             if (fp2 == nullptr) {
                 HLOGE("fail to open uncompressed file .perf.data");
                 return nullptr;
@@ -95,7 +96,7 @@ PerfFileReader::~PerfFileReader()
 
     // remove the uncompressed .perf.data
     if (compressData_) {
-        if (remove(".perf.data") != 0) {
+        if (remove(UNCOMPRESS_TMP_FILE) != 0) {
             HLOGE("Fail to remove uncompressed file .perf.data");
             perror("Fail to remove temp file");
         }
