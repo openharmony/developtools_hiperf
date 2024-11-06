@@ -156,7 +156,7 @@ public:
         "         must be a power of two, rang[2,1024], default is 1024.\n"
         "   --app <package_name>\n"
         "         Collect profile info for an OHOS app, the app must be debuggable.\n"
-        "         Record will exit if the process is not started within 10 seconds.\n"
+        "         Record will exit if the process is not started within 20 seconds.\n"
         "   --chkms <millisec>\n"
         "         Set the interval of querying the <package_name>.\n"
         "         <millisec> is in range [1-200], default is 10.\n"
