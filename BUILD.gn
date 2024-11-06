@@ -116,6 +116,7 @@ config("hiperf_inner_config") {
 
 sources_platform_common = [
   "./src/command.cpp",
+  "./src/command_reporter.cpp",
   "./src/dwarf_encoding.cpp",
   "./src/ipc_utilities.cpp",
   "./src/option.cpp",
@@ -202,6 +203,7 @@ ohos_source_set("hiperf_platform_common") {
       "c_utils:utils",
       "faultloggerd:libunwinder_static",
       "hilog:libhilog",
+      "hisysevent:libhisysevent",
       "init:libbegetutil",
       "ipc:ipc_core",
       "samgr:samgr_proxy",

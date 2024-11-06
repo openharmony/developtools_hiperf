@@ -805,6 +805,18 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
     }
     return true;
 }
+
+void SubCommandStat::AddReportArgs(CommandReporter& reporter)
+{
+    if (targetSystemWide_) {
+        reporter.targetProcess_ = "ALL";
+    } else if (!appPackage_.empty()) {
+        reporter.targetProcess_ = appPackage_;
+    } else {
+        reporter.targetProcess_ = VectorToString<pid_t>(selectPids_);
+    }
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

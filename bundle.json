@@ -19,16 +19,17 @@
     "ram": "2000KB",
     "deps": {
       "components": [
-        "hilog",
-        "napi",
-        "samgr",
-        "ipc",
-        "c_utils",
-        "bundle_framework",
-        "faultloggerd",
-        "init",
         "ability_base",
         "bounds_checking_function",
+        "bundle_framework",
+        "c_utils",
+        "faultloggerd",
+        "hilog",
+        "hisysevent",
+        "init",
+        "ipc",
+        "napi",
+        "samgr",
         "zlib"
       ],
       "third_party": [

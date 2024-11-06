@@ -15,6 +15,8 @@
 #ifndef HIPERF_SUBCOMMAND_H_
 #define HIPERF_SUBCOMMAND_H_
 #include <string>
+
+#include "command_reporter.h"
 #include "utilities.h"
 #include "virtual_runtime.h"
 
@@ -64,6 +66,9 @@ public:
         args.clear(); // all the args is processed
         return true;
     }
+
+    // add args for hisysevent
+    virtual void AddReportArgs(CommandReporter& reporter) {};
 
     // return false means cmd failed
     virtual bool OnSubCommand(std::vector<std::string> &args) = 0;

@@ -93,6 +93,9 @@ public:
     bool ParseSpecialOption(std::vector<std::string> &args);
     void DumpOptions(void) const override;
 
+    // add args for hisysevent
+    void AddReportArgs(CommandReporter& reporter) override;
+
 private:
     PerfEvents perfEvents_;
     bool targetSystemWide_ {false};
@@ -154,6 +157,10 @@ private:
     bool CheckSelectCpuPidOption();
     void SetReportFlags(bool cpuFlag, bool threadFlag);
     void SetPerfEvent();
+
+    FRIEND_TEST(SubCommandStatTest, ReportSampleAll);
+    FRIEND_TEST(SubCommandStatTest, ReportSamplePid);
+    FRIEND_TEST(SubCommandStatTest, ReportSampleApp);
 };
 
 bool RegisterSubCommandStat(void);
