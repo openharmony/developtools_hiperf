@@ -20,6 +20,7 @@
 #include <mutex>
 #include <regex>
 #include <sstream>
+#include <stdlib.h>
 #include <thread>
 
 #include <gmock/gmock.h>
