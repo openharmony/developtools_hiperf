@@ -18,7 +18,6 @@
 #include <cinttypes>
 #include <condition_variable>
 #include <mutex>
-#include <random>
 #include <regex>
 #include <sstream>
 #include <thread>
@@ -2258,7 +2257,7 @@ HWTEST_F(SubCommandStatTest, CheckPidAndApp, TestSize.Level1)
     }
     std::string cmd = "stat -p " + std::to_string(existPid + rand() % 100 + 1) + " -d 2";
     EXPECT_EQ(Command::DispatchCommand(cmd), false);
-    
+
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     const auto startTime = chrono::steady_clock::now();
