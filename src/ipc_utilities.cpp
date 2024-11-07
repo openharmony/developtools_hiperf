@@ -62,6 +62,10 @@ bool IsApplicationEncryped(const int pid)
     CHECK_TRUE(pid <= 0, false, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
     std::string bundleName = GetProcessName(pid);
     CHECK_TRUE(bundleName.empty(), false, 1, "bundleName is empty,pid is %d", pid);
+    auto pos = bundleName.find(":");
+    if (pos != std::string::npos) {
+        bundleName = bundleName.substr(0, pos);
+    }
     sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
     sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
