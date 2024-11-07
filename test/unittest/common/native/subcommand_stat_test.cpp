@@ -18,6 +18,7 @@
 #include <cinttypes>
 #include <condition_variable>
 #include <mutex>
+#include <random>
 #include <regex>
 #include <sstream>
 #include <thread>
@@ -2245,10 +2246,24 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_app_running, TestSize.Level1)
  */
 HWTEST_F(SubCommandStatTest, CheckPidAndApp, TestSize.Level1)
 {
+    pid_t existPid = -1;
+    const std::string basePath {"/proc/"};
+    std::vector<std::string> subDirs = GetSubDirs(basePath);
+    for (const auto &subDir : subDirs) {
+        if (!IsDigits(subDir)) {
+            continue;
+        }
+        pid_t pid = std::stoll(subDir);
+        existPid = max(existPid, pid);
+    }
+    std::string cmd = "stat -p " + std::to_string(existPid + rand() % 100 + 1) + " -d 2";
+    EXPECT_EQ(Command::DispatchCommand(cmd), false);
+    
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     const auto startTime = chrono::steady_clock::now();
-    EXPECT_EQ(Command::DispatchCommand("stat -p 700001 -d 2"), true);
+    std::string existCmd = "stat -p " + std::to_string(existPid) + " -d 2";
+    EXPECT_EQ(Command::DispatchCommand(existCmd), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
