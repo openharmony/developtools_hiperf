@@ -24,6 +24,7 @@
 #include <hilog/log.h>
 
 #include "symbols_file_test.h"
+#include "test_utilities.h"
 
 using namespace testing::ext;
 using namespace std;
