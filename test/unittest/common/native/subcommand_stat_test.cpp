@@ -17,10 +17,10 @@
 #include <algorithm>
 #include <cinttypes>
 #include <condition_variable>
+#include <cstdlib>
 #include <mutex>
 #include <regex>
 #include <sstream>
-#include <cstdlib>
 #include <thread>
 
 #include <gmock/gmock.h>
