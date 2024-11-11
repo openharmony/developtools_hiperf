@@ -650,8 +650,8 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         HLOGV("CheckAppIsRunning() failed");
         return false;
     }
-    if (!CheckOptionPidAndApp(selectPids_)) {
-        HLOGV("CheckOptionPidAndApp() failed");
+    if (!CheckOptionPid(selectPids_)) {
+        HLOGV("CheckOptionPid() failed");
         return false;
     }
 
