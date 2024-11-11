@@ -1009,14 +1009,32 @@ void DumpSpeReportData(int indent, FILE *outputDump)
     for (auto it = AuxRawDataMap_.begin(); it != AuxRawDataMap_.end(); it++) {
         u64 count = typeCount[it->first];
         DumpSpeReportHead(indent, it->first, count);
+        std::vector<ReportItemAuxRawData> auxRawData;
         for (auto& it2 : it->second) {
-            PRINT_INDENT(indent + 1, "%*.2f%% ", FULL_PERCENTAGE_LEN, it2.second.heating);
-            PRINT_INDENT(indent + 1, "%-*llu ", FULL_PERCENTAGE_LEN, it2.second.count);
-            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_COMM_LEN, it2.second.comm.c_str());
-            PRINT_INDENT(indent + 1, "0x%-*llx ", SPE_PERCENTAGE_PC_LEN, it2.second.pc);
-            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_DSO_LEN, it2.second.SharedObject.c_str());
-            PRINT_INDENT(indent + 1, "%-*s", SPE_PERCENTAGE_FUNC_LEN, it2.second.Symbol.c_str());
-            PRINT_INDENT(indent + 1, "0x%llx\n", it2.second.offset);
+            struct ReportItemAuxRawData reportItem = {
+                it2.second.type,
+                it2.second.heating,
+                it2.second.count,
+                it2.second.comm,
+                it2.second.pc,
+                it2.second.SharedObject,
+                it2.second.Symbol,
+                it2.second.offset
+            };
+            auxRawData.emplace_back(reportItem);
+        }
+        std::sort(auxRawData.begin(), auxRawData.end(), [](const ReportItemAuxRawData& lhs,
+                                                           const ReportItemAuxRawData& rhs) {
+            return lhs.count > rhs.count;
+        });
+        for (auto& it3 : auxRawData) {
+            PRINT_INDENT(indent + 1, "%*.2f%% ", FULL_PERCENTAGE_LEN, it3.heating);
+            PRINT_INDENT(indent + 1, "%-*llu ", FULL_PERCENTAGE_LEN, it3.count);
+            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_COMM_LEN, it3.comm.c_str());
+            PRINT_INDENT(indent + 1, "0x%-*llx ", SPE_PERCENTAGE_PC_LEN, it3.pc);
+            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_DSO_LEN, it3.SharedObject.c_str());
+            PRINT_INDENT(indent + 1, "%-*s", SPE_PERCENTAGE_FUNC_LEN, it3.Symbol.c_str());
+            PRINT_INDENT(indent + 1, "0x%llx\n", it3.offset);
         }
     }
 }
