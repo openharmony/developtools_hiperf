@@ -4131,7 +4131,6 @@ input{
                 let funcId = c[i].symbol;
                 let percent = c[i].subEvents * 100 / parentEvents;
                 let percent2 = c[i].subEvents * 100 / this.sumCount;
-                if (percent2 < 0.1) continue // 过滤掉 百分比为0.1一下的节点
                 let heatColor = this.getColor(percent2, funName);
                 let w = rect.w * (percent / 100.0);
                 if (w < 1) {
@@ -4202,7 +4201,6 @@ input{
                 let funcId = c[i].symbol;
                 let percent = c[i].subEvents * 100 / parentEvents;// sumCount;
                 let percent2 = c[i].subEvents * 100 / this.sumCount;
-                if (percent2 < 0.1) continue // 过滤掉 百分比为0.1一下的节点
                 let heatColor = this.getColor(percent2, funName);
                 let w = rect.w * (percent / 100.0);
                 if (w < 1) {
@@ -4420,7 +4418,7 @@ input{
             if (json.osVersion) {
                 rows.push({key: 'OS Version', value: json.osVersion,time:''});
             }
-            rows.push({key: 'Script Version', value: '1.0.0.240604',time:''});
+            rows.push({key: 'Script Version', value: '1.0.0.241031',time:''});
             if (json.deviceCommandLine) {
                 rows.push({key:'Record cmdline',value: json.deviceCommandLine,time:''});
             }
