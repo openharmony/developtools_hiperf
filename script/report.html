@@ -4021,7 +4021,6 @@ input{
             if (this.data) {
                 if (this.reverse) {
                     this.drawCReverse(
-                        0,
                         this.c,
                         1,
                         {
@@ -4120,16 +4119,13 @@ input{
             return heatColor;
         }
 
-        drawCReverse = (parentEvents, c, dept, rect) => {
+        drawCReverse = (c, dept, rect) => {
             let ctx = this.context;
             let offset = 0;
-            if (parentEvents === 0) {
-                parentEvents = c.reduce((acc, cur) => acc + cur.subEvents, 0);
-            }
             for (let i = 0; i < c.length; i++) {
                 let funName = this.getFunctionName(c[i].symbol);
                 let funcId = c[i].symbol;
-                let percent = c[i].subEvents * 100 / parentEvents;
+                let percent = c[i].subEvents * 100 / (c.reduce((acc, cur) => acc + cur.subEvents, 0));
                 let percent2 = c[i].subEvents * 100 / this.sumCount;
                 let heatColor = this.getColor(percent2, funName);
                 let w = rect.w * (percent / 100.0);
@@ -4163,13 +4159,8 @@ input{
                         ctx.strokeStyle = `#000000`;
                         ctx.strokeRect(_x, rect.y + 1, w - 1, rect.h);
                         let statisticNum = this.getStatistics(c[i]);
-                        let count = this.getCount(c[i]);
                         this.funcNameSpan.textContent = funName;
-                        if (this.type === 1 || this.type === 2 || this.type === 3) {
-                            this.panel.title = funName + ': [' + count + '  ' + statisticNum + ']';
-                        } else {
-                            this.panel.title = funName + ': [' + statisticNum + ']';
-                        }
+                        this.panel.title = funName + ': [' + statisticNum + ']';
                         this.percentSpan.textContent = statisticNum;
                     } else {
                         if (this.mouseState === 'mouseUp') {
@@ -4186,7 +4177,7 @@ input{
                 // 递归绘制子节点
                 if (c[i].callStack && c[i].callStack.length > 0) {
                     _rect.y = _rect.y + _rect.h;
-                    this.drawCReverse(c[i].subEvents, [i].callStack, dept + 1, _rect);
+                    this.drawCReverse(c[i].callStack, dept + 1, _rect);
                 }
             }
         }
