@@ -214,7 +214,8 @@ bool PerfFileWriter::Read(void *buf, size_t len)
     return true;
 }
 
-void SetWriteRecordStat(bool isWrite){
+void PerfFileWriter::SetWriteRecordStat(bool isWrite)
+{
     isWritingRecord = isWrite;
 }
 
