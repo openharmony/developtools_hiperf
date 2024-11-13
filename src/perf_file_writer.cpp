@@ -214,6 +214,10 @@ bool PerfFileWriter::Read(void *buf, size_t len)
     return true;
 }
 
+void SetWriteRecordStat(bool isWrite){
+    isWritingRecord = isWrite;
+}
+
 uint64_t PerfFileWriter::GetDataSize() const
 {
     return dataSection_.size;
