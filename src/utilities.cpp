@@ -494,11 +494,13 @@ std::vector<pid_t> GetSubthreadIDs(const pid_t pid)
     auto tids = GetSubDirs(path);
     std::vector<pid_t> res {};
     for (auto tidStr : tids) {
-        pid_t tid = static_cast<pid_t>(std::stoul(tidStr, nullptr));
-        if (tid == pid) {
-            continue;
+        if (!tidStr.empty()) {
+            pid_t tid = static_cast<pid_t>(std::stoul(tidStr, nullptr));
+            if (tid == pid) {
+                continue;
+            }
+            res.push_back(tid);
         }
-        res.push_back(tid);
     }
     return res;
 }
