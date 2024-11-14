@@ -360,7 +360,7 @@ void SubCommandReport::LoadEventDesc()
 {
     const PerfFileSection *featureSection =
         recordFileReader_->GetFeatureSection(FEATURE::EVENT_DESC);
-    CHECK_TRUE(featureSection == nullptr, NO_RETVAL, 0, "");
+    CHECK_TRUE(featureSection == nullptr, NO_RETVAL, 1, "featureSection invalid");
     const PerfFileSectionEventDesc &sectionEventdesc =
         *static_cast<const PerfFileSectionEventDesc *>(featureSection);
     HLOGV("Event descriptions: %zu", sectionEventdesc.eventDesces_.size());

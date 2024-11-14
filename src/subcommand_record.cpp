@@ -181,7 +181,7 @@ bool SubCommandRecord::GetSpeOptions()
         for (auto item: valueExpressions) {
             std::vector<std::string> expressions = StringSplit(item, "=");
             size_t itemNum = 2;
-            if (expressions.size() == itemNum) {
+            if (expressions.size() == itemNum && IsNumberic(expressions[1])) {
                 std::string name = expressions[0];
                 unsigned long long num = std::stoull(expressions[1]);
                 if (speOptMap_.find(name) != speOptMap_.end()) {
@@ -397,7 +397,12 @@ bool SubCommandRecord::CheckDataLimitOption()
 bool SubCommandRecord::CheckSelectCpuPidOption()
 {
     if (!selectCpus_.empty()) {
-        int maxCpuid = sysconf(_SC_NPROCESSORS_CONF) - 1;
+        int cpuCount = sysconf(_SC_NPROCESSORS_CONF);
+        if (cpuCount == -1) {
+            printf("sysconf failed.\n");
+            return false;
+        }
+        int maxCpuid = cpuCount - 1;
         for (auto cpu : selectCpus_) {
             if (cpu < 0 || cpu > maxCpuid) {
                 printf("Invalid -c value '%d', the CPU ID should be in 0~%d \n", cpu, maxCpuid);

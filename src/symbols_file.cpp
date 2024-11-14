@@ -102,6 +102,10 @@ std::string SymbolsFile::SearchReadableFile(const std::vector<std::string> &sear
         return filePath;
     }
     for (auto searchPath : searchPaths) {
+        if (searchPath.empty()) {
+            HLOGW("searchPath is empty.");
+            continue;
+        }
         if (searchPath.back() != PATH_SEPARATOR) {
             searchPath += PATH_SEPARATOR;
         }
@@ -307,7 +311,7 @@ private:
     bool GetHDRSectionInfo(uint64_t &ehFrameHdrElfOffset, uint64_t &fdeTableElfOffset,
                            uint64_t &fdeTableSize) override
     {
-        CHECK_TRUE(elfFile_ == nullptr, false, 0, "");
+        CHECK_TRUE(elfFile_ == nullptr, false, 1, "elfFile_ is nullptr");
         ShdrInfo shinfo;
         if (!elfFile_->GetSectionInfo(shinfo, ".eh_frame_hdr")) {
             return false;

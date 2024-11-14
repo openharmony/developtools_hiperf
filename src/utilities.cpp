@@ -844,6 +844,20 @@ bool IsHiviewCall()
     return false;
 #endif
 }
+
+bool IsNumberic(const std::string& str)
+{
+    std::istringstream iss(str);
+    int number;
+    char trailingCharacter;
+    if (!(iss >> number)) {
+        return false;
+    }
+    if (iss >> trailingCharacter) {
+        return false;
+    }
+    return true;
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

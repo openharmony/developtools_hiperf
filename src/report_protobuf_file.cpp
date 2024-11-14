@@ -215,7 +215,7 @@ int ReportProtobufFileReader::Read(void *buffer, int size)
 
                 return protobufFileStream_->gcount();
             }
-            printf("read file %d bytes failed %s : %s\n", size, fileName_.c_str(), readErr.what());
+            HLOGW("read file %d bytes failed %s : %s\n", size, fileName_.c_str(), readErr.what());
         }
     } else {
         printf("no file open for read (request %d bytes).\n", size);

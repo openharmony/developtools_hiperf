@@ -14,6 +14,7 @@
  */
 #include "hiperf_client_napi.h"
 #include <cstdio>
+#include <sstream>
 #include <string>
 #include "hiperf_hilog.h"
 #include "hiperf_client.h"
@@ -51,6 +52,20 @@ static std::vector<std::string> StringSplit(std::string source, const std::strin
     return result;
 }
 
+static bool IsNumberic(const std::string& str)
+{
+    std::istringstream iss(str);
+    int number;
+    char trailingCharacter;
+    if (!(iss >> number)) {
+        return false;
+    }
+    if (iss >> trailingCharacter) {
+        return false;
+    }
+    return true;
+}
+
 static std::vector<int> StringSplitToInt(std::string source, const std::string &split = ",")
 {
     size_t pos = 0;
@@ -60,13 +75,13 @@ static std::vector<int> StringSplitToInt(std::string source, const std::string &
     while ((pos = source.find(split)) != std::string::npos) {
         // split
         std::string token = source.substr(0, pos);
-        if (!token.empty()) {
+        if (IsNumberic(token)) {
             result.push_back(std::stoi(token));
         }
         source.erase(0, pos + split.length());
     }
     // add last token
-    if (!source.empty()) {
+    if (IsNumberic(source)) {
         result.push_back(std::stoi(source));
     }
     return result;
@@ -85,7 +100,10 @@ static std::string GetJsStringFromOption(const napi_env &env, const napi_callbac
 
     char value[PATH_MAX] = {0};
     size_t valueLen = 0;
-    napi_get_value_string_utf8(env, args[0], value, sizeof(value), &valueLen);
+    if (napi_get_value_string_utf8(env, args[0], value, sizeof(value), &valueLen) != napi_ok) {
+        HIPERF_HILOGE(MODULE_JS_NAPI, "napi_get_value_string_utf8 failed.");
+        return "";
+    }
     HIPERF_HILOGD(MODULE_JS_NAPI, "%{public}s", value);
     return std::string(value);
 }
