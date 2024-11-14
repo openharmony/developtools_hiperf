@@ -651,6 +651,10 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
         HLOGV("CheckAppIsRunning() failed");
         return false;
     }
+    if (!CheckOptionPid(selectPids_)) {
+        HLOGV("CheckOptionPid() failed");
+        return false;
+    }
 
     perfEvents_.SetCpu(selectCpus_);
     std::vector<pid_t> pids;

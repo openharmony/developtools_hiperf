@@ -1260,6 +1260,10 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     }
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents tracking finish");
 
+    if (isSpe_) {
+        HLOGD("stop write spe record");
+        fileWriter_->SetWriteRecordStat(false);
+    }
     startSaveFileTimes_ = steady_clock::now();
     if (!FinishWriteRecordFile()) {
         HLOGE("Fail to finish record file %s", outputFilename_.c_str());

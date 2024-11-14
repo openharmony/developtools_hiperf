@@ -65,6 +65,7 @@ public:
     bool ReadDataSection(ProcessRecordCB &callback);
     bool ReadRecords(ProcessRecordCB &callback);
     bool Read(void *buf, size_t len);
+    void SetWriteRecordStat(bool isWrite);
 
 private:
     std::string fileBuffer_;
