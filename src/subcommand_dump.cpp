@@ -592,7 +592,7 @@ void SubCommandDump::SetHM()
     if (isHM_) {
         pid_t devhost = -1;
         std::string str = reader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
-        if (str != EMPTY_STRING) {
+        if (IsNumberic(str)) {
             devhost = std::stoll(str);
         }
         vr_.SetDevhostPid(devhost);

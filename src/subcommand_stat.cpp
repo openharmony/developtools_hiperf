@@ -351,7 +351,7 @@ std::string SubCommandStat::GetCommentConfigName(
     const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName)
 {
     std::string commentConfigName = "";
-    CHECK_TRUE(countEvent == nullptr || eventName.length() == 0, commentConfigName, 0, "");
+    CHECK_TRUE(countEvent == nullptr || eventName.length() == 0, commentConfigName, 1, "countEvent is nullptr");
     if (countEvent->userOnly) {
         commentConfigName = eventName + ":u";
     } else if (countEvent->kernelOnly) {
