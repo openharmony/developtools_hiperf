@@ -29,22 +29,6 @@ namespace HiPerf {
 bool PerfRecordSample::dumpRemoveStack_ = false;
 thread_local std::unordered_map<PerfRecordType, PerfEventRecord*> PerfEventRecordFactory::recordMap_ = {};
 
-#define INIT_PERF_RECORD_DATA(PerfRecordType)   \
-void  PerfRecordType::Init(uint8_t* data, const perf_event_attr&)      \
-{   \
-    PerfEventRecordTemplate::Init(data);    \
-    size_t dataSize = GetSize();    \
-    if (dataSize >= sizeof(header_)) {   \
-        size_t copySize = dataSize - sizeof(header_);    \
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), data + sizeof(header_), copySize) != 0) {  \
-            HLOGE("##PerfRecordType## memcpy_s return failed!");    \
-        }   \
-    } else {    \
-        HLOGE("##PerfRecordType## return failed!"); \
-    }   \
-}   \
-
-
 PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
 {
     switch (type) {
@@ -82,10 +66,9 @@ PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
             return new PerfRecordSwitchCpuWide();
         default:
             HLOGE("unknown record type %d\n", type);
-            return nullptr;
+            return new PerfRecordNull();
     }
 }
-
 
 template<typename T>
 inline void PushToBinary(bool condition, uint8_t *&p, const T &v)
@@ -126,11 +109,6 @@ inline void PopFromBinary2(bool condition, uint8_t *&p, T1 &v1, T2 &v2)
         p += sizeof(T2);
     }
 }
-
-
-
-INIT_PERF_RECORD_DATA(PerfRecordAuxtrace)
-
 
 PerfRecordAuxtrace::PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid)
 {
@@ -207,9 +185,6 @@ size_t PerfRecordAuxtrace::GetSize() const
     return header_.size + data_.size;
 }
 
-
-INIT_PERF_RECORD_DATA(PerfRecordMmap)
-
 PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
                                const std::string &filename)
 {
@@ -258,11 +233,6 @@ void PerfRecordMmap::DumpLog(const std::string &prefix) const
     HLOGV("%s:  MMAP: size %d pid %u tid %u dso '%s' (0x%llx-0x%llx)@0x%llx", prefix.c_str(),
           header_.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len, data_.pgoff);
 }
-
-
-INIT_PERF_RECORD_DATA(PerfRecordMmap2)
-
-
 
 PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
                                  u32 maj, u32 min, u64 ino, u32 prot, u32 flags,
@@ -350,14 +320,13 @@ void PerfRecordMmap2::DumpData(int indent) const
     }
 #endif
 }
+
 void PerfRecordMmap2::DumpLog(const std::string &prefix) const
 {
     HLOGV("%s:  MMAP2: size %d pid %u tid %u dso '%s' (0x%llx-0x%llx)@0x%llx", prefix.c_str(),
           header_.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len,
           data_.pgoff);
 }
-
-INIT_PERF_RECORD_DATA(PerfRecordLost)
 
 bool PerfRecordLost::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -386,10 +355,6 @@ PerfRecordLost::PerfRecordLost(bool inKernel, u64 id, u64 lost)
     data_.lost = lost;
     header_.size = sizeof(header_) + sizeof(data_);
 }
-
-
-
-INIT_PERF_RECORD_DATA(PerfRecordComm)
 
 PerfRecordComm::PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm)
 {
@@ -446,7 +411,6 @@ PerfRecordSample::PerfRecordSample(const PerfRecordSample& sample)
     stackId_ = sample.stackId_;
     removeStack_ = sample.removeStack_;
 }
-
 
 void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
 {
@@ -508,7 +472,6 @@ void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
     }
 }
 
-
 void PerfRecordSample::SetDumpRemoveStack(bool dumpRemoveStack)
 {
     dumpRemoveStack_ = dumpRemoveStack;
@@ -518,7 +481,6 @@ bool PerfRecordSample::IsDumpRemoveStack()
 {
     return dumpRemoveStack_;
 }
-
 
 bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -816,12 +778,6 @@ pid_t PerfRecordSample::GetServerPidof(unsigned int ipNr)
     }
 }
 
-
-
-
-
-INIT_PERF_RECORD_DATA(PerfRecordExit)
-
 bool PerfRecordExit::GetBinary(std::vector<uint8_t> &buf) const
 {
     if (buf.size() < GetSize()) {
@@ -841,11 +797,6 @@ void PerfRecordExit::DumpData(int indent) const
     PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u time 0x%llx\n", data_.pid, data_.ppid,
                  data_.tid, data_.ptid, data_.time);
 }
-
-
-
-INIT_PERF_RECORD_DATA(PerfRecordThrottle)
-
 
 bool PerfRecordThrottle::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -867,10 +818,6 @@ void PerfRecordThrottle::DumpData(int indent) const
                  data_.stream_id);
 }
 
-
-
-INIT_PERF_RECORD_DATA(PerfRecordUnthrottle)
-
 bool PerfRecordUnthrottle::GetBinary(std::vector<uint8_t> &buf) const
 {
     if (buf.size() < GetSize()) {
@@ -884,14 +831,12 @@ bool PerfRecordUnthrottle::GetBinary(std::vector<uint8_t> &buf) const
     *pDest = data_;
     return true;
 }
+
 void PerfRecordUnthrottle::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
                  data_.stream_id);
 }
-
-
-INIT_PERF_RECORD_DATA(PerfRecordFork)
 
 bool PerfRecordFork::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -913,10 +858,6 @@ void PerfRecordFork::DumpData(int indent) const
                  data_.ptid);
 }
 
-
-
-INIT_PERF_RECORD_DATA(PerfRecordRead)
-
 bool PerfRecordRead::GetBinary(std::vector<uint8_t> &buf) const
 {
     if (buf.size() < GetSize()) {
@@ -937,10 +878,6 @@ void PerfRecordRead::DumpData(int indent) const
     PRINT_INDENT(indent, "values: value %llx, timeEnabled %llx, timeRunning %llx, id %llx\n",
                  data_.values.value, data_.values.timeEnabled, data_.values.timeRunning, data_.values.id);
 }
-
-
-
-INIT_PERF_RECORD_DATA(PerfRecordAux)
 
 bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -971,12 +908,6 @@ void PerfRecordAux::DumpData(int indent) const
                  data_.sample_id.time);
 }
 
-
-
-
-
-INIT_PERF_RECORD_DATA(PerfRecordItraceStart)
-
 bool PerfRecordItraceStart::GetBinary(std::vector<uint8_t> &buf) const
 {
     if (buf.size() < GetSize()) {
@@ -995,10 +926,6 @@ void PerfRecordItraceStart::DumpData(int indent) const
 {
     PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
 }
-
-
-
-INIT_PERF_RECORD_DATA(PerfRecordLostSamples)
 
 bool PerfRecordLostSamples::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -1019,10 +946,6 @@ void PerfRecordLostSamples::DumpData(int indent) const
     PRINT_INDENT(indent, "lost %llu\n", data_.lost);
 }
 
-
-
-INIT_PERF_RECORD_DATA(PerfRecordSwitch)
-
 bool PerfRecordSwitch::GetBinary(std::vector<uint8_t> &buf) const
 {
     if (buf.size() < GetSize()) {
@@ -1036,9 +959,6 @@ bool PerfRecordSwitch::GetBinary(std::vector<uint8_t> &buf) const
     *pDest = data_;
     return true;
 }
-
-
-INIT_PERF_RECORD_DATA(PerfRecordSwitchCpuWide)
 
 bool PerfRecordSwitchCpuWide::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -1060,8 +980,8 @@ void PerfRecordSwitchCpuWide::DumpData(int indent) const
                  data_.next_prev_tid);
 }
 
-PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type, uint8_t *data,
-                                                    const perf_event_attr &attr)
+PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type, uint8_t* data,
+                                                            const perf_event_attr &attr)
 {
     HLOG_ASSERT(data == nullptr);
     PerfEventRecord* record = nullptr;
@@ -1075,10 +995,6 @@ PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type,
     record->Init(data, attr);
     return *record;
 }
-
-
-
-
 
 } // namespace HiPerf
 } // namespace Developtools
