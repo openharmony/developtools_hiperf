@@ -20,99 +20,72 @@
 
 #include "utilities.h"
 
-using namespace OHOS::HiviewDFX;
-using namespace std;
+// using namespace OHOS::HiviewDFX;
+// using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
-void *g_sampleMemCache = nullptr; // for read record from buf thread
-void *g_sampleMemCacheMain = nullptr; // for main thread:collecttionsymbol
-constexpr size_t SAMPLE_CACHE_SIZE = 4 * 1024;
+bool PerfRecordSample::dumpRemoveStack_ = false;
+thread_local std::unordered_map<PerfRecordType, PerfEventRecord*> PerfEventRecordFactory::recordMap_ = {};
 
-std::unique_ptr<PerfEventRecord> GetPerfEventRecord(const int type, uint8_t *p,
-                                                    const perf_event_attr &attr)
+#define INIT_PERF_RECORD_DATA(PerfRecordType)   \
+void  PerfRecordType::Init(uint8_t* data, const perf_event_attr&)      \
+{   \
+    PerfEventRecordTemplate::Init(data);    \
+    size_t dataSize = GetSize();    \
+    if (dataSize >= sizeof(header_)) {   \
+        size_t copySize = dataSize - sizeof(header_);    \
+        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), data + sizeof(header_), copySize) != 0) {  \
+            HLOGE("##PerfRecordType## memcpy_s return failed!");    \
+        }   \
+    } else {    \
+        HLOGE("##PerfRecordType## return failed!"); \
+    }   \
+}   \
+
+
+PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
 {
-    HLOG_ASSERT(p);
-    uint8_t *data = p;
-
-    // check kernel
     switch (type) {
         case PERF_RECORD_SAMPLE:
-            return std::make_unique<PerfRecordSample>(data, attr);
+            return new PerfRecordSample();
         case PERF_RECORD_MMAP:
-            return std::make_unique<PerfRecordMmap>(data);
+            return new PerfRecordMmap();
         case PERF_RECORD_MMAP2:
-            return std::make_unique<PerfRecordMmap2>(data);
+            return new PerfRecordMmap2();
         case PERF_RECORD_LOST:
-            return std::make_unique<PerfRecordLost>(data);
+            return new PerfRecordLost();
         case PERF_RECORD_COMM:
-            return std::make_unique<PerfRecordComm>(data);
+            return new PerfRecordComm();
         case PERF_RECORD_EXIT:
-            return std::make_unique<PerfRecordExit>(data);
+            return new PerfRecordExit();
         case PERF_RECORD_THROTTLE:
-            return std::make_unique<PerfRecordThrottle>(data);
+            return new PerfRecordThrottle();
         case PERF_RECORD_UNTHROTTLE:
-            return std::make_unique<PerfRecordUnthrottle>(data);
+            return new PerfRecordUnthrottle();
         case PERF_RECORD_FORK:
-            return std::make_unique<PerfRecordFork>(data);
+            return new PerfRecordFork();
         case PERF_RECORD_READ:
-            return std::make_unique<PerfRecordRead>(data);
+            return new PerfRecordRead();
         case PERF_RECORD_AUX:
-            return std::make_unique<PerfRecordAux>(data);
+            return new PerfRecordAux();
         case PERF_RECORD_AUXTRACE:
-            return std::make_unique<PerfRecordAuxtrace>(data);
+            return new PerfRecordAuxtrace();
         case PERF_RECORD_ITRACE_START:
-            return std::make_unique<PerfRecordItraceStart>(data);
+            return new PerfRecordItraceStart();
         case PERF_RECORD_LOST_SAMPLES:
-            return std::make_unique<PerfRecordLostSamples>(data);
+            return new PerfRecordLostSamples();
         case PERF_RECORD_SWITCH:
-            return std::make_unique<PerfRecordSwitch>(data);
+            return new PerfRecordSwitch();
         case PERF_RECORD_SWITCH_CPU_WIDE:
-            return std::make_unique<PerfRecordSwitchCpuWide>(data);
+            return new PerfRecordSwitchCpuWide();
         default:
             HLOGE("unknown record type %d\n", type);
             return nullptr;
     }
 }
 
-std::unique_ptr<PerfEventRecord> GetPerfSampleFromCache(const int type, uint8_t *p,
-                                                        const perf_event_attr &attr)
-{
-    HLOG_ASSERT(p);
-    uint8_t *data = p;
-
-    if (type == PERF_RECORD_SAMPLE) {
-        if (g_sampleMemCache != nullptr) {
-            memset_s(g_sampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCache) PerfRecordSample(data, attr));
-        } else {
-            g_sampleMemCache = std::malloc(SAMPLE_CACHE_SIZE);
-            memset_s(g_sampleMemCache, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCache) PerfRecordSample(data, attr));
-        }
-    }
-    return GetPerfEventRecord(type, p, attr);
-}
-
-std::unique_ptr<PerfEventRecord> GetPerfSampleFromCacheMain(const int type, uint8_t *p,
-                                                            const perf_event_attr &attr)
-{
-    HLOG_ASSERT(p);
-    uint8_t *data = p;
-
-    if (type == PERF_RECORD_SAMPLE) {
-        if (g_sampleMemCacheMain != nullptr) {
-            memset_s(g_sampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCacheMain) PerfRecordSample(data, attr));
-        } else {
-            g_sampleMemCacheMain = std::malloc(SAMPLE_CACHE_SIZE);
-            memset_s(g_sampleMemCacheMain, SAMPLE_CACHE_SIZE, 0, SAMPLE_CACHE_SIZE);
-            return std::unique_ptr<PerfEventRecord>(new (g_sampleMemCacheMain) PerfRecordSample(data, attr));
-        }
-    }
-    return GetPerfEventRecord(type, p, attr);
-}
 
 template<typename T>
 inline void PushToBinary(bool condition, uint8_t *&p, const T &v)
@@ -154,87 +127,14 @@ inline void PopFromBinary2(bool condition, uint8_t *&p, T1 &v1, T2 &v2)
     }
 }
 
-// PerfEventRecord
-PerfEventRecord::PerfEventRecord(perf_event_type type, bool inKernel, const std::string &name)
-    : name_(name)
-{
-    header.type = type;
-    header.misc = inKernel ? PERF_RECORD_MISC_KERNEL : PERF_RECORD_MISC_USER;
-    header.size = sizeof(header);
-}
 
-PerfEventRecord::PerfEventRecord(perf_event_hiperf_ext_type type, const std::string &name)
-    : name_(name)
-{
-    header.type = type;
-    header.misc = PERF_RECORD_MISC_USER;
-    header.size = sizeof(header);
-}
 
-PerfEventRecord::PerfEventRecord(uint8_t *p, const std::string &name) : name_(name)
-{
-    if (p == nullptr) {
-        header.type = PERF_RECORD_MMAP;
-        header.misc = PERF_RECORD_MISC_USER;
-        header.size = 0;
-        return;
-    }
-    header = *(reinterpret_cast<perf_event_header *>(p));
-}
+INIT_PERF_RECORD_DATA(PerfRecordAuxtrace)
 
-void PerfEventRecord::GetHeaderBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetHeaderSize()) {
-        buf.resize(GetHeaderSize());
-    }
-    uint8_t *p = buf.data();
-    *(reinterpret_cast<perf_event_header *>(p)) = header;
-}
-
-void PerfEventRecord::Dump(int indent, std::string outputFilename, FILE *outputDump) const
-{
-    if (outputDump != nullptr) {
-        g_outputDump = outputDump;
-    } else if (!outputFilename.empty() && g_outputDump == nullptr) {
-        std::string resolvedPath = CanonicalizeSpecPath(outputFilename.c_str());
-        g_outputDump = fopen(resolvedPath.c_str(), "w");
-        if (g_outputDump == nullptr) {
-            printf("unable open file to '%s' because '%d'\n", outputFilename.c_str(), errno);
-            return;
-        }
-    }
-    PRINT_INDENT(indent, "\n");
-    PRINT_INDENT(indent, "record %s: type %u, misc %u, size %zu\n", GetName().c_str(), GetType(),
-                 GetMisc(), GetSize());
-    DumpData(indent + 1);
-}
-
-void PerfEventRecord::DumpLog(const std::string &prefix) const
-{
-    HLOGV("%s: record %s: type %u, misc %u, size %zu\n", prefix.c_str(), GetName().c_str(),
-          GetType(), GetMisc(), GetSize());
-}
-
-std::vector<u64> PerfRecordSample::ips_ = {};
-std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
-std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
-
-PerfRecordAuxtrace::PerfRecordAuxtrace(uint8_t *p) : PerfEventRecord(p, "auxtrace")
-{
-    if (header.size >= sizeof(header)) {
-        size_t copySize = header.size - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordAuxtrace retren failed !!!");
-    }
-    rawData_ = p + header.size;
-}
 
 PerfRecordAuxtrace::PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid)
-    : PerfEventRecord(PERF_RECORD_AUXTRACE, "auxtrace")
 {
+    PerfEventRecordTemplate::Init(PERF_RECORD_AUXTRACE);
     data_.size = size;
     data_.offset = offset;
     data_.reference = reference;
@@ -243,19 +143,19 @@ PerfRecordAuxtrace::PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 
     data_.cpu = cpu;
     data_.reserved__ = pid;
 
-    header.size = sizeof(header) + sizeof(data_);
+    header_.size = sizeof(header_) + sizeof(data_);
 }
 
 bool PerfRecordAuxtrace::GetBinary1(std::vector<uint8_t> &buf) const
 {
-    if (buf.size() < header.size) {
-        buf.resize(header.size);
+    if (buf.size() < header_.size) {
+        buf.resize(header_.size);
     }
 
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    size_t copySize = header.size - GetHeaderSize();
+    size_t copySize = header_.size - GetHeaderSize();
     if (memcpy_s(p, sizeof(data_), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
         HLOGE("memcpy_s return failed");
         return false;
@@ -272,12 +172,12 @@ bool PerfRecordAuxtrace::GetBinary(std::vector<uint8_t> &buf) const
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
 
-    size_t copySize = header.size - GetHeaderSize();
+    size_t copySize = header_.size - GetHeaderSize();
     if (memcpy_s(p, sizeof(data_), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
         HLOGE("memcpy_s return failed");
         return false;
     }
-    p += header.size - GetHeaderSize();
+    p += header_.size - GetHeaderSize();
     if (memcpy_s(p, data_.size, static_cast<uint8_t *>(rawData_), data_.size) != 0) {
         HLOGE("memcpy_s return failed");
         return false;
@@ -304,104 +204,258 @@ void PerfRecordAuxtrace::DumpLog(const std::string &prefix) const
 
 size_t PerfRecordAuxtrace::GetSize() const
 {
-    return header.size + data_.size;
+    return header_.size + data_.size;
 }
 
-void PerfRecordSample::DumpLog(const std::string &prefix) const
+
+INIT_PERF_RECORD_DATA(PerfRecordMmap)
+
+PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
+                               const std::string &filename)
 {
-    HLOGV("%s: SAMPLE: id= %llu size %d pid %u tid %u ips %llu regs %llu, stacks %llu time %llu",
-          prefix.c_str(), data_.sample_id, header.size, data_.pid, data_.tid, data_.nr,
-          data_.reg_nr, data_.dyn_size, data_.time);
+    PerfEventRecordTemplate::Init(PERF_RECORD_MMAP, inKernel);
+
+    data_.pid = pid;
+    data_.tid = tid;
+    data_.addr = addr;
+    data_.len = len;
+    data_.pgoff = pgoff;
+    if (strncpy_s(data_.filename, KILO, filename.c_str(), filename.size()) != 0) {
+        HLOGE("strncpy_s failed");
+    }
+
+    header_.size = sizeof(header_) + sizeof(data_) - KILO + filename.size() + 1;
 }
 
-void PerfRecordSample::RecoverCallStack()
+bool PerfRecordMmap::GetBinary(std::vector<uint8_t> &buf) const
 {
-    data_.ips = ips_.data();
-    data_.nr = ips_.size();
-    removeStack_ = true;
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    // data_.filename[] is variable-length
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    return true;
 }
 
-void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
+void PerfRecordMmap::DumpData(int indent) const
 {
-    // first we check if we have some user unwind stack need to merge ?
-    if (callFrames_.size() != 0) {
-        // when we have some kernel ips , we cp it first
-        // new size is user call frames + kernel call frames
-        // + PERF_CONTEXT_USER(last + 1) + expand mark(also PERF_CONTEXT_USER)
-        const unsigned int perfContextSize = 2;
-        ips_.reserve(data_.nr + callFrames_.size() + perfContextSize);
-        if (data_.nr > 0) {
-            ips_.assign(data_.ips, data_.ips + data_.nr);
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
+                     data_.addr, data_.len);
+        PRINT_INDENT(indent, "pgoff 0x%llx, filename %s\n", data_.pgoff, data_.filename);
+    }
+#endif
+}
+
+void PerfRecordMmap::DumpLog(const std::string &prefix) const
+{
+    HLOGV("%s:  MMAP: size %d pid %u tid %u dso '%s' (0x%llx-0x%llx)@0x%llx", prefix.c_str(),
+          header_.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len, data_.pgoff);
+}
+
+
+INIT_PERF_RECORD_DATA(PerfRecordMmap2)
+
+
+
+PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
+                                 u32 maj, u32 min, u64 ino, u32 prot, u32 flags,
+                                 const std::string &filename)
+{
+    PerfEventRecordTemplate::Init(PERF_RECORD_MMAP2, inKernel);
+    data_.pid = pid;
+    data_.tid = tid;
+    data_.addr = addr;
+    data_.len = len;
+    data_.pgoff = pgoff;
+    data_.maj = maj;
+    data_.min = min;
+    data_.ino = ino;
+    data_.ino_generation = 0;
+    data_.prot = prot;
+    data_.flags = flags;
+    if (strncpy_s(data_.filename, KILO, filename.c_str(), filename.size()) != 0) {
+        HLOGE("strncpy_s failed");
+    }
+
+    header_.size = sizeof(header_) + sizeof(data_) - KILO + filename.size() + 1;
+}
+
+PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<HiviewDFX::DfxMap> item)
+{
+    PerfEventRecordTemplate::Init(PERF_RECORD_MMAP2, inKernel);
+    data_.pid = pid;
+    data_.tid = tid;
+    if (item != nullptr) {
+        data_.addr = item->begin;
+        data_.len = item->end - item->begin;
+        data_.pgoff = item->offset;
+        data_.maj = item->major;
+        data_.min = item->minor;
+        data_.ino = item->inode;
+        data_.ino_generation = 0;
+        // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
+        // why prot get from this is 7. rwxp
+        HiviewDFX::DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
+        if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
+            HLOGE("strncpy_s failed");
         }
-        // add user context mark
-        ips_.emplace_back(PERF_CONTEXT_USER);
-        // we also need make a expand mark just for debug only
-        const size_t beginIpsSize = ips_.size();
-        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const DfxFrame &frame) {
-            ips_.emplace_back(frame.pc);
-            if (originalSize != 0 and (originalSize != callFrames_.size()) and
-                ips_.size() == (originalSize + beginIpsSize)) {
-                // just for debug
-                // so we can see which frame begin is expand call frames
-                ips_.emplace_back(PERF_CONTEXT_USER);
-            }
-            return true;
-        });
-        if (ret) {
-            HLOGV("combed %zu", callFrames_.size());
-        } else {
-            HLOGV("failed to combed %zu", callFrames_.size());
-        }
 
-        if (sampleType_ & PERF_SAMPLE_REGS_USER) {
-            header.size -= data_.reg_nr * sizeof(u64);
-            data_.reg_nr = 0;
-            data_.user_abi = 0;
-        }
-
-        if (sampleType_ & PERF_SAMPLE_STACK_USER) {
-            // 1. remove the user stack
-            header.size -= data_.stack_size;
-            header.size -= sizeof(data_.dyn_size);
-
-            // 2. clean the size
-            data_.stack_size = 0;
-            data_.dyn_size = 0;
-        }
-
-        if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
-            HLOGV("ips change from %llu -> %zu", data_.nr, ips_.size());
-
-            // 3. remove the nr size
-            header.size -= data_.nr * sizeof(u64);
-
-            // 4. add new nr size
-            data_.nr = ips_.size();
-            header.size += data_.nr * sizeof(u64);
-
-            // 5. change ips potin to our ips array and hold it.
-            data_.ips = ips_.data();
-        }
+        header_.size = sizeof(header_) + sizeof(data_) - KILO + item->name.size() + 1;
     } else {
-        // nothing need change
-        return;
+        data_.addr = 0;
+        data_.len = 0;
+        data_.pgoff = 0;
+        data_.maj = 0;
+        data_.min = 0;
+        data_.ino = 0;
+        data_.ino_generation = 0;
+        if (memset_s(data_.filename, KILO, 0, KILO) != EOK) {
+            HLOGE("memset_s failed");
+        }
     }
 }
 
-PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
-    : PerfEventRecord(p, "sample")
+bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const
 {
-    if (p == nullptr) {
-        HLOG_ASSERT(p);
-        return;
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
     }
-    // clear the static vector data
-    Clean();
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    // data_.filename[] is variable-length
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    return true;
+}
+
+void PerfRecordMmap2::DumpData(int indent) const
+{
+#if defined(is_ohos) && is_ohos
+    if (IsRoot()) {
+        PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
+                     data_.addr, data_.len);
+        PRINT_INDENT(indent, "pgoff 0x%llx, maj %u, min %u, ino %llu, ino_generation %llu\n",
+                     data_.pgoff, data_.maj, data_.min, data_.ino, data_.ino_generation);
+        PRINT_INDENT(indent, "prot %u, flags %u, filename %s\n", data_.prot, data_.flags,
+                     data_.filename);
+    }
+#endif
+}
+void PerfRecordMmap2::DumpLog(const std::string &prefix) const
+{
+    HLOGV("%s:  MMAP2: size %d pid %u tid %u dso '%s' (0x%llx-0x%llx)@0x%llx", prefix.c_str(),
+          header_.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len,
+          data_.pgoff);
+}
+
+INIT_PERF_RECORD_DATA(PerfRecordLost)
+
+bool PerfRecordLost::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordLostData *>(p);
+    *pDest = data_;
+
+    return true;
+}
+
+void PerfRecordLost::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "id %llu, lost %llu\n", data_.id, data_.lost);
+}
+
+PerfRecordLost::PerfRecordLost(bool inKernel, u64 id, u64 lost)
+{
+    PerfEventRecordTemplate::Init(PERF_RECORD_LOST, inKernel);
+    data_.id = id;
+    data_.lost = lost;
+    header_.size = sizeof(header_) + sizeof(data_);
+}
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordComm)
+
+PerfRecordComm::PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm)
+{
+    
+    PerfEventRecordTemplate::Init(PERF_RECORD_COMM, inKernel);
+    data_.pid = pid;
+    data_.tid = tid;
+    if (strncpy_s(data_.comm, KILO, comm.c_str(), comm.size()) != 0) {
+        HLOGE("strncpy_s failed !!!");
+    }
+
+    header_.size = sizeof(header_) + sizeof(data_) - KILO + comm.size() + 1;
+}
+
+bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    // data_.comm[] is variable-length
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+
+    return true;
+}
+
+void PerfRecordComm::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "pid %u, tid %u, comm %s\n", data_.pid, data_.tid, data_.comm);
+}
+
+void PerfRecordComm::DumpLog(const std::string &prefix) const
+{
+    HLOGV("pid %u, tid %u, comm %s\n", data_.pid, data_.tid, data_.comm);
+}
+
+PerfRecordSample::PerfRecordSample(const PerfRecordSample& sample)
+{
+    header_ = sample.header_;
+    data_ = sample.data_;
+
+    sampleType_ = sample.sampleType_;
+    skipKernel_ = sample.skipKernel_;
+    skipPid_ = sample.skipPid_;
+
+    ips_ = sample.ips_;
+    callFrames_ = sample.callFrames_;
+    serverPidMap_ = sample.serverPidMap_;
+
+    stackId_ = sample.stackId_;
+    removeStack_ = sample.removeStack_;
+}
+
+
+void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
+{
+    PerfEventRecordTemplate::Init(p);
+
+    HLOG_ASSERT(p == nullptr);
     sampleType_ = attr.sample_type;
-
     uint8_t *start = p;
-
-    p += sizeof(header);
+    p += sizeof(header_);
 
     // parse record according SAMPLE_TYPE
     PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id);
@@ -448,11 +502,23 @@ PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
         p += data_.stack_size;
         PopFromBinary(true, p, data_.dyn_size);
     }
-    uint32_t remain = header.size - (p - start);
+    uint32_t remain = header_.size - (p - start);
     if (data_.nr == 0 && dumpRemoveStack_ && remain == sizeof(stackId_)) {
         PopFromBinary(true, p, stackId_.value);
     }
 }
+
+
+void PerfRecordSample::SetDumpRemoveStack(bool dumpRemoveStack)
+{
+    dumpRemoveStack_ = dumpRemoveStack;
+}
+
+bool PerfRecordSample::IsDumpRemoveStack()
+{
+    return dumpRemoveStack_;
+}
+
 
 bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
 {
@@ -593,599 +659,102 @@ void PerfRecordSample::DumpData(int indent) const
     }
 }
 
+void PerfRecordSample::DumpLog(const std::string &prefix) const
+{
+    HLOGV("%s: SAMPLE: id= %llu size %d pid %u tid %u ips %llu regs %llu, stacks %llu time %llu",
+          prefix.c_str(), data_.sample_id, header_.size, data_.pid, data_.tid, data_.nr,
+          data_.reg_nr, data_.dyn_size, data_.time);
+}
+
+void PerfRecordSample::RecoverCallStack()
+{
+    data_.ips = ips_.data();
+    data_.nr = ips_.size();
+    removeStack_ = true;
+}
+
+void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
+{
+    // first we check if we have some user unwind stack need to merge ?
+    if (callFrames_.size() != 0) {
+        // when we have some kernel ips , we cp it first
+        // new size is user call frames + kernel call frames
+        // + PERF_CONTEXT_USER(last + 1) + expand mark(also PERF_CONTEXT_USER)
+        const unsigned int perfContextSize = 2;
+        ips_.reserve(data_.nr + callFrames_.size() + perfContextSize);
+        if (data_.nr > 0) {
+            ips_.assign(data_.ips, data_.ips + data_.nr);
+        }
+        // add user context mark
+        ips_.emplace_back(PERF_CONTEXT_USER);
+        // we also need make a expand mark just for debug only
+        const size_t beginIpsSize = ips_.size();
+        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const HiviewDFX::DfxFrame &frame) {
+            ips_.emplace_back(frame.pc);
+            if (originalSize != 0 and (originalSize != callFrames_.size()) and
+                ips_.size() == (originalSize + beginIpsSize)) {
+                // just for debug
+                // so we can see which frame begin is expand call frames
+                ips_.emplace_back(PERF_CONTEXT_USER);
+            }
+            return true;
+        });
+        if (ret) {
+            HLOGV("combed %zu", callFrames_.size());
+        } else {
+            HLOGV("failed to combed %zu", callFrames_.size());
+        }
+
+        if (sampleType_ & PERF_SAMPLE_REGS_USER) {
+            header_.size -= data_.reg_nr * sizeof(u64);
+            data_.reg_nr = 0;
+            data_.user_abi = 0;
+        }
+
+        if (sampleType_ & PERF_SAMPLE_STACK_USER) {
+            // 1. remove the user stack
+            header_.size -= data_.stack_size;
+            header_.size -= sizeof(data_.dyn_size);
+
+            // 2. clean the size
+            data_.stack_size = 0;
+            data_.dyn_size = 0;
+        }
+
+        if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
+            HLOGV("ips change from %llu -> %zu", data_.nr, ips_.size());
+
+            // 3. remove the nr size
+            header_.size -= data_.nr * sizeof(u64);
+
+            // 4. add new nr size
+            data_.nr = ips_.size();
+            header_.size += data_.nr * sizeof(u64);
+
+            // 5. change ips potin to our ips array and hold it.
+            data_.ips = ips_.data();
+        }
+    } else {
+        // nothing need change
+        return;
+    }
+}
+
 inline pid_t PerfRecordSample::GetPid() const
 {
     return data_.pid;
 }
 
-void PerfRecordSample::Clean()
+PerfRecordSample::PerfRecordSample(bool inKernel, u32 pid, u32 tid, u64 period, u64 time, u64 id)
 {
-    ips_.clear();
-    callFrames_.clear();
-    serverPidMap_.clear();
-}
-
-PerfRecordMmap::PerfRecordMmap(uint8_t *p) : PerfEventRecord(p, "mmap")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordMmap retren failed !!!");
-    }
-}
-
-PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
-                               const std::string &filename)
-    : PerfEventRecord(PERF_RECORD_MMAP, inKernel, "mmap")
-{
+    PerfEventRecordTemplate::Init(PERF_RECORD_SAMPLE, inKernel);
     data_.pid = pid;
     data_.tid = tid;
-    data_.addr = addr;
-    data_.len = len;
-    data_.pgoff = pgoff;
-    if (strncpy_s(data_.filename, KILO, filename.c_str(), filename.size()) != 0) {
-        HLOGE("strncpy_s failed");
-    }
-
-    header.size = sizeof(header) + sizeof(data_) - KILO + filename.size() + 1;
-}
-
-bool PerfRecordMmap::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    // data_.filename[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
-    return true;
-}
-
-void PerfRecordMmap::DumpData(int indent) const
-{
-#if defined(is_ohos) && is_ohos
-    if (IsRoot()) {
-        PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
-                     data_.addr, data_.len);
-        PRINT_INDENT(indent, "pgoff 0x%llx, filename %s\n", data_.pgoff, data_.filename);
-    }
-#endif
-}
-
-void PerfRecordMmap::DumpLog(const std::string &prefix) const
-{
-    HLOGV("%s:  MMAP: size %d pid %u tid %u dso '%s' (0x%llx-0x%llx)@0x%llx", prefix.c_str(),
-          header.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len, data_.pgoff);
-}
-
-PerfRecordMmap2::PerfRecordMmap2(uint8_t *p) : PerfEventRecord(p, "mmap2")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordMmap2 retren failed !!!");
-    }
-}
-
-PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
-                                 u32 maj, u32 min, u64 ino, u32 prot, u32 flags,
-                                 const std::string &filename)
-    : PerfEventRecord(PERF_RECORD_MMAP2, inKernel, "mmap2")
-{
-    data_.pid = pid;
-    data_.tid = tid;
-    data_.addr = addr;
-    data_.len = len;
-    data_.pgoff = pgoff;
-    data_.maj = maj;
-    data_.min = min;
-    data_.ino = ino;
-    data_.ino_generation = 0;
-    data_.prot = prot;
-    data_.flags = flags;
-    if (strncpy_s(data_.filename, KILO, filename.c_str(), filename.size()) != 0) {
-        HLOGE("strncpy_s failed");
-    }
-
-    header.size = sizeof(header) + sizeof(data_) - KILO + filename.size() + 1;
-}
-
-PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<DfxMap> item)
-    : PerfEventRecord(PERF_RECORD_MMAP2, inKernel, "mmap2")
-{
-    data_.pid = pid;
-    data_.tid = tid;
-    if (item != nullptr) {
-        data_.addr = item->begin;
-        data_.len = item->end - item->begin;
-        data_.pgoff = item->offset;
-        data_.maj = item->major;
-        data_.min = item->minor;
-        data_.ino = item->inode;
-        data_.ino_generation = 0;
-        // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
-        // why prot get from this is 7. rwxp
-        DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
-        if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
-            HLOGE("strncpy_s failed");
-        }
-
-        header.size = sizeof(header) + sizeof(data_) - KILO + item->name.size() + 1;
-    } else {
-        data_.addr = 0;
-        data_.len = 0;
-        data_.pgoff = 0;
-        data_.maj = 0;
-        data_.min = 0;
-        data_.ino = 0;
-        data_.ino_generation = 0;
-        if (memset_s(data_.filename, KILO, 0, KILO) != EOK) {
-            HLOGE("memset_s failed");
-        }
-    }
-}
-
-bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    // data_.filename[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
-    return true;
-}
-
-void PerfRecordMmap2::DumpData(int indent) const
-{
-#if defined(is_ohos) && is_ohos
-    if (IsRoot()) {
-        PRINT_INDENT(indent, "pid %u, tid %u, addr 0x%llx, len 0x%llx\n", data_.pid, data_.tid,
-                     data_.addr, data_.len);
-        PRINT_INDENT(indent, "pgoff 0x%llx, maj %u, min %u, ino %llu, ino_generation %llu\n",
-                     data_.pgoff, data_.maj, data_.min, data_.ino, data_.ino_generation);
-        PRINT_INDENT(indent, "prot %u, flags %u, filename %s\n", data_.prot, data_.flags,
-                     data_.filename);
-    }
-#endif
-}
-void PerfRecordMmap2::DumpLog(const std::string &prefix) const
-{
-    HLOGV("%s:  MMAP2: size %d pid %u tid %u dso '%s' (0x%llx-0x%llx)@0x%llx", prefix.c_str(),
-          header.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len,
-          data_.pgoff);
-}
-
-PerfRecordLost::PerfRecordLost(uint8_t *p) : PerfEventRecord(p, "lost")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordLost retren failed !!!");
-    }
-}
-
-bool PerfRecordLost::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordLostData *>(p);
-    *pDest = data_;
-
-    return true;
-}
-
-void PerfRecordLost::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "id %llu, lost %llu\n", data_.id, data_.lost);
-}
-
-PerfRecordComm::PerfRecordComm(uint8_t *p) : PerfEventRecord(p, "comm")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordComm retren failed !!!");
-    }
-}
-
-PerfRecordComm::PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm)
-    : PerfEventRecord(PERF_RECORD_COMM, inKernel, "comm")
-{
-    data_.pid = pid;
-    data_.tid = tid;
-    if (strncpy_s(data_.comm, KILO, comm.c_str(), comm.size()) != 0) {
-        HLOGE("strncpy_s failed !!!");
-    }
-
-    header.size = sizeof(header) + sizeof(data_) - KILO + comm.size() + 1;
-}
-
-bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    // data_.comm[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
-
-    return true;
-}
-
-void PerfRecordComm::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "pid %u, tid %u, comm %s\n", data_.pid, data_.tid, data_.comm);
-}
-
-void PerfRecordComm::DumpLog(const std::string &prefix) const
-{
-    HLOGV("pid %u, tid %u, comm %s\n", data_.pid, data_.tid, data_.comm);
-}
-
-PerfRecordExit::PerfRecordExit(uint8_t *p) : PerfEventRecord(p, "exit")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordExit retren failed !!!");
-    }
-}
-
-bool PerfRecordExit::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordExitData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-void PerfRecordExit::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u time 0x%llx\n", data_.pid, data_.ppid,
-                 data_.tid, data_.ptid, data_.time);
-}
-
-PerfRecordThrottle::PerfRecordThrottle(uint8_t *p) : PerfEventRecord(p, "throttle")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordThrottle retren failed !!!");
-    }
-}
-
-bool PerfRecordThrottle::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordThrottleData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-void PerfRecordThrottle::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
-                 data_.stream_id);
-}
-
-PerfRecordUnthrottle::PerfRecordUnthrottle(uint8_t *p) : PerfEventRecord(p, "unthrottle")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordUnthrottle retren failed !!!");
-    }
-}
-
-bool PerfRecordUnthrottle::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordThrottleData *>(p);
-    *pDest = data_;
-    return true;
-}
-void PerfRecordUnthrottle::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
-                 data_.stream_id);
-}
-
-PerfRecordFork::PerfRecordFork(uint8_t *p) : PerfEventRecord(p, "fork")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordFork retren failed !!!");
-    }
-}
-
-bool PerfRecordFork::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordForkData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-void PerfRecordFork::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u\n", data_.pid, data_.ppid, data_.tid,
-                 data_.ptid);
-}
-
-PerfRecordRead::PerfRecordRead(uint8_t *p) : PerfEventRecord(p, "read")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordRead retren failed !!!");
-    }
-}
-
-bool PerfRecordRead::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordReadData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-void PerfRecordRead::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
-    PRINT_INDENT(indent, "values: value %llx, timeEnabled %llx, timeRunning %llx, id %llx\n",
-                 data_.values.value, data_.values.timeEnabled, data_.values.timeRunning, data_.values.id);
-}
-
-PerfRecordAux::PerfRecordAux(uint8_t *p) : PerfEventRecord(p, "aux")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordAux retren failed !!!");
-    }
-}
-
-bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    PushToBinary(true, p, data_.aux_offset);
-    PushToBinary(true, p, data_.aux_size);
-    PushToBinary(true, p, data_.flags);
-    PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.sample_id.pid, data_.sample_id.tid);
-    PushToBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.sample_id.time);
-    PushToBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.sample_id.id);
-    PushToBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.sample_id.stream_id);
-
-    PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.sample_id.cpu, data_.sample_id.res);
-    PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id.id2);
-    return true;
-}
-
-void PerfRecordAux::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "aux_offset 0x%llx aux_size 0x%llx flags 0x%llx pid %u tid %u time %llu",
-                 data_.aux_offset, data_.aux_size, data_.flags, data_.sample_id.pid, data_.sample_id.tid,
-                 data_.sample_id.time);
-}
-
-PerfRecordItraceStart::PerfRecordItraceStart(uint8_t *p) : PerfEventRecord(p, "itraceStart")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordItraceStart retren failed !!!");
-    }
-}
-
-bool PerfRecordItraceStart::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordItraceStartData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-void PerfRecordItraceStart::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
-}
-
-PerfRecordLostSamples::PerfRecordLostSamples(uint8_t *p) : PerfEventRecord(p, "lostSamples")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordLostSamples retren failed !!!");
-    }
-}
-
-bool PerfRecordLostSamples::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordLostSamplesData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-void PerfRecordLostSamples::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "lost %llu\n", data_.lost);
-}
-
-PerfRecordSwitch::PerfRecordSwitch(uint8_t *p) : PerfEventRecord(p, "switch")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordSwitch retren failed !!!");
-    }
-}
-
-bool PerfRecordSwitch::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordSwitchData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-PerfRecordSwitchCpuWide::PerfRecordSwitchCpuWide(uint8_t *p) : PerfEventRecord(p, "switchCpuWide")
-{
-    size_t dataSize = GetSize();
-    if (dataSize >= sizeof(header)) {
-        size_t copySize = dataSize - sizeof(header);
-        if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header), copySize) != 0) {
-            HLOGE("memcpy_s retren failed !!!");
-        }
-    } else {
-        HLOGE("PerfRecordSwitchCpuWide retren failed !!!");
-    }
-}
-
-bool PerfRecordSwitchCpuWide::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    auto pDest = reinterpret_cast<PerfRecordSwitchCpuWideData *>(p);
-    *pDest = data_;
-    return true;
-}
-
-void PerfRecordSwitchCpuWide::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "next_prev_pid %u, next_prev_tid %u\n", data_.next_prev_pid,
-                 data_.next_prev_tid);
-}
+    data_.period = period;
+    data_.time = time;
+    data_.id = 0;
+    header_.size = sizeof(header_) + sizeof(data_);
+};
 
 pid_t PerfRecordSample::GetUstackServerPid()
 {
@@ -1246,6 +815,271 @@ pid_t PerfRecordSample::GetServerPidof(unsigned int ipNr)
         return serverPidMap_[ipNr];
     }
 }
+
+
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordExit)
+
+bool PerfRecordExit::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordExitData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+void PerfRecordExit::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u time 0x%llx\n", data_.pid, data_.ppid,
+                 data_.tid, data_.ptid, data_.time);
+}
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordThrottle)
+
+
+bool PerfRecordThrottle::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordThrottleData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+void PerfRecordThrottle::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
+                 data_.stream_id);
+}
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordUnthrottle)
+
+bool PerfRecordUnthrottle::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordThrottleData *>(p);
+    *pDest = data_;
+    return true;
+}
+void PerfRecordUnthrottle::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "time 0x%llx, id %llx, stream_id %llx\n", data_.time, data_.id,
+                 data_.stream_id);
+}
+
+
+INIT_PERF_RECORD_DATA(PerfRecordFork)
+
+bool PerfRecordFork::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordForkData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+void PerfRecordFork::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "pid %u, ppid %u, tid %u, ptid %u\n", data_.pid, data_.ppid, data_.tid,
+                 data_.ptid);
+}
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordRead)
+
+bool PerfRecordRead::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordReadData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+void PerfRecordRead::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
+    PRINT_INDENT(indent, "values: value %llx, timeEnabled %llx, timeRunning %llx, id %llx\n",
+                 data_.values.value, data_.values.timeEnabled, data_.values.timeRunning, data_.values.id);
+}
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordAux)
+
+bool PerfRecordAux::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    PushToBinary(true, p, data_.aux_offset);
+    PushToBinary(true, p, data_.aux_size);
+    PushToBinary(true, p, data_.flags);
+    PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.sample_id.pid, data_.sample_id.tid);
+    PushToBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.sample_id.time);
+    PushToBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.sample_id.id);
+    PushToBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.sample_id.stream_id);
+
+    PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.sample_id.cpu, data_.sample_id.res);
+    PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id.id2);
+    return true;
+}
+
+void PerfRecordAux::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "aux_offset 0x%llx aux_size 0x%llx flags 0x%llx pid %u tid %u time %llu",
+                 data_.aux_offset, data_.aux_size, data_.flags, data_.sample_id.pid, data_.sample_id.tid,
+                 data_.sample_id.time);
+}
+
+
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordItraceStart)
+
+bool PerfRecordItraceStart::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordItraceStartData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+void PerfRecordItraceStart::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
+}
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordLostSamples)
+
+bool PerfRecordLostSamples::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordLostSamplesData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+void PerfRecordLostSamples::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "lost %llu\n", data_.lost);
+}
+
+
+
+INIT_PERF_RECORD_DATA(PerfRecordSwitch)
+
+bool PerfRecordSwitch::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordSwitchData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+
+INIT_PERF_RECORD_DATA(PerfRecordSwitchCpuWide)
+
+bool PerfRecordSwitchCpuWide::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    auto pDest = reinterpret_cast<PerfRecordSwitchCpuWideData *>(p);
+    *pDest = data_;
+    return true;
+}
+
+void PerfRecordSwitchCpuWide::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "next_prev_pid %u, next_prev_tid %u\n", data_.next_prev_pid,
+                 data_.next_prev_tid);
+}
+
+PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type, uint8_t *data,
+                                                    const perf_event_attr &attr)
+{
+    HLOG_ASSERT(data == nullptr);
+    PerfEventRecord* record = nullptr;
+    auto it = recordMap_.find(type);
+    if (it == recordMap_.end()) {
+        record = CreatePerfEventRecord(type);
+        recordMap_.emplace(type, record);
+    } else {
+        record = it->second;
+    }
+    record->Init(data, attr);
+    return *record;
+}
+
+
+
+
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

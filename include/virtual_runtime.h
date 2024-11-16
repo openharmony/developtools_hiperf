@@ -51,7 +51,7 @@ public:
     // from the record , it will call back to write some Simulated Record
     // case 1. some mmap will be create when it read mmaps for each new process (from record sample)
 
-    using RecordCallBack = std::function<bool(std::unique_ptr<PerfEventRecord>)>;
+    using RecordCallBack = std::function<bool(PerfEventRecord&)>;
     using CollectSymbolCallBack = std::function<void(PerfRecordSample*)>;
 
     void SetRecordMode(RecordCallBack recordCallBack);

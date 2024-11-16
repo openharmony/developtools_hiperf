@@ -125,10 +125,10 @@ bool PerfFileWriter::WriteRecord(const PerfEventRecord &record)
         return false;
     }
 
-    HLOGV("write '%s', size %zu", record.GetName().c_str(), record.GetSize());
+    HLOGV("write '%s', size %zu", record.GetNameP(), record.GetSize());
 
     CHECK_TRUE(record.GetSize() > RECORD_SIZE_LIMIT_SPE, false, 1,
-               "%s record size exceed limit", record.GetName().c_str());
+               "%s record size exceed limit", record.GetNameP());
     // signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0xb64eb195
     static std::vector<u8> buf(RECORD_SIZE_LIMIT_SPE);
 
@@ -186,13 +186,13 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
                     }
                     uint8_t *data = buf;
                     // the record is allowed from a cache memory, does not free memory after use
-                    auto record = GetPerfSampleFromCacheMain(static_cast<perf_event_type>(header->type),
+                    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(header->type),
                                                              data, defaultEventAttr_);
                     // skip unknown record
-                    CHECK_TRUE(record == nullptr, true, 0, "");
+                    CHECK_TRUE(record.GetNameP() == nullptr, true, 0, "");
                     remainingSize = remainingSize - header->size - speSize;
                     // call callback to process, do not destroy the record
-                    callback(std::move(record));
+                    callback(record);
                     recordNumber++;
                 }
             } else {

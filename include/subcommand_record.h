@@ -303,8 +303,8 @@ private:
     bool isSpe_ = false;
 
     // callback to process record
-    bool ProcessRecord(std::unique_ptr<PerfEventRecord>);
-    bool SaveRecord(std::unique_ptr<PerfEventRecord>, bool ptrReleaseFlag = false);
+    bool ProcessRecord(PerfEventRecord& record);
+    bool SaveRecord(PerfEventRecord& record, bool ptrReleaseFlag = false);
 
     // file format like as 0,1-3,4-6,7,8
     uint32_t GetCountFromFile(const std::string &fileName);
@@ -327,7 +327,7 @@ private:
     void ReportTime();
 #endif
 
-    bool CollectionSymbol(std::unique_ptr<PerfEventRecord> record);
+    bool CollectionSymbol(PerfEventRecord& record);
     void CollectSymbol(PerfRecordSample *sample);
     bool SetPerfLimit(const std::string& file, int value, std::function<bool (int, int)> const& cmd,
         const std::string& param);
