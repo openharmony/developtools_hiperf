@@ -73,7 +73,7 @@ struct AttrWithId {
 
 class PerfEventRecord {
 public:
-    virtual const char* GetNameP() const = 0;
+    virtual const char* GetName() const = 0;
     virtual void Init(uint8_t* data, const perf_event_attr& attr) = 0;
 
     virtual ~PerfEventRecord() = default;
@@ -104,7 +104,7 @@ public:
 
     struct perf_event_header header_ = {};
     DataType data_ = {};
-    const char* GetNameP() const override final
+    const char* GetName() const override final
     {
         return RECORD_TYPE_NAME;
     }
@@ -184,39 +184,6 @@ protected:
     }
 };
 
-// PerfEventRecord
-// template <typename DataType, const char* RECORD_TYPE_NAME>
-// void PerfEventRecordTemplate<DataType, RECORD_TYPE_NAME>::Init(perf_event_type type, bool inKernel)
-// {
-// }
-
-// template <typename DataType, const char* RECORD_TYPE_NAME>
-// void PerfEventRecordTemplate<DataType, RECORD_TYPE_NAME>::Init(perf_event_hiperf_ext_type type)
-// {
-// }
-
-// template <typename DataType, const char* RECORD_TYPE_NAME>
-// void PerfEventRecordTemplate<DataType, RECORD_TYPE_NAME>::Init(uint8_t *p, const perf_event_attr&)
-// {
-//     if (p == nullptr) {
-//         header_.type = PERF_RECORD_MMAP;
-//         header_.misc = PERF_RECORD_MISC_USER;
-//         header_.size = 0;
-//         return;
-//     }
-//     header_ = *(reinterpret_cast<perf_event_header *>(p));
-
-//     size_t dataSize = GetSize();
-//     if (dataSize >= sizeof(header_)) {
-//         size_t copySize = dataSize - sizeof(header_);
-//         if (memcpy_s(reinterpret_cast<uint8_t *>(&data_), sizeof(data_), p + sizeof(header_), copySize) != 0) {
-//             HLOGE("init perf record memcpy_s failed!");
-//         }
-//     } else {
-//         HLOGE("init perf record failed!");
-//     }
-// }
-
 template <typename DataType, const char* NAME>
 void PerfEventRecordTemplate<DataType, NAME>::GetHeaderBinary(std::vector<uint8_t>& buf) const
 {
@@ -241,7 +208,7 @@ void PerfEventRecordTemplate<DataType, NAME>::Dump(int indent, std::string outpu
         }
     }
     PRINT_INDENT(indent, "\n");
-    PRINT_INDENT(indent, "record %s: type %u, misc %u, size %zu\n", GetNameP(), GetType(),
+    PRINT_INDENT(indent, "record %s: type %u, misc %u, size %zu\n", GetName(), GetType(),
                  GetMisc(), GetSize());
     DumpData(indent + 1);
 }
@@ -249,12 +216,13 @@ void PerfEventRecordTemplate<DataType, NAME>::Dump(int indent, std::string outpu
 template <typename DataType, const char* NAME>
 void PerfEventRecordTemplate<DataType, NAME>::DumpLog(const std::string& prefix) const
 {
-    HLOGV("%s: record %s: type %u, misc %u, size %zu\n", prefix.c_str(), GetNameP(),
+    HLOGV("%s: record %s: type %u, misc %u, size %zu\n", prefix.c_str(), GetName(),
           GetType(), GetMisc(), GetSize());
 }
 
 // define convert from linux/perf_event.h
 // description from https://man7.org/linux/man-pages/man2/perf_event_open.2.html
+
 constexpr __u64 SAMPLE_ID = PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_ID |
                             PERF_SAMPLE_STREAM_ID | PERF_SAMPLE_CPU | PERF_SAMPLE_IDENTIFIER;
 
@@ -528,16 +496,16 @@ private:
 };
 
 template<typename T>
-void PushToBinary(bool condition, uint8_t*& p, const T& v);
+void PushToBinary(bool condition, uint8_t *&p, const T &v);
 
 template<typename T1, typename T2>
-void PushToBinary2(bool condition, uint8_t*& p, const T1& v1, const T2& v2);
+void PushToBinary2(bool condition, uint8_t *&p, const T1 &v1, const T2 &v2);
 
 template<typename T>
-void PopFromBinary(bool condition, uint8_t*& p, T& v);
+void PopFromBinary(bool condition, uint8_t *&p, T &v);
 
 template<typename T1, typename T2>
-void PopFromBinary2(bool condition, uint8_t*& p, T1& v1, T2& v2);
+void PopFromBinary2(bool condition, uint8_t *&p, T1 &v1, T2 &v2);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

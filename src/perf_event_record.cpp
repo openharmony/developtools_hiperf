@@ -20,8 +20,6 @@
 
 #include "utilities.h"
 
-// using namespace OHOS::HiviewDFX;
-// using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {

@@ -279,7 +279,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
                     PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
                         static_cast<perf_event_type>(header->type), data, *attr);
                     // unknown record , break the process
-                    if (record.GetNameP() == nullptr) {
+                    if (record.GetName() == nullptr) {
                         return false;
                     } else {
                         HLOGV("record type %u", record.GetType());

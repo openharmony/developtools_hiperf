@@ -440,7 +440,7 @@ void SubCommandDump::DumpDataPortion(int indent)
 {
     int recordCount = 0;
     auto recordcCallback = [&](PerfEventRecord& record) {
-        CHECK_TRUE(record.GetNameP() == nullptr, false, 0, ""); // return false in callback can stop the read process
+        CHECK_TRUE(record.GetName() == nullptr, false, 0, ""); // return false in callback can stop the read process
 
         // for UT
         if (exportSampleIndex_ > 0) {

@@ -1325,7 +1325,7 @@ void SubCommandRecord::RemoveVdsoTmpFile()
 
 bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 {
-    CHECK_TRUE(record.GetNameP() == nullptr, false, 1, "record is null");
+    CHECK_TRUE(record.GetName() == nullptr, false, 1, "record is null");
 #if HIDEBUG_RECORD_NOT_PROCESS
     // some times we want to check performance
     // but we still want to see the record number
@@ -1375,14 +1375,14 @@ bool SubCommandRecord::SaveRecord(PerfEventRecord& record, bool ptrReleaseFlag)
         }
     }
 
-    if (record.GetNameP() == nullptr) {
+    if (record.GetName() == nullptr) {
 #ifdef HIPERF_DEBUG_TIME
         const auto saveTime = steady_clock::now();
 #endif
         if (!fileWriter_->WriteRecord(record)) {
             // write file failed, need stop record
             perfEvents_.StopTracking();
-            HLOGV("fail to write record %s", record.GetNameP());
+            HLOGV("fail to write record %s", record.GetName());
             return false;
         }
         if (record.GetType() == PERF_RECORD_SAMPLE) {
@@ -1390,7 +1390,7 @@ bool SubCommandRecord::SaveRecord(PerfEventRecord& record, bool ptrReleaseFlag)
         } else {
             recordNoSamples_++;
         }
-        HLOGV(" write done. size=%zu name=%s", record.GetSize(), record.GetNameP());
+        HLOGV(" write done. size=%zu name=%s", record.GetSize(), record.GetName());
 #ifdef HIPERF_DEBUG_TIME
         saveRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - saveTime);
 #endif
@@ -1607,7 +1607,7 @@ bool SubCommandRecord::PostProcessRecordFile()
 
         // 2. read out the file and unwind
         auto record_callback = [&](PerfEventRecord& record) {
-            if (record.GetNameP() == nullptr) {
+            if (record.GetName() == nullptr) {
                 // return false in callback can stop the read process
                 return false;
             } else if (record.GetType() == PERF_RECORD_SAMPLE) {
@@ -1657,7 +1657,7 @@ void SubCommandRecord::SymbolicHits()
 
 bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
 {
-    CHECK_TRUE(record.GetNameP() == nullptr, false, 0, "");
+    CHECK_TRUE(record.GetName() == nullptr, false, 0, "");
     if (record.GetType() == PERF_RECORD_SAMPLE) {
         PerfRecordSample* sample = static_cast<PerfRecordSample*>(&record);
 #if USE_COLLECT_SYMBOLIC
