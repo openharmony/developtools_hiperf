@@ -281,7 +281,12 @@ public:
     void DumpData(int indent) const override;
 
     // only for UT
-    PerfRecordLost(bool inKernel, u64 id, u64 lost);
+    PerfRecordLost(bool inKernel, u64 id, u64 lost) {
+        PerfEventRecordTemplate::Init(PERF_RECORD_LOST, inKernel);
+        data_.id = id;
+        data_.lost = lost;
+        header_.size = sizeof(header_) + sizeof(data_);
+    }
 };
 
 class PerfRecordComm : public PerfEventRecordTemplate<PerfRecordCommData, PERF_RECORD_TYPE_MMAP> {
@@ -326,9 +331,19 @@ public:
     // originalSize is use for expand callstack
     void ReplaceWithCallStack(size_t originalSize = 0);
     pid_t GetPid() const override;
+    void Clean();
 
     // only for UT
-    PerfRecordSample(bool inKernel, u32 pid, u32 tid, u64 period = 0, u64 time = 0, u64 id = 0);
+    PerfRecordSample(bool inKernel, u32 pid, u32 tid, u64 period = 0, u64 time = 0, u64 id = 0) {
+        PerfEventRecordTemplate::Init(PERF_RECORD_SAMPLE, inKernel);
+        Clean();
+        data_.pid = pid;
+        data_.tid = tid;
+        data_.period = period;
+        data_.time = time;
+        data_.id = 0;
+        header_.size = sizeof(header_) + sizeof(data_);
+    }
 
     pid_t GetUstackServerPid();
     pid_t GetServerPidof(unsigned int ipNr);
