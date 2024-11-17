@@ -16,6 +16,7 @@
 #include "perf_event_record_test.h"
 
 #include <cstring>
+#include <thread>
 
 using namespace testing::ext;
 using namespace std;
@@ -724,6 +725,73 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord, TestSize.Level1)
         PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
                                                    reinterpret_cast<uint8_t *>(&data), attr);
     ASSERT_EQ(perfEventRecord.GetName() != nullptr, true);
+}
+
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord2, TestSize.Level1)
+{
+    struct PerfRecordSwitchCpuWidest {
+        perf_event_header h;
+        PerfRecordSwitchCpuWideData d;
+    };
+    PerfRecordSwitchCpuWidest data = {
+        {PERF_RECORD_SWITCH_CPU_WIDE, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordSwitchCpuWidest)},
+        {}};
+    perf_event_attr attr {};
+    attr.sample_type = UINT64_MAX;
+    PerfEventRecord& perfEventRecord1 =
+        PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+    PerfEventRecord& perfEventRecord2 =
+        PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+
+    ASSERT_TRUE(&perfEventRecord1 == &perfEventRecord2);
+}
+
+
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord3, TestSize.Level1)
+{
+    struct PerfRecordSwitchCpuWidest {
+        perf_event_header h;
+        PerfRecordSwitchCpuWideData d;
+    };
+    PerfRecordSwitchCpuWidest data = {
+        {PERF_RECORD_SWITCH_CPU_WIDE, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordSwitchCpuWidest)},
+        {}};
+    perf_event_attr attr {};
+    attr.sample_type = UINT64_MAX;
+    PerfEventRecord& perfEventRecord1 =
+        PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+    PerfEventRecord& perfEventRecord2 =
+        PerfEventRecordFactory::GetPerfEventRecord(INT32_MAX,
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+    ASSERT_TRUE(perfEventRecord1.GetName() != nullptr);
+    ASSERT_TRUE(perfEventRecord2.GetName() == nullptr);
+}
+
+HWTEST_F(PerfEventRecordTest, MultiThreadGetPerfEventRecord, TestSize.Level1)
+{
+    struct PerfRecordSwitchCpuWidest {
+        perf_event_header h;
+        PerfRecordSwitchCpuWideData d;
+    };
+    PerfRecordSwitchCpuWidest data = {
+        {PERF_RECORD_SWITCH_CPU_WIDE, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordSwitchCpuWidest)},
+        {}};
+    perf_event_attr attr {};
+    attr.sample_type = UINT64_MAX;
+    PerfEventRecord& perfEventRecord1 =
+        PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+
+    std::thread t1([&perfEventRecord1, &data, attr]() {
+        PerfEventRecord& perfEventRecord2 =
+            PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
+                                                       reinterpret_cast<uint8_t *>(&data), attr);
+        ASSERT_TRUE(&perfEventRecord1 != &perfEventRecord2);
+    });
+    t1.join();
 }
 } // namespace HiPerf
 } // namespace Developtools

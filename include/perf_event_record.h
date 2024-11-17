@@ -43,22 +43,23 @@ using PerfRecordType = int32_t;
 static constexpr uint32_t RECORD_SIZE_LIMIT = 65535;
 static constexpr uint32_t RECORD_SIZE_LIMIT_SPE = 524288; // auxMmapPages_ * pageSize_
 
-static const char PERF_RECORD_TYPE_AUXTRACE[] = "auxtrace";
-static const char PERF_RECORD_TYPE_SAMPLE[] = "sample";
-static const char PERF_RECORD_TYPE_MMAP[] = "mmap";
-static const char PERF_RECORD_TYPE_MMAP2[] = "mmap2";
-static const char PERF_RECORD_TYPE_LOST[] = "lost";
-static const char PERF_RECORD_TYPE_COMM[] = "comm";
-static const char PERF_RECORD_TYPE_EXIT[] = "exit";
-static const char PERF_RECORD_TYPE_THROTTLE[] = "throttle";
-static const char PERF_RECORD_TYPE_UNTHROTTLE[] = "unthrottle";
-static const char PERF_RECORD_TYPE_FORK[] = "fork";
-static const char PERF_RECORD_TYPE_READ[] = "read";
-static const char PERF_RECORD_TYPE_AUX[] = "aux";
-static const char PERF_RECORD_TYPE_ITRACESTART[] = "itraceStart";
-static const char PERF_RECORD_TYPE_LOSTSAMPLE[] = "lostSamples";
-static const char PERF_RECORD_TYPE_SWITCH[] = "switch";
-static const char PERF_RECORD_TYPE_SWITCHCPUWIDE[] = "switchCpuWide";
+static constexpr char PERF_RECORD_TYPE_AUXTRACE[] = "auxtrace";
+static constexpr char PERF_RECORD_TYPE_SAMPLE[] = "sample";
+static constexpr char PERF_RECORD_TYPE_MMAP[] = "mmap";
+static constexpr char PERF_RECORD_TYPE_MMAP2[] = "mmap2";
+static constexpr char PERF_RECORD_TYPE_LOST[] = "lost";
+static constexpr char PERF_RECORD_TYPE_COMM[] = "comm";
+static constexpr char PERF_RECORD_TYPE_EXIT[] = "exit";
+static constexpr char PERF_RECORD_TYPE_THROTTLE[] = "throttle";
+static constexpr char PERF_RECORD_TYPE_UNTHROTTLE[] = "unthrottle";
+static constexpr char PERF_RECORD_TYPE_FORK[] = "fork";
+static constexpr char PERF_RECORD_TYPE_READ[] = "read";
+static constexpr char PERF_RECORD_TYPE_AUX[] = "aux";
+static constexpr char PERF_RECORD_TYPE_ITRACESTART[] = "itraceStart";
+static constexpr char PERF_RECORD_TYPE_LOSTSAMPLE[] = "lostSamples";
+static constexpr char PERF_RECORD_TYPE_SWITCH[] = "switch";
+static constexpr char PERF_RECORD_TYPE_SWITCHCPUWIDE[] = "switchCpuWide";
+static constexpr char* PERF_RECORD_TYPE_NULL = nullptr;
 
 enum perf_event_hiperf_ext_type {
     PERF_RECORD_AUXTRACE = 71,
@@ -494,7 +495,7 @@ public:
     void DumpData(int indent) const override;
 };
 
-class PerfRecordNull : public PerfEventRecordTemplate<PerfRecordSwitchCpuWideData, nullptr> {
+class PerfRecordNull : public PerfEventRecordTemplate<PerfRecordSwitchCpuWideData, PERF_RECORD_TYPE_NULL> {
 public:
     PerfRecordNull() = default;
 
