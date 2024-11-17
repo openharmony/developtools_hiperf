@@ -80,7 +80,8 @@ HWTEST_F(PerfEventRecordTest, Mmap, TestSize.Level1)
     size_t buffSize = HEADER_SIZE + sizeof(PerfRecordMmapData) - KILO + strlen(data.filename) + 1;
     ASSERT_EQ(recordIn.GetSize(), buffSize);
 
-    PerfRecordMmap recordOut(buff.data());
+    PerfRecordMmap recordOut;
+    recordOut.Init(buff.data());
     ASSERT_EQ(recordOut.GetType(), PERF_RECORD_MMAP);
     ASSERT_EQ(recordOut.GetName(), RECORDNAME_MMAP);
     ASSERT_EQ(recordOut.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -115,7 +116,8 @@ HWTEST_F(PerfEventRecordTest, Mmap2, TestSize.Level1)
     size_t buffSize = HEADER_SIZE + sizeof(PerfRecordMmap2Data) - KILO + strlen(data.filename) + 1;
     ASSERT_EQ(recordIn.GetSize(), buffSize);
 
-    PerfRecordMmap2 recordOut(buff.data());
+    PerfRecordMmap2 recordOut;
+    recordOut.Init(buff.data());
     ASSERT_EQ(recordOut.GetType(), PERF_RECORD_MMAP2);
     ASSERT_EQ(recordOut.GetName(), RECORDNAME_MMAP2);
     ASSERT_EQ(recordOut.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -153,7 +155,8 @@ HWTEST_F(PerfEventRecordTest, Comm, TestSize.Level1)
 
     size_t buffSize = HEADER_SIZE + sizeof(PerfRecordCommData) - KILO + strlen(data.comm) + 1;
     ASSERT_EQ(recordIn.GetSize(), buffSize);
-    PerfRecordComm recordOut(buff.data());
+    PerfRecordComm recordOut;
+    recordOut.Init(buff.data());
     ASSERT_EQ(recordOut.GetType(), PERF_RECORD_COMM);
     ASSERT_EQ(recordOut.GetName(), RECORDNAME_COMM);
     ASSERT_EQ(recordOut.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -175,7 +178,8 @@ HWTEST_F(PerfEventRecordTest, Lost, TestSize.Level1)
         {PERF_RECORD_LOST_SAMPLES, PERF_RECORD_MISC_KERNEL, sizeof(TestRecordLostst)},
         {1, 2}};
 
-    PerfRecordLost record((uint8_t *)&data);
+    PerfRecordLost record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_LOST_SAMPLES);
     ASSERT_EQ(record.GetName(), RECORDNAME_LOST);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -197,7 +201,8 @@ HWTEST_F(PerfEventRecordTest, Exit, TestSize.Level1)
     TestRecordExitst data = {{PERF_RECORD_EXIT, PERF_RECORD_MISC_KERNEL, sizeof(TestRecordExitst)},
                              {1, 2, 3, 4, 5}};
 
-    PerfRecordExit record((uint8_t *)&data);
+    PerfRecordExit record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_EXIT);
     ASSERT_EQ(record.GetName(), RECORDNAME_EXIT);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -220,7 +225,8 @@ HWTEST_F(PerfEventRecordTest, Throttle, TestSize.Level1)
         {PERF_RECORD_THROTTLE, PERF_RECORD_MISC_KERNEL, sizeof(TestRecordThrottlest)},
         {1, 2, 3}};
 
-    PerfRecordThrottle record((uint8_t *)&data);
+    PerfRecordThrottle record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_THROTTLE);
     ASSERT_EQ(record.GetName(), RECORDNAME_THROTTLE);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -243,7 +249,8 @@ HWTEST_F(PerfEventRecordTest, Unthrottle, TestSize.Level1)
         {PERF_RECORD_UNTHROTTLE, PERF_RECORD_MISC_KERNEL, sizeof(TestRecordUNThrottlest)},
         {1, 2, 3}};
 
-    PerfRecordUnthrottle record((uint8_t *)&data);
+    PerfRecordUnthrottle record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_UNTHROTTLE);
     ASSERT_EQ(record.GetName(), RECORDNAME_UNTHROTTLE);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -265,7 +272,8 @@ HWTEST_F(PerfEventRecordTest, Fork, TestSize.Level1)
     TestRecordForkst data = {{PERF_RECORD_FORK, PERF_RECORD_MISC_KERNEL, sizeof(TestRecordForkst)},
                              {1, 2, 3, 4, 5}};
 
-    PerfRecordFork record((uint8_t *)&data);
+    PerfRecordFork record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_FORK);
     ASSERT_EQ(record.GetName(), RECORDNAME_FORK);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -419,7 +427,8 @@ HWTEST_F(PerfEventRecordTest, Sample, TestSize.Level1)
         {}};
     InitTestRecordSample(data);
 
-    PerfRecordSample record((uint8_t *)&data, attr);
+    PerfRecordSample record;
+    record.Init((uint8_t *)&data, attr);
     ASSERT_EQ(record.GetType(), PERF_RECORD_SAMPLE);
     ASSERT_EQ(record.GetName(), RECORDNAME_SAMPLE);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -439,7 +448,8 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack1, TestSize.Level1)
         {}};
     InitTestRecordSample(data);
 
-    PerfRecordSample record((uint8_t *)&data, attr);
+    PerfRecordSample record;
+    record.Init((uint8_t *)&data, attr);
     record.sampleType_ |= PERF_SAMPLE_REGS_USER;
     record.sampleType_ |= PERF_SAMPLE_STACK_USER;
     record.sampleType_ |= PERF_SAMPLE_CALLCHAIN;
@@ -472,7 +482,8 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack2, TestSize.Level1)
         {}};
     InitTestRecordSample(data);
 
-    PerfRecordSample record((uint8_t *)&data, attr);
+    PerfRecordSample record;
+    record.Init((uint8_t *)&data, attr);
     record.sampleType_ |= PERF_SAMPLE_CALLCHAIN;
 
     std::vector<u64> ips = {};
@@ -498,7 +509,8 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack3, TestSize.Level1)
         {}};
     InitTestRecordSample(data);
 
-    PerfRecordSample record((uint8_t *)&data, attr);
+    PerfRecordSample record;
+    record.Init((uint8_t *)&data, attr);
     record.sampleType_ |= PERF_SAMPLE_CALLCHAIN;
 
     record.callFrames_ = {4, 5, 6, 7, 8, 9};
@@ -527,7 +539,8 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack4, TestSize.Level1)
         {}};
     InitTestRecordSample(data);
 
-    PerfRecordSample record((uint8_t *)&data, attr);
+    PerfRecordSample record;
+    record.Init((uint8_t *)&data, attr);
     record.sampleType_ |= PERF_SAMPLE_CALLCHAIN;
 
     record.callFrames_ = {};
@@ -553,7 +566,8 @@ HWTEST_F(PerfEventRecordTest, Read, TestSize.Level1)
     PerfRecordReadst data = {{PERF_RECORD_READ, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordReadst)},
                              {1, 2, {11, 12, 13, 14}}};
 
-    PerfRecordRead record((uint8_t *)&data);
+    PerfRecordRead record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_READ);
     ASSERT_EQ(record.GetName(), RECORDNAME_READ);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -575,7 +589,8 @@ HWTEST_F(PerfEventRecordTest, Aux, TestSize.Level1)
     PerfRecordAuxst data = {{PERF_RECORD_AUX, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordAuxst)},
                             {1, 2, 3}};
 
-    PerfRecordAux record((uint8_t *)&data);
+    PerfRecordAux record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_AUX);
     ASSERT_EQ(record.GetName(), RECORDNAME_AUX);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -598,7 +613,8 @@ HWTEST_F(PerfEventRecordTest, ItraceStart, TestSize.Level1)
         {PERF_RECORD_ITRACE_START, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordItraceStartst)},
         {1, 2}};
 
-    PerfRecordItraceStart record((uint8_t *)&data);
+    PerfRecordItraceStart record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_ITRACE_START);
     ASSERT_EQ(record.GetName(), RECORDNAME_ITRACE_START);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -621,7 +637,8 @@ HWTEST_F(PerfEventRecordTest, LostSamples, TestSize.Level1)
         {PERF_RECORD_LOST_SAMPLES, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordLostSamplesst)},
         {1}};
 
-    PerfRecordLostSamples record((uint8_t *)&data);
+    PerfRecordLostSamples record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_LOST_SAMPLES);
     ASSERT_EQ(record.GetName(), RECORDNAME_LOST_SAMPLES);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -644,7 +661,8 @@ HWTEST_F(PerfEventRecordTest, Switch, TestSize.Level1)
         {PERF_RECORD_SWITCH, PERF_RECORD_MISC_KERNEL, sizeof(perf_event_header)},
         {}};
 
-    PerfRecordSwitch record((uint8_t *)&data);
+    PerfRecordSwitch record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_SWITCH);
     ASSERT_EQ(record.GetName(), RECORDNAME_SWITCH);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -667,7 +685,8 @@ HWTEST_F(PerfEventRecordTest, SwitchCpuWide, TestSize.Level1)
         {PERF_RECORD_SWITCH_CPU_WIDE, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordSwitchCpuWidest)},
         {}};
 
-    PerfRecordSwitchCpuWide record((uint8_t *)&data);
+    PerfRecordSwitchCpuWide record;
+    record.Init((uint8_t *)&data);
     ASSERT_EQ(record.GetType(), PERF_RECORD_SWITCH_CPU_WIDE);
     ASSERT_EQ(record.GetName(), RECORDNAME_SWITCH_CPU_WIDE);
     ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
@@ -694,16 +713,17 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord, TestSize.Level1)
         if (type == PERF_RECORD_SAMPLE) {
             continue;
         }
-        std::unique_ptr<PerfEventRecord> perfEventRecord =
-            GetPerfEventRecord(static_cast<perf_event_type>(type), reinterpret_cast<uint8_t *>(&data), attr);
+        PerfEventRecord& perfEventRecord =
+            PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(type),
+                                                       reinterpret_cast<uint8_t *>(&data), attr);
         if (type < PERF_RECORD_NAMESPACES) {
-            ASSERT_EQ(perfEventRecord != nullptr, true);
+            ASSERT_EQ(perfEventRecord.GetName() != nullptr, true);
         }
     }
-    std::unique_ptr<PerfEventRecord> perfEventRecord =
-        GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
-                           reinterpret_cast<uint8_t *>(&data), attr);
-    ASSERT_EQ(perfEventRecord != nullptr, true);
+    PerfEventRecord& perfEventRecord =
+        PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_AUXTRACE),
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+    ASSERT_EQ(perfEventRecord.GetName() != nullptr, true);
 }
 } // namespace HiPerf
 } // namespace Developtools
