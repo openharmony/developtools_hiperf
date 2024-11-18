@@ -381,13 +381,15 @@ void SubCommandDump::DumpAttrPortion(int indent)
 
 void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
 {
-    if (recordSample.data_.reg_nr > 0 and recordSample.data_.dyn_size > 0) {
+    if (recordSample.data_.reg_nr > 0 && recordSample.data_.dyn_size > 0) {
         // <pid>_<tid>_user_regs_<time>
         std::string userRegs =
             StringPrintf("hiperf_%d_%d_user_regs_%zu.dump", recordSample.data_.pid,
                          recordSample.data_.tid, exportSampleIndex_);
         std::string resolvedPath = CanonicalizeSpecPath(userRegs.c_str());
-        std::unique_ptr<FILE, decltype(&fclose)> fpUserRegs(fopen(resolvedPath.c_str(), "wb"), fclose);
+        FILE *userRegsFp = fopen(resolvedPath.c_str(), "wb");
+        CHECK_TRUE(userRegsFp == nullptr, NO_RETVAL, 1, "open userRegs failed");
+        std::unique_ptr<FILE, decltype(&fclose)> fpUserRegs(userRegsFp, fclose);
         fwrite(recordSample.data_.user_regs, sizeof(u64), recordSample.data_.reg_nr,
                fpUserRegs.get());
 
@@ -395,7 +397,9 @@ void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
             StringPrintf("hiperf_%d_%d_user_data_%zu.dump", recordSample.data_.pid,
                          recordSample.data_.tid, exportSampleIndex_);
         std::string resolvePath = CanonicalizeSpecPath(userData.c_str());
-        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvePath.c_str(), "wb"), fclose);
+        FILE *UserDataFp = fopen(resolvePath.c_str(), "wb");
+        CHECK_TRUE(UserDataFp == nullptr, NO_RETVAL, 1, "open UserData failed");
+        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(UserDataFp, fclose);
         fwrite(recordSample.data_.stack_data, sizeof(u8), recordSample.data_.dyn_size,
                fpUserData.get());
     }
@@ -592,7 +596,7 @@ void SubCommandDump::SetHM()
     if (isHM_) {
         pid_t devhost = -1;
         std::string str = reader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
-        if (IsNumberic(str)) {
+        if (IsNumeric(str)) {
             devhost = std::stoll(str);
         }
         vr_.SetDevhostPid(devhost);

@@ -259,7 +259,9 @@ static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
     if (err && *err) {
         return *err;
     }
-
+    if (*bufLen - 1 < 0) {
+        HLOGW("SpePktOutString failed, bufLen: %d", static_cast<int>(*bufLen));
+    }
     va_start(args, fmt);
     ret = vsnprintf_s(*bufPtr, *bufLen, *bufLen - 1, fmt, args);
     va_end(args);
@@ -268,6 +270,7 @@ static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
         if (err && !*err) {
             *err = ret;
         }
+        HLOGW("vsnprintf_s failed: %d\n", ret);
 
     /*
      * If the return value is *bufLen or greater, the output was
@@ -625,21 +628,6 @@ static u64 SpeCalcIp(int index, u64 payload)
     }
 
     return payload;
-}
-
-struct SpeDecoder *SpeDecoderNew(struct SpeParams *params)
-{
-    CHECK_TRUE(params == nullptr, nullptr, 1, "Invalid pointer!");
-    struct SpeDecoder *decoder;
-
-    decoder = static_cast<struct SpeDecoder*>(malloc(sizeof(struct SpeDecoder)));
-    if (!decoder) {
-        return NULL;
-    }
-
-    decoder->data = params->data;
-
-    return decoder;
 }
 
 void SpeDecoderFree(struct SpeDecoder *decoder)

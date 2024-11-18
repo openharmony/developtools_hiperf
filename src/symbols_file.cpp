@@ -43,9 +43,6 @@
 #include "utilities.h"
 #include "ipc_utilities.h"
 
-using namespace OHOS::HiviewDFX;
-using namespace std::chrono;
-
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -98,7 +95,7 @@ std::string SymbolsFile::SearchReadableFile(const std::vector<std::string> &sear
                                             const std::string &filePath) const
 {
     if (filePath.empty()) {
-        HLOGW("nothing to found");
+        HLOGW("filePath is empty, nothing to found");
         return filePath;
     }
     for (auto searchPath : searchPaths) {
@@ -154,7 +151,7 @@ const std::string SymbolsFile::FindSymbolFile(
 
     // only access the patch in onRecording_
     // in report mode we don't load any thing in runtime path
-    if (foundPath.empty() and onRecording_) {
+    if (foundPath.empty() && onRecording_) {
         // try access direct at last
         if (CheckPathReadable(symboleFilePath)) {
             // found direct folder
@@ -799,7 +796,7 @@ public:
     bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
-        if (module_ == filePath_ and onRecording_) {
+        if (module_ == filePath_ && onRecording_) {
             // file name still not convert to ko file path
             // this is in record mode
             HLOGV("find ko name %s", module_.c_str());

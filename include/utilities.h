@@ -310,7 +310,7 @@ bool IsBeta();
 bool IsAllowProfilingUid();
 bool IsHiviewCall();
 bool PowerOfTwo(uint64_t n);
-bool IsNumberic(const std::string& str);
+bool IsNumeric(const std::string& str);
 
 const std::string HMKERNEL = "HongMeng";
 

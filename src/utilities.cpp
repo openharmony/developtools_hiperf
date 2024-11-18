@@ -280,7 +280,7 @@ std::string ReadFileToString(const std::string &fileName)
 {
     std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
     std::ifstream inputString(resolvedPath, std::ios::in);
-    if (!inputString or !inputString.is_open()) {
+    if (!inputString || !inputString.is_open()) {
         return EMPTY_STRING;
     }
     std::istreambuf_iterator<char> firstIt = {inputString};
@@ -845,7 +845,7 @@ bool IsHiviewCall()
 #endif
 }
 
-bool IsNumberic(const std::string& str)
+bool IsNumeric(const std::string& str)
 {
     std::istringstream iss(str);
     int number;

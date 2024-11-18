@@ -18,7 +18,6 @@
 #include "debug_logger.h"
 #include "option.h"
 
-using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -146,7 +145,7 @@ void SubCommand::ExcludeThreadsFromSelectTids(const std::vector<std::string> &ex
     }
 }
 
-bool SubCommand::RegisterSubCommand(std::string cmdName, std::unique_ptr<SubCommand> subCommand)
+bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::unique_ptr<SubCommand> subCommand)
 {
     HLOGV("%s", cmdName.c_str());
     if (cmdName.empty()) {
@@ -158,7 +157,7 @@ bool SubCommand::RegisterSubCommand(std::string cmdName, std::unique_ptr<SubComm
         return false;
     }
 
-    if (g_SubCommandsMap.count(cmdName) == 0) {
+    if (g_SubCommandsMap.find(cmdName) == g_SubCommandsMap.end()) {
         std::lock_guard<std::mutex> lock(g_subCommandMutex);
         g_SubCommandsMap.insert(std::make_pair(cmdName, std::move(subCommand)));
         return true;

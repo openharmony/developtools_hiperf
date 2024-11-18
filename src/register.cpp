@@ -63,7 +63,7 @@ uint64_t GetSupportedRegMask(ArchType arch)
             break;
         default:
             result = std::numeric_limits<uint64_t>::max();
-            HLOGE("unsupport arch %d", arch);
+            HLOGE("unsupport arch %u", arch);
             break;
     }
     return result;
@@ -272,7 +272,7 @@ ArchType GetDeviceArch()
 
 void UpdateRegForABI(ArchType arch, u64 *regs)
 {
-    if (g_deviceArchType == ArchType::ARCH_ARM64 and arch == ArchType::ARCH_ARM) {
+    if (g_deviceArchType == ArchType::ARCH_ARM64 && arch == ArchType::ARCH_ARM) {
         // arm in arm64
         regs[PERF_REG_ARM_PC] = regs[PERF_REG_ARM64_PC];
     }

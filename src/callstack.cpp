@@ -79,7 +79,7 @@ const std::map<unw_error_t, const std::string> UNW_ERROR_MAP = {
 };
 const std::string CallStack::GetUnwErrorName(int error)
 {
-    if (UNW_ERROR_MAP.count(static_cast<unw_error_t>(-error)) > 0) {
+    if (UNW_ERROR_MAP.find(static_cast<unw_error_t>(-error)) != UNW_ERROR_MAP.end()) {
         return UNW_ERROR_MAP.at(static_cast<unw_error_t>(-error));
     } else {
         return "UNKNOW_UNW_ERROR";
@@ -292,7 +292,7 @@ int CallStack::AccessMem([[maybe_unused]] unw_addr_space_t as, unw_word_t addr,
         return -UNW_EUNSPEC;
     }
 
-    if (addr < unwindInfoPtr->callStack.stackPoint_ or
+    if (addr < unwindInfoPtr->callStack.stackPoint_ ||
         addr + sizeof(unw_word_t) >= unwindInfoPtr->callStack.stackEnd_) {
         if (ReadVirtualThreadMemory(*unwindInfoPtr, addr, valuePoint)) {
             HLOGM("access_mem addr get val 0x%" UNW_WORD_PFLAG ", from mmap", *valuePoint);
@@ -540,8 +540,8 @@ size_t CallStack::DoExpandCallStack(std::vector<DfxFrame> &newCallFrames,
 {
     int maxCycle = 0;
 
-    if (expandLimit == 0 or newCallFrames.size() < expandLimit or
-        cachedCallFrames.size() < expandLimit or
+    if (expandLimit == 0 || newCallFrames.size() < expandLimit ||
+        cachedCallFrames.size() < expandLimit ||
         cachedCallFrames.size() >= MAX_CALL_FRAME_UNWIND_SIZE) {
         HLOGM("expandLimit %zu not match new %zu cache %zu", expandLimit, newCallFrames.size(),
               cachedCallFrames.size());
@@ -777,7 +777,7 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
                "unwindInfoPtr is null or address overflow at 0x%" UNW_WORD_PFLAG " increase 0x%zu",
                addr, sizeof(uintptr_t));
 
-    if (addr < unwindInfoPtr->callStack.stackPoint_ or
+    if (addr < unwindInfoPtr->callStack.stackPoint_ ||
         addr + sizeof(uintptr_t) >= unwindInfoPtr->callStack.stackEnd_) {
         if (ReadVirtualThreadMemory(*unwindInfoPtr, addr, val)) {
             HLOGM("access_mem addr get val 0x%" UNW_WORD_PFLAG ", from mmap", *val);

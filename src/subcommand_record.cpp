@@ -181,7 +181,7 @@ bool SubCommandRecord::GetSpeOptions()
         for (auto item: valueExpressions) {
             std::vector<std::string> expressions = StringSplit(item, "=");
             size_t itemNum = 2;
-            if (expressions.size() == itemNum && IsNumberic(expressions[1])) {
+            if (expressions.size() == itemNum && IsNumeric(expressions[1])) {
                 std::string name = expressions[0];
                 unsigned long long num = std::stoull(expressions[1]);
                 if (speOptMap_.find(name) != speOptMap_.end()) {
@@ -544,7 +544,7 @@ bool SubCommandRecord::CheckTargetProcessOptions()
         }
         hasTarget = true;
     }
-    if (!hasTarget and (controlCmd_.empty() or controlCmd_ == CONTROL_CMD_PREPARE)) {
+    if (!hasTarget && (controlCmd_.empty() || controlCmd_ == CONTROL_CMD_PREPARE)) {
         printf("please select a target process\n");
         return false;
     }
@@ -601,11 +601,11 @@ bool SubCommandRecord::ParseDataLimitOption(const std::string &str)
 {
     uint unit = 1;
     char c = str.at(str.size() >= 1 ? str.size() - 1 : 0);
-    if (c == 'K' or c == 'k') {
+    if (c == 'K' || c == 'k') {
         unit = KILO;
-    } else if (c == 'm' or c == 'M') {
+    } else if (c == 'm' || c == 'M') {
         unit = KILO * KILO;
-    } else if (c == 'g' or c == 'G') {
+    } else if (c == 'g' || c == 'G') {
         unit = KILO * KILO * KILO;
     } else {
         return false;
@@ -697,8 +697,8 @@ bool SubCommandRecord::ParseBranchSampleType(const std::vector<std::string> &vec
 
 bool SubCommandRecord::ParseControlCmd(const std::string cmd)
 {
-    if (cmd.empty() or cmd == CONTROL_CMD_PREPARE or cmd == CONTROL_CMD_START or
-        cmd == CONTROL_CMD_PAUSE or cmd == CONTROL_CMD_RESUME or cmd == CONTROL_CMD_STOP) {
+    if (cmd.empty() || cmd == CONTROL_CMD_PREPARE || cmd == CONTROL_CMD_START ||
+        cmd == CONTROL_CMD_PAUSE || cmd == CONTROL_CMD_RESUME || cmd == CONTROL_CMD_STOP) {
         return true;
     }
 
@@ -783,7 +783,7 @@ bool SubCommandRecord::TraceOffCpu()
     int enable = -1;
     std::string node = SCHED_SWITCH;
     const std::string nodeDebug = SCHED_SWITCH_DEBUG;
-    CHECK_TRUE(!ReadIntFromProcFile(node.c_str(), enable) and !ReadIntFromProcFile(nodeDebug.c_str(), enable),
+    CHECK_TRUE(!ReadIntFromProcFile(node.c_str(), enable) && !ReadIntFromProcFile(nodeDebug.c_str(), enable),
                false, LOG_TYPE_PRINTF, "Cannot trace off CPU, event sched:sched_switch is not available (%s or %s)\n",
                node.c_str(), nodeDebug.c_str());
 
@@ -905,7 +905,7 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     // do some config for virtualRuntime_
     virtualRuntime_.SetCallStackExpend(disableCallstackExpend_ ? 0 : 1);
     // these is same for virtual runtime
-    virtualRuntime_.SetDisableUnwind(disableUnwind_ or delayUnwind_);
+    virtualRuntime_.SetDisableUnwind(disableUnwind_ || delayUnwind_);
     virtualRuntime_.EnableDebugInfoSymbolic(enableDebugInfoSymbolic_);
     if (!symbolDir_.empty()) {
         if (!virtualRuntime_.SetSymbolsPaths(symbolDir_)) {
@@ -1089,7 +1089,7 @@ bool SubCommandRecord::CreateFifoServer()
 {
     char errInfo[ERRINFOLEN] = { 0 };
     const mode_t fifoMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 or
+    if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 ||
         mkfifo(CONTROL_FIFO_FILE_C2S.c_str(), fifoMode) != 0) {
         if (errno == EEXIST) {
             printf("another sampling service is running.\n");
@@ -1134,7 +1134,7 @@ bool SubCommandRecord::CreateFifoServer()
         if (fd != -1) {
             WaitFifoReply(fd, CONTROL_WAITREPY_TOMEOUT, reply);
         }
-        if (fd == -1 or reply != HiperfClient::ReplyOK) {
+        if (fd == -1 || reply != HiperfClient::ReplyOK) {
             if (reply != HiperfClient::ReplyOK) {
                 printf("%s\n", reply.c_str());
             }
@@ -1225,7 +1225,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     }
 
     // prepare PerfEvents
-    if (!PrepareSysKernel() or !PreparePerfEvent()) {
+    if (!PrepareSysKernel() || !PreparePerfEvent()) {
         return false;
     }
 
