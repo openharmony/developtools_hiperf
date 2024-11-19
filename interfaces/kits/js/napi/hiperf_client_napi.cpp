@@ -31,28 +31,20 @@ static std::unique_ptr<HiperfClient::Client> g_hiperfClient =
 static std::unique_ptr<HiperfClient::RecordOption> g_hiperfRecordOption =
     std::make_unique<HiperfClient::RecordOption>();
 
-static std::vector<std::string> StringSplit(std::string source, const std::string &split = ",")
+static std::vector<std::string> StringSplit(const std::string& text, char delimiter = ',')
 {
-    size_t pos = 0;
-    std::vector<std::string> result;
-
-    // find
-    while ((pos = source.find(split)) != std::string::npos) {
-        // split
-        std::string token = source.substr(0, pos);
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(text);
+    while (std::getline(tokenStream, token, delimiter)) {
         if (!token.empty()) {
-            result.push_back(token);
+            tokens.push_back(token);
         }
-        source.erase(0, pos + split.length());
     }
-    // add last token
-    if (!source.empty()) {
-        result.push_back(source);
-    }
-    return result;
+    return tokens;
 }
 
-static bool IsNumberic(const std::string& str)
+static bool IsNumeric(const std::string& str)
 {
     std::istringstream iss(str);
     int number;
@@ -66,25 +58,17 @@ static bool IsNumberic(const std::string& str)
     return true;
 }
 
-static std::vector<int> StringSplitToInt(std::string source, const std::string &split = ",")
+static std::vector<int> StringSplitToInt(const std::string& text, char delimiter = ',')
 {
-    size_t pos = 0;
-    std::vector<int> result;
-
-    // find
-    while ((pos = source.find(split)) != std::string::npos) {
-        // split
-        std::string token = source.substr(0, pos);
-        if (IsNumberic(token)) {
-            result.push_back(std::stoi(token));
+    std::vector<int> tokens;
+    std::string token;
+    std::istringstream tokenStream(text);
+    while (std::getline(tokenStream, token, delimiter)) {
+        if (IsNumeric(token)) {
+            tokens.push_back(std::stoi(token));
         }
-        source.erase(0, pos + split.length());
     }
-    // add last token
-    if (IsNumberic(source)) {
-        result.push_back(std::stoi(source));
-    }
-    return result;
+    return tokens;
 }
 
 static std::string GetJsStringFromOption(const napi_env &env, const napi_callback_info &info)

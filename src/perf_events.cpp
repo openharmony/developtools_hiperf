@@ -412,7 +412,7 @@ void PerfEvents::SetConfig(std::map<const std::string, unsigned long long> &speO
 bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, bool excludeKernel,
                           bool followGroup)
 {
-    HLOG_ASSERT(!excludeUser or !excludeKernel);
+    HLOG_ASSERT(!excludeUser || !excludeKernel);
     CHECK_TRUE(followGroup && eventGroupItem_.empty(), false, 1, "no group leader create before");
     // found the event name
     CHECK_TRUE(!IsEventSupport(type, config), false, 0, "");

@@ -57,7 +57,7 @@ uint8_t *RingBuffer::AllocForWrite(size_t writeSize)
         if (writePos + writeSize > readPos) {
             return nullptr;
         }
-    } else if (writePos == readPos and writeHead != readHead) {
+    } else if (writePos == readPos && writeHead != readHead) {
         // writePos catch up with readPos, but buffer is full
         return nullptr;
     } else {

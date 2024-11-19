@@ -15,19 +15,15 @@
 
 #include "debug_logger.h"
 
-#include <ratio>
-
 #include "option.h"
 #if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
 
-using namespace std::literals::chrono_literals;
-using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-DebugLogger::DebugLogger() : timeStamp_(steady_clock::now()), logPath_(DEFAULT_LOG_PATH)
+DebugLogger::DebugLogger() : timeStamp_(std::chrono::steady_clock::now()), logPath_(DEFAULT_LOG_PATH)
 {
     OpenLog();
 }
@@ -82,12 +78,12 @@ int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fm
 {
     constexpr const int DEFAULT_STRING_BUF_SIZE = 4096;
 #ifdef HIPERF_DEBUG_TIME
-    const auto startSprintf = steady_clock::now();
+    const auto startSprintf = std::chrono::steady_clock::now();
 #endif
-    const auto startTime = steady_clock::now();
-    if (!ShouldLog(level, logTag) or logDisabled_ or fmt == nullptr) {
+    const auto startTime = std::chrono::steady_clock::now();
+    if (!ShouldLog(level, logTag) || logDisabled_ || fmt == nullptr) {
 #ifdef HIPERF_DEBUG_TIME
-        logTimes_ += duration_cast<microseconds>(steady_clock::now() - startSprintf);
+        logTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startSprintf);
 #endif
         return 0;
     }
@@ -99,9 +95,9 @@ int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fm
     ret = vsnprintf_s(buffer.data(), buffer.size(), buffer.size() >= 1 ? buffer.size() - 1 : 0, fmt, va);
     va_end(va);
 #ifdef HIPERF_DEBUG_TIME
-    logSprintfTimes_ += duration_cast<microseconds>(steady_clock::now() - startSprintf);
+    logSprintfTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startSprintf);
 #endif
-    if ((mixLogOutput_ and level < LEVEL_FATAL) or level == LEVEL_FATAL) {
+    if ((mixLogOutput_ && level < LEVEL_FATAL) || level == LEVEL_FATAL) {
         ret = fprintf(stdout, "%s", buffer.data()); // to the stdout
     }
 
@@ -113,17 +109,17 @@ int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fm
     } else if (file_ != nullptr) {
         std::lock_guard<std::recursive_mutex> lock(logMutex_);
 #ifdef HIPERF_DEBUG_TIME
-        const auto startWriteTime = steady_clock::now();
+        const auto startWriteTime = std::chrono::steady_clock::now();
 #endif
-        milliseconds timeStamp = duration_cast<milliseconds>(startTime - timeStamp_);
+        auto timeStamp = startTime - timeStamp_;
         fprintf(file_, "%05" PRId64 "ms %s", (int64_t)timeStamp.count(), buffer.data()); // to the file
 #ifdef HIPERF_DEBUG_TIME
-        logWriteTimes_ += duration_cast<microseconds>(steady_clock::now() - startWriteTime);
+        logWriteTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startWriteTime);
 #endif
     }
 
 #ifdef HIPERF_DEBUG_TIME
-    logTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+    logTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startTime);
     logCount_++;
 #endif
     if (level == LEVEL_FATAL && exitOnFatal_) {
@@ -170,7 +166,7 @@ bool DebugLogger::SetLogPath(const std::string &newLogPath)
 {
     // make sure not write happend when rename
     std::lock_guard<std::recursive_mutex> lock(logMutex_);
-    if (newLogPath.empty() and newLogPath != logPath_) {
+    if (newLogPath.empty() && newLogPath != logPath_) {
         return false;
     }
     if (file_ != nullptr) {

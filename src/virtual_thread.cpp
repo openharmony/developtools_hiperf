@@ -366,7 +366,7 @@ void VirtualThread::SortMemMaps()
 {
     for (int currPos = 1; currPos < static_cast<int>(memMaps_.size()); ++currPos) {
         int targetPos = currPos - 1;
-        while (targetPos >= 0 and memMaps_[memMapsIndexs_[currPos]]->end < memMaps_[memMapsIndexs_[targetPos]]->end) {
+        while (targetPos >= 0 && memMaps_[memMapsIndexs_[currPos]]->end < memMaps_[memMapsIndexs_[targetPos]]->end) {
             --targetPos;
         }
         if (targetPos < currPos - 1) {

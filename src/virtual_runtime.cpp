@@ -248,7 +248,11 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
     while (getline(ifs, line)) {
         uint64_t addr = 0;
         uint64_t size = 0;
-        char module[line.size()];
+        uint64_t lineSize = line.size();
+        if (lineSize > 4096) { // 4096: line length
+            continue;
+        }
+        char *module = new char[lineSize];
         /*
         name       size  load     map
         hi_mipi_rx 53248 0 - Live 0xbf109000 (O)
@@ -262,7 +266,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
         hi3516cv500_base,sys_config,hi_proc,hi_irq,Live 0xbf000000 (O)
         */
         int ret = sscanf_s(line.c_str(), "%s%" PRIu64 "%*u%*s%*s 0x%" PRIx64 "", module,
-                           sizeof(module), &size, &addr, sizeof(addr));
+                           lineSize, &size, &addr, sizeof(addr));
         constexpr int numSlices {3};
         if (ret == numSlices) {
             auto &map = koMaps.emplace_back(addr, addr + size, 0, "", std::string(module));
@@ -270,6 +274,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
         } else {
             HLOGE("unknown line %d: '%s'", ret, line.c_str());
         }
+        delete []module;
     }
 
     if (std::all_of(koMaps.begin(), koMaps.end(),
@@ -1062,13 +1067,13 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
 bool VirtualRuntime::GetSymbolCache(uint64_t fileVaddr, DfxSymbol &symbol,
                                     const perf_callchain_context &context)
 {
-    if (context == PERF_CONTEXT_MAX and kThreadSymbolCache_.count(fileVaddr)) {
+    if (context == PERF_CONTEXT_MAX && kThreadSymbolCache_.count(fileVaddr)) {
         CHECK_TRUE(kThreadSymbolCache_.find(symbol.fileVaddr_) == kThreadSymbolCache_.end(), false, 0, "");
         symbol = kThreadSymbolCache_[symbol.fileVaddr_];
         symbol.hit_++;
         HLOGV("hit kernel thread cache 0x%" PRIx64 " %d", fileVaddr, symbol.hit_);
         return true;
-    } else if (context != PERF_CONTEXT_USER and kernelSymbolCache_.count(fileVaddr)) {
+    } else if (context != PERF_CONTEXT_USER && kernelSymbolCache_.count(fileVaddr)) {
         CHECK_TRUE(kernelSymbolCache_.find(symbol.fileVaddr_) == kernelSymbolCache_.end(), false, 0, "");
         symbol = kernelSymbolCache_[symbol.fileVaddr_];
         symbol.hit_++;
@@ -1110,7 +1115,7 @@ DfxSymbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid, const per
         }
     }
 
-    if (context == PERF_CONTEXT_USER or (context == PERF_CONTEXT_MAX and !symbol.IsValid())) {
+    if (context == PERF_CONTEXT_USER || (context == PERF_CONTEXT_MAX && !symbol.IsValid())) {
         // check userspace memmap
         symbol = GetUserSymbol(ip, GetThread(pid, tid));
         if (userSymbolCache_.find(symbol.fileVaddr_) == userSymbolCache_.end()) {
@@ -1121,7 +1126,7 @@ DfxSymbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid, const per
               userSymbolCache_[symbol.fileVaddr_].ToDebugString().c_str());
     }
 
-    if (context == PERF_CONTEXT_KERNEL or (context == PERF_CONTEXT_MAX and !symbol.IsValid())) {
+    if (context == PERF_CONTEXT_KERNEL || (context == PERF_CONTEXT_MAX && !symbol.IsValid())) {
         // check kernelspace
         HLOGM("try found addr in kernelspace %zu maps", kernelSpaceMemMaps_.size());
         symbol = GetKernelSymbol(ip, kernelSpaceMemMaps_, GetThread(pid, tid));

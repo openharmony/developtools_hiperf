@@ -20,8 +20,6 @@
 
 #include "utilities.h"
 
-using namespace OHOS::HiviewDFX;
-using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -339,7 +337,7 @@ void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
         const size_t beginIpsSize = ips_.size();
         bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const DfxFrame &frame) {
             ips_.emplace_back(frame.pc);
-            if (originalSize != 0 and (originalSize != callFrames_.size()) and
+            if (originalSize != 0 && (originalSize != callFrames_.size()) &&
                 ips_.size() == (originalSize + beginIpsSize)) {
                 // just for debug
                 // so we can see which frame begin is expand call frames
