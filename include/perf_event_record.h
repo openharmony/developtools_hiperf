@@ -38,6 +38,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+using namespace OHOS::HiviewDFX;
 using PerfRecordType = int32_t;
 
 static constexpr uint32_t RECORD_SIZE_LIMIT = 65535;
@@ -74,27 +75,54 @@ struct AttrWithId {
 
 class PerfEventRecord {
 public:
+    struct perf_event_header header_ = {};
+
     virtual const char* GetName() const = 0;
     virtual void Init(uint8_t* data, const perf_event_attr& attr) = 0;
 
     virtual ~PerfEventRecord() = default;
 
-    virtual size_t GetSize() const = 0;
-    virtual size_t GetHeaderSize() const = 0;
-    virtual void GetHeaderBinary(std::vector<uint8_t>& buf) const = 0;
+    virtual size_t GetSize() const
+    {
+        return header_.size;
+    };
+    size_t GetHeaderSize() const
+    {
+        return sizeof(header_);
+    };
+    void GetHeaderBinary(std::vector<uint8_t>& buf) const;
 
-    virtual uint32_t GetType() const = 0;
-    virtual uint16_t GetMisc() const = 0;
-    virtual bool InKernel() = 0;
-    virtual bool InUser() = 0;
-
+    uint32_t GetType() const
+    {
+        return header_.type;
+    };
+    uint16_t GetMisc() const
+    {
+        return header_.misc;
+    };
+    bool InKernel()
+    {
+        return header_.misc & PERF_RECORD_MISC_KERNEL;
+    }
+    bool InUser()
+    {
+        return header_.misc & PERF_RECORD_MISC_USER;
+    }
     // to support --exclude-hiperf, return sample_id.pid to filter record,
-    virtual pid_t GetPid() const = 0;
+    virtual pid_t GetPid() const
+    {
+        return 0;
+    };
 
-    virtual bool GetBinary(std::vector<uint8_t>& buf) const = 0;
-    virtual void Dump(int indent = 0, std::string outputFilename = "", FILE* outputDump = nullptr) const = 0;
+    virtual bool GetBinary(std::vector<uint8_t> &buf) const = 0;
+    void Dump(int indent = 0, std::string outputFilename = "", FILE *outputDump = nullptr) const;
     virtual void DumpData(int indent) const = 0;
-    virtual void DumpLog(const std::string& prefix) const = 0;
+    virtual void DumpLog(const std::string& prefix) const;
+
+protected:
+    void Init(perf_event_type type, bool inKernel);
+    void Init(perf_event_hiperf_ext_type type);
+    void InitHeader(uint8_t* p);
 };
 
 template <typename DataType, const char* RECORD_TYPE_NAME>
@@ -103,7 +131,6 @@ public:
     PerfEventRecordTemplate(const PerfEventRecordTemplate&) = delete;
     PerfEventRecordTemplate& operator=(const PerfEventRecordTemplate&) = delete;
 
-    struct perf_event_header header_ = {};
     DataType data_ = {};
     const char* GetName() const override final
     {
@@ -111,14 +138,10 @@ public:
     }
 
     PerfEventRecordTemplate() = default;
-    void Init(uint8_t* p, const perf_event_attr& = {}) override {
-        if (p == nullptr) {
-            header_.type = PERF_RECORD_MMAP;
-            header_.misc = PERF_RECORD_MISC_USER;
-            header_.size = 0;
-            return;
-        }
-        header_ = *(reinterpret_cast<perf_event_header*>(p));
+    virtual ~PerfEventRecordTemplate() = default;
+    void Init(uint8_t* p, const perf_event_attr& = {}) override
+    {
+        InitHeader(p);
 
         size_t dataSize = GetSize();
         if (dataSize >= sizeof(header_)) {
@@ -130,96 +153,7 @@ public:
             HLOGE("init perf record failed!");
         }
     };
-
-    virtual ~PerfEventRecordTemplate() {}
-
-    size_t GetSize() const override
-    {
-        return header_.size;
-    };
-    size_t GetHeaderSize() const override final
-    {
-        return sizeof(header_);
-    };
-    void GetHeaderBinary(std::vector<uint8_t>& buf) const override final;
-
-    uint32_t GetType() const override final
-    {
-        return header_.type;
-    };
-    uint16_t GetMisc() const override final
-    {
-        return header_.misc;
-    };
-    bool InKernel() override final
-    {
-        return header_.misc & PERF_RECORD_MISC_KERNEL;
-    }
-    bool InUser() override final
-    {
-        return header_.misc & PERF_RECORD_MISC_USER;
-    }
-
-    // to support --exclude-hiperf, return sample_id.pid to filter record,
-    pid_t GetPid() const override
-    {
-        return 0;
-    };
-
-    bool GetBinary(std::vector<uint8_t>& buf) const override = 0;
-    void Dump(int indent = 0, std::string outputFilename = "", FILE* outputDump = nullptr) const override final;
-    void DumpData(int indent) const override = 0;
-    void DumpLog(const std::string& prefix) const override;
-
-protected:
-    void Init(perf_event_type type, bool inKernel) {
-        header_.type = type;
-        header_.misc = inKernel ? PERF_RECORD_MISC_KERNEL : PERF_RECORD_MISC_USER;
-        header_.size = sizeof(header_);
-    };
-
-    void Init(perf_event_hiperf_ext_type type) {
-        header_.type = type;
-        header_.misc = PERF_RECORD_MISC_USER;
-        header_.size = sizeof(header_);
-    }
 };
-
-template <typename DataType, const char* NAME>
-void PerfEventRecordTemplate<DataType, NAME>::GetHeaderBinary(std::vector<uint8_t>& buf) const
-{
-    if (buf.size() < GetHeaderSize()) {
-        buf.resize(GetHeaderSize());
-    }
-    uint8_t* p = buf.data();
-    *(reinterpret_cast<perf_event_header*>(p)) = header_;
-}
-
-template <typename DataType, const char* NAME>
-void PerfEventRecordTemplate<DataType, NAME>::Dump(int indent, std::string outputFilename, FILE* outputDump) const
-{
-    if (outputDump != nullptr) {
-        g_outputDump = outputDump;
-    } else if (!outputFilename.empty() && g_outputDump == nullptr) {
-        std::string resolvedPath = CanonicalizeSpecPath(outputFilename.c_str());
-        g_outputDump = fopen(resolvedPath.c_str(), "w");
-        if (g_outputDump == nullptr) {
-            printf("unable open file to '%s' because '%d'\n", outputFilename.c_str(), errno);
-            return;
-        }
-    }
-    PRINT_INDENT(indent, "\n");
-    PRINT_INDENT(indent, "record %s: type %u, misc %u, size %zu\n", GetName(), GetType(),
-                 GetMisc(), GetSize());
-    DumpData(indent + 1);
-}
-
-template <typename DataType, const char* NAME>
-void PerfEventRecordTemplate<DataType, NAME>::DumpLog(const std::string& prefix) const
-{
-    HLOGV("%s: record %s: type %u, misc %u, size %zu\n", prefix.c_str(), GetName(),
-          GetType(), GetMisc(), GetSize());
-}
 
 // define convert from linux/perf_event.h
 // description from https://man7.org/linux/man-pages/man2/perf_event_open.2.html
@@ -243,7 +177,7 @@ public:
     void DumpData(int indent) const override;
     void DumpLog(const std::string &prefix) const override;
 
-    size_t GetSize() const override;
+    virtual size_t GetSize() const override;
 };
 
 class PerfRecordMmap : public PerfEventRecordTemplate<PerfRecordMmapData, PERF_RECORD_TYPE_MMAP> {
@@ -257,7 +191,7 @@ public:
     void DumpLog(const std::string &prefix) const override;
 };
 
-class PerfRecordMmap2 : public PerfEventRecordTemplate<PerfRecordMmap2Data, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordMmap2 : public PerfEventRecordTemplate<PerfRecordMmap2Data, PERF_RECORD_TYPE_MMAP2> {
 public:
 
     PerfRecordMmap2() = default;
@@ -265,7 +199,7 @@ public:
     PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff, u32 maj, u32 min,
                     u64 ino, u32 prot, u32 flags, const std::string &filename);
 
-    PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<HiviewDFX::DfxMap> item);
+    PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<DfxMap> item);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     void DumpData(int indent) const override;
@@ -273,7 +207,7 @@ public:
     bool discard_ = false;
 };
 
-class PerfRecordLost : public PerfEventRecordTemplate<PerfRecordLostData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordLost : public PerfEventRecordTemplate<PerfRecordLostData, PERF_RECORD_TYPE_LOST> {
 public:
 
     PerfRecordLost() = default;
@@ -282,20 +216,19 @@ public:
     void DumpData(int indent) const override;
 
     // only for UT
-    PerfRecordLost(bool inKernel, u64 id, u64 lost) {
-        PerfEventRecordTemplate::Init(PERF_RECORD_LOST, inKernel);
+    PerfRecordLost(bool inKernel, u64 id, u64 lost)
+    {
+        PerfEventRecord::Init(PERF_RECORD_LOST, inKernel);
         data_.id = id;
         data_.lost = lost;
         header_.size = sizeof(header_) + sizeof(data_);
     }
 };
 
-class PerfRecordComm : public PerfEventRecordTemplate<PerfRecordCommData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordComm : public PerfEventRecordTemplate<PerfRecordCommData, PERF_RECORD_TYPE_COMM> {
 public:
 
     PerfRecordComm() = default;
-
-
     PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
@@ -303,7 +236,7 @@ public:
     void DumpLog(const std::string &prefix) const override;
 };
 
-class PerfRecordSample : public PerfEventRecordTemplate<PerfRecordSampleData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordSample : public PerfEventRecordTemplate<PerfRecordSampleData, PERF_RECORD_TYPE_SAMPLE> {
 public:
     uint64_t sampleType_ = SAMPLE_TYPE;
     uint64_t skipKernel_ = 0;
@@ -312,7 +245,7 @@ public:
     // hold the new ips memory (after unwind)
     // used for data_.ips replace (ReplaceWithCallStack)
     std::vector<u64> ips_;
-    std::vector<HiviewDFX::DfxFrame> callFrames_;
+    std::vector<DfxFrame> callFrames_;
     std::vector<pid_t> serverPidMap_;
 
     PerfRecordSample() = default;
@@ -335,8 +268,9 @@ public:
     void Clean();
 
     // only for UT
-    PerfRecordSample(bool inKernel, u32 pid, u32 tid, u64 period = 0, u64 time = 0, u64 id = 0) {
-        PerfEventRecordTemplate::Init(PERF_RECORD_SAMPLE, inKernel);
+    PerfRecordSample(bool inKernel, u32 pid, u32 tid, u64 period = 0, u64 time = 0, u64 id = 0)
+    {
+        PerfEventRecord::Init(PERF_RECORD_SAMPLE, inKernel);
         Clean();
         data_.pid = pid;
         data_.tid = tid;
@@ -352,7 +286,7 @@ private:
     static bool dumpRemoveStack_;
 };
 
-class PerfRecordExit : public PerfEventRecordTemplate<PerfRecordExitData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordExit : public PerfEventRecordTemplate<PerfRecordExitData, PERF_RECORD_TYPE_EXIT> {
 public:
     PerfRecordExit() = default;
 
@@ -360,7 +294,7 @@ public:
     void DumpData(int indent) const override;
 };
 
-class PerfRecordThrottle : public PerfEventRecordTemplate<PerfRecordThrottleData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordThrottle : public PerfEventRecordTemplate<PerfRecordThrottleData, PERF_RECORD_TYPE_THROTTLE> {
 public:
     PerfRecordThrottle() = default;
 
@@ -368,7 +302,7 @@ public:
     void DumpData(int indent) const override;
 };
 
-class PerfRecordUnthrottle : public PerfEventRecordTemplate<PerfRecordThrottleData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordUnthrottle : public PerfEventRecordTemplate<PerfRecordThrottleData, PERF_RECORD_TYPE_UNTHROTTLE> {
 public:
     PerfRecordUnthrottle() = default;
 
@@ -376,7 +310,7 @@ public:
     void DumpData(int indent) const override;
 };
 
-class PerfRecordFork : public PerfEventRecordTemplate<PerfRecordForkData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordFork : public PerfEventRecordTemplate<PerfRecordForkData, PERF_RECORD_TYPE_FORK> {
 public:
     PerfRecordFork() = default;
 
@@ -387,7 +321,7 @@ public:
 /*
     This record indicates a read event.
 */
-class PerfRecordRead : public PerfEventRecordTemplate<PerfRecordReadData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordRead : public PerfEventRecordTemplate<PerfRecordReadData, PERF_RECORD_TYPE_READ> {
 public:
     PerfRecordRead() = default;
 
@@ -414,7 +348,7 @@ public:
                 if set, then the data returned has
                 overwritten previous data.
 */
-class PerfRecordAux : public PerfEventRecordTemplate<PerfRecordAuxData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordAux : public PerfEventRecordTemplate<PerfRecordAuxData, PERF_RECORD_TYPE_AUX> {
 public:
     uint64_t sampleType_ = SAMPLE_ID;
     PerfRecordAux() = default;
@@ -434,7 +368,7 @@ public:
     tid    thread ID of the thread starting an instruction
             trace.
 */
-class PerfRecordItraceStart : public PerfEventRecordTemplate<PerfRecordItraceStartData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordItraceStart : public PerfEventRecordTemplate<PerfRecordItraceStartData, PERF_RECORD_TYPE_ITRACESTART> {
 public:
     PerfRecordItraceStart() = default;
 
@@ -447,7 +381,7 @@ public:
     record indicates some number of samples that may have
     been lost.
 */
-class PerfRecordLostSamples : public PerfEventRecordTemplate<PerfRecordLostSamplesData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordLostSamples : public PerfEventRecordTemplate<PerfRecordLostSamplesData, PERF_RECORD_TYPE_LOSTSAMPLE> {
 public:
     PerfRecordLostSamples() = default;
 
@@ -461,7 +395,7 @@ public:
     indicates whether it was a context switch into or away
     from the current process.
 */
-class PerfRecordSwitch : public PerfEventRecordTemplate<PerfRecordSwitchData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordSwitch : public PerfEventRecordTemplate<PerfRecordSwitchData, PERF_RECORD_TYPE_SWITCH> {
 public:
     PerfRecordSwitch() = default;
 
@@ -487,7 +421,8 @@ public:
             The thread ID of the previous (if switching in)
             or next (if switching out) thread on the CPU.
 */
-class PerfRecordSwitchCpuWide : public PerfEventRecordTemplate<PerfRecordSwitchCpuWideData, PERF_RECORD_TYPE_MMAP> {
+class PerfRecordSwitchCpuWide
+    : public PerfEventRecordTemplate<PerfRecordSwitchCpuWideData, PERF_RECORD_TYPE_SWITCHCPUWIDE> {
 public:
     PerfRecordSwitchCpuWide() = default;
 

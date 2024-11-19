@@ -1375,7 +1375,7 @@ bool SubCommandRecord::SaveRecord(PerfEventRecord& record, bool ptrReleaseFlag)
         }
     }
 
-    if (record.GetName() == nullptr) {
+    if (record.GetName() != nullptr) {
 #ifdef HIPERF_DEBUG_TIME
         const auto saveTime = steady_clock::now();
 #endif

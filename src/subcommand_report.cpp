@@ -229,7 +229,8 @@ bool SubCommandReport::RecordCallBack(PerfEventRecord& record)
     GetReport().virtualRuntime_.UpdateFromRecord(record);
 
     if (record.GetType() == PERF_RECORD_SAMPLE) {
-        std::unique_ptr<PerfRecordSample> sample(new PerfRecordSample(static_cast<PerfRecordSample&>(record)));
+        std::unique_ptr<PerfRecordSample> sample
+            = std::make_unique<PerfRecordSample>(static_cast<PerfRecordSample&>(record));
         std::unique_ptr<PerfRecordSample> prevSample = nullptr;
         if (cpuOffMode_) {
             auto prevIt = prevSampleCache_.find(sample->data_.tid);

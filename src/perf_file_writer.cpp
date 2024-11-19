@@ -186,8 +186,8 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
                     }
                     uint8_t *data = buf;
                     // the record is allowed from a cache memory, does not free memory after use
-                    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(header->type),
-                                                             data, defaultEventAttr_);
+                    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
+                        static_cast<perf_event_type>(header->type), data, defaultEventAttr_);
                     // skip unknown record
                     CHECK_TRUE(record.GetName() == nullptr, true, 0, "");
                     remainingSize = remainingSize - header->size - speSize;

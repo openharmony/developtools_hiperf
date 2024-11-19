@@ -20,6 +20,8 @@
 
 #include "utilities.h"
 
+using namespace OHOS::HiviewDFX;
+using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -27,7 +29,7 @@ namespace HiPerf {
 bool PerfRecordSample::dumpRemoveStack_ = false;
 thread_local std::unordered_map<PerfRecordType, PerfEventRecord*> PerfEventRecordFactory::recordMap_ = {};
 
-PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
+static PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
 {
     switch (type) {
         case PERF_RECORD_SAMPLE:
@@ -108,9 +110,68 @@ inline void PopFromBinary2(bool condition, uint8_t *&p, T1 &v1, T2 &v2)
     }
 }
 
+// PerfEventRecord
+void PerfEventRecord::Init(perf_event_type type, bool inKernel)
+{
+    header_.type = type;
+    header_.misc = inKernel ? PERF_RECORD_MISC_KERNEL : PERF_RECORD_MISC_USER;
+    header_.size = sizeof(header_);
+};
+
+void PerfEventRecord::Init(perf_event_hiperf_ext_type type)
+{
+    header_.type = type;
+    header_.misc = PERF_RECORD_MISC_USER;
+    header_.size = sizeof(header_);
+}
+
+void PerfEventRecord::InitHeader(uint8_t* p)
+{
+    if (p == nullptr) {
+        header_.type = PERF_RECORD_MMAP;
+        header_.misc = PERF_RECORD_MISC_USER;
+        header_.size = 0;
+        return;
+    }
+    header_ = *(reinterpret_cast<perf_event_header*>(p));
+}
+
+void PerfEventRecord::GetHeaderBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetHeaderSize()) {
+        buf.resize(GetHeaderSize());
+    }
+    uint8_t *p = buf.data();
+    *(reinterpret_cast<perf_event_header*>(p)) = header_;
+}
+
+void PerfEventRecord::Dump(int indent, std::string outputFilename, FILE *outputDump) const
+{
+    if (outputDump != nullptr) {
+        g_outputDump = outputDump;
+    } else if (!outputFilename.empty() && g_outputDump == nullptr) {
+        std::string resolvedPath = CanonicalizeSpecPath(outputFilename.c_str());
+        g_outputDump = fopen(resolvedPath.c_str(), "w");
+        if (g_outputDump == nullptr) {
+            printf("unable open file to '%s' because '%d'\n", outputFilename.c_str(), errno);
+            return;
+        }
+    }
+    PRINT_INDENT(indent, "\n");
+    PRINT_INDENT(indent, "record %s: type %u, misc %u, size %zu\n", GetName(), GetType(),
+                 GetMisc(), GetSize());
+    DumpData(indent + 1);
+}
+
+void PerfEventRecord::DumpLog(const std::string &prefix) const
+{
+    HLOGV("%s: record %s: type %u, misc %u, size %zu\n", prefix.c_str(), GetName(),
+          GetType(), GetMisc(), GetSize());
+}
+
 PerfRecordAuxtrace::PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid)
 {
-    PerfEventRecordTemplate::Init(PERF_RECORD_AUXTRACE);
+    PerfEventRecord::Init(PERF_RECORD_AUXTRACE);
     data_.size = size;
     data_.offset = offset;
     data_.reference = reference;
@@ -213,7 +274,7 @@ void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
         ips_.emplace_back(PERF_CONTEXT_USER);
         // we also need make a expand mark just for debug only
         const size_t beginIpsSize = ips_.size();
-        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const HiviewDFX::DfxFrame &frame) {
+        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const DfxFrame &frame) {
             ips_.emplace_back(frame.pc);
             if (originalSize != 0 and (originalSize != callFrames_.size()) and
                 ips_.size() == (originalSize + beginIpsSize)) {
@@ -266,12 +327,17 @@ void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
 
 void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
 {
-    PerfEventRecordTemplate::Init(p);
+    PerfEventRecord::InitHeader(p);
 
-    HLOG_ASSERT(p == nullptr);
+    HLOG_ASSERT(p != nullptr);
     // clear the vector data
     Clean();
     sampleType_ = attr.sample_type;
+    skipKernel_ = 0;
+    skipPid_ = 0;
+    stackId_ = {0};
+    removeStack_ = false;
+    data_ = {};
     uint8_t *start = p;
     p += sizeof(header_);
 
@@ -480,7 +546,7 @@ void PerfRecordSample::Clean()
 PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
                                const std::string &filename)
 {
-    PerfEventRecordTemplate::Init(PERF_RECORD_MMAP, inKernel);
+    PerfEventRecord::Init(PERF_RECORD_MMAP, inKernel);
 
     data_.pid = pid;
     data_.tid = tid;
@@ -530,7 +596,7 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 
                                  u32 maj, u32 min, u64 ino, u32 prot, u32 flags,
                                  const std::string &filename)
 {
-    PerfEventRecordTemplate::Init(PERF_RECORD_MMAP2, inKernel);
+    PerfEventRecord::Init(PERF_RECORD_MMAP2, inKernel);
     data_.pid = pid;
     data_.tid = tid;
     data_.addr = addr;
@@ -549,9 +615,9 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 
     header_.size = sizeof(header_) + sizeof(data_) - KILO + filename.size() + 1;
 }
 
-PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<HiviewDFX::DfxMap> item)
+PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_ptr<DfxMap> item)
 {
-    PerfEventRecordTemplate::Init(PERF_RECORD_MMAP2, inKernel);
+    PerfEventRecord::Init(PERF_RECORD_MMAP2, inKernel);
     data_.pid = pid;
     data_.tid = tid;
     if (item != nullptr) {
@@ -564,7 +630,7 @@ PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, std::shared_pt
         data_.ino_generation = 0;
         // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
         // why prot get from this is 7. rwxp
-        HiviewDFX::DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
+        DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
         if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
             HLOGE("strncpy_s failed");
         }
@@ -643,7 +709,7 @@ void PerfRecordLost::DumpData(int indent) const
 
 PerfRecordComm::PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm)
 {
-    PerfEventRecordTemplate::Init(PERF_RECORD_COMM, inKernel);
+    PerfEventRecord::Init(PERF_RECORD_COMM, inKernel);
     data_.pid = pid;
     data_.tid = tid;
     if (strncpy_s(data_.comm, KILO, comm.c_str(), comm.size()) != 0) {
@@ -971,7 +1037,7 @@ pid_t PerfRecordSample::GetServerPidof(unsigned int ipNr)
 PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type, uint8_t* data,
                                                             const perf_event_attr &attr)
 {
-    HLOG_ASSERT(data == nullptr);
+    HLOG_ASSERT(data != nullptr);
     PerfEventRecord* record = nullptr;
     auto it = recordMap_.find(type);
     if (it == recordMap_.end()) {
