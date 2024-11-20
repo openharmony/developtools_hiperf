@@ -91,7 +91,7 @@ public:
     {
         return sizeof(header_);
     };
-    void GetHeaderBinary(std::vector<uint8_t>& buf) const;
+    void GetHeaderBinary(std::vector<uint8_t> &buf) const;
 
     uint32_t GetType() const
     {
@@ -245,9 +245,9 @@ public:
     // extend
     // hold the new ips memory (after unwind)
     // used for data_.ips replace (ReplaceWithCallStack)
-    std::vector<u64> ips_;
-    std::vector<DfxFrame> callFrames_;
-    std::vector<pid_t> serverPidMap_;
+    static std::vector<u64> ips_;
+    static std::vector<DfxFrame> callFrames_;
+    static std::vector<pid_t> serverPidMap_;
 
     PerfRecordSample() = default;
     PerfRecordSample(const PerfRecordSample& sample);

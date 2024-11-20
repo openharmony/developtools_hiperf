@@ -169,6 +169,10 @@ void PerfEventRecord::DumpLog(const std::string &prefix) const
           GetType(), GetMisc(), GetSize());
 }
 
+std::vector<u64> PerfRecordSample::ips_ = {};
+std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
+std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
+
 PerfRecordAuxtrace::PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid)
 {
     PerfEventRecord::Init(PERF_RECORD_AUXTRACE);
