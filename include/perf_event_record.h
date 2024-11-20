@@ -23,6 +23,7 @@
 #include <string>
 #include <sys/types.h>
 #include <unique_fd.h>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 #include <linux/perf_event.h>
