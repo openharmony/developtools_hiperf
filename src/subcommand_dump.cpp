@@ -423,7 +423,7 @@ void SubCommandDump::ExprotUserData(PerfEventRecord& record)
     }
 }
 
-void SubCommandDump::DumpCallChain(int indent, PerfRecordSample& sample)
+void SubCommandDump::DumpCallChain(int indent, const PerfRecordSample& sample)
 {
     PRINT_INDENT(indent, "\n callchain: %zu\n", sample.callFrames_.size());
     if (sample.callFrames_.size() > 0) {

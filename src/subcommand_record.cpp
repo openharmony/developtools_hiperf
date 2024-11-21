@@ -1359,7 +1359,7 @@ bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 #endif
 }
 
-bool SubCommandRecord::SaveRecord(PerfEventRecord& record, bool ptrReleaseFlag)
+bool SubCommandRecord::SaveRecord(const PerfEventRecord& record, bool ptrReleaseFlag)
 {
 #if HIDEBUG_RECORD_NOT_SAVE
     return true;

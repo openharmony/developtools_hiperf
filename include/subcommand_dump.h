@@ -107,7 +107,7 @@ private:
     void DumpPrintFileHeader(int indent = 0);
     void DumpAttrPortion(int indent = 0);
     void DumpDataPortion(int indent = 0);
-    void DumpCallChain(int indent, PerfRecordSample& sample);
+    void DumpCallChain(int indent, const PerfRecordSample& sample);
     void DumpFeaturePortion(int indent = 0);
     void DumpUniqueStackTableNode(int indent, const PerfFileSectionUniStackTable &uniStackTable);
     void ExprotUserData(PerfEventRecord& record);
