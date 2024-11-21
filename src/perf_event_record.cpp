@@ -173,6 +173,12 @@ std::vector<u64> PerfRecordSample::ips_ = {};
 std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
 std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
 
+void PerfRecordAuxtrace::Init(uint8_t* data, const perf_event_attr& attr)
+{
+    PerfEventRecordTemplate::Init(data);
+    rawData_ = data + header_.size;
+}
+
 PerfRecordAuxtrace::PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid)
 {
     PerfEventRecord::Init(PERF_RECORD_AUXTRACE);
