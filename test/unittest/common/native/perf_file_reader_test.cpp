@@ -25,7 +25,7 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-using ProcessRecordCB = const std::function<bool(std::unique_ptr<PerfEventRecord> record)>;
+using ProcessRecordCB = const std::function<bool(PerfEventRecord& record)>;
 class PerfFileReaderTest : public testing::Test {
 public:
     static void SetUpTestCase(void);

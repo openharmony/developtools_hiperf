@@ -117,16 +117,16 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxS
                                                            arm_spe_reference(), cpu, tid, cpu, pid);
     static std::vector<u8> vbuf(RECORD_SIZE_LIMIT);
     uint8_t *buf;
-    if ((buf = recordBuf_->AllocForWrite(auxtraceRecord.header.size + auxSize)) == nullptr) {
+    if ((buf = recordBuf_->AllocForWrite(auxtraceRecord.header_.size + auxSize)) == nullptr) {
         HLOGD("alloc buffer failed: PerfRecordAuxtrace record, readSize: %llu", auxSize);
         return;
     }
     auxtraceRecord.GetBinary1(vbuf);
-    if (memcpy_s(buf, auxtraceRecord.header.size, vbuf.data(), auxtraceRecord.header.size) != 0) {
+    if (memcpy_s(buf, auxtraceRecord.header_.size, vbuf.data(), auxtraceRecord.header_.size) != 0) {
         HLOGE("memcpy_s return failed");
         return;
     }
-    buf += auxtraceRecord.header.size;
+    buf += auxtraceRecord.header_.size;
 
     while (auxSize > 0) {
         u64 readSize = pageSize_;
@@ -412,7 +412,7 @@ void PerfEvents::SetConfig(std::map<const std::string, unsigned long long> &speO
 bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, bool excludeKernel,
                           bool followGroup)
 {
-    HLOG_ASSERT(!excludeUser or !excludeKernel);
+    HLOG_ASSERT(!excludeUser || !excludeKernel);
     CHECK_TRUE(followGroup && eventGroupItem_.empty(), false, 1, "no group leader create before");
     // found the event name
     CHECK_TRUE(!IsEventSupport(type, config), false, 0, "");
@@ -1624,7 +1624,7 @@ void PerfEvents::ReadRecordFromBuf()
             const auto readingStartTime_ = steady_clock::now();
 #endif
 #if !HIDEBUG_SKIP_CALLBACK
-            recordCallBack_(GetPerfSampleFromCache(*type, p, *attr));
+            recordCallBack_(PerfEventRecordFactory::GetPerfEventRecord(*type, p, *attr));
 #endif
             recordEventCount_++;
 #ifdef HIPERF_DEBUG_TIME
@@ -1643,7 +1643,7 @@ void PerfEvents::ReadRecordFromBuf()
         const auto readingStartTime_ = steady_clock::now();
 #endif
 #if !HIDEBUG_SKIP_CALLBACK
-        recordCallBack_(GetPerfSampleFromCache(*type, p, *attr));
+        recordCallBack_(PerfEventRecordFactory::GetPerfEventRecord(*type, p, *attr));
 #endif
         recordEventCount_++;
 #ifdef HIPERF_DEBUG_TIME

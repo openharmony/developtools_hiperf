@@ -15,7 +15,6 @@
 
 #include "subcommand_help.h"
 #include "debug_logger.h"
-using namespace std;
 
 namespace OHOS {
 namespace Developtools {

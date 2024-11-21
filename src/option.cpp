@@ -63,7 +63,7 @@ std::vector<std::string>::iterator FindOption(argsVector &args, const std::strin
             break;
         }
     }
-    auto it = find(args.begin(), args.end(), optionName);
+    auto it = std::find(args.begin(), args.end(), optionName);
     if (it != args.end()) {
         if (tmpit != args.end() && it > tmpit) {
             it = args.end();

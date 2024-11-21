@@ -41,49 +41,47 @@ void Report::AddReportItem(const PerfRecordSample &sample, bool includeCallStack
                         configIndex, sample.data_.id);
     VirtualThread &thread = virtualRuntime_.GetThread(sample.data_.pid, sample.data_.tid);
     HLOG_ASSERT(sample.callFrames_.size() > 0);
-    if (sample.callFrames_.size() > 0) {
-        // if we need callstack ?
-        if (includeCallStack) {
-            // we will use caller mode , from last to first
-            auto frameIt = sample.callFrames_.rbegin();
+    // if we need callstack ?
+    if (includeCallStack) {
+        // we will use caller mode , from last to first
+        auto frameIt = sample.callFrames_.rbegin();
+        ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
+            sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
+            frameIt->funcName, frameIt->funcOffset, sample.data_.period);
+        HLOGD("ReportItem: %s", item.ToDebugString().c_str());
+        HLOG_ASSERT(!item.func_.empty());
+
+        std::vector<ReportItemCallFrame> *currentCallFrames = &item.callStacks_;
+        for (frameIt = sample.callFrames_.rbegin(); frameIt != sample.callFrames_.rend();
+                frameIt++) {
+            HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
+            // in add items case , right one should only have 1 callstack
+            // so just new callfames and move to next level
+            ReportItemCallFrame &nextCallFrame = currentCallFrames->emplace_back(
+                frameIt->funcName, frameIt->funcOffset, frameIt->mapName,
+                sample.data_.period,
+                (std::next(frameIt) == sample.callFrames_.rend()) ? sample.data_.period : 0);
+            HLOGV("add callframe %s", nextCallFrame.ToDebugString().c_str());
+            currentCallFrames = &nextCallFrame.childs;
+        }
+        HLOGV("callstack %zu", item.callStacks_.size());
+        if (item.callStacks_.size() > 0) {
+            HLOGV("callstack 2nd level %zu", item.callStacks_[0].childs.size());
+        }
+    } else {
+        auto frameIt = sample.callFrames_.begin();
+        if (frameIt != sample.callFrames_.end()) {
+            HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
+            // for arkjs frame, skip the stub.an frame
+            if (StringEndsWith(frameIt->mapName, "stub.an") && sample.callFrames_.size() > 1) {
+                HLOGV("stub.an frame, go to next, mapname %s", frameIt->mapName.c_str());
+                frameIt++;
+            }
             ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
                 sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
                 frameIt->funcName, frameIt->funcOffset, sample.data_.period);
-            HLOGD("ReportItem: %s", item.ToDebugString().c_str());
+            HLOGV("%s", item.ToDebugString().c_str());
             HLOG_ASSERT(!item.func_.empty());
-
-            std::vector<ReportItemCallFrame> *currentCallFrames = &item.callStacks_;
-            for (frameIt = sample.callFrames_.rbegin(); frameIt != sample.callFrames_.rend();
-                 frameIt++) {
-                HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
-                // in add items case , right one should only have 1 callstack
-                // so just new callfames and move to next level
-                ReportItemCallFrame &nextCallFrame = currentCallFrames->emplace_back(
-                    frameIt->funcName, frameIt->funcOffset, frameIt->mapName,
-                    sample.data_.period,
-                    (std::next(frameIt) == sample.callFrames_.rend()) ? sample.data_.period : 0);
-                HLOGV("add callframe %s", nextCallFrame.ToDebugString().c_str());
-                currentCallFrames = &nextCallFrame.childs;
-            }
-            HLOGV("callstack %zu", item.callStacks_.size());
-            if (item.callStacks_.size() > 0) {
-                HLOGV("callstack 2nd level %zu", item.callStacks_[0].childs.size());
-            }
-        } else {
-            auto frameIt = sample.callFrames_.begin();
-            if (frameIt != sample.callFrames_.end()) {
-                HLOG_ASSERT(frameIt->pc < PERF_CONTEXT_MAX);
-                // for arkjs frame, skip the stub.an frame
-                if (StringEndsWith(frameIt->mapName, "stub.an") && sample.callFrames_.size() > 1) {
-                    HLOGV("stub.an frame, go to next, mapname %s", frameIt->mapName.c_str());
-                    frameIt++;
-                }
-                ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-                    sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
-                    frameIt->funcName, frameIt->funcOffset, sample.data_.period);
-                HLOGV("%s", item.ToDebugString().c_str());
-                HLOG_ASSERT(!item.func_.empty());
-            }
         }
     }
     configs_[configIndex].sampleCount_++;
@@ -321,7 +319,7 @@ bool Report::MultiLevelSorting(const ReportItem &a, const ReportItem &b)
 #ifdef HIPERF_DEBUG
     if (DebugLogger::GetInstance()->GetLogLevel() <= LEVEL_VERBOSE) {
         bool result2 = MultiLevelCompare(b, a) > 0;
-        if (result and result == result2) {
+        if (result && result == result2) {
             HLOGE("MultiLevelSorting a->b %d vs b->a %d", result, result2);
             HLOGE("left %s", a.ToDebugString().c_str());
             HLOGE("right %s", b.ToDebugString().c_str());
@@ -456,14 +454,14 @@ void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFram
                NO_RETVAL, 0, "");
 
     // print it self
-    if (callFrame.selfEventCount_ != 0 and callFrame.selfEventCount_ != callFrame.eventCount_) {
+    if (callFrame.selfEventCount_ != 0 && callFrame.selfEventCount_ != callFrame.eventCount_) {
         OutputStdCallFrame(indent + CALLSTACK_INDENT, "[run in self function]",
                            callFrame.selfEventCount_, callFrame.eventCount_);
     }
 
     // printf children
     // if only one children
-    if (callFrame.childs.size() == 1u and
+    if (callFrame.childs.size() == 1u &&
         callFrame.childs[0].eventCount_ == callFrame.eventCount_) {
         HLOGV("childCallFream %*c %s", indent, ' ', callFrame.childs[0].func_.data());
         // don't indent if same count (only one 100% children)
@@ -519,7 +517,7 @@ void Report::OutputStdContentItem(const ReportItem &reportItem)
 
 void Report::OutputStdItemHeating(float heat, float heat2)
 {
-    if (heat == heat2 and heat == 0.0f) {
+    if (heat == heat2 && heat == 0.0f) {
         fprintf(output_, "something error , all it is end.\n");
     } else if (heat2 == 0) {
         // only have first
@@ -560,7 +558,7 @@ void Report::OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfig
                 if (MultiLevelSame(*it, *it2)) {
                     // we found the same item
                     // output the diff heating
-                    if (it->heat > option_.heatLimit_ and it2->heat > option_.heatLimit_) {
+                    if (it->heat > option_.heatLimit_ && it2->heat > option_.heatLimit_) {
                         OutputStdItemHeating(it->heat, it2->heat);
                         OutputStdContentItem(*it);
                     }

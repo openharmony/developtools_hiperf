@@ -106,9 +106,14 @@ bool TrackedCommand::StartCommand()
     // send start signal to start execution of command
     ssize_t nbyte {0};
     char startSignal {1};
+    int loopCount = 0;
     while (true) {
         nbyte = write(startFd_, &startSignal, 1);
         if (nbyte == -1) {
+            if (loopCount++ > MAX_LOOP_COUNT) {
+                HLOGE("read failed.");
+                break;
+            }
             continue;
         }
         break;
@@ -117,9 +122,14 @@ bool TrackedCommand::StartCommand()
     // check execution state of command
     // read acknowledgement signal
     char ackSignal {0};
+    loopCount = 0;
     while (true) {
         nbyte = read(ackFd_, &ackSignal, 1);
-        if (nbyte == -1 and (errno == EINTR or errno == EIO)) {
+        if (nbyte == -1 && (errno == EINTR || errno == EIO)) {
+            if (loopCount++ > MAX_LOOP_COUNT) {
+                HLOGE("read failed.");
+                break;
+            }
             continue;
         }
         HLOGE("*** nbyte: %zd, ackSignal: %d ***\n", nbyte, ackSignal);
@@ -142,9 +152,14 @@ void TrackedCommand::ExecuteCommand(const int &startFd, const int &ackFd)
     // waiting start signal
     char startSignal {0};
     ssize_t nbyte {0};
+    int loopCount = 0;
     while (true) {
         nbyte = read(startFd, &startSignal, 1);
         if (nbyte == -1) {
+            if (loopCount++ > MAX_LOOP_COUNT) {
+                HLOGE("read failed.");
+                break;
+            }
             continue;
         }
         break;
@@ -164,9 +179,14 @@ void TrackedCommand::ExecuteCommand(const int &startFd, const int &ackFd)
     }
     // execv() or execvp() failed, send failure signal
     char ackSignal {1};
+    loopCount = 0;
     while (true) {
         nbyte = write(ackFd, &ackSignal, 1);
         if (nbyte == -1) {
+            if (loopCount++ > MAX_LOOP_COUNT) {
+                HLOGE("read failed.");
+                break;
+            }
             continue;
         }
         break;
@@ -182,7 +202,7 @@ bool TrackedCommand::WaitCommand(int &wstatus)
         pid_t pid = waitpid(childPid_, &wstatus, WNOHANG);
         if (pid == 0) {
             return false;
-        } else { // pid == childPid_ or pid == -1
+        } else { // pid == childPid_ || pid == -1
             childPid_ = -1;
             state_ = State::COMMAND_STOPPED;
             return true;

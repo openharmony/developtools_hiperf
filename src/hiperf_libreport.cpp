@@ -47,7 +47,7 @@ int Report(const char *perfFile, const char *reportFile, const char *reportOptio
 {
     std::unique_ptr<SubCommandReport> report = std::make_unique<SubCommandReport>();
     HLOGD("report the file %s to %s\n", perfFile, reportFile);
-    if (perfFile != nullptr and reportFile != nullptr) {
+    if (perfFile != nullptr && reportFile != nullptr) {
         std::vector<std::string> args;
         args.emplace_back("-i");
         args.emplace_back(perfFile);
@@ -77,7 +77,7 @@ int ReportUnwindJson(const char *perfFile, const char *reportFile, const char *s
 {
     std::unique_ptr<SubCommandReport> report = std::make_unique<SubCommandReport>();
     HLOGD("report the file %s to json file %s symbols from %s\n", perfFile, reportFile, symbolsDir);
-    if (perfFile != nullptr and reportFile != nullptr) {
+    if (perfFile != nullptr && reportFile != nullptr) {
         std::vector<std::string> args;
         args.emplace_back("-i");
         args.emplace_back(perfFile);
@@ -119,11 +119,13 @@ const char *ReportGetSymbolFiles(const char *perfFile)
     static std::string result; // static for hold the c_str buffer
     result.clear();
     if (perfFile == nullptr) {
+        HLOGW("perfFile is nullptr.");
         return result.c_str();
     }
 
     auto reader = GetReader(perfFile);
     if (reader == nullptr) {
+        HLOGW("reader is nullptr.");
         return result.c_str();
     }
     // found symbols in file

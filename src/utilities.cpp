@@ -280,7 +280,7 @@ std::string ReadFileToString(const std::string &fileName)
 {
     std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
     std::ifstream inputString(resolvedPath, std::ios::in);
-    if (!inputString or !inputString.is_open()) {
+    if (!inputString || !inputString.is_open()) {
         return EMPTY_STRING;
     }
     std::istreambuf_iterator<char> firstIt = {inputString};
@@ -494,11 +494,13 @@ std::vector<pid_t> GetSubthreadIDs(const pid_t pid)
     auto tids = GetSubDirs(path);
     std::vector<pid_t> res {};
     for (auto tidStr : tids) {
-        pid_t tid = static_cast<pid_t>(std::stoul(tidStr, nullptr));
-        if (tid == pid) {
-            continue;
+        if (!tidStr.empty()) {
+            pid_t tid = static_cast<pid_t>(std::stoul(tidStr, nullptr));
+            if (tid == pid) {
+                continue;
+            }
+            res.push_back(tid);
         }
-        res.push_back(tid);
     }
     return res;
 }
@@ -841,6 +843,20 @@ bool IsHiviewCall()
 #else
     return false;
 #endif
+}
+
+bool IsNumeric(const std::string& str)
+{
+    std::istringstream iss(str);
+    int number;
+    char trailingCharacter;
+    if (!(iss >> number)) {
+        return false;
+    }
+    if (iss >> trailingCharacter) {
+        return false;
+    }
+    return true;
 }
 } // namespace HiPerf
 } // namespace Developtools

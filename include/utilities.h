@@ -310,6 +310,7 @@ bool IsBeta();
 bool IsAllowProfilingUid();
 bool IsHiviewCall();
 bool PowerOfTwo(uint64_t n);
+bool IsNumeric(const std::string& str);
 
 const std::string HMKERNEL = "HongMeng";
 
@@ -344,29 +345,6 @@ bool IsArkJsFile(const std::string& filepath);
 std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname);
-
-template <typename Func>
-class ScopeGuard {
-public:
-    explicit ScopeGuard(Func&& fn)
-        : fn_(fn) {}
-    ~ScopeGuard()
-    {
-        fn_();
-    }
-private:
-    Func fn_;
-};
-
-struct ScopeGuardOnExit {};
-template <typename Func>
-static inline ScopeGuard<Func> operator+(ScopeGuardOnExit, Func&& fn)
-{
-    return ScopeGuard<Func>(std::forward<Func>(fn));
-}
-
-#define ON_SCOPE_EXIT \
-        auto __onGuardExit__ = ScopeGuardOnExit{} + [&]
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

@@ -26,7 +26,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-using ProcessRecordCB = const std::function<bool(std::unique_ptr<PerfEventRecord> record)>;
+using ProcessRecordCB = const std::function<bool(PerfEventRecord& record)>;
 // read record from data file, like perf.data.
 // format of file follow
 // tools/perf/Documentation/perf.data-file-format.txt

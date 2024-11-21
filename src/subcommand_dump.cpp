@@ -381,13 +381,15 @@ void SubCommandDump::DumpAttrPortion(int indent)
 
 void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
 {
-    if (recordSample.data_.reg_nr > 0 and recordSample.data_.dyn_size > 0) {
+    if (recordSample.data_.reg_nr > 0 && recordSample.data_.dyn_size > 0) {
         // <pid>_<tid>_user_regs_<time>
         std::string userRegs =
             StringPrintf("hiperf_%d_%d_user_regs_%zu.dump", recordSample.data_.pid,
                          recordSample.data_.tid, exportSampleIndex_);
         std::string resolvedPath = CanonicalizeSpecPath(userRegs.c_str());
-        std::unique_ptr<FILE, decltype(&fclose)> fpUserRegs(fopen(resolvedPath.c_str(), "wb"), fclose);
+        FILE *userRegsFp = fopen(resolvedPath.c_str(), "wb");
+        CHECK_TRUE(userRegsFp == nullptr, NO_RETVAL, 1, "open userRegs failed");
+        std::unique_ptr<FILE, decltype(&fclose)> fpUserRegs(userRegsFp, fclose);
         fwrite(recordSample.data_.user_regs, sizeof(u64), recordSample.data_.reg_nr,
                fpUserRegs.get());
 
@@ -395,19 +397,21 @@ void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
             StringPrintf("hiperf_%d_%d_user_data_%zu.dump", recordSample.data_.pid,
                          recordSample.data_.tid, exportSampleIndex_);
         std::string resolvePath = CanonicalizeSpecPath(userData.c_str());
-        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvePath.c_str(), "wb"), fclose);
+        FILE *UserDataFp = fopen(resolvePath.c_str(), "wb");
+        CHECK_TRUE(UserDataFp == nullptr, NO_RETVAL, 1, "open UserData failed");
+        std::unique_ptr<FILE, decltype(&fclose)> fpUserData(UserDataFp, fclose);
         fwrite(recordSample.data_.stack_data, sizeof(u8), recordSample.data_.dyn_size,
                fpUserData.get());
     }
 }
 
-void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
+void SubCommandDump::ExprotUserData(PerfEventRecord& record)
 {
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
         if (currectSampleIndex_++ != exportSampleIndex_) {
             return;
         }
-        PerfRecordSample *recordSample = static_cast<PerfRecordSample *>(record.get());
+        PerfRecordSample* recordSample = static_cast<PerfRecordSample*>(&record);
         ExprotUserStack(*recordSample);
 
         std::string userData =
@@ -423,14 +427,14 @@ void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
     }
 }
 
-void SubCommandDump::DumpCallChain(int indent, std::unique_ptr<PerfRecordSample> &sample)
+void SubCommandDump::DumpCallChain(int indent, const PerfRecordSample& sample)
 {
-    PRINT_INDENT(indent, "\n callchain: %zu\n", sample->callFrames_.size());
-    if (sample->callFrames_.size() > 0) {
+    PRINT_INDENT(indent, "\n callchain: %zu\n", sample.callFrames_.size());
+    if (sample.callFrames_.size() > 0) {
         indent += indent + 1;
-        for (auto frameIt = sample->callFrames_.begin(); frameIt != sample->callFrames_.end();
+        for (auto frameIt = sample.callFrames_.begin(); frameIt != sample.callFrames_.end();
              frameIt++) {
-            PRINT_INDENT(indent, "%02zd:%s\n", std::distance(frameIt, sample->callFrames_.end()),
+            PRINT_INDENT(indent, "%02zd:%s\n", std::distance(frameIt, sample.callFrames_.end()),
                          frameIt->ToSymbolString().c_str());
         }
     }
@@ -439,8 +443,8 @@ void SubCommandDump::DumpCallChain(int indent, std::unique_ptr<PerfRecordSample>
 void SubCommandDump::DumpDataPortion(int indent)
 {
     int recordCount = 0;
-    auto recordcCallback = [&](std::unique_ptr<PerfEventRecord> record) {
-        CHECK_TRUE(record == nullptr, false, 0, ""); // return false in callback can stop the read process
+    auto recordcCallback = [&](PerfEventRecord& record) {
+        CHECK_TRUE(record.GetName() == nullptr, false, 0, ""); // return false in callback can stop the read process
 
         // for UT
         if (exportSampleIndex_ > 0) {
@@ -448,15 +452,13 @@ void SubCommandDump::DumpDataPortion(int indent)
         }
 
         // tell process tree what happend for rebuild symbols
-        vr_.UpdateFromRecord(*record);
+        vr_.UpdateFromRecord(record);
 
         recordCount++;
-        record->Dump(indent, outputFilename_, g_outputDump);
+        record.Dump(indent, outputFilename_, g_outputDump);
 
-        if (record->GetType() == PERF_RECORD_SAMPLE) {
-            std::unique_ptr<PerfRecordSample> sample(
-                static_cast<PerfRecordSample *>(record.release()));
-            DumpCallChain(indent, sample);
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            DumpCallChain(indent, static_cast<PerfRecordSample&>(record));
         }
 
         return true;
@@ -592,7 +594,7 @@ void SubCommandDump::SetHM()
     if (isHM_) {
         pid_t devhost = -1;
         std::string str = reader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
-        if (str != EMPTY_STRING) {
+        if (IsNumeric(str)) {
             devhost = std::stoll(str);
         }
         vr_.SetDevhostPid(devhost);

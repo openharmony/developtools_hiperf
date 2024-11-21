@@ -134,12 +134,13 @@ bool PerfFileSection::Read(std::string &value)
     CHECK_TRUE(!Read(size), false, 0, "");
     // if size large than buf size or 0 size ?
     // don't assert for fuzz test
-    CHECK_TRUE(size == 0 or size > maxSize_, false, 0, "");
-    char buf[size];
+    CHECK_TRUE(size == 0 || size > maxSize_, false, 0, "");
+    char *buf = new char[size];
     CHECK_TRUE(!Read(buf, size), false, 0, "");
     CHECK_TRUE(buf[size - 1] != 0, false, 0, "");
     value = buf;
     HLOGDUMMY("Read String size %u buf : %s", size, value.c_str());
+    delete []buf;
     return true;
 }
 void PerfFileSection::Skip(size_t size)

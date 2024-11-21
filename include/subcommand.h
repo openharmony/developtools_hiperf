@@ -80,7 +80,7 @@ public:
     };
 
     // called from main
-    static bool RegisterSubCommand(std::string, std::unique_ptr<SubCommand>);
+    static bool RegisterSubCommand(const std::string&, std::unique_ptr<SubCommand>);
 
     // get some cmd
     static const std::map<std::string, std::unique_ptr<SubCommand>> &GetSubCommands();

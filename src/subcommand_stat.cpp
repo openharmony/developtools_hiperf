@@ -26,7 +26,7 @@
 #include "utilities.h"
 
 const uint16_t ONE_HUNDRED = 100;
-const uint16_t THOUSNADS_SEPARATOR = 3;
+const uint16_t THOUSANDS_SEPARATOR = 3;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -56,7 +56,7 @@ void SubCommandStat::DumpOptions() const
 
 bool SubCommandStat::ParseOption(std::vector<std::string> &args)
 {
-    if (args.size() == 1 and args[0] == "-h") {
+    if (args.size() == 1 && args[0] == "-h") {
         args.clear();
         helpOption_ = true;
         PrintUsage();
@@ -203,7 +203,7 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
     // print value
     std::string strEventCount = std::to_string(reportSum->eventCountSum);
     for (size_t i = strEventCount.size() >= 1 ? strEventCount.size() - 1 : 0, j = 1; i > 0; --i, ++j) {
-        if (j == THOUSNADS_SEPARATOR) {
+        if (j == THOUSANDS_SEPARATOR) {
             j = 0;
             strEventCount.insert(strEventCount.begin() + i, ',');
         }
@@ -306,7 +306,7 @@ void SubCommandStat::ReportNormal(
         std::string comment = comments[configName];
         std::string strEventCount = std::to_string(it->second->eventCount);
         for (size_t i = strEventCount.size() >= 1 ? strEventCount.size() - 1 : 0, j = 1; i > 0; --i, ++j) {
-            if (j == THOUSNADS_SEPARATOR) {
+            if (j == THOUSANDS_SEPARATOR) {
                 strEventCount.insert(strEventCount.begin() + i, ',');
                 j = 0;
             }
@@ -351,7 +351,7 @@ std::string SubCommandStat::GetCommentConfigName(
     const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName)
 {
     std::string commentConfigName = "";
-    CHECK_TRUE(countEvent == nullptr || eventName.length() == 0, commentConfigName, 0, "");
+    CHECK_TRUE(countEvent == nullptr || eventName.length() == 0, commentConfigName, 1, "countEvent is nullptr");
     if (countEvent->userOnly) {
         commentConfigName = eventName + ":u";
     } else if (countEvent->kernelOnly) {
@@ -610,7 +610,9 @@ bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
     }
 
     for (auto pid : pids) {
-        if (!IsDir("/proc/" + std::to_string(pid))) {
+        std::ostringstream oss;
+        oss << "/proc/" << pid;
+        if (!IsDir(oss.str())) {
             printf("not exit pid %d\n", pid);
             return false;
         }
@@ -649,6 +651,10 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     }
     if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
         HLOGV("CheckAppIsRunning() failed");
+        return false;
+    }
+    if (!CheckOptionPid(selectPids_)) {
+        HLOGV("CheckOptionPid() failed");
         return false;
     }
 

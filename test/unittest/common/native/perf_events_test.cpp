@@ -41,7 +41,7 @@ public:
     static void TestCodeThread(void);
     static void RunTestThreads(std::vector<std::thread> &threads);
     static void SetAllConfig(PerfEvents &event);
-    static bool RecordCount(std::unique_ptr<PerfEventRecord> record);
+    static bool RecordCount(PerfEventRecord& record);
     static void StatCount(
         const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
 
@@ -71,13 +71,9 @@ void PerfEventsTest::TearDown() {}
 uint64_t PerfEventsTest::g_recordCount = 0;
 uint64_t PerfEventsTest::g_statCount = 0;
 
-bool PerfEventsTest::RecordCount(std::unique_ptr<PerfEventRecord> record)
+bool PerfEventsTest::RecordCount(PerfEventRecord& record)
 {
     g_recordCount++;
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
-        // the record is allowed from a cache memory, does not free memory after use
-        record.release();
-    }
     return true;
 }
 

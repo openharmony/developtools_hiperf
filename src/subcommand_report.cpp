@@ -123,14 +123,14 @@ void SubCommandReport::DumpOptions() const
 bool SubCommandReport::VerifyDisplayOption()
 {
     for (std::string &number : reportOption_.displayPids_) {
-        if (!IsDigits(number) or number.front() == '-') {
+        if (!IsDigits(number) || number.front() == '-') {
             printf("error number for pid '%s'\n", number.c_str());
             return false;
         }
     }
 
     for (std::string &number : reportOption_.displayTids_) {
-        if (!IsDigits(number) or number.front() == '-') {
+        if (!IsDigits(number) || number.front() == '-') {
             printf("error number for tid '%s'\n", number.c_str());
             return false;
         }
@@ -151,11 +151,11 @@ bool SubCommandReport::VerifyOption()
     }
     const float min = 0.0;
     const float max = 100.0;
-    if (reportOption_.heatLimit_ < min or reportOption_.heatLimit_ > max) {
+    if (reportOption_.heatLimit_ < min || reportOption_.heatLimit_ > max) {
         printf("head limit error. must in (0 <= limit < 100).\n");
         return false;
     }
-    if (reportOption_.callStackHeatLimit_ < min or reportOption_.callStackHeatLimit_ > max) {
+    if (reportOption_.callStackHeatLimit_ < min || reportOption_.callStackHeatLimit_ > max) {
         printf("head limit error. must in (0 <= limit < 100).\n");
         return false;
     }
@@ -164,7 +164,7 @@ bool SubCommandReport::VerifyOption()
         return false;
     }
     if (!recordFile_[SECOND].empty()) {
-        if (protobufFormat_ or jsonFormat_ or showCallStack_) {
+        if (protobufFormat_ || jsonFormat_ || showCallStack_) {
             printf("diff don't support any export mode(like json , flame or proto)\n");
         } else {
             diffMode_ = true;
@@ -223,13 +223,14 @@ void SubCommandReport::ProcessSample(std::unique_ptr<PerfRecordSample> &sample)
     }
 }
 
-bool SubCommandReport::RecordCallBack(std::unique_ptr<PerfEventRecord> record)
+bool SubCommandReport::RecordCallBack(PerfEventRecord& record)
 {
     // tell process tree what happend for rebuild symbols
-    GetReport().virtualRuntime_.UpdateFromRecord(*record);
+    GetReport().virtualRuntime_.UpdateFromRecord(record);
 
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
-        std::unique_ptr<PerfRecordSample> sample(static_cast<PerfRecordSample *>(record.release()));
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
+        std::unique_ptr<PerfRecordSample> sample
+            = std::make_unique<PerfRecordSample>(static_cast<PerfRecordSample&>(record));
         std::unique_ptr<PerfRecordSample> prevSample = nullptr;
         if (cpuOffMode_) {
             auto prevIt = prevSampleCache_.find(sample->data_.tid);
@@ -256,7 +257,7 @@ bool SubCommandReport::RecordCallBack(std::unique_ptr<PerfEventRecord> record)
                 HLOGV("current sample period %llu ", sample->data_.period);
             }
         }
-        if (cpuOffMode_ and cpuOffids_.size() > 0 and cpuOffids_.count(sample->data_.id) > 0) {
+        if (cpuOffMode_ && cpuOffids_.size() > 0 && cpuOffids_.count(sample->data_.id) > 0) {
             BroadcastSample(sample);
         } else {
             ProcessSample(sample);
@@ -264,7 +265,7 @@ bool SubCommandReport::RecordCallBack(std::unique_ptr<PerfEventRecord> record)
     } else {
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
         if (protobufFormat_) {
-            protobufOutputFileWriter_->ProcessRecord(*record);
+            protobufOutputFileWriter_->ProcessRecord(record);
         }
 #endif
     }
@@ -360,7 +361,7 @@ void SubCommandReport::LoadEventDesc()
 {
     const PerfFileSection *featureSection =
         recordFileReader_->GetFeatureSection(FEATURE::EVENT_DESC);
-    CHECK_TRUE(featureSection == nullptr, NO_RETVAL, 0, "");
+    CHECK_TRUE(featureSection == nullptr, NO_RETVAL, 1, "featureSection invalid");
     const PerfFileSectionEventDesc &sectionEventdesc =
         *static_cast<const PerfFileSectionEventDesc *>(featureSection);
     HLOGV("Event descriptions: %zu", sectionEventdesc.eventDesces_.size());
@@ -369,7 +370,7 @@ void SubCommandReport::LoadEventDesc()
 
         HLOGV("event name[%zu]: %s ids: %s", i, fileAttr.name.c_str(),
               VectorToString(fileAttr.ids).c_str());
-        if (cpuOffMode_ and fileAttr.name == cpuOffEventName) {
+        if (cpuOffMode_ && fileAttr.name == cpuOffEventName) {
             // found cpuoff event id
             std::set<uint64_t> cpuOffids(fileAttr.ids.begin(), fileAttr.ids.end());
             cpuOffids_ = cpuOffids;
@@ -440,7 +441,7 @@ void SubCommandReport::FlushCacheRecord()
     for (auto &pair : prevSampleCache_) {
         std::unique_ptr<PerfRecordSample> sample = std::move(pair.second);
         sample->data_.period = 1u;
-        if (cpuOffMode_ and cpuOffids_.size() > 0 and cpuOffids_.count(sample->data_.id) > 0) {
+        if (cpuOffMode_ && cpuOffids_.size() > 0 && cpuOffids_.count(sample->data_.id) > 0) {
             BroadcastSample(sample);
         } else {
             ProcessSample(sample);
@@ -478,8 +479,8 @@ bool SubCommandReport::LoadPerfData()
     // before load data section
     SetHM();
     recordFileReader_->ReadDataSection(
-        [this] (std::unique_ptr<PerfEventRecord> record) -> bool {
-            return this->RecordCallBack(std::move(record));
+        [this] (PerfEventRecord& record) -> bool {
+            return this->RecordCallBack(record);
         });
     if (cpuOffMode_) {
         FlushCacheRecord();

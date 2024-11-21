@@ -284,7 +284,6 @@ struct SpeDecoder {
     struct SpePkt packet;
 };
 
-struct SpeDecoder *SpeDecoderNew(struct SpeParams *params);
 struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen);
 void SpeDecoderFree(struct SpeDecoder *decoder);
 

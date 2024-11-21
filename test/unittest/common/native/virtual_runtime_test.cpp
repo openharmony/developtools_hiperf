@@ -24,7 +24,6 @@
 #include <hilog/log.h>
 
 #include "symbols_file_test.h"
-#include "test_utilities.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -42,7 +41,7 @@ public:
     void LogLevelTest(std::vector<std::string> args, DebugLevel level);
     default_random_engine rnd_;
     std::unique_ptr<VirtualRuntime> runtime_;
-    bool RecordCallBack(std::unique_ptr<PerfEventRecord> record);
+    bool RecordCallBack(PerfEventRecord& record);
     size_t callbackCount_ = 0;
 
     void PrepareKernelSymbol();
@@ -70,10 +69,10 @@ void VirtualRuntimeTest::TearDown()
     runtime_.release();
 }
 
-bool VirtualRuntimeTest::RecordCallBack(std::unique_ptr<PerfEventRecord> record)
+bool VirtualRuntimeTest::RecordCallBack(PerfEventRecord& record)
 {
     callbackCount_++;
-    printf("callbackCount_ %zu: type %d\n", callbackCount_, record->GetType());
+    printf("callbackCount_ %zu: type %d\n", callbackCount_, record.GetType());
     return true;
 }
 
@@ -372,7 +371,8 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
     (void)memset_s(&attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr));
     attr.sample_type = TEST_RECORD_SAMPLE_TYPE;
     attr.sample_regs_user = TEST_DWARF_RECORD_REGS_USER;
-    PerfRecordSample sample(data.data(), attr);
+    PerfRecordSample sample;
+    sample.Init(data.data(), attr);
     sample.DumpLog("UnwindFromRecord");
     ASSERT_EQ(sample.data_.stack_size, TEST_DWARF_RECORD_STACK_SIZE);
 

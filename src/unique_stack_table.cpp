@@ -182,8 +182,8 @@ bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
 
 bool UniqueStackTable::ImportNode(uint32_t index, const Node& node)
 {
-    Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     CHECK_TRUE(index >= tableSize_, false, 0, "");
+    Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     tableHead[index].value = node.value;
     return true;
 }

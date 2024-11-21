@@ -181,7 +181,7 @@ bool SubCommandRecord::GetSpeOptions()
         for (auto item: valueExpressions) {
             std::vector<std::string> expressions = StringSplit(item, "=");
             size_t itemNum = 2;
-            if (expressions.size() == itemNum) {
+            if (expressions.size() == itemNum && IsNumeric(expressions[1])) {
                 std::string name = expressions[0];
                 unsigned long long num = std::stoull(expressions[1]);
                 if (speOptMap_.find(name) != speOptMap_.end()) {
@@ -397,7 +397,12 @@ bool SubCommandRecord::CheckDataLimitOption()
 bool SubCommandRecord::CheckSelectCpuPidOption()
 {
     if (!selectCpus_.empty()) {
-        int maxCpuid = sysconf(_SC_NPROCESSORS_CONF) - 1;
+        int cpuCount = sysconf(_SC_NPROCESSORS_CONF);
+        if (cpuCount == -1) {
+            printf("sysconf failed.\n");
+            return false;
+        }
+        int maxCpuid = cpuCount - 1;
         for (auto cpu : selectCpus_) {
             if (cpu < 0 || cpu > maxCpuid) {
                 printf("Invalid -c value '%d', the CPU ID should be in 0~%d \n", cpu, maxCpuid);
@@ -539,7 +544,7 @@ bool SubCommandRecord::CheckTargetProcessOptions()
         }
         hasTarget = true;
     }
-    if (!hasTarget and (controlCmd_.empty() or controlCmd_ == CONTROL_CMD_PREPARE)) {
+    if (!hasTarget && (controlCmd_.empty() || controlCmd_ == CONTROL_CMD_PREPARE)) {
         printf("please select a target process\n");
         return false;
     }
@@ -596,11 +601,11 @@ bool SubCommandRecord::ParseDataLimitOption(const std::string &str)
 {
     uint unit = 1;
     char c = str.at(str.size() >= 1 ? str.size() - 1 : 0);
-    if (c == 'K' or c == 'k') {
+    if (c == 'K' || c == 'k') {
         unit = KILO;
-    } else if (c == 'm' or c == 'M') {
+    } else if (c == 'm' || c == 'M') {
         unit = KILO * KILO;
-    } else if (c == 'g' or c == 'G') {
+    } else if (c == 'g' || c == 'G') {
         unit = KILO * KILO * KILO;
     } else {
         return false;
@@ -692,8 +697,8 @@ bool SubCommandRecord::ParseBranchSampleType(const std::vector<std::string> &vec
 
 bool SubCommandRecord::ParseControlCmd(const std::string cmd)
 {
-    if (cmd.empty() or cmd == CONTROL_CMD_PREPARE or cmd == CONTROL_CMD_START or
-        cmd == CONTROL_CMD_PAUSE or cmd == CONTROL_CMD_RESUME or cmd == CONTROL_CMD_STOP) {
+    if (cmd.empty() || cmd == CONTROL_CMD_PREPARE || cmd == CONTROL_CMD_START ||
+        cmd == CONTROL_CMD_PAUSE || cmd == CONTROL_CMD_RESUME || cmd == CONTROL_CMD_STOP) {
         return true;
     }
 
@@ -778,7 +783,7 @@ bool SubCommandRecord::TraceOffCpu()
     int enable = -1;
     std::string node = SCHED_SWITCH;
     const std::string nodeDebug = SCHED_SWITCH_DEBUG;
-    CHECK_TRUE(!ReadIntFromProcFile(node.c_str(), enable) and !ReadIntFromProcFile(nodeDebug.c_str(), enable),
+    CHECK_TRUE(!ReadIntFromProcFile(node.c_str(), enable) && !ReadIntFromProcFile(nodeDebug.c_str(), enable),
                false, LOG_TYPE_PRINTF, "Cannot trace off CPU, event sched:sched_switch is not available (%s or %s)\n",
                node.c_str(), nodeDebug.c_str());
 
@@ -806,8 +811,8 @@ void SubCommandRecord::RecoverSavedCmdlinesSize()
 bool SubCommandRecord::PreparePerfEvent()
 {
     // we need to notify perfEvents_ sampling mode by SetRecordCallBack first
-    auto processRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
-        return this->ProcessRecord(std::move(record));
+    auto processRecord = [this](PerfEventRecord& record) -> bool {
+        return this->ProcessRecord(record);
     };
     perfEvents_.SetRecordCallBack(processRecord);
 
@@ -892,15 +897,15 @@ bool SubCommandRecord::PrepareSysKernel()
 
 bool SubCommandRecord::PrepareVirtualRuntime()
 {
-    auto saveRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
-        return this->SaveRecord(std::move(record), false);
+    auto saveRecord = [this](PerfEventRecord& record) -> bool {
+        return this->SaveRecord(record, false);
     };
     virtualRuntime_.SetRecordMode(saveRecord);
 
     // do some config for virtualRuntime_
     virtualRuntime_.SetCallStackExpend(disableCallstackExpend_ ? 0 : 1);
     // these is same for virtual runtime
-    virtualRuntime_.SetDisableUnwind(disableUnwind_ or delayUnwind_);
+    virtualRuntime_.SetDisableUnwind(disableUnwind_ || delayUnwind_);
     virtualRuntime_.EnableDebugInfoSymbolic(enableDebugInfoSymbolic_);
     if (!symbolDir_.empty()) {
         if (!virtualRuntime_.SetSymbolsPaths(symbolDir_)) {
@@ -1084,7 +1089,7 @@ bool SubCommandRecord::CreateFifoServer()
 {
     char errInfo[ERRINFOLEN] = { 0 };
     const mode_t fifoMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 or
+    if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 ||
         mkfifo(CONTROL_FIFO_FILE_C2S.c_str(), fifoMode) != 0) {
         if (errno == EEXIST) {
             printf("another sampling service is running.\n");
@@ -1129,7 +1134,7 @@ bool SubCommandRecord::CreateFifoServer()
         if (fd != -1) {
             WaitFifoReply(fd, CONTROL_WAITREPY_TOMEOUT, reply);
         }
-        if (fd == -1 or reply != HiperfClient::ReplyOK) {
+        if (fd == -1 || reply != HiperfClient::ReplyOK) {
             if (reply != HiperfClient::ReplyOK) {
                 printf("%s\n", reply.c_str());
             }
@@ -1220,7 +1225,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     }
 
     // prepare PerfEvents
-    if (!PrepareSysKernel() or !PreparePerfEvent()) {
+    if (!PrepareSysKernel() || !PreparePerfEvent()) {
         return false;
     }
 
@@ -1260,6 +1265,10 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     }
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents tracking finish");
 
+    if (isSpe_) {
+        HLOGD("stop write spe record");
+        fileWriter_->SetWriteRecordStat(false);
+    }
     startSaveFileTimes_ = steady_clock::now();
     if (!FinishWriteRecordFile()) {
         HLOGE("Fail to finish record file %s", outputFilename_.c_str());
@@ -1314,20 +1323,16 @@ void SubCommandRecord::RemoveVdsoTmpFile()
     }
 }
 
-bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
+bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 {
-    CHECK_TRUE(record == nullptr, false, 1, "record is null");
+    CHECK_TRUE(record.GetName() == nullptr, false, 1, "record is null");
 #if HIDEBUG_RECORD_NOT_PROCESS
     // some times we want to check performance
     // but we still want to see the record number
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
         recordSamples_++;
     } else {
         recordNoSamples_++;
-    }
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
-        // when the record is allowed from a cache memory, does not free memory after use
-        record.release();
     }
     return true;
 #else
@@ -1336,11 +1341,7 @@ bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
 #endif
     if (excludeHiperf_) {
         static pid_t pid = getpid();
-        if (record->GetPid() == pid) {
-            if (record->GetType() == PERF_RECORD_SAMPLE) {
-                // when the record is allowed from a cache memory, does not free memory after use
-                record.release();
-            }
+        if (record.GetPid() == pid) {
             // discard record
             return true;
         }
@@ -1349,23 +1350,17 @@ bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
     // May create some simulated events
     // it will call ProcessRecord before next line
 #if !HIDEBUG_RECORD_NOT_PROCESS_VM
-    virtualRuntime_.UpdateFromRecord(*record);
+    virtualRuntime_.UpdateFromRecord(record);
 #endif
 #ifdef HIPERF_DEBUG_TIME
     prcessRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
-    return SaveRecord(std::move(record), true);
+    return SaveRecord(record, true);
 #endif
 }
 
-bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record, bool ptrReleaseFlag)
+bool SubCommandRecord::SaveRecord(const PerfEventRecord& record, bool ptrReleaseFlag)
 {
-    ON_SCOPE_EXIT {
-        if (ptrReleaseFlag && record->GetType() == PERF_RECORD_SAMPLE) {
-            // when the record is allowed from a cache memory, does not free memory after use
-            record.release();
-        }
-    };
 #if HIDEBUG_RECORD_NOT_SAVE
     return true;
 #endif
@@ -1380,22 +1375,22 @@ bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record, bool 
         }
     }
 
-    if (record) {
+    if (record.GetName() != nullptr) {
 #ifdef HIPERF_DEBUG_TIME
         const auto saveTime = steady_clock::now();
 #endif
-        if (!fileWriter_->WriteRecord(*record)) {
+        if (!fileWriter_->WriteRecord(record)) {
             // write file failed, need stop record
             perfEvents_.StopTracking();
-            HLOGV("fail to write record %s", record->GetName().c_str());
+            HLOGV("fail to write record %s", record.GetName());
             return false;
         }
-        if (record->GetType() == PERF_RECORD_SAMPLE) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
             recordSamples_++;
         } else {
             recordNoSamples_++;
         }
-        HLOGV(" write done. size=%zu name=%s", record->GetSize(), record->GetName().c_str());
+        HLOGV(" write done. size=%zu name=%s", record.GetSize(), record.GetName());
 #ifdef HIPERF_DEBUG_TIME
         saveRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - saveTime);
 #endif
@@ -1611,15 +1606,15 @@ bool SubCommandRecord::PostProcessRecordFile()
         }
 
         // 2. read out the file and unwind
-        auto record_callback = [&](std::unique_ptr<PerfEventRecord> record) {
-            if (record == nullptr) {
+        auto record_callback = [&](PerfEventRecord& record) {
+            if (record.GetName() == nullptr) {
                 // return false in callback can stop the read process
                 return false;
-            } else if (record->GetType() == PERF_RECORD_SAMPLE) {
+            } else if (record.GetType() == PERF_RECORD_SAMPLE) {
                 HLOGM("readback record for unwind");
-                virtualRuntime_.UnwindFromRecord(static_cast<PerfRecordSample &>(*record));
+                virtualRuntime_.UnwindFromRecord(static_cast<PerfRecordSample&>(record));
             }
-            SaveRecord(std::move(record));
+            SaveRecord(record);
             return true;
         };
         fileReader->ReadDataSection(record_callback);
@@ -1660,22 +1655,20 @@ void SubCommandRecord::SymbolicHits()
 }
 #endif
 
-bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
+bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
 {
-    CHECK_TRUE(record == nullptr, false, 0, "");
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
-        PerfRecordSample *sample = static_cast<PerfRecordSample *>(record.get());
+    CHECK_TRUE(record.GetName() == nullptr, false, 0, "");
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
+        PerfRecordSample* sample = static_cast<PerfRecordSample*>(&record);
 #if USE_COLLECT_SYMBOLIC
         CollectSymbol(sample);
 #else
         virtualRuntime_.SymbolicRecord(*sample);
 #endif
-        // the record is allowed from a cache memory, does not free memory after use
-        record.release();
     }
 
-    if (isSpe_ && record->GetType() == PERF_RECORD_AUXTRACE) {
-        PerfRecordAuxtrace *sample = static_cast<PerfRecordAuxtrace *>(record.get());
+    if (isSpe_ && record.GetType() == PERF_RECORD_AUXTRACE) {
+        PerfRecordAuxtrace* sample = static_cast<PerfRecordAuxtrace*>(&record);
         virtualRuntime_.SymbolSpeRecord(*sample);
     }
 
@@ -1685,7 +1678,7 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
 {
     CHECK_TRUE(sample == nullptr, NO_RETVAL, 0, "");
-    perf_callchain_context context = sample->inKernel() ? PERF_CONTEXT_KERNEL
+    perf_callchain_context context = sample->InKernel() ? PERF_CONTEXT_KERNEL
                                                         : PERF_CONTEXT_USER;
     pid_t serverPid;
     // if no nr use ip ? remove stack nr == 0?
@@ -1745,8 +1738,8 @@ bool SubCommandRecord::FinishWriteRecordFile()
             virtualRuntime_.CollectDedupSymbol(kernelSymbolsHits_, userSymbolsHits_);
         } else {
             fileWriter_->ReadDataSection(
-                [this] (std::unique_ptr<PerfEventRecord> record) -> bool {
-                    return this->CollectionSymbol(std::move(record));
+                [this] (PerfEventRecord& record) -> bool {
+                    return this->CollectionSymbol(record);
                 });
         }
 #if USE_COLLECT_SYMBOLIC

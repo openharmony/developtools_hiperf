@@ -14,6 +14,7 @@
  */
 #include "hiperf_client_napi.h"
 #include <cstdio>
+#include <sstream>
 #include <string>
 #include "hiperf_hilog.h"
 #include "hiperf_client.h"
@@ -30,46 +31,44 @@ static std::unique_ptr<HiperfClient::Client> g_hiperfClient =
 static std::unique_ptr<HiperfClient::RecordOption> g_hiperfRecordOption =
     std::make_unique<HiperfClient::RecordOption>();
 
-static std::vector<std::string> StringSplit(std::string source, const std::string &split = ",")
+static std::vector<std::string> StringSplit(const std::string& text, char delimiter = ',')
 {
-    size_t pos = 0;
-    std::vector<std::string> result;
-
-    // find
-    while ((pos = source.find(split)) != std::string::npos) {
-        // split
-        std::string token = source.substr(0, pos);
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(text);
+    while (std::getline(tokenStream, token, delimiter)) {
         if (!token.empty()) {
-            result.push_back(token);
+            tokens.push_back(token);
         }
-        source.erase(0, pos + split.length());
     }
-    // add last token
-    if (!source.empty()) {
-        result.push_back(source);
-    }
-    return result;
+    return tokens;
 }
 
-static std::vector<int> StringSplitToInt(std::string source, const std::string &split = ",")
+static bool IsNumeric(const std::string& str)
 {
-    size_t pos = 0;
-    std::vector<int> result;
+    std::istringstream iss(str);
+    int number;
+    char trailingCharacter;
+    if (!(iss >> number)) {
+        return false;
+    }
+    if (iss >> trailingCharacter) {
+        return false;
+    }
+    return true;
+}
 
-    // find
-    while ((pos = source.find(split)) != std::string::npos) {
-        // split
-        std::string token = source.substr(0, pos);
-        if (!token.empty()) {
-            result.push_back(std::stoi(token));
+static std::vector<int> StringSplitToInt(const std::string& text, char delimiter = ',')
+{
+    std::vector<int> tokens;
+    std::string token;
+    std::istringstream tokenStream(text);
+    while (std::getline(tokenStream, token, delimiter)) {
+        if (IsNumeric(token)) {
+            tokens.push_back(std::stoi(token));
         }
-        source.erase(0, pos + split.length());
     }
-    // add last token
-    if (!source.empty()) {
-        result.push_back(std::stoi(source));
-    }
-    return result;
+    return tokens;
 }
 
 static std::string GetJsStringFromOption(const napi_env &env, const napi_callback_info &info)
@@ -85,7 +84,10 @@ static std::string GetJsStringFromOption(const napi_env &env, const napi_callbac
 
     char value[PATH_MAX] = {0};
     size_t valueLen = 0;
-    napi_get_value_string_utf8(env, args[0], value, sizeof(value), &valueLen);
+    if (napi_get_value_string_utf8(env, args[0], value, sizeof(value), &valueLen) != napi_ok) {
+        HIPERF_HILOGE(MODULE_JS_NAPI, "napi_get_value_string_utf8 failed.");
+        return "";
+    }
     HIPERF_HILOGD(MODULE_JS_NAPI, "%{public}s", value);
     return std::string(value);
 }

@@ -46,7 +46,9 @@ std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &file
     if (!reader->ReadFileHeader()) {
         // Fail to read header, maybe its compressed
         if (reader->IsGzipFile()) {
-            fclose(fp);
+            if (fp != nullptr) {
+                fclose(fp);
+            }
             reader->fp_ = nullptr;
 
             CHECK_TRUE(!UncompressFile(fileName, UNCOMPRESS_TMP_FILE), nullptr, 1,
@@ -80,7 +82,7 @@ PerfFileReader::PerfFileReader(const std::string &fileName, FILE *fp) : fp_(fp),
     featureSectionOffset_ = 0;
     struct stat fileStat;
     if (fp != nullptr) {
-        if (fstat(fileno(fp), &fileStat) != -1 and fileStat.st_size > 0) {
+        if (fstat(fileno(fp), &fileStat) != -1 && fileStat.st_size > 0) {
             fileSize_ = fileStat.st_size;
         }
     }
@@ -110,7 +112,7 @@ bool PerfFileReader::IsValidDataFile()
 
 bool PerfFileReader::IsGzipFile()
 {
-    return header_.magic[0] == '\x1f' and header_.magic[1] == '\x8b';
+    return header_.magic[0] == '\x1f' && header_.magic[1] == '\x8b';
 }
 
 bool PerfFileReader::ReadFileHeader()
@@ -276,20 +278,20 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
                         }
                     }
                     uint8_t *data = buf;
-                    std::unique_ptr<PerfEventRecord> record = GetPerfEventRecord(
+                    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
                         static_cast<perf_event_type>(header->type), data, *attr);
                     // unknown record , break the process
-                    if (!record) {
+                    if (record.GetName() == nullptr) {
                         return false;
                     } else {
-                        HLOGV("record type %u", record->GetType());
+                        HLOGV("record type %u", record.GetType());
                     }
                     remainingSize = remainingSize - header->size - speSize;
 #ifdef HIPERF_DEBUG_TIME
                     const auto startCallbackTime = steady_clock::now();
 #endif
                     // call callback to process, then destroy record
-                    callback(std::move(record));
+                    callback(record);
                     recordNumber++;
 #ifdef HIPERF_DEBUG_TIME
                     readCallbackTime_ +=
@@ -404,7 +406,7 @@ bool PerfFileReader::ReadFeatureSection()
         HLOGV("process feature %d:%s", feature, PerfFileSection::GetFeatureName(feature).c_str());
         HLOGV(" sectionHeader -> read offset '0x%" PRIx64 " size '0x%" PRIx64 "'",
               sectionHeader.offset, sectionHeader.size);
-        CHECK_TRUE(sectionHeader.size == 0 or sectionHeader.size > fileSize_, false, 1,
+        CHECK_TRUE(sectionHeader.size == 0 || sectionHeader.size > fileSize_, false, 1,
                    "sectionHeader.size %" PRIu64 " is not correct", sectionHeader.size);
 
         std::vector<char> buf(sectionHeader.size);
@@ -423,7 +425,7 @@ bool PerfFileReader::ReadFeatureSection()
         } else if (feature == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
             perfFileSections_.emplace_back(
                 std::make_unique<PerfFileSectionUniStackTable>(feature, (char *)&buf[0], buf.size()));
-            PerfRecordSample::dumpRemoveStack_ = true;
+            PerfRecordSample::SetDumpRemoveStack(true);
         } else {
             HLOGW("still not imp how to process with feature %d", feature);
         }

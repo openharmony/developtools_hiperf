@@ -259,7 +259,9 @@ static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
     if (err && *err) {
         return *err;
     }
-
+    if (*bufLen - 1 < 0) {
+        HLOGW("SpePktOutString failed, bufLen: %d", static_cast<int>(*bufLen));
+    }
     va_start(args, fmt);
     ret = vsnprintf_s(*bufPtr, *bufLen, *bufLen - 1, fmt, args);
     va_end(args);
@@ -268,6 +270,7 @@ static int SpePktOutString(int *err, char **bufPtr, size_t *bufLen,
         if (err && !*err) {
             *err = ret;
         }
+        HLOGW("vsnprintf_s failed: %d\n", ret);
 
     /*
      * If the return value is *bufLen or greater, the output was
@@ -625,21 +628,6 @@ static u64 SpeCalcIp(int index, u64 payload)
     }
 
     return payload;
-}
-
-struct SpeDecoder *SpeDecoderNew(struct SpeParams *params)
-{
-    CHECK_TRUE(params == nullptr, nullptr, 1, "Invalid pointer!");
-    struct SpeDecoder *decoder;
-
-    decoder = static_cast<struct SpeDecoder*>(malloc(sizeof(struct SpeDecoder)));
-    if (!decoder) {
-        return NULL;
-    }
-
-    decoder->data = params->data;
-
-    return decoder;
 }
 
 void SpeDecoderFree(struct SpeDecoder *decoder)
@@ -1009,14 +997,32 @@ void DumpSpeReportData(int indent, FILE *outputDump)
     for (auto it = AuxRawDataMap_.begin(); it != AuxRawDataMap_.end(); it++) {
         u64 count = typeCount[it->first];
         DumpSpeReportHead(indent, it->first, count);
+        std::vector<ReportItemAuxRawData> auxRawData;
         for (auto& it2 : it->second) {
-            PRINT_INDENT(indent + 1, "%*.2f%% ", FULL_PERCENTAGE_LEN, it2.second.heating);
-            PRINT_INDENT(indent + 1, "%-*llu ", FULL_PERCENTAGE_LEN, it2.second.count);
-            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_COMM_LEN, it2.second.comm.c_str());
-            PRINT_INDENT(indent + 1, "0x%-*llx ", SPE_PERCENTAGE_PC_LEN, it2.second.pc);
-            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_DSO_LEN, it2.second.SharedObject.c_str());
-            PRINT_INDENT(indent + 1, "%-*s", SPE_PERCENTAGE_FUNC_LEN, it2.second.Symbol.c_str());
-            PRINT_INDENT(indent + 1, "0x%llx\n", it2.second.offset);
+            struct ReportItemAuxRawData reportItem = {
+                it2.second.type,
+                it2.second.heating,
+                it2.second.count,
+                it2.second.comm,
+                it2.second.pc,
+                it2.second.SharedObject,
+                it2.second.Symbol,
+                it2.second.offset
+            };
+            auxRawData.emplace_back(reportItem);
+        }
+        std::sort(auxRawData.begin(), auxRawData.end(), [](const ReportItemAuxRawData& lhs,
+                                                           const ReportItemAuxRawData& rhs) {
+            return lhs.count > rhs.count;
+        });
+        for (auto& it3 : auxRawData) {
+            PRINT_INDENT(indent + 1, "%*.2f%% ", FULL_PERCENTAGE_LEN, it3.heating);
+            PRINT_INDENT(indent + 1, "%-*llu ", FULL_PERCENTAGE_LEN, it3.count);
+            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_COMM_LEN, it3.comm.c_str());
+            PRINT_INDENT(indent + 1, "0x%-*llx ", SPE_PERCENTAGE_PC_LEN, it3.pc);
+            PRINT_INDENT(indent + 1, "%-*s ", SPE_PERCENTAGE_DSO_LEN, it3.SharedObject.c_str());
+            PRINT_INDENT(indent + 1, "%-*s", SPE_PERCENTAGE_FUNC_LEN, it3.Symbol.c_str());
+            PRINT_INDENT(indent + 1, "0x%llx\n", it3.offset);
         }
     }
 }
