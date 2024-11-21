@@ -443,7 +443,7 @@ public:
     };
     using StatCallBack =
         std::function<void(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &)>;
-    using RecordCallBack = std::function<bool(std::unique_ptr<PerfEventRecord>)>;
+    using RecordCallBack = std::function<bool(PerfEventRecord&)>;
 
     void SetStatCallBack(StatCallBack reportCallBack);
     void SetRecordCallBack(RecordCallBack recordCallBack);

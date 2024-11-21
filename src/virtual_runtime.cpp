@@ -148,7 +148,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid, const std::str
               thread.name_.c_str(), thread.GetMaps().size());
         // we need make a PerfRecordComm
         auto commRecord = std::make_unique<PerfRecordComm>(IsKernelThread(pid), pid, tid, thread.name_);
-        recordCallBack_(std::move(commRecord));
+        recordCallBack_(*commRecord);
         // only work for pid
         if (pid == tid) {
             if (isHM_) {
@@ -169,7 +169,7 @@ VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid, const std::str
                 HLOGD("make PerfRecordMmap2 %d:%d:%s:%s(0x%" PRIx64 "-0x%" PRIx64 ")@%" PRIx64 " ",
                       thread.pid_, thread.tid_, thread.name_.c_str(), map->name.c_str(),
                       map->begin, map->end, map->offset);
-                recordCallBack_(std::move(mmapRecord));
+                recordCallBack_(*mmapRecord);
                 if (updateNormalSymbol) {
                     UpdateSymbols(map, pid);
                 }
@@ -286,7 +286,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
         for (const auto &map : koMaps) {
             auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin,
                                                            map.end - map.begin, 0, map.name);
-            recordCallBack_(std::move(record));
+            recordCallBack_(*record);
         }
     }
     std::move(koMaps.begin(), koMaps.end(), std::back_inserter(kernelSpaceMemMaps_));
@@ -299,7 +299,7 @@ void VirtualRuntime::UpdateKernelSpaceMaps()
     if (recordCallBack_) {
         auto record = std::make_unique<PerfRecordMmap>(true, 0, 0, map.begin,
                                                        map.end - map.begin, 0, map.name);
-        recordCallBack_(std::move(record));
+        recordCallBack_(*record);
     }
 }
 
@@ -338,7 +338,7 @@ void VirtualRuntime::UpdateKernelSymbols()
             kernelFile->textExecVaddrFileOffset_, KERNEL_MMAP_NAME);
 
         if (recordCallBack_) {
-            recordCallBack_(std::move(record));
+            recordCallBack_(*record);
         }
         symbolsFiles_.emplace_back(std::move(kernelFile));
     } else {
@@ -395,7 +395,7 @@ void VirtualRuntime::DedupFromRecord(PerfRecordSample *recordSample)
     }
     // callstack dedup success
     recordSample->stackId_.value = stackId.value;
-    recordSample->header.size -= (sizeof(u64) * nr - sizeof(stackId));
+    recordSample->header_.size -= (sizeof(u64) * nr - sizeof(stackId));
     recordSample->data_.nr = 0;
     recordSample->data_.ips = nullptr;
     recordSample->removeStack_ = true;
@@ -558,7 +558,7 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
 {
     // only do this in record mode.
     if (recordCallBack_ == nullptr || needkernelCallChain_ ||
-        !sample.inKernel() || sample.data_.nr == 0) {
+        !sample.InKernel() || sample.data_.nr == 0) {
         return;
     }
 
@@ -575,11 +575,11 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
     }
     sample.skipKernel_ = skip;
     sample.data_.nr -= skip;
-    sample.header.size -= sizeof(u64) * skip;
+    sample.header_.size -= sizeof(u64) * skip;
     if (sample.data_.server_nr > 0) {
         sample.skipPid_ = skipPid;
         sample.data_.server_nr -= skipPid;
-        sample.header.size -= sizeof(u64) * skipPid;
+        sample.header_.size -= sizeof(u64) * skipPid;
     }
 }
 
@@ -661,9 +661,9 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
 {
-    HLOGV("  MMAP: size %d pid %u tid %u", recordMmap.header.size, recordMmap.data_.pid,
+    HLOGV("  MMAP: size %d pid %u tid %u", recordMmap.header_.size, recordMmap.data_.pid,
           recordMmap.data_.tid);
-    HLOGV("  MMAP: %s dso '%s' (0x%llx-0x%llx)@0x%llx", recordMmap.inKernel() ? "kernel" : "user",
+    HLOGV("  MMAP: %s dso '%s' (0x%llx-0x%llx)@0x%llx", recordMmap.InKernel() ? "kernel" : "user",
           recordMmap.data_.filename, recordMmap.data_.addr,
           recordMmap.data_.addr + recordMmap.data_.len, recordMmap.data_.pgoff);
     // kernel mmap
@@ -671,12 +671,12 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
     if (IsKernelThread(recordMmap.data_.pid)) {
         UpdateKernelThreadMap(recordMmap.data_.pid, recordMmap.data_.addr,
                               recordMmap.data_.len, recordMmap.data_.filename);
-    } else if (recordMmap.inKernel()) {
+    } else if (recordMmap.InKernel()) {
         UpdatekernelMap(recordMmap.data_.addr, recordMmap.data_.addr + recordMmap.data_.len,
                         recordMmap.data_.pgoff, recordMmap.data_.filename);
     } else {
-        NeedAdaptSandboxPath(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header.size);
-        FixHMBundleMmap(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header.size);
+        NeedAdaptSandboxPath(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header_.size);
+        FixHMBundleMmap(recordMmap.data_.filename, recordMmap.data_.pid, recordMmap.header_.size);
         auto map = UpdateThreadMaps(recordMmap.data_.pid, recordMmap.data_.tid, recordMmap.data_.filename,
                                     recordMmap.data_.addr, recordMmap.data_.len, recordMmap.data_.pgoff);
         UpdateSymbols(map, recordMmap.data_.pid);
@@ -715,11 +715,11 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
             u64 len = elfLoadInfoMap[0].mmapLen;
             u64 pgoff = elfLoadInfoMap[0].offset & (~(elfLoadInfoMap[0].align >= 1 ? elfLoadInfoMap[0].align - 1 : 0));
             std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
-                std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+                std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
                 begin, len, pgoff, 0, 0, 0, PROT_READ, 0, std::string(recordMmap2.data_.filename));
             UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, mmap2FirstSeg->data_.filename,
                 mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
-            recordCallBack_(std::move(mmap2FirstSeg));
+            recordCallBack_(*mmap2FirstSeg);
         } else {
             auto elfLoadInfoMap = symFile->GetPtLoads();
             u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
@@ -727,21 +727,21 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
             u64 pgoff = elfLoadInfoMap[0].offset &
                         (~(elfLoadInfoMap[0].align >= 1 ? elfLoadInfoMap[0].align - 1 : 0));
             std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
-                std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+                std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
                 begin, len, pgoff, 0, 0, 0, PROT_READ, 0, curMap->name);
             UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, curMap->name,
                 mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
-            recordCallBack_(std::move(mmap2FirstSeg));
+            recordCallBack_(*mmap2FirstSeg);
 
             std::unique_ptr<PerfRecordMmap2> mmap2SecondSegment =
-                std::make_unique<PerfRecordMmap2>(recordMmap2.inKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+                std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
                 recordMmap2.data_.addr,
                 recordMmap2.data_.len,
                 recordMmap2.data_.pgoff - prevMap->offset, // minus load offset of hap
                 0, 0, 0, recordMmap2.data_.prot, 0, curMap->name);
             UpdateThreadMaps(mmap2SecondSegment->data_.pid, mmap2SecondSegment->data_.tid, curMap->name,
                 mmap2SecondSegment->data_.addr, mmap2SecondSegment->data_.len, mmap2SecondSegment->data_.pgoff);
-            recordCallBack_(std::move(mmap2SecondSegment));
+            recordCallBack_(*mmap2SecondSegment);
             recordMmap2.discard_ = true;
         }
         symbolsFiles_.emplace_back(std::move(symFile));
@@ -769,15 +769,15 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap2 &recordMmap2)
         return;
     }
 
-    HLOGV("  MMAP2: size %d pid %u tid %u", recordMmap2.header.size, recordMmap2.data_.pid,
+    HLOGV("  MMAP2: size %d pid %u tid %u", recordMmap2.header_.size, recordMmap2.data_.pid,
           recordMmap2.data_.tid);
-    HLOGV("  MMAP2: %s dso '%s' (0x%llx-0x%llx)@0x%llx prot:%u", recordMmap2.inKernel() ? "kernel" : "user",
+    HLOGV("  MMAP2: %s dso '%s' (0x%llx-0x%llx)@0x%llx prot:%u", recordMmap2.InKernel() ? "kernel" : "user",
           recordMmap2.data_.filename, recordMmap2.data_.addr,
           recordMmap2.data_.addr + recordMmap2.data_.len, recordMmap2.data_.pgoff, recordMmap2.data_.prot);
 
     if (recordCallBack_) {
-        if (NeedAdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size)) {
-            FixHMBundleMmap(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header.size);
+        if (NeedAdaptSandboxPath(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header_.size)) {
+            FixHMBundleMmap(recordMmap2.data_.filename, recordMmap2.data_.pid, recordMmap2.header_.size);
             CHECK_TRUE(!CheckValidSandBoxMmap(recordMmap2), NO_RETVAL, 0, "");
         }
     }
@@ -1258,7 +1258,7 @@ void VirtualRuntime::UpdateServiceSpaceMaps()
             std::make_unique<PerfRecordMmap>(true, SYSMGR_PID, SYSMGR_PID,
                                              map->begin, map->end - map->begin,
                                              0, SYSMGR_FILE_NAME);
-            recordCallBack_(std::move(record));
+            recordCallBack_(*record);
         }
     }
 }
@@ -1296,7 +1296,7 @@ void VirtualRuntime::UpdateDevhostSpaceMaps()
             std::make_unique<PerfRecordMmap>(false, devhostPid_, devhostPid_,
                                              map->begin, map->end - map->begin,
                                              0, map->name);
-            recordCallBack_(std::move(record));
+            recordCallBack_(*record);
         }
     }
 }

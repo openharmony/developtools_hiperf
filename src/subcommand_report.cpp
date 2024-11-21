@@ -223,13 +223,14 @@ void SubCommandReport::ProcessSample(std::unique_ptr<PerfRecordSample> &sample)
     }
 }
 
-bool SubCommandReport::RecordCallBack(std::unique_ptr<PerfEventRecord> record)
+bool SubCommandReport::RecordCallBack(PerfEventRecord& record)
 {
     // tell process tree what happend for rebuild symbols
-    GetReport().virtualRuntime_.UpdateFromRecord(*record);
+    GetReport().virtualRuntime_.UpdateFromRecord(record);
 
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
-        std::unique_ptr<PerfRecordSample> sample(static_cast<PerfRecordSample *>(record.release()));
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
+        std::unique_ptr<PerfRecordSample> sample
+            = std::make_unique<PerfRecordSample>(static_cast<PerfRecordSample&>(record));
         std::unique_ptr<PerfRecordSample> prevSample = nullptr;
         if (cpuOffMode_) {
             auto prevIt = prevSampleCache_.find(sample->data_.tid);
@@ -264,7 +265,7 @@ bool SubCommandReport::RecordCallBack(std::unique_ptr<PerfEventRecord> record)
     } else {
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
         if (protobufFormat_) {
-            protobufOutputFileWriter_->ProcessRecord(*record);
+            protobufOutputFileWriter_->ProcessRecord(record);
         }
 #endif
     }
@@ -478,8 +479,8 @@ bool SubCommandReport::LoadPerfData()
     // before load data section
     SetHM();
     recordFileReader_->ReadDataSection(
-        [this] (std::unique_ptr<PerfEventRecord> record) -> bool {
-            return this->RecordCallBack(std::move(record));
+        [this] (PerfEventRecord& record) -> bool {
+            return this->RecordCallBack(record);
         });
     if (cpuOffMode_) {
         FlushCacheRecord();
