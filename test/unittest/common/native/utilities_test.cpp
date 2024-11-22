@@ -234,6 +234,24 @@ HWTEST_F(UtilitiesTest, VectorToString, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetToString
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, SetToString, TestSize.Level1)
+{
+    EXPECT_EQ(SetToString<std::string>({}), "<empty>");
+    EXPECT_EQ(SetToString<std::string>({"a"}), "a");
+
+    EXPECT_EQ(SetToString<int>({}), "<empty>");
+    EXPECT_EQ(SetToString<int>({1}), "1");
+    EXPECT_EQ(SetToString<int>({1, 2, 3}).size(), 5);
+    EXPECT_EQ(SetToString<std::string>({"a", "b", "c"}).size(), 5);
+
+    EXPECT_EQ(SetToString<float>({}), "<empty>");
+}
+
+/**
  * @tc.name: BufferToHexString
  * @tc.desc:
  * @tc.type: FUNC
