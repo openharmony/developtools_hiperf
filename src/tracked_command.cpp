@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static uint64_t MAX_LOOP_COUNT = 10000;
+static constexpr uint64_t MAX_LOOP_COUNT = 10000;
 
 std::unique_ptr<TrackedCommand> TrackedCommand::CreateInstance(const std::vector<std::string> &args)
 {

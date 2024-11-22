@@ -28,6 +28,8 @@
 
 #include "command.h"
 #include "debug_logger.h"
+#include "subcommand_report.h"
+#include "subcommand_test.h"
 #include "test_utilities.h"
 #include "utilities.h"
 
@@ -100,11 +102,13 @@ void SubCommandRecordTest::SetUp()
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
     SubCommandRecord::RegisterSubCommandRecord();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
+    ASSERT_EQ(SubCommandReport::RegisterSubCommandReport(), true);
+    SubCommand::RegisterSubCommand("TEST_CMD_1", std::make_unique<SubCommandTest>("TEST_CMD_1"));
 }
 
 void SubCommandRecordTest::TearDown()
 {
-    ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
+    ASSERT_EQ(SubCommand::GetSubCommands().size(), 3u);
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
     MemoryHold::Get().Clean();
@@ -146,7 +150,9 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - startTime);
     std::string stringOut = stdoutRecord.Stop();
-
+    if (expect) {
+        EXPECT_EQ(stringOut.find("Sample records:") != std::string::npos, true);
+    }
     printf("run %" PRId64 " ms return %s(expect %s)\n", (uint64_t)costMs.count(), ret ? "true" : "false",
            expect ? "true" : "false");
     EXPECT_EQ(expect, ret);
@@ -1629,6 +1635,35 @@ HWTEST_F(SubCommandRecordTest, ReportSampleApp, TestSize.Level1)
     EXPECT_EQ(reporter.targetProcess_, "com.test.app");
 }
 
+/**
+ * @tc.name: ChecKernel
+ * @tc.desc: Test kernel version
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ChecKernel, TestSize.Level1)
+{
+    utsname unameBuf;
+    if ((uname(&unameBuf)) == 0) {
+        std::string osrelease = unameBuf.release;
+        std::string sysname = unameBuf.sysname;
+        EXPECT_EQ(osrelease.find(HMKERNEL) != std::string::npos || sysname.find("Linux") != std::string::npos, true);
+    }
+}
+
+/**
+ * @tc.name: RecordAndReport
+ * @tc.desc: Test record and report
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, RecordAndReport, TestSize.Level1)
+{
+    TestRecordCommand("-d 5 -s dwarf -o /data/local/tmp/test_perf.data", true, true);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/test_perf.data"), true);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_EQ(stringOut.find("report done") != std::string::npos, true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
