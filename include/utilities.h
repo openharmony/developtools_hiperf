@@ -164,22 +164,22 @@ std::string VectorToString(const std::vector<T> &items)
 template<class T>
 std::string SetToString(const std::unordered_set<T> &items)
 {
-    std::string itemsString = "";
+    std::string result = "";
     const std::string split = ",";
     for (auto item : items) {
-        if (!itemsString.empty()) {
-            itemsString.append(split);
+        if (!result.empty()) {
+            result.append(split);
         }
         if constexpr (std::is_same<T, std::string>::value) {
-            itemsString.append(item);
+            result.append(item);
         } else {
-            itemsString.append(std::to_string(item));
+            result.append(std::to_string(item));
         }
     }
-    if (itemsString.empty()) {
-        itemsString.append("<empty>");
+    if (result.empty()) {
+        result.append("<empty>");
     }
-    return itemsString;
+    return result;
 }
 
 std::string BufferToHexString(const std::vector<unsigned char> &vec);
