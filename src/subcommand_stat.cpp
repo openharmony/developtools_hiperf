@@ -819,7 +819,11 @@ void SubCommandStat::AddReportArgs(CommandReporter& reporter)
     } else if (!appPackage_.empty()) {
         reporter.targetProcess_ = appPackage_;
     } else {
-        reporter.targetProcess_ = VectorToString<pid_t>(selectPids_);
+        std::unordered_set<std::string> processNames = {};
+        for_each(selectPids_.begin(), selectPids_.end(), [&processNames] (const pid_t& pid) {
+            processNames.insert(GetProcessName(pid));
+        });
+        reporter.targetProcess_ = SetToString<std::string>(processNames);
     }
 }
 

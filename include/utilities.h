@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #include <set>
 
@@ -158,6 +159,27 @@ std::string VectorToString(const std::vector<T> &items)
             itemsString.append("<empty>");
         return itemsString;
     }
+}
+
+template<class T>
+std::string SetToString(const std::unordered_set<T> &items)
+{
+    std::string result = "";
+    const std::string split = ",";
+    for (auto item : items) {
+        if (!result.empty()) {
+            result.append(split);
+        }
+        if constexpr (std::is_same<T, std::string>::value) {
+            result.append(item);
+        } else {
+            result.append(std::to_string(item));
+        }
+    }
+    if (result.empty()) {
+        result.append("<empty>");
+    }
+    return result;
 }
 
 std::string BufferToHexString(const std::vector<unsigned char> &vec);
