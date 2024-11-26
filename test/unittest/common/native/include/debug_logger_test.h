@@ -16,7 +16,6 @@
 #ifndef HIPERF_DEBUG_TEST
 #define HIPERF_DEBUG_TEST
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 

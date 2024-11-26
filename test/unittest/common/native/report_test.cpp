@@ -16,7 +16,6 @@
 #include "report_test.h"
 
 #include <bitset>
-#include <gmock/gmock.h>
 #include <sys/ioctl.h>
 
 using namespace testing::ext;

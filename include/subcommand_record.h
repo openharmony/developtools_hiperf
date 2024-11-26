@@ -366,10 +366,6 @@ private:
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
     bool OnlineReportData();
-
-    FRIEND_TEST(SubCommandRecordTest, ReportSampleAll);
-    FRIEND_TEST(SubCommandRecordTest, ReportSamplePid);
-    FRIEND_TEST(SubCommandRecordTest, ReportSampleApp);
 };
 } // namespace HiPerf
 } // namespace Developtools

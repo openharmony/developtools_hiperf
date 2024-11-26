@@ -16,7 +16,6 @@
 #ifndef HIPERF_PERF_FILE_READER_TEST_H
 #define HIPERF_PERF_FILE_READER_TEST_H
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 

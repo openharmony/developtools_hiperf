@@ -226,15 +226,6 @@ private:
 
     // kernel thread
     void UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, std::string filename);
-
-    FRIEND_TEST(VirtualRuntimeTest, SetRecordMode);
-    FRIEND_TEST(VirtualRuntimeTest, UpdateKernelSymbols);
-    FRIEND_TEST(VirtualRuntimeTest, UpdateKernelModulesSymbols);
-    FRIEND_TEST(VirtualRuntimeTest, SetCallStackExpend);
-    FRIEND_TEST(VirtualRuntimeTest, SetDisableUnwind);
-    FRIEND_TEST(VirtualRuntimeTest, UnwindFromRecord);
-    friend class VirtualRuntimeTest;
-
     bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
 };
 } // namespace HiPerf

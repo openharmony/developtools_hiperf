@@ -26,7 +26,6 @@
 #include <sys/time.h>
 #include <string>
 #include <fstream>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sstream>
 #include "subcommand_record.h"

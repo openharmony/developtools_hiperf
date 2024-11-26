@@ -402,17 +402,6 @@ private:
     void AddReportCallStackReverse(uint64_t eventCount, ReportCallNodeItem &callNode,
                                    const std::vector<DfxFrame> &frames);
     uint64_t sampleCount_ = 0;
-
-    FRIEND_TEST(ReportJsonFileTest, UpdateReportSample);
-    FRIEND_TEST(ReportJsonFileTest, UpdateReportCallStack);
-    FRIEND_TEST(ReportJsonFileTest, UpdateCallNodeEventCount);
-    FRIEND_TEST(ReportJsonFileTest, ProcessSymbolsFiles);
-    FRIEND_TEST(ReportJsonFileTest, GetFunctionID);
-    FRIEND_TEST(ReportJsonFileTest, GetLibID);
-    FRIEND_TEST(ReportJsonFileTest, GetConfigIndex);
-    FRIEND_TEST(ReportJsonFileTest, GetConfigName);
-    FRIEND_TEST(ReportJsonFileTest, GetConfig);
-    friend class ReportJsonFileTest;
 };
 } // namespace HiPerf
 } // namespace Developtools

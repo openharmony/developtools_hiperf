@@ -31,6 +31,7 @@ declare_args() {
   hiperf_debug = true
   hiperf_code_analyze = false
   hiperf_use_syspara = true
+  hiperf_independent_compilation = true
   bundle_framework_enable = false
   ability_base_enable = false
   if (defined(global_parts_info) &&

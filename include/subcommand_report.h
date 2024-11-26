@@ -179,15 +179,6 @@ private:
     std::unique_ptr<ReportProtobufFileWriter> protobufOutputFileWriter_ = nullptr;
     void UpdateReportInfo();
 #endif
-    friend class SubCommandReportTest;
-    FRIEND_TEST(SubCommandReportTest, TestLoadPerfData);
-    FRIEND_TEST(SubCommandReportTest, TestOutputReport);
-    FRIEND_TEST(SubCommandReportTest, TestOutputStd);
-    FRIEND_TEST(SubCommandReportTest, TestVerifyOption);
-    FRIEND_TEST(SubCommandReportTest, TestVerifyDisplayOption);
-    FRIEND_TEST(SubCommandReportTest, TestPrepareConsole);
-    FRIEND_TEST(SubCommandReportTest, TestPrepareConsole);
-
     void SetHM();
 };
 } // namespace HiPerf

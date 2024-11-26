@@ -15,7 +15,6 @@
 #ifndef HIPERF_PERF_EVENT_RECORD_TEST_H
 #define HIPERF_PERF_EVENT_RECORD_TEST_H
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 

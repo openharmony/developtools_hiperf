@@ -16,6 +16,7 @@
 #ifndef REPORT_TEST
 #define REPORT_TEST
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 

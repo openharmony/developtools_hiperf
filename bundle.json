@@ -28,13 +28,11 @@
         "hisysevent",
         "init",
         "ipc",
+        "libunwind",
         "napi",
+        "protobuf",
         "samgr",
         "zlib"
-      ],
-      "third_party": [
-        "protobuf",
-        "libunwind"
       ]
     },
     "build": {

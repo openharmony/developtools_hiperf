@@ -16,7 +16,6 @@
 #ifndef SUBCOMMAND_HELP_TEST
 #define SUBCOMMAND_HELP_TEST
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 

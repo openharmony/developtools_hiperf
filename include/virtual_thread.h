@@ -93,6 +93,10 @@ public:
 
 private:
     void SortMemMaps();
+    VirtualThread& GetParent()
+    {
+        return parent_;
+    }
 #ifdef DEBUG_TIME
     bool IsSorted() const;
 #endif
@@ -115,7 +119,6 @@ private:
 #ifdef DEBUG_MISS_SYMBOL
     mutable std::vector<std::string> missedSymbolFile_;
 #endif
-    FRIEND_TEST(VirtualThreadTest, ReadRoMemory);
 };
 } // namespace HiPerf
 } // namespace Developtools

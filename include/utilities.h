@@ -38,7 +38,6 @@
 #include <unique_fd.h>
 #include <unistd.h>
 #if !is_mingw
-#include <gtest/gtest_prod.h>
 #include <sys/syscall.h>
 #endif
 #include <linux/types.h>

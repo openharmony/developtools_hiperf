@@ -25,8 +25,6 @@
 #include <sstream>
 #include <string>
 #include <unistd.h>
-
-#include <gtest/gtest_prod.h>
 #if !is_mingw
 #include <sys/syscall.h>
 #undef gettid
@@ -136,11 +134,6 @@ private:
     bool exitOnFatal_ = true;
     std::string logPath_;
     std::map<std::string, DebugLevel> logTagLevelmap_;
-
-    friend class OptionDebugTest;
-    friend class DebugLoggerTest;
-    FRIEND_TEST(DebugLoggerTest, SetLogTags);
-    FRIEND_TEST(DebugLoggerTest, Disable);
 };
 
 #ifdef HIPERF_DEBUG_PRINTF
