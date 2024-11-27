@@ -68,8 +68,6 @@ common_deps = [
   "${hiperf_path}/:hiperf_platform_host",
   "${hiperf_path}/:hiperf_platform_linux",
   "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static",
-  "//third_party/googletest:gmock_main",
-  "//third_party/googletest:gtest_main",
 ]
 
 config("hiperf_test_config") {
@@ -98,11 +96,14 @@ ohos_unittest("hiperf_unittest") {
   deps = common_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "faultloggerd:libunwinder_static",
+    "googletest:gmock",
     "hilog:libhilog",
   ]
   cflags = [
     "-Dprivate=public",  #allow test code access private members
+    "-Dprotected=public",  #allow test code access protected members
   ]
   sources = sources_interface
   sources += sources_base
@@ -131,6 +132,7 @@ ohos_fuzztest("CommandLineFuzzTest") {
   deps = fuzz_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
   ]
@@ -149,6 +151,7 @@ ohos_fuzztest("LibReportFuzzTest") {
   deps = fuzz_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "hilog:libhilog",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -163,6 +166,7 @@ ohos_fuzztest("ClientApiFuzzTest") {
   deps = fuzz_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "hilog:libhilog",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -177,6 +181,7 @@ ohos_fuzztest("SpeDecoderFuzzTest") {
   deps = fuzz_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "hilog:libhilog",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -192,6 +197,7 @@ ohos_fuzztest("PerfFileFuzzTest") {
   deps = fuzz_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
   ]

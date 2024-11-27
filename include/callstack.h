@@ -141,10 +141,6 @@ private:
 
     std::shared_ptr<UnwindAccessors> accessor_;
 #endif
-
-    FRIEND_TEST(CallStackTest, ExpendCallStackFullCache);
-    FRIEND_TEST(CallStackTest, LibUnwindEmptyFunc);
-    FRIEND_TEST(CallStackTest, GetUnwErrorName);
 };
 
 struct UnwindInfo {

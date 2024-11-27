@@ -232,15 +232,6 @@ protected:
     void AdjustSymbols();
     void SortMatchedSymbols();
     bool CheckPathReadable(const std::string &path) const;
-
-    FRIEND_TEST(SymbolsFileTest, FindSymbolFile);
-    FRIEND_TEST(SymbolsFileTest, UpdateBuildIdIfMatch);
-    FRIEND_TEST(SymbolsFileTest, exportSymbolToFileFormat);
-    FRIEND_TEST(SymbolsFileTest, exportSymbolToFileFormatMatched);
-    friend class VirtualRuntimeTest;
-    FRIEND_TEST(ReportJsonFileTest, ProcessSymbolsFiles);
-    FRIEND_TEST(ReportProtobufFileTest, ProcessSymbolsFiles);
-    friend class ReportProtobufFileTest;
 };
 } // namespace HiPerf
 } // namespace Developtools

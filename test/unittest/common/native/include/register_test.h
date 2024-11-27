@@ -16,7 +16,6 @@
 #ifndef HIPERF_REGISTER_TEST
 #define HIPERF_REGISTER_TEST
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 

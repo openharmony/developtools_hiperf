@@ -16,7 +16,6 @@
 
 #include "option_debug_test.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <random>
 

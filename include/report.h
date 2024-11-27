@@ -554,12 +554,6 @@ private:
     bool OutputStdCallFrame(int indent, const std::string_view &funcName, uint64_t eventCount,
                             uint64_t totalEventCount);
     void OutputStdItemHeating(float heat, float heat2);
-
-    FRIEND_TEST(ReportTest, MultiLevelSorting);
-    FRIEND_TEST(ReportTest, MultiLevelSameAndUpdateCount);
-    FRIEND_TEST(ReportTest, MergeCallFrameCount);
-    FRIEND_TEST(ReportTest, MultiLevelCompare);
-    FRIEND_TEST(ReportTest, PrepareConsole);
 };
 } // namespace HiPerf
 } // namespace Developtools

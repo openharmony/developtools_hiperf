@@ -15,7 +15,6 @@
 
 #include "subcommand_test.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 

@@ -164,11 +164,11 @@ common_deps = [
   ":support_protobuf",
 ]
 
-common_configs = [
-  ":hiperf_inner_config",
-  "../../commonlibrary/c_utils/base:utils_config",
-  "//third_party/googletest:gtest_config",
-]
+common_configs = [ ":hiperf_inner_config" ]
+
+if (!hiperf_independent_compilation) {
+  common_configs += [ "../../commonlibrary/c_utils/base:utils_config" ]
+}
 
 if (hiperf_target_static) {
   common_deps -= [ ":support_protobuf" ]
@@ -371,8 +371,7 @@ ohos_source_set("proto_file_cpp") {
   cflags = []
 
   deps = [ ":hiperf_host_build_proto" ]
-  public_deps = [ "//third_party/protobuf:protobuf_lite_static" ]
-
+  external_deps = [ "protobuf:protobuf_lite_static" ]
   sources = proto_file_codegen
   public_configs = [ ":proto_file_cpp_config" ]
 }
@@ -525,13 +524,15 @@ group("hiperf_target_all") {
     } else {
       deps = []
       if (!use_libfuzzer) {
-        deps += [
-          ":hiperf_host(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
-          ":hiperf_host_lib(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
-          ":hiperf_host_lib_demo(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
-          ":hiperf_host_python",
-        ]
-        if (!is_tsan) {
+        if (!hiperf_independent_compilation) {
+          deps += [
+            ":hiperf_host(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
+            ":hiperf_host_lib(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
+            ":hiperf_host_lib_demo(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
+          ]
+        }
+        deps += [ ":hiperf_host_python" ]
+        if (!is_tsan && !hiperf_independent_compilation) {
           deps += [
             ":hiperf_host(//build/toolchain/mingw:mingw_x86_64)",  # host mingw
             ":hiperf_host_lib(//build/toolchain/mingw:mingw_x86_64)",  # host_mingw

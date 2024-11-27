@@ -65,13 +65,6 @@ private:
     virtual bool ProcessRecord(const PerfRecordComm &recordComm);
     virtual bool ProcessRecord(const PerfRecordLost &recordLost);
     void BeforeClose();
-
-    FRIEND_TEST(ReportProtobufFileTest, Close);
-    FRIEND_TEST(ReportProtobufFileTest, ProcessRecord);
-    FRIEND_TEST(ReportProtobufFileTest, ProcessRecordPerfRecordLost);
-    FRIEND_TEST(ReportProtobufFileTest, ProcessRecordPerfRecordComm);
-    FRIEND_TEST(ReportProtobufFileTest, BeforeClose);
-    FRIEND_TEST(ReportProtobufFileTest, ProcessSymbolsFiles);
 };
 
 class ReportProtobufFileReader : public google::protobuf::io::CopyingInputStream {

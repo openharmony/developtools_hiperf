@@ -16,7 +16,6 @@
 #ifndef REPORT_JSON_FILE_TEST
 #define REPORT_JSON_FILE_TEST
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 
