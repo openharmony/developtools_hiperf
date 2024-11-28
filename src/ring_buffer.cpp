@@ -42,6 +42,7 @@ size_t RingBuffer::GetFreeSize() const
 uint8_t *RingBuffer::AllocForWrite(size_t writeSize)
 {
     if (buf_ == nullptr) {
+        HLOGE("buf_ is nullptr");
         return nullptr;
     }
     size_t writeHead = head_.load(std::memory_order_relaxed);

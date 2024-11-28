@@ -163,8 +163,8 @@ void SubCommandStat::SetReportFlags(bool cpuFlag, bool threadFlag)
 void SubCommandStat::Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
 {
     bool isNeedPerCpuTid = false;
-    for (auto it = countEvents.begin(); it != countEvents.end(); ++it) {
-        if (!(it->second->summaries.empty())) {
+    for (const auto &it : countEvents) {
+        if (!(it.second->summaries.empty())) {
             isNeedPerCpuTid = true;
             break;
         }

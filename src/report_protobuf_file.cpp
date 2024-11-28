@@ -40,6 +40,10 @@ void ReportProtobufFileWriter::BeforeClose()
 
 void ReportProtobufFileWriter::Close()
 {
+    if (protobufFileStream_ == nullptr) {
+        HLOGE("protobufFileStream_ is nullptr");
+        return;
+    }
     if (protobufFileStream_->is_open()) {
         BeforeClose();
         // write 0 as end
@@ -52,6 +56,10 @@ void ReportProtobufFileWriter::Close()
 
 bool ReportProtobufFileWriter::Write(const void *buffer, int size)
 {
+    if (protobufFileStream_ == nullptr) {
+        HLOGE("protobufFileStream_ is nullptr");
+        return false;
+    }
     if (protobufFileStream_->is_open()) {
         try {
             protobufFileStream_->write(static_cast<const char *>(buffer), size);
@@ -70,6 +78,10 @@ bool ReportProtobufFileWriter::Create(std::string fileName)
 {
     fileName_ = fileName;
     try {
+        if (protobufFileStream_ == nullptr) {
+            HLOGE("protobufFileStream_ is nullptr");
+            return false;
+        }
         protobufFileStream_->exceptions(std::ofstream::failbit | std::ofstream::badbit |
                                         std::ofstream::eofbit);
         std::string resolvedPath = CanonicalizeSpecPath(fileName_.c_str());

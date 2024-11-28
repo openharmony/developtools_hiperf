@@ -37,7 +37,6 @@
 #include "symbols_file.h"
 #include "utilities.h"
 
-using namespace std;
 using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
@@ -69,7 +68,7 @@ void PerfEvents::SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, u32 si
     while (traceSize > 0) {
         offset = CALC_OFFSET(offset, auxMmapPages_ * pageSize_);
         left = static_cast<u32>(auxMmapPages_ * pageSize_ - offset);
-        copySize = min(traceSize, left);
+        copySize = std::min(traceSize, left);
         src = PTR_ADD(dataPage, offset);
         if (memcpy_s(buf, left, src, copySize) != 0) {
             HLOGV("SpeReadData memcpy_s failed.");
@@ -189,7 +188,7 @@ PerfEvents::~PerfEvents()
 
 bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
 {
-    unique_ptr<perf_event_attr> attr = PerfEvents::CreateDefaultAttr(type, config);
+    std::unique_ptr<perf_event_attr> attr = PerfEvents::CreateDefaultAttr(type, config);
     CHECK_TRUE(attr == nullptr, false, 0, "");
     UniqueFd fd = Open(*attr.get());
     if (fd < 0) {
@@ -211,7 +210,7 @@ bool PerfEvents::SetBranchSampleType(uint64_t value)
 {
     if (value != 0) {
         // cpu-clcles event must be supported
-        unique_ptr<perf_event_attr> attr =
+        std::unique_ptr<perf_event_attr> attr =
             PerfEvents::CreateDefaultAttr(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
         CHECK_TRUE(attr == nullptr, false, 0, "");
         attr->sample_type |= PERF_SAMPLE_BRANCH_STACK;
@@ -518,7 +517,7 @@ bool PerfEvents::AddEvent(perf_type_id type, __u64 config, bool excludeUser, boo
 
 std::unique_ptr<perf_event_attr> PerfEvents::CreateDefaultAttr(perf_type_id type, __u64 config)
 {
-    unique_ptr<perf_event_attr> attr = make_unique<perf_event_attr>();
+    std::unique_ptr<perf_event_attr> attr = std::make_unique<perf_event_attr>();
     if (memset_s(attr.get(), sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
         HLOGE("memset_s failed in PerfEvents::CreateDefaultAttr");
         return nullptr;
@@ -1111,7 +1110,7 @@ bool PerfEvents::CreateFdEvents(void)
                     // after open successed , fill the result
                     // make a new FdItem
                     FdItem &fdItem = eventItem.fdItems.emplace_back();
-                    fdItem.fd = move(fd);
+                    fdItem.fd = std::move(fd);
                     fdItem.cpu = cpus_[icpu];
                     fdItem.pid = pids_[ipid];
                     fdNumber++;
@@ -1169,7 +1168,7 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
                 configName = eventItem.configName;
             }
             if (countEvents_.count(configName) == 0) {
-                auto countEvent = make_unique<CountEvent>(CountEvent {});
+                auto countEvent = std::make_unique<CountEvent>(CountEvent {});
                 countEvents_[configName] = std::move(countEvent);
                 countEvents_[configName]->userOnly = eventItem.attr.exclude_kernel;
                 countEvents_[configName]->kernelOnly = eventItem.attr.exclude_user;
