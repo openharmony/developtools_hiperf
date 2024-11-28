@@ -105,7 +105,7 @@ VirtualThread &VirtualRuntime::UpdateThread(pid_t pid, pid_t tid, const std::str
     const auto startTime = steady_clock::now();
 #endif
     VirtualThread &thread = GetThread(pid, tid, name);
-    if (!name.empty()) {
+    if (!name.empty() && thread.name_.empty()) {
         thread.name_ = name;
     }
 #ifdef HIPERF_DEBUG_TIME
