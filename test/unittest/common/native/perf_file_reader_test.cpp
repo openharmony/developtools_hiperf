@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdio.h>
 
 #include "perf_file_reader.h"
 #include "perf_file_reader_test.h"
@@ -111,6 +112,46 @@ HWTEST_F(PerfFileReaderTest, Test_GetFetureString, TestSize.Level1)
     const FEATURE feture = FEATURE::ARCH;
     const std::string result = "ARCH";
     EXPECT_NE(hiperfFileReader->GetFeatureString(feture), result);
+}
+
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr1, TestSize.Level1)
+{
+    perf_file_attr attr;
+    attr.ids.size = UINT64_MAX;
+    std::vector<uint64_t> v;
+    PerfFileReader reader("", nullptr);
+    EXPECT_FALSE(reader.ReadIdsForAttr(attr, &v));
+}
+
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr2, TestSize.Level1)
+{
+    perf_file_attr attr;
+    attr.ids.size = 1;
+    std::string fileName = "/proc/" + to_string(getpid()) + "/cmdline";
+    FILE* fp = fopen(fileName.c_str(), "r");
+    EXPECT_NE(fp, nullptr);
+    std::vector<uint64_t> v;
+    PerfFileReader reader("", fp);
+    EXPECT_TRUE(reader.ReadIdsForAttr(attr, &v));
+    EXPECT_NE(v.size(), 0);
+}
+
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr3, TestSize.Level1)
+{
+    perf_file_attr attr;
+    attr.ids.size = 12;
+    std::string fileName = "/proc/" + to_string(getpid()) + "/cmdline";
+    FILE* fp = fopen(fileName.c_str(), "r");
+    EXPECT_NE(fp, nullptr);
+    std::vector<uint64_t> v;
+    v.resize(attr.ids.size / sizeof(uint64_t) + 200);
+    PerfFileReader reader("", fp);
+    uint64_t* data = v.data();
+    uint64_t u1 = *(data + v.size());
+    EXPECT_TRUE(reader.ReadIdsForAttr(attr, &v));
+    if (v.data() == data) {
+        EXPECT_EQ(u1, *(data + v.size()));
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

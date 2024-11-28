@@ -748,7 +748,6 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord2, TestSize.Level1)
     ASSERT_TRUE(&perfEventRecord1 == &perfEventRecord2);
 }
 
-
 HWTEST_F(PerfEventRecordTest, GetPerfEventRecord3, TestSize.Level1)
 {
     struct PerfRecordSwitchCpuWidest {
@@ -792,6 +791,71 @@ HWTEST_F(PerfEventRecordTest, MultiThreadGetPerfEventRecord, TestSize.Level1)
         ASSERT_TRUE(&perfEventRecord1 != &perfEventRecord2);
     });
     t1.join();
+}
+
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordMmap, TestSize.Level1)
+{
+    perf_event_header header;
+    header.size = sizeof(PerfRecordMmapData) + sizeof(perf_event_header);
+    PerfRecordMmapData data;
+    for (uint32_t i = 0; i < KILO; i++) {
+        data.filename[i] = 'a';
+    }
+    size_t size = sizeof(PerfRecordMmapData) + sizeof(perf_event_header) + 10;
+    uint8_t* p = static_cast<uint8_t*>(malloc(size));
+    memset(p, 5, size);
+    memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header));
+    memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordMmapData),
+             reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordMmapData));
+
+    PerfRecordMmap record;
+    record.Init(p);
+    std::string str = record.data_.filename;
+    ASSERT_EQ(str.size(), KILO - 1);
+    for (char c : str) {
+        EXPECT_EQ(c, 'a');
+    }
+    
+    free(p);
+}
+
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordComm, TestSize.Level1)
+{
+    perf_event_header header;
+    header.size = sizeof(PerfRecordCommData) + sizeof(perf_event_header);
+    PerfRecordCommData data;
+    for (uint32_t i = 0; i < KILO; i++) {
+        data.comm[i] = 'a';
+    }
+    size_t size = sizeof(PerfRecordCommData) + sizeof(perf_event_header) + 10;
+    uint8_t* p = static_cast<uint8_t*>(malloc(size));
+    memset(p, 5, size);
+    memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header));
+    memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordCommData),
+             reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordCommData));
+
+    PerfRecordComm record;
+    record.Init(p);
+    std::string str = record.data_.comm;
+    ASSERT_EQ(str.size(), KILO - 1);
+    for (char c : str) {
+        EXPECT_EQ(c, 'a');
+    }
+    
+    free(p);
+}
+
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level1)
+{
+    perf_event_header header;
+    header.size = sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header);
+    uint8_t* p = static_cast<uint8_t*>(malloc(header.size));
+
+    PerfRecordAuxtrace record;
+    record.Init(p);
+    ASSERT_NE(record.rawData_, nullptr);
+
+    free(p); 
 }
 } // namespace HiPerf
 } // namespace Developtools

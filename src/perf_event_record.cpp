@@ -551,6 +551,12 @@ void PerfRecordSample::Clean()
     serverPidMap_.clear();
 }
 
+void PerfRecordMmap::Init(uint8_t* data, const perf_event_attr&)
+{
+    PerfEventRecordTemplate::Init(data);
+    data_.filename[KILO - 1] = '\0';
+}
+
 PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
                                const std::string &filename)
 {
@@ -714,6 +720,11 @@ void PerfRecordLost::DumpData(int indent) const
     PRINT_INDENT(indent, "id %llu, lost %llu\n", data_.id, data_.lost);
 }
 
+void PerfRecordComm::Init(uint8_t* data, const perf_event_attr&)
+{
+    PerfEventRecordTemplate::Init(data);
+    data_.comm[KILO - 1] = '\0';
+}
 
 PerfRecordComm::PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm)
 {
