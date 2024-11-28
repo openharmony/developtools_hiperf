@@ -136,8 +136,16 @@ bool PerfFileSection::Read(std::string &value)
     // don't assert for fuzz test
     CHECK_TRUE(size == 0 || size > maxSize_, false, 0, "");
     char *buf = new char[size];
-    CHECK_TRUE(!Read(buf, size), false, 0, "");
-    CHECK_TRUE(buf[size - 1] != 0, false, 0, "");
+    if (!Read(buf, size)) {
+        HLOGE("Read failed.");
+        delete []buf;
+        return false;
+    }
+    if (buf[size - 1] != 0) {
+        HLOGE("buf is invalid.");
+        delete []buf;
+        return false;
+    }
     value = buf;
     HLOGDUMMY("Read String size %u buf : %s", size, value.c_str());
     delete []buf;

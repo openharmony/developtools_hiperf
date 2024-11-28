@@ -229,7 +229,6 @@ protected:
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
             return false;
         }
-
         if (elfFile_ == nullptr) {
             if (StringEndsWith(elfPath, ".hap")) {
                 CHECK_TRUE(map == nullptr, false, 1, "map should not be nullptr.");
