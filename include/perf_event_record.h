@@ -143,6 +143,9 @@ public:
     void Init(uint8_t* p, const perf_event_attr& = {}) override
     {
         InitHeader(p);
+        if (p == nullptr) {
+            return;
+        }
 
         size_t dataSize = GetSize();
         if (dataSize >= sizeof(header_)) {
@@ -172,7 +175,7 @@ public:
     u8* rawData_ = nullptr;
     PerfRecordAuxtrace() = default;
     PerfRecordAuxtrace(u64 size, u64 offset, u64 reference, u32 idx, u32 tid, u32 cpu, u32 pid);
-    void Init(uint8_t* data, const perf_event_attr& attr) override;
+    void Init(uint8_t* data, const perf_event_attr& attr = {}) override;
 
     bool GetBinary1(std::vector<uint8_t> &buf) const;
     bool GetBinary(std::vector<uint8_t> &buf) const override;
@@ -185,6 +188,7 @@ public:
 class PerfRecordMmap : public PerfEventRecordTemplate<PerfRecordMmapData, PERF_RECORD_TYPE_MMAP> {
 public:
     PerfRecordMmap() = default;
+    void Init(uint8_t* data, const perf_event_attr& attr = {}) override;
     PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
                    const std::string &filename);
 
@@ -231,6 +235,7 @@ class PerfRecordComm : public PerfEventRecordTemplate<PerfRecordCommData, PERF_R
 public:
 
     PerfRecordComm() = default;
+    void Init(uint8_t* data, const perf_event_attr& attr = {}) override;
     PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm);
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
