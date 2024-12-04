@@ -110,8 +110,8 @@ private:
     void DumpCallChain(int indent, const PerfRecordSample& sample);
     void DumpFeaturePortion(int indent = 0);
     void DumpUniqueStackTableNode(int indent, const PerfFileSectionUniStackTable &uniStackTable);
-    void ExprotUserData(PerfEventRecord& record);
-    void ExprotUserStack(const PerfRecordSample &recordSample);
+    void ExportUserData(PerfEventRecord& record);
+    void ExportUserStack(const PerfRecordSample &recordSample);
     void PrintHeaderInfo(const int &indent);
     void PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct);
     void PrintFeatureEventdesc(int indent, const PerfFileSectionEventDesc &sectionEventdesc);
