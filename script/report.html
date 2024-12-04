@@ -4119,6 +4119,11 @@ input{
             return heatColor;
         }
 
+        getLibName(symbol) {
+            let fileId = data.SymbolMap[symbol].file;
+            return data.symbolsFileList[fileId];
+        }
+
         drawCReverse = (c, dept, rect) => {
             let ctx = this.context;
             let offset = 0;
@@ -4227,7 +4232,7 @@ input{
                         let count = this.getCount(c[i]);
                         this.funcNameSpan.textContent = funName;
                         if (this.type === 1 || this.type === 2 || this.type === 3) {
-                            this.panel.title = funName + ': [' + count + '  ' + statisticNum + ']';
+                            this.panel.title = funName + ': [' + count + '  ' + statisticNum + ']\n' + this.getLibName(c[i].symbol);
                         } else {
                             this.panel.title = funName + ': [' + statisticNum + ']';
                         }
