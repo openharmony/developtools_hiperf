@@ -304,7 +304,7 @@ private:
 
     // callback to process record
     bool ProcessRecord(PerfEventRecord& record);
-    bool SaveRecord(const PerfEventRecord& record, bool ptrReleaseFlag = false);
+    bool SaveRecord(const PerfEventRecord& record);
 
     // file format like as 0,1-3,4-6,7,8
     uint32_t GetCountFromFile(const std::string &fileName);

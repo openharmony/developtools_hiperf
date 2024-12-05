@@ -1061,6 +1061,9 @@ PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type,
     auto it = recordMap_.find(type);
     if (it == recordMap_.end()) {
         record = CreatePerfEventRecord(type);
+        if (record == nullptr) {
+            record = new PerfRecordNull();
+        }
         recordMap_.emplace(type, record);
     } else {
         record = it->second;

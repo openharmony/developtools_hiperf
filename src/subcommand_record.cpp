@@ -898,7 +898,7 @@ bool SubCommandRecord::PrepareSysKernel()
 bool SubCommandRecord::PrepareVirtualRuntime()
 {
     auto saveRecord = [this](PerfEventRecord& record) -> bool {
-        return this->SaveRecord(record, false);
+        return this->SaveRecord(record);
     };
     virtualRuntime_.SetRecordMode(saveRecord);
 
@@ -1355,11 +1355,11 @@ bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 #ifdef HIPERF_DEBUG_TIME
     prcessRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
-    return SaveRecord(record, true);
+    return SaveRecord(record);
 #endif
 }
 
-bool SubCommandRecord::SaveRecord(const PerfEventRecord& record, bool ptrReleaseFlag)
+bool SubCommandRecord::SaveRecord(const PerfEventRecord& record)
 {
 #if HIDEBUG_RECORD_NOT_SAVE
     return true;

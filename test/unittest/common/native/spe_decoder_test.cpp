@@ -15,7 +15,6 @@
 #include "spe_decoder_test.h"
 
 #include "command.h"
-#include "spe_decoder.h"
 #include "subcommand_dump.h"
 #include "subcommand_record.h"
 #include "test_utilities.h"

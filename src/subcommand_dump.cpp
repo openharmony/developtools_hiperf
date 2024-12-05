@@ -379,7 +379,7 @@ void SubCommandDump::DumpAttrPortion(int indent)
     }
 }
 
-void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
+void SubCommandDump::ExportUserStack(const PerfRecordSample &recordSample)
 {
     if (recordSample.data_.reg_nr > 0 && recordSample.data_.dyn_size > 0) {
         // <pid>_<tid>_user_regs_<time>
@@ -405,14 +405,14 @@ void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
     }
 }
 
-void SubCommandDump::ExprotUserData(PerfEventRecord& record)
+void SubCommandDump::ExportUserData(PerfEventRecord& record)
 {
     if (record.GetType() == PERF_RECORD_SAMPLE) {
         if (currectSampleIndex_++ != exportSampleIndex_) {
             return;
         }
         PerfRecordSample* recordSample = static_cast<PerfRecordSample*>(&record);
-        ExprotUserStack(*recordSample);
+        ExportUserStack(*recordSample);
 
         std::string userData =
             StringPrintf("hiperf_%d_%d_sample_record_%zu_%" PRIu64 ".dump", recordSample->data_.pid,
@@ -448,7 +448,7 @@ void SubCommandDump::DumpDataPortion(int indent)
 
         // for UT
         if (exportSampleIndex_ > 0) {
-            ExprotUserData(record);
+            ExportUserData(record);
         }
 
         // tell process tree what happend for rebuild symbols

@@ -24,7 +24,6 @@ config("hiperf_client_config") {
 }
 
 ohos_shared_library("hiperf_client") {
-  branch_protector_ret = "pac_ret"
   install_enable = true
   public_configs = [ ":hiperf_client_config" ]
   sources = [ "src/hiperf_client.cpp" ]
@@ -44,7 +43,6 @@ ohos_shared_library("hiperf_client") {
 }
 
 ohos_static_library("hiperf_client_static") {
-  branch_protector_ret = "pac_ret"
   public_configs = [ ":hiperf_client_config" ]
   sources = [ "src/hiperf_client.cpp" ]
   defines = []
