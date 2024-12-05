@@ -803,10 +803,11 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordMmap, TestSize.Level1)
     }
     size_t size = sizeof(PerfRecordMmapData) + sizeof(perf_event_header) + 10;
     uint8_t* p = static_cast<uint8_t*>(malloc(size));
-    memset(p, 5, size);
-    memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header));
-    memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordMmapData),
-             reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordMmapData));
+    ASSERT_EQ(memset_s(p, size, 5, size), 0);
+    ASSERT_EQ(memcpy_s(p, sizeof(perf_event_header),
+        reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header)), 0);
+    ASSERT_EQ(memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordMmapData),
+        reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordMmapData)), 0);
 
     PerfRecordMmap record;
     record.Init(p);
@@ -815,7 +816,7 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordMmap, TestSize.Level1)
     for (char c : str) {
         EXPECT_EQ(c, 'a');
     }
-    
+
     free(p);
 }
 
@@ -829,10 +830,11 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordComm, TestSize.Level1)
     }
     size_t size = sizeof(PerfRecordCommData) + sizeof(perf_event_header) + 10;
     uint8_t* p = static_cast<uint8_t*>(malloc(size));
-    memset(p, 5, size);
-    memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header));
-    memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordCommData),
-             reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordCommData));
+    ASSERT_EQ(memset_s(p, size, 5, size), 0);
+    ASSERT_EQ(memcpy_s(p, sizeof(perf_event_header),
+        reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header)), 0);
+    ASSERT_EQ(memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordCommData),
+        reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordCommData)), 0);
 
     PerfRecordComm record;
     record.Init(p);
@@ -841,7 +843,7 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordComm, TestSize.Level1)
     for (char c : str) {
         EXPECT_EQ(c, 'a');
     }
-    
+
     free(p);
 }
 
