@@ -117,7 +117,7 @@ HWTEST_F(PerfFileReaderTest, Test_GetFetureString, TestSize.Level1)
 HWTEST_F(PerfFileReaderTest, ReadIdsForAttr1, TestSize.Level1)
 {
     perf_file_attr attr;
-    attr.ids.size = UINT64_MAX;
+    attr.ids.size = 2000000000;
     std::vector<uint64_t> v;
     PerfFileReader reader("", nullptr);
     EXPECT_FALSE(reader.ReadIdsForAttr(attr, &v));
@@ -139,19 +139,15 @@ HWTEST_F(PerfFileReaderTest, ReadIdsForAttr2, TestSize.Level1)
 HWTEST_F(PerfFileReaderTest, ReadIdsForAttr3, TestSize.Level1)
 {
     perf_file_attr attr;
-    attr.ids.size = 12;
+    attr.ids.size = 4;
+    attr.ids.offset = 0;
     std::string fileName = "/proc/" + to_string(getpid()) + "/cmdline";
     FILE* fp = fopen(fileName.c_str(), "r");
     EXPECT_NE(fp, nullptr);
     std::vector<uint64_t> v;
-    v.resize(attr.ids.size / sizeof(uint64_t) + 200);
     PerfFileReader reader("", fp);
-    uint64_t* data = v.data();
-    uint64_t u1 = *(data + v.size());
     EXPECT_TRUE(reader.ReadIdsForAttr(attr, &v));
-    if (v.data() == data) {
-        EXPECT_EQ(u1, *(data + v.size()));
-    }
+    EXPECT_TRUE(v.size() * sizeof(uint64_t) >= attr.ids.size);
 }
 } // namespace HiPerf
 } // namespace Developtools
