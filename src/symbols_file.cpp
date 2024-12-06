@@ -1220,8 +1220,20 @@ bool SymbolsFile::CheckPathReadable(const std::string &path) const
 {
     if (access(path.c_str(), R_OK) == 0) {
         return true;
+    }
+    // access does not have the access permission in some scenarios
+    struct stat st;
+    if (stat(path.c_str(), &st) == 0) {
+        return true;
     } else {
-        HLOGM("'%s' is unable read", path.c_str());
+#if defined(is_ohos) && is_ohos
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HLOGM("'%s' is unable read,errno: %d, errmsg: %s", path.c_str(), errno, errInfo);
+        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s is unable read errno:%" HILOG_PUBLIC
+                      "d , errInfo: %" HILOG_PUBLIC "s\n",
+                      path.c_str(), errno, errInfo);
+#endif
         return false;
     }
 }
