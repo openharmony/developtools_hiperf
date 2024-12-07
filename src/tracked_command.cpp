@@ -106,7 +106,7 @@ bool TrackedCommand::StartCommand()
     // send start signal to start execution of command
     ssize_t nbyte {0};
     char startSignal {1};
-    int loopCount = 0;
+    uint64_t loopCount = 0;
     while (true) {
         nbyte = write(startFd_, &startSignal, 1);
         if (nbyte == -1) {
@@ -152,7 +152,7 @@ void TrackedCommand::ExecuteCommand(const int &startFd, const int &ackFd)
     // waiting start signal
     char startSignal {0};
     ssize_t nbyte {0};
-    int loopCount = 0;
+    uint64_t loopCount = 0;
     while (true) {
         nbyte = read(startFd, &startSignal, 1);
         if (nbyte == -1) {

@@ -100,7 +100,7 @@ const char* CpuUsageTest::GetItems(const char* buffer, unsigned int item)
     // read from buffer by offset
     const char* p = buffer;
     int len = strlen(buffer);
-    int count = 0;
+    unsigned int count = 0;
     for (int i = 0; i < len; ++i) {
         if (*p == ' ') {
             count++;

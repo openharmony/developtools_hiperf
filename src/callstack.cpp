@@ -670,7 +670,7 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
 #ifdef target_cpu_arm
     static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm>();
     std::vector<uintptr_t> tempRegs;
-    for (auto i = 0; i < regsNum_; ++i) {
+    for (u64 i = 0; i < regsNum_; ++i) {
         tempRegs.push_back(static_cast<uintptr_t>(regs_[i]));
     }
     regs->SetRegsData(tempRegs);

@@ -16,7 +16,6 @@ import("../../../../hiperf.gni")
 
 config("hiperf_client_napi_config") {
   include_dirs = [
-    "//third_party/node/src",
     "${hiperf_path}/include",
     "${innerkits_path}/include",
   ]

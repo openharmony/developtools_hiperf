@@ -100,6 +100,7 @@ ohos_unittest("hiperf_unittest") {
     "faultloggerd:libunwinder_static",
     "googletest:gmock",
     "hilog:libhilog",
+    "protobuf:protobuf_lite",
   ]
   cflags = [
     "-Dprivate=public",  #allow test code access private members
@@ -133,8 +134,9 @@ ohos_fuzztest("CommandLineFuzzTest") {
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libunwinder",
+    "faultloggerd:libunwinder_static",
     "hilog:libhilog",
+    "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [
@@ -153,6 +155,7 @@ ohos_fuzztest("LibReportFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
+    "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/libreport_fuzzer/LibReport_fuzzer.cpp" ]
@@ -168,6 +171,7 @@ ohos_fuzztest("ClientApiFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
+    "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/clientapi_fuzzer/ClientApi_fuzzer.cpp" ]
@@ -183,6 +187,7 @@ ohos_fuzztest("SpeDecoderFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
+    "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/spedecoder_fuzzer/SpeDecoder_fuzzer.cpp" ]
@@ -198,8 +203,9 @@ ohos_fuzztest("PerfFileFuzzTest") {
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libunwinder",
+    "faultloggerd:libunwinder_static",
     "hilog:libhilog",
+    "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/perffile_fuzzer/PerfFile_fuzzer.cpp" ]
@@ -213,8 +219,10 @@ ohos_fuzztest("PerfFileFormatFuzzTest") {
   deps = fuzz_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "faultloggerd:libunwinder_static",
     "hilog:libhilog",
+    "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
   sources = [ "fuzztest/perffileformat_fuzzer/PerfFileFormat_fuzzer.cpp" ]
