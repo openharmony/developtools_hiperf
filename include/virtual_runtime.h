@@ -51,7 +51,7 @@ public:
     // from the record , it will call back to write some Simulated Record
     // case 1. some mmap will be create when it read mmaps for each new process (from record sample)
 
-    using RecordCallBack = std::function<bool(std::unique_ptr<PerfEventRecord>)>;
+    using RecordCallBack = std::function<bool(PerfEventRecord&)>;
     using CollectSymbolCallBack = std::function<void(PerfRecordSample*)>;
 
     void SetRecordMode(RecordCallBack recordCallBack);
@@ -131,6 +131,7 @@ public:
     }
     DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
+    void ClearSymbolCache();
 
     VirtualThread &GetThread(pid_t pid, pid_t tid, const std::string name = "");
     const std::map<pid_t, VirtualThread> &GetThreads() const

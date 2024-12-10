@@ -29,7 +29,7 @@ bool SubCommandHelp::OnSubCommand(std::vector<std::string> &args)
 void SubCommandHelp::RegisterSubCommandHelp()
 {
     HLOGV("enter");
-    SubCommand::RegisterSubCommand("help", std::make_unique<SubCommandHelp>());
+    SubCommand::RegisterSubCommand("help", SubCommandHelp::GetInstance);
 }
 
 bool SubCommandHelp::OnHelp(std::vector<std::string> &args)
@@ -54,7 +54,7 @@ bool SubCommandHelp::OnHelp(std::vector<std::string> &args)
             if (command.second == nullptr) {
                 continue;
             }
-            printf("\t%s:\t%s\n", command.second->Name().c_str(), command.second->Brief().c_str());
+            printf("\t%s:\t%s\n", command.second()->Name().c_str(), command.second()->Brief().c_str());
         }
         printf("\nSee 'hiperf help [command]' for more information on a specific command.\n\n");
     } else {
@@ -69,6 +69,12 @@ bool SubCommandHelp::OnHelp(std::vector<std::string> &args)
     }
 
     return true;
+}
+
+SubCommand* SubCommandHelp::GetInstance()
+{
+    static SubCommandHelp subCommand;
+    return &subCommand;
 }
 } // namespace HiPerf
 } // namespace Developtools

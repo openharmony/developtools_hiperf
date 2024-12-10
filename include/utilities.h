@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #include <set>
 
@@ -160,6 +161,27 @@ std::string VectorToString(const std::vector<T> &items)
     }
 }
 
+template<class T>
+std::string SetToString(const std::unordered_set<T> &items)
+{
+    std::string result = "";
+    const std::string split = ",";
+    for (auto item : items) {
+        if (!result.empty()) {
+            result.append(split);
+        }
+        if constexpr (std::is_same<T, std::string>::value) {
+            result.append(item);
+        } else {
+            result.append(std::to_string(item));
+        }
+    }
+    if (result.empty()) {
+        result.append("<empty>");
+    }
+    return result;
+}
+
 std::string BufferToHexString(const std::vector<unsigned char> &vec);
 std::string BufferToHexString(const unsigned char buf[], size_t size);
 void HexDump(const void *buf, size_t size, size_t max_size = 0);
@@ -175,6 +197,7 @@ bool StringStartsWith(const std::string &string, const std::string &with);
 bool StringEndsWith(const std::string &string, const std::string &with);
 
 bool IsSameCommand(const std::string &cmdLine, const std::string &cmdName);
+bool IsSameCommand(const std::string &cmdLine, const std::vector<std::string>& cmdNames);
 
 std::vector<pid_t> GetSubthreadIDs(const pid_t pid);
 
@@ -334,7 +357,24 @@ const std::string HMKERNEL = "HongMeng";
 pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
                        const uint64_t waitAppTimeOut);
 bool IsRestarted(const std::string &appPackage);
-void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage);
+
+template<typename Container>
+void CollectPidsByAppname(std::set<pid_t> &pids, const Container& appPackage)
+{
+    const std::string basePath {"/proc/"};
+    const std::string cmdline {"/cmdline"};
+    std::vector<std::string> subDirs = GetSubDirs(basePath);
+    for (const auto &subDir : subDirs) {
+        if (!IsDigits(subDir)) {
+            continue;
+        }
+        std::string fileName {basePath + subDir + cmdline};
+        if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+            pids.emplace(std::stoul(subDir, nullptr));
+        }
+    }
+}
+
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err);
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
@@ -346,28 +386,11 @@ std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname);
 
-template <typename Func>
-class ScopeGuard {
-public:
-    explicit ScopeGuard(Func&& fn)
-        : fn_(fn) {}
-    ~ScopeGuard()
-    {
-        fn_();
-    }
-private:
-    Func fn_;
-};
-
-struct ScopeGuardOnExit {};
-template <typename Func>
-static inline ScopeGuard<Func> operator+(ScopeGuardOnExit, Func&& fn)
+template<typename T>
+inline bool CheckOutOfRange(const T& value, const T& min, const T& max)
 {
-    return ScopeGuard<Func>(std::forward<Func>(fn));
+    return value < min || value > max;
 }
-
-#define ON_SCOPE_EXIT \
-        auto __onGuardExit__ = ScopeGuardOnExit{} + [&]
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

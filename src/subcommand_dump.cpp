@@ -379,7 +379,7 @@ void SubCommandDump::DumpAttrPortion(int indent)
     }
 }
 
-void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
+void SubCommandDump::ExportUserStack(const PerfRecordSample &recordSample)
 {
     if (recordSample.data_.reg_nr > 0 && recordSample.data_.dyn_size > 0) {
         // <pid>_<tid>_user_regs_<time>
@@ -405,14 +405,14 @@ void SubCommandDump::ExprotUserStack(const PerfRecordSample &recordSample)
     }
 }
 
-void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
+void SubCommandDump::ExportUserData(PerfEventRecord& record)
 {
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
         if (currectSampleIndex_++ != exportSampleIndex_) {
             return;
         }
-        PerfRecordSample *recordSample = static_cast<PerfRecordSample *>(record.get());
-        ExprotUserStack(*recordSample);
+        PerfRecordSample* recordSample = static_cast<PerfRecordSample*>(&record);
+        ExportUserStack(*recordSample);
 
         std::string userData =
             StringPrintf("hiperf_%d_%d_sample_record_%zu_%" PRIu64 ".dump", recordSample->data_.pid,
@@ -427,14 +427,14 @@ void SubCommandDump::ExprotUserData(std::unique_ptr<PerfEventRecord> &record)
     }
 }
 
-void SubCommandDump::DumpCallChain(int indent, std::unique_ptr<PerfRecordSample> &sample)
+void SubCommandDump::DumpCallChain(int indent, const PerfRecordSample& sample)
 {
-    PRINT_INDENT(indent, "\n callchain: %zu\n", sample->callFrames_.size());
-    if (sample->callFrames_.size() > 0) {
+    PRINT_INDENT(indent, "\n callchain: %zu\n", sample.callFrames_.size());
+    if (sample.callFrames_.size() > 0) {
         indent += indent + 1;
-        for (auto frameIt = sample->callFrames_.begin(); frameIt != sample->callFrames_.end();
+        for (auto frameIt = sample.callFrames_.begin(); frameIt != sample.callFrames_.end();
              frameIt++) {
-            PRINT_INDENT(indent, "%02zd:%s\n", std::distance(frameIt, sample->callFrames_.end()),
+            PRINT_INDENT(indent, "%02zd:%s\n", std::distance(frameIt, sample.callFrames_.end()),
                          frameIt->ToSymbolString().c_str());
         }
     }
@@ -443,24 +443,22 @@ void SubCommandDump::DumpCallChain(int indent, std::unique_ptr<PerfRecordSample>
 void SubCommandDump::DumpDataPortion(int indent)
 {
     int recordCount = 0;
-    auto recordcCallback = [&](std::unique_ptr<PerfEventRecord> record) {
-        CHECK_TRUE(record == nullptr, false, 0, ""); // return false in callback can stop the read process
+    auto recordcCallback = [&](PerfEventRecord& record) {
+        CHECK_TRUE(record.GetName() == nullptr, false, 0, ""); // return false in callback can stop the read process
 
         // for UT
         if (exportSampleIndex_ > 0) {
-            ExprotUserData(record);
+            ExportUserData(record);
         }
 
         // tell process tree what happend for rebuild symbols
-        vr_.UpdateFromRecord(*record);
+        vr_.UpdateFromRecord(record);
 
         recordCount++;
-        record->Dump(indent, outputFilename_, g_outputDump);
+        record.Dump(indent, outputFilename_, g_outputDump);
 
-        if (record->GetType() == PERF_RECORD_SAMPLE) {
-            std::unique_ptr<PerfRecordSample> sample(
-                static_cast<PerfRecordSample *>(record.release()));
-            DumpCallChain(indent, sample);
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            DumpCallChain(indent, static_cast<PerfRecordSample&>(record));
         }
 
         return true;
@@ -584,7 +582,7 @@ void SubCommandDump::DumpUniqueStackTableNode(int indent, const PerfFileSectionU
 
 bool SubCommandDump::RegisterSubCommandDump()
 {
-    return SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
+    return SubCommand::RegisterSubCommand("dump", SubCommandDump::GetInstance);
 }
 
 void SubCommandDump::SetHM()
@@ -613,6 +611,12 @@ void SubCommandDump::DumpSpeReport()
         DumpSpeReportData(indent_, g_outputDump);
     }
 #endif
+}
+
+SubCommand* SubCommandDump::GetInstance()
+{
+    static SubCommandDump subCommand;
+    return &subCommand;
 }
 
 } // namespace HiPerf

@@ -38,6 +38,8 @@ public:
     bool OnSubCommand(std::vector<std::string> &args) override;
     static void RegisterSubCommandHelp(void);
     static bool OnHelp(std::vector<std::string> &args);
+
+    static SubCommand* GetInstance();
 };
 } // namespace HiPerf
 } // namespace Developtools

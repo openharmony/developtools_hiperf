@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdio.h>
 
 #include "perf_file_reader.h"
 #include "perf_file_reader_test.h"
@@ -25,7 +26,7 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-using ProcessRecordCB = const std::function<bool(std::unique_ptr<PerfEventRecord> record)>;
+using ProcessRecordCB = const std::function<bool(PerfEventRecord& record)>;
 class PerfFileReaderTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -111,6 +112,42 @@ HWTEST_F(PerfFileReaderTest, Test_GetFetureString, TestSize.Level1)
     const FEATURE feture = FEATURE::ARCH;
     const std::string result = "ARCH";
     EXPECT_NE(hiperfFileReader->GetFeatureString(feture), result);
+}
+
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr1, TestSize.Level1)
+{
+    perf_file_attr attr;
+    attr.ids.size = 2000000000;
+    std::vector<uint64_t> v;
+    PerfFileReader reader("", nullptr);
+    EXPECT_FALSE(reader.ReadIdsForAttr(attr, &v));
+}
+
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr2, TestSize.Level1)
+{
+    perf_file_attr attr;
+    attr.ids.size = 1;
+    std::string fileName = "/proc/" + to_string(getpid()) + "/cmdline";
+    FILE* fp = fopen(fileName.c_str(), "r");
+    EXPECT_NE(fp, nullptr);
+    std::vector<uint64_t> v;
+    PerfFileReader reader("", fp);
+    EXPECT_TRUE(reader.ReadIdsForAttr(attr, &v));
+    EXPECT_NE(v.size(), 0);
+}
+
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr3, TestSize.Level1)
+{
+    perf_file_attr attr;
+    attr.ids.size = 4;
+    attr.ids.offset = 0;
+    std::string fileName = "/proc/" + to_string(getpid()) + "/cmdline";
+    FILE* fp = fopen(fileName.c_str(), "r");
+    EXPECT_NE(fp, nullptr);
+    std::vector<uint64_t> v;
+    PerfFileReader reader("", fp);
+    EXPECT_TRUE(reader.ReadIdsForAttr(attr, &v));
+    EXPECT_TRUE(v.size() * sizeof(uint64_t) >= attr.ids.size);
 }
 } // namespace HiPerf
 } // namespace Developtools

@@ -76,6 +76,8 @@ public:
     static void DumpPrintEventAttr(const perf_event_attr &attr, int indent = 0);
     std::unique_ptr<PerfFileReader> reader_;
 
+    static SubCommand* GetInstance();
+
 private:
     static void DumpSampleType(uint64_t sampleType, int indent);
     bool PrepareDumpOutput();
@@ -107,11 +109,11 @@ private:
     void DumpPrintFileHeader(int indent = 0);
     void DumpAttrPortion(int indent = 0);
     void DumpDataPortion(int indent = 0);
-    void DumpCallChain(int indent, std::unique_ptr<PerfRecordSample> &sample);
+    void DumpCallChain(int indent, const PerfRecordSample& sample);
     void DumpFeaturePortion(int indent = 0);
     void DumpUniqueStackTableNode(int indent, const PerfFileSectionUniStackTable &uniStackTable);
-    void ExprotUserData(std::unique_ptr<PerfEventRecord> &record);
-    void ExprotUserStack(const PerfRecordSample &recordSample);
+    void ExportUserData(PerfEventRecord& record);
+    void ExportUserStack(const PerfRecordSample &recordSample);
     void PrintHeaderInfo(const int &indent);
     void PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct);
     void PrintFeatureEventdesc(int indent, const PerfFileSectionEventDesc &sectionEventdesc);

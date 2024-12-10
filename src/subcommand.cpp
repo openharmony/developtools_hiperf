@@ -21,8 +21,31 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static std::map<std::string, std::unique_ptr<SubCommand>> g_SubCommandsMap;
-std::mutex g_subCommandMutex;
+std::mutex SubCommand::subCommandMutex_;
+std::map<std::string, std::unique_ptr<SubCommand>> SubCommand::subCommandMap_ = {};
+std::map<std::string, std::function<SubCommand*()>> SubCommand::subCommandFuncMap_ = {};
+
+bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::function<SubCommand*()> func)
+{
+    HLOGV("%s", cmdName.c_str());
+    if (cmdName.empty()) {
+        HLOGE("unable to register empty subcommand!");
+        return false;
+    }
+    if (cmdName.front() == '-') {
+        HLOGE("unable use '-' at the begin of subcommand '%s'", cmdName.c_str());
+        return false;
+    }
+
+    if (subCommandFuncMap_.find(cmdName) == subCommandFuncMap_.end()) {
+        std::lock_guard<std::mutex> lock(subCommandMutex_);
+        subCommandFuncMap_.insert(std::make_pair(cmdName, func));
+        return true;
+    } else {
+        HLOGE("subcommand '%s' already registered!", cmdName.c_str());
+        return false;
+    }
+}
 
 // parse option first
 bool SubCommand::OnSubCommandOptions(std::vector<std::string> args)
@@ -147,45 +170,37 @@ void SubCommand::ExcludeThreadsFromSelectTids(const std::vector<std::string> &ex
 
 bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::unique_ptr<SubCommand> subCommand)
 {
-    HLOGV("%s", cmdName.c_str());
-    if (cmdName.empty()) {
-        HLOGE("unable to register empty subcommand!");
-        return false;
-    }
-    if (cmdName.front() == '-') {
-        HLOGE("unable use '-' at the begin of subcommand '%s'", cmdName.c_str());
-        return false;
-    }
-
-    if (g_SubCommandsMap.find(cmdName) == g_SubCommandsMap.end()) {
-        std::lock_guard<std::mutex> lock(g_subCommandMutex);
-        g_SubCommandsMap.insert(std::make_pair(cmdName, std::move(subCommand)));
+    SubCommand* subCommandPtr = subCommand.get();
+    auto func = [subCommandPtr]() -> SubCommand* {
+        return subCommandPtr;
+    };
+    if (RegisterSubCommand(cmdName, func)) {
+        std::lock_guard<std::mutex> lock(subCommandMutex_);
+        subCommandMap_[cmdName] = std::move(subCommand);
         return true;
-    } else {
-        HLOGE("subcommand '%s' already registered!", cmdName.c_str());
-        return false;
     }
+    return false;
 }
 
 void SubCommand::ClearSubCommands()
 {
-    std::lock_guard<std::mutex> lock(g_subCommandMutex);
-    g_SubCommandsMap.clear();
+    std::lock_guard<std::mutex> lock(subCommandMutex_);
+    subCommandFuncMap_.clear();
+    subCommandMap_.clear();
 }
 
-const std::map<std::string, std::unique_ptr<SubCommand>> &SubCommand::GetSubCommands()
+const std::map<std::string, std::function<SubCommand*()>>& SubCommand::GetSubCommands()
 {
-    return g_SubCommandsMap;
+    return subCommandFuncMap_;
 }
 
 SubCommand *SubCommand::FindSubCommand(std::string &cmdName)
 {
     HLOGV("%s", cmdName.c_str());
-    std::lock_guard<std::mutex> lock(g_subCommandMutex);
-    auto found = g_SubCommandsMap.find(cmdName);
-    if (found != g_SubCommandsMap.end()) {
-        // remove the subcmd itself
-        return found->second.get();
+    std::lock_guard<std::mutex> lock(subCommandMutex_);
+    auto found = subCommandFuncMap_.find(cmdName);
+    if (found != subCommandFuncMap_.end()) {
+        return found->second();
     } else {
         return nullptr;
     }

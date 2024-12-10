@@ -27,6 +27,8 @@ const std::string TempBinPath = "/data/local/tmp/";
 const std::string ReplyOK = "OK\n";
 const std::string ReplyFAIL = "FAIL\n";
 const std::string ReplyStart = "START\n";
+const std::string ReplyOutput = "OUTPUT\n";
+const std::string ReplyOutputCheck = "OUTPUT_CHECK\n";
 const std::string ReplyStop = "STOP\n";
 const std::string ReplyPause = "PAUSE\n";
 const std::string ReplyResume = "RESUME\n";
@@ -255,6 +257,10 @@ public:
      * Resume recording
      */
     bool Resume();
+    /**
+     * Output recording
+     */
+    bool Output();
     /**
      * Stop recording
      */

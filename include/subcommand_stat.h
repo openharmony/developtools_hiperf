@@ -96,6 +96,8 @@ public:
     // add args for hisysevent
     void AddReportArgs(CommandReporter& reporter) override;
 
+    static SubCommand* GetInstance();
+
 private:
     PerfEvents perfEvents_;
     bool targetSystemWide_ {false};

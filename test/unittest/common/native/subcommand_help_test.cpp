@@ -52,7 +52,7 @@ public:
 void SubCommandHelpTest::SetUpTestCase()
 {
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommandHelp::RegisterSubCommandHelp();
+    SubCommand::RegisterSubCommand("help", std::make_unique<SubCommandHelp>());
 }
 
 void SubCommandHelpTest::TearDownTestCase()

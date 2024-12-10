@@ -85,7 +85,7 @@ void SubCommandStatTest::TearDownTestCase() {}
 void SubCommandStatTest::SetUp()
 {
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    ASSERT_EQ(RegisterSubCommandStat(), true);
+    ASSERT_EQ(SubCommand::RegisterSubCommand("stat", std::make_unique<SubCommandStat>()), true);
 }
 
 void SubCommandStatTest::TearDown()
@@ -2298,12 +2298,13 @@ HWTEST_F(SubCommandStatTest, ReportSampleAll, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, ReportSamplePid, TestSize.Level1)
 {
     SubCommandStat command;
-    command.selectPids_ = {1, 2, 3};
+    command.selectPids_ = { getpid() };
+    std::string name = GetProcessName(getpid());
 
     CommandReporter reporter("stat");
     reporter.isReported_ = true;
     command.AddReportArgs(reporter);
-    EXPECT_EQ(reporter.targetProcess_, "1,2,3");
+    EXPECT_EQ(reporter.targetProcess_, name);
 }
 
 /**

@@ -50,6 +50,7 @@ const std::string CONTROL_CMD_PREPARE = "prepare";
 const std::string CONTROL_CMD_START = "start";
 const std::string CONTROL_CMD_PAUSE = "pause";
 const std::string CONTROL_CMD_RESUME = "resume";
+const std::string CONTROL_CMD_OUTPUT = "output";
 const std::string CONTROL_CMD_STOP = "stop";
 const std::string CONTROL_FIFO_FILE_C2S = "/data/local/tmp/.hiperf_record_control_c2s";
 const std::string CONTROL_FIFO_FILE_S2C = "/data/local/tmp/.hiperf_record_control_s2c";
@@ -72,6 +73,7 @@ constexpr uint64_t TYPE_PERF_SAMPLE_BRANCH = PERF_SAMPLE_BRANCH_ANY | PERF_SAMPL
                                              PERF_SAMPLE_BRANCH_ANY_RETURN | PERF_SAMPLE_BRANCH_IND_JUMP |
                                              PERF_SAMPLE_BRANCH_IND_CALL | PERF_SAMPLE_BRANCH_COND |
                                              PERF_SAMPLE_BRANCH_CALL;
+static constexpr uint64_t CHECK_WAIT_TIME_MS = 200;
 
 int GetClockId(const std::string &name)
 {
@@ -132,8 +134,9 @@ void SubCommandRecord::DumpOptions() const
     printf(" no_inherit:\t%s\n", noInherit_ ? "true" : "false");
     printf(" selectPids:\t%s\n", VectorToString(selectPids_).c_str());
     printf(" selectTids:\t%s\n", VectorToString(selectTids_).c_str());
-    printf(" excludeTids:\t%s\n", VectorToString(excludeTids_).c_str());
-    printf(" excludeThreads:\t%s\n", VectorToString(excludeThreadNames_).c_str());
+    printf(" excludeTids:\t%s\n", VectorToString(excludeTidArgs_).c_str());
+    printf(" excludeThreads:\t%s\n", VectorToString(excludeThreadNameArgs_).c_str());
+    printf(" excludeProcessName_:\t%s\n", VectorToString(excludeProcessNameArgs_).c_str());
     printf(" kernelCallChain:\t%s\n", kernelCallChain_ ? "true" : "false");
     printf(" callChainUserOnly_:\t%s\n", callChainUserOnly_ ? "true" : "false");
     printf(" restart:\t%s\n", restart_ ? "true" : "false");
@@ -159,6 +162,8 @@ void SubCommandRecord::DumpOptions() const
     printf(" pipe_output:\t%d\n", clientPipeOutput_);
     printf(" cmdlinesSize_:\t%d\n", cmdlinesSize_);
     printf(" report_:\t%s\n", report_ ? "true" : "false");
+    printf(" backtrack_:\t%s\n", backtrack_ ? "true" : "false");
+    printf(" backtrackTime_:\t%" PRIu64 "\n", backtrackTime_);
 }
 
 bool SubCommandRecord::GetSpeOptions()
@@ -302,10 +307,10 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--callchain-useronly", callChainUserOnly_)) {
         return false;
     }
-    if (!Option::GetOptionValue(args, "--exclude-tid", excludeTids_)) {
+    if (!Option::GetOptionValue(args, "--exclude-tid", excludeTidArgs_)) {
         return false;
     }
-    if (!Option::GetOptionValue(args, "--exclude-thread", excludeThreadNames_)) {
+    if (!Option::GetOptionValue(args, "--exclude-thread", excludeThreadNameArgs_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--restart", restart_)) {
@@ -343,6 +348,15 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "--report", report_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--backtrack", backtrack_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--backtrack-sec", backtrackTime_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--exclude-process", excludeProcessNameArgs_)) {
         return false;
     }
     if (targetSystemWide_ && dedupStack_) {
@@ -432,28 +446,33 @@ bool SubCommandRecord::CheckSelectCpuPidOption()
 
 bool SubCommandRecord::CheckArgsRange()
 {
-    if (timeStopSec_ < MIN_STOP_SECONDS || timeStopSec_ > MAX_STOP_SECONDS) {
+    if (CheckOutOfRange<float>(timeStopSec_, MIN_STOP_SECONDS, MAX_STOP_SECONDS)) {
         printf("Invalid -d value '%.3f', the seconds should be in %.3f~%.3f  \n", timeStopSec_,
                MIN_STOP_SECONDS, MAX_STOP_SECONDS);
         return false;
     }
-    if (cpuPercent_ < MIN_CPU_PERCENT || cpuPercent_ > MAX_CPU_PERCENT) {
+    if (CheckOutOfRange<int>(cpuPercent_, MIN_CPU_PERCENT, MAX_CPU_PERCENT)) {
         printf("Invalid --cpu-limit value '%d', CPU percent should be in %d~%d \n", cpuPercent_,
                MIN_CPU_PERCENT, MAX_CPU_PERCENT);
         return false;
     }
-    if (checkAppMs_ < MIN_CHECK_APP_MS || checkAppMs_ > MAX_CHECK_APP_MS) {
+    if (CheckOutOfRange<int>(checkAppMs_, MIN_CHECK_APP_MS, MAX_CHECK_APP_MS)) {
         printf("Invalid --chkms value '%d', the milliseconds should be in %d~%d \n", checkAppMs_,
                MIN_CHECK_APP_MS, MAX_CHECK_APP_MS);
         return false;
     }
-    if (mmapPages_ < MIN_PERF_MMAP_PAGE || mmapPages_ > MAX_PERF_MMAP_PAGE ||
+    if (CheckOutOfRange<uint64_t>(backtrackTime_, MIN_BACKTRACK_TIME_SEC, MAX_BACKTRACK_TIME_SEC)) {
+        printf("Invalid --backtrack-sec value '%" PRIu64 " ', value should be in %" PRIu64 "~%" PRIu64 " \n", backtrackTime_,
+               MIN_BACKTRACK_TIME_SEC, MAX_BACKTRACK_TIME_SEC);
+        return false;
+    }
+    if (CheckOutOfRange<int>(mmapPages_, MIN_PERF_MMAP_PAGE, MAX_PERF_MMAP_PAGE) ||
         !PowerOfTwo(mmapPages_)) {
         printf("Invalid -m value '%d', value should be in %d~%d and must be a power of two \n",
                mmapPages_, MIN_PERF_MMAP_PAGE, MAX_PERF_MMAP_PAGE);
         return false;
     }
-    if (cmdlinesSize_ < MIN_SAVED_CMDLINES_SIZE || cmdlinesSize_ > MAX_SAVED_CMDLINES_SIZE ||
+    if (CheckOutOfRange<int>(cmdlinesSize_, MIN_SAVED_CMDLINES_SIZE, MAX_SAVED_CMDLINES_SIZE) ||
         !PowerOfTwo(cmdlinesSize_)) {
         printf("Invalid --cmdline-size value '%d', value should be in %d~%d and must be a power of two \n",
                cmdlinesSize_, MIN_SAVED_CMDLINES_SIZE, MAX_SAVED_CMDLINES_SIZE);
@@ -461,6 +480,23 @@ bool SubCommandRecord::CheckArgsRange()
     }
     if (!clockId_.empty() && GetClockId(clockId_) == -1) {
         printf("Invalid --clockid value %s\n", clockId_.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool SubCommandRecord::CheckExcludeArgs()
+{
+    if (targetSystemWide_ && !excludeTidArgs_.empty()) {
+        printf("-a option is conflict with --exclude-tid.\n");
+        return false;
+    }
+    if (targetSystemWide_ && !excludeThreadNameArgs_.empty()) {
+        printf("-a option is conflict with --exclude-thread.\n");
+        return false;
+    }
+    if (!targetSystemWide_ && !excludeProcessNameArgs_.empty()) {
+        printf("--exclude-process must be used with -a.\n");
         return false;
     }
     if (!targetSystemWide_ && excludeHiperf_) {
@@ -473,6 +509,9 @@ bool SubCommandRecord::CheckArgsRange()
 bool SubCommandRecord::CheckOptions()
 {
     if (!CheckArgsRange()) {
+        return false;
+    }
+    if (!CheckExcludeArgs()) {
         return false;
     }
     if (!CheckDataLimitOption()) {
@@ -580,7 +619,9 @@ bool SubCommandRecord::CheckTargetPids()
             }
         }
     }
-    if (!SubCommand::HandleSubCommandExclude(excludeTids_, excludeThreadNames_, selectTids_)) {
+
+    CollectExcludeThread();
+    if (!SubCommand::HandleSubCommandExclude(excludeTidArgs_, excludeThreadNameArgs_, selectTids_)) {
         return false;
     }
     selectPids_.insert(selectPids_.end(), selectTids_.begin(), selectTids_.end());
@@ -697,8 +738,8 @@ bool SubCommandRecord::ParseBranchSampleType(const std::vector<std::string> &vec
 
 bool SubCommandRecord::ParseControlCmd(const std::string cmd)
 {
-    if (cmd.empty() || cmd == CONTROL_CMD_PREPARE || cmd == CONTROL_CMD_START ||
-        cmd == CONTROL_CMD_PAUSE || cmd == CONTROL_CMD_RESUME || cmd == CONTROL_CMD_STOP) {
+    if (cmd.empty() || cmd == CONTROL_CMD_PREPARE || cmd == CONTROL_CMD_START || cmd == CONTROL_CMD_PAUSE ||
+        cmd == CONTROL_CMD_RESUME || cmd == CONTROL_CMD_STOP || cmd == CONTROL_CMD_OUTPUT) {
         return true;
     }
 
@@ -811,8 +852,8 @@ void SubCommandRecord::RecoverSavedCmdlinesSize()
 bool SubCommandRecord::PreparePerfEvent()
 {
     // we need to notify perfEvents_ sampling mode by SetRecordCallBack first
-    auto processRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
-        return this->ProcessRecord(std::move(record));
+    auto processRecord = [this](PerfEventRecord& record) -> bool {
+        return this->ProcessRecord(record);
     };
     perfEvents_.SetRecordCallBack(processRecord);
 
@@ -855,6 +896,9 @@ bool SubCommandRecord::PreparePerfEvent()
         perfEvents_.SetSamplePeriod(period_);
     }
 
+    perfEvents_.SetBackTrack(backtrack_);
+    perfEvents_.SetBackTrackTime(backtrackTime_);
+
     perfEvents_.SetInherit(!noInherit_);
     perfEvents_.SetTrackedCommand(trackedCommand_);
 
@@ -895,25 +939,8 @@ bool SubCommandRecord::PrepareSysKernel()
     return true;
 }
 
-bool SubCommandRecord::PrepareVirtualRuntime()
+void SubCommandRecord::PrepareKernelMaps()
 {
-    auto saveRecord = [this](std::unique_ptr<PerfEventRecord> record) -> bool {
-        return this->SaveRecord(std::move(record), false);
-    };
-    virtualRuntime_.SetRecordMode(saveRecord);
-
-    // do some config for virtualRuntime_
-    virtualRuntime_.SetCallStackExpend(disableCallstackExpend_ ? 0 : 1);
-    // these is same for virtual runtime
-    virtualRuntime_.SetDisableUnwind(disableUnwind_ || delayUnwind_);
-    virtualRuntime_.EnableDebugInfoSymbolic(enableDebugInfoSymbolic_);
-    if (!symbolDir_.empty()) {
-        if (!virtualRuntime_.SetSymbolsPaths(symbolDir_)) {
-            printf("Failed to set symbol path(%s)\n", VectorToString(symbolDir_).c_str());
-            return false;
-        }
-    }
-
     // load vsdo first
     virtualRuntime_.LoadVdso();
 
@@ -930,6 +957,27 @@ bool SubCommandRecord::PrepareVirtualRuntime()
     if (isHM_) {
         virtualRuntime_.UpdateDevhostSpaceMaps();
     }
+}
+bool SubCommandRecord::PrepareVirtualRuntime()
+{
+    auto saveRecord = [this](PerfEventRecord& record) -> bool {
+        return this->SaveRecord(record);
+    };
+    virtualRuntime_.SetRecordMode(saveRecord);
+
+    // do some config for virtualRuntime_
+    virtualRuntime_.SetCallStackExpend(disableCallstackExpend_ ? 0 : 1);
+    // these is same for virtual runtime
+    virtualRuntime_.SetDisableUnwind(disableUnwind_ || delayUnwind_);
+    virtualRuntime_.EnableDebugInfoSymbolic(enableDebugInfoSymbolic_);
+    if (!symbolDir_.empty()) {
+        if (!virtualRuntime_.SetSymbolsPaths(symbolDir_)) {
+            printf("Failed to set symbol path(%s)\n", VectorToString(symbolDir_).c_str());
+            return false;
+        }
+    }
+
+    PrepareKernelMaps();
     if (dedupStack_) {
         virtualRuntime_.SetDedupStack();
         auto collectSymbol = [this](PerfRecordSample *sample) {
@@ -990,15 +1038,92 @@ bool SubCommandRecord::IsSamplingRunning()
     return true;
 }
 
+bool SubCommandRecord::PreOutputRecordFile()
+{
+    if (perfEvents_.IsOutputTracking()) {
+        HLOGE("output track is in process");
+        return false;
+    }
+    if (!CreateInitRecordFile(false)) {
+        HLOGE("create record file before output");
+        return false;
+    }
+    PrepareKernelMaps();
+    if (!perfEvents_.OutputTracking()) {
+        HLOGE("enable output tracking failed");
+        return false;
+    }
+    outputEnd_ = false;
+    return true;
+}
+
+void SubCommandRecord::OutputRecordFile()
+{
+    while (perfEvents_.IsOutputTracking()) {
+        std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
+    }
+
+    if (!FinishWriteRecordFile()) {
+        HLOGE("output record failed");
+    }
+    fileWriter_ = nullptr;
+}
+
+bool SubCommandRecord::PostOutputRecordFile(bool output)
+{
+    if (output) {
+        OutputRecordFile();
+    }
+
+    fileWriter_ = nullptr;
+    outputEnd_ = true;
+    StringViewHold::Get().Clean();
+    return true;
+}
+
+void SubCommandRecord::InitControlCommandHandlerMap()
+{
+    controlCommandHandlerMap_.clear();
+    controlCommandHandlerMap_.emplace(HiperfClient::ReplyStart, ControlCommandHandler{
+        std::bind(&PerfEvents::EnableTracking, &perfEvents_)
+    });
+
+    controlCommandHandlerMap_.emplace(HiperfClient::ReplyCheck, ControlCommandHandler{
+        std::bind(&SubCommandRecord::clientRunning_, this)
+    });
+
+    controlCommandHandlerMap_.emplace(HiperfClient::ReplyStop, ControlCommandHandler{
+        std::bind(&PerfEvents::StopTracking, &perfEvents_)
+    });
+
+    controlCommandHandlerMap_.emplace(HiperfClient::ReplyPause, ControlCommandHandler{
+        std::bind(&PerfEvents::PauseTracking, &perfEvents_)
+    });
+
+    controlCommandHandlerMap_.emplace(HiperfClient::ReplyResume, ControlCommandHandler{
+        std::bind(&PerfEvents::ResumeTracking, &perfEvents_)
+    });
+
+    controlCommandHandlerMap_.emplace(HiperfClient::ReplyOutput, ControlCommandHandler{
+        std::bind(&SubCommandRecord::PreOutputRecordFile, this),
+        std::bind(&SubCommandRecord::PostOutputRecordFile, this, std::placeholders::_1)
+    });
+
+    controlCommandHandlerMap_.emplace(HiperfClient::ReplyOutputCheck, ControlCommandHandler{
+        std::bind(&SubCommandRecord::outputEnd_, this)
+    });
+}
+
 void SubCommandRecord::ClientCommandHandle()
 {
     using namespace HiperfClient;
     CHECK_TRUE(!IsSamplingRunning(), NO_RETVAL, 0, "");
     // tell the caller if Exist
     ClientCommandResponse(true);
+    InitControlCommandHandlerMap();
 
     bool hasRead = true;
-    while (!clientExit_) {
+    while (clientRunning_) {
         if (isFifoServer_ && hasRead) {
             if (clientPipeInput_ != -1) {
                 // after read(), block is disabled, the poll will be waked neven if no data
@@ -1029,18 +1154,21 @@ void SubCommandRecord::ClientCommandHandle()
             }
         }
         HLOGD("server:new command %s", command.c_str());
-        if (command == ReplyStart) {
-            ClientCommandResponse(perfEvents_.EnableTracking());
-        } else if (command == ReplyCheck) {
-            ClientCommandResponse(!clientExit_);
-        } else if (command == ReplyStop) {
-            ClientCommandResponse(perfEvents_.StopTracking());
-        } else if (command == ReplyPause) {
-            ClientCommandResponse(perfEvents_.PauseTracking());
-        } else if (command == ReplyResume) {
-            ClientCommandResponse(perfEvents_.ResumeTracking());
-        }
+        DispatchControlCommand(command);
     }
+}
+
+void SubCommandRecord::DispatchControlCommand(const std::string& command)
+{
+    auto it = controlCommandHandlerMap_.find(command);
+    if (it == controlCommandHandlerMap_.end()) {
+        return;
+    }
+
+    ControlCommandHandler& handler = it->second;
+    bool ret = handler.preProcess();
+    ClientCommandResponse(ret);
+    handler.postProcess(ret);
 }
 
 bool SubCommandRecord::ProcessControl()
@@ -1064,17 +1192,10 @@ bool SubCommandRecord::ProcessControl()
         ret = SendFifoAndWaitReply(HiperfClient::ReplyPause, CONTROL_WAITREPY_TOMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_STOP) {
         ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
-        if (ret) {
-            // wait sampling process exit really
-            static constexpr uint64_t waitCheckSleepMs = 200;
-            std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
-            while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TOMEOUT_CHECK)) {
-                std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
-            }
-            HLOGI("wait reply check end.");
-        }
-        remove(CONTROL_FIFO_FILE_C2S.c_str());
-        remove(CONTROL_FIFO_FILE_S2C.c_str());
+        ProcessStopCommand(ret);
+    } else if (controlCmd_ == CONTROL_CMD_OUTPUT) {
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutput, CONTROL_WAITREPY_TOMEOUT);
+        ProcessOutputCommand(ret);
     }
 
     if (ret) {
@@ -1083,6 +1204,38 @@ bool SubCommandRecord::ProcessControl()
         printf("%s sampling failed.\n", controlCmd_.c_str());
     }
     return ret;
+}
+
+void SubCommandRecord::ProcessStopCommand(bool ret)
+{
+    if (ret) {
+        // wait sampling process exit really
+        static constexpr uint64_t waitCheckSleepMs = 200;
+        std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
+        while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TOMEOUT_CHECK)) {
+            std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
+        }
+        HLOGI("wait reply check end.");
+    }
+    remove(CONTROL_FIFO_FILE_C2S.c_str());
+    remove(CONTROL_FIFO_FILE_S2C.c_str());
+}
+
+void SubCommandRecord::ProcessOutputCommand(bool ret)
+{
+    if (!ret) {
+        HLOGI("send fifo and wait repoy fail");
+        return;
+    }
+
+    std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
+    while (!outputEnd_) {
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutputCheck, CONTROL_WAITREPY_TOMEOUT_CHECK);
+        if (ret) {
+            break;
+        }
+        std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
+    }
 }
 
 bool SubCommandRecord::CreateFifoServer()
@@ -1233,7 +1386,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     CHECK_TRUE(!perfEvents_.PrepareTracking(), false, LOG_TYPE_WITH_HILOG, "Fail to prepare tracking ");
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents prepared");
 
-    if (!CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
+    if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         HLOGE("Fail to create record file %s", outputFilename_.c_str());
         HIPERF_HILOGE(MODULE_DEFAULT, "Fail to create record file %s", outputFilename_.c_str());
         return false;
@@ -1270,19 +1423,21 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
         fileWriter_->SetWriteRecordStat(false);
     }
     startSaveFileTimes_ = steady_clock::now();
-    if (!FinishWriteRecordFile()) {
-        HLOGE("Fail to finish record file %s", outputFilename_.c_str());
-        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to finish record file %s", outputFilename_.c_str());
-        return false;
-    } else if (!PostProcessRecordFile()) {
-        HLOGE("Fail to post process record file");
-        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to post process record file");
-        return false;
+    if (!backtrack_) {
+        if (!FinishWriteRecordFile()) {
+            HLOGE("Fail to finish record file %s", outputFilename_.c_str());
+            HIPERF_HILOGE(MODULE_DEFAULT, "Fail to finish record file %s", outputFilename_.c_str());
+            return false;
+        } else if (!PostProcessRecordFile()) {
+            HLOGE("Fail to post process record file");
+            HIPERF_HILOGE(MODULE_DEFAULT, "Fail to post process record file");
+            return false;
+        }
+        RecordCompleted();
     }
 
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord final report");
     // finial report
-    RecordCompleted();
     RecoverSavedCmdlinesSize();
     OnlineReportData();
     CloseClientThread();
@@ -1294,7 +1449,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
 void SubCommandRecord::CloseClientThread()
 {
     if (clientCommandHanle_.joinable()) {
-        clientExit_ = true;
+        clientRunning_ = false;
         HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
             close(nullFd_);
@@ -1323,58 +1478,55 @@ void SubCommandRecord::RemoveVdsoTmpFile()
     }
 }
 
-bool SubCommandRecord::ProcessRecord(std::unique_ptr<PerfEventRecord> record)
+bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 {
-    CHECK_TRUE(record == nullptr, false, 1, "record is null");
+    CHECK_TRUE(record.GetName() == nullptr, false, 1, "record is null");
 #if HIDEBUG_RECORD_NOT_PROCESS
     // some times we want to check performance
     // but we still want to see the record number
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
         recordSamples_++;
     } else {
         recordNoSamples_++;
-    }
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
-        // when the record is allowed from a cache memory, does not free memory after use
-        record.release();
     }
     return true;
 #else
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
-    if (excludeHiperf_) {
-        static pid_t pid = getpid();
-        if (record->GetPid() == pid) {
-            if (record->GetType() == PERF_RECORD_SAMPLE) {
-                // when the record is allowed from a cache memory, does not free memory after use
-                record.release();
-            }
-            // discard record
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
+        PerfRecordSample& recordSample = static_cast<PerfRecordSample&>(record);
+        if (IsThreadExcluded(recordSample.data_.pid, recordSample.data_.tid)) {
             return true;
         }
+    } else if (record.GetType() == PERF_RECORD_COMM) {
+        PerfRecordComm& recordComm = static_cast<PerfRecordComm&>(record);
+        for (const auto& threadName : excludeThreadNameArgs_) {
+            if (threadName.compare(recordComm.data_.comm) == 0) {
+                excludeTids_.insert(recordComm.data_.tid);
+                break;
+            }
+        }
+    }
+
+    if (backtrack_ && !perfEvents_.IsOutputTracking()) {
+        return true;
     }
 
     // May create some simulated events
     // it will call ProcessRecord before next line
 #if !HIDEBUG_RECORD_NOT_PROCESS_VM
-    virtualRuntime_.UpdateFromRecord(*record);
+    virtualRuntime_.UpdateFromRecord(record);
 #endif
 #ifdef HIPERF_DEBUG_TIME
     prcessRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
-    return SaveRecord(std::move(record), true);
+    return SaveRecord(record);
 #endif
 }
 
-bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record, bool ptrReleaseFlag)
+bool SubCommandRecord::SaveRecord(const PerfEventRecord& record)
 {
-    ON_SCOPE_EXIT {
-        if (ptrReleaseFlag && record->GetType() == PERF_RECORD_SAMPLE) {
-            // when the record is allowed from a cache memory, does not free memory after use
-            record.release();
-        }
-    };
 #if HIDEBUG_RECORD_NOT_SAVE
     return true;
 #endif
@@ -1389,22 +1541,22 @@ bool SubCommandRecord::SaveRecord(std::unique_ptr<PerfEventRecord> record, bool 
         }
     }
 
-    if (record) {
+    if (record.GetName() != nullptr) {
 #ifdef HIPERF_DEBUG_TIME
         const auto saveTime = steady_clock::now();
 #endif
-        if (!fileWriter_->WriteRecord(*record)) {
+        if (!fileWriter_->WriteRecord(record)) {
             // write file failed, need stop record
             perfEvents_.StopTracking();
-            HLOGV("fail to write record %s", record->GetName().c_str());
+            HLOGV("fail to write record %s", record.GetName());
             return false;
         }
-        if (record->GetType() == PERF_RECORD_SAMPLE) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
             recordSamples_++;
         } else {
             recordNoSamples_++;
         }
-        HLOGV(" write done. size=%zu name=%s", record->GetSize(), record->GetName().c_str());
+        HLOGV(" write done. size=%zu name=%s", record.GetSize(), record.GetName());
 #ifdef HIPERF_DEBUG_TIME
         saveRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - saveTime);
 #endif
@@ -1620,15 +1772,15 @@ bool SubCommandRecord::PostProcessRecordFile()
         }
 
         // 2. read out the file and unwind
-        auto record_callback = [&](std::unique_ptr<PerfEventRecord> record) {
-            if (record == nullptr) {
+        auto record_callback = [&](PerfEventRecord& record) {
+            if (record.GetName() == nullptr) {
                 // return false in callback can stop the read process
                 return false;
-            } else if (record->GetType() == PERF_RECORD_SAMPLE) {
+            } else if (record.GetType() == PERF_RECORD_SAMPLE) {
                 HLOGM("readback record for unwind");
-                virtualRuntime_.UnwindFromRecord(static_cast<PerfRecordSample &>(*record));
+                virtualRuntime_.UnwindFromRecord(static_cast<PerfRecordSample&>(record));
             }
-            SaveRecord(std::move(record));
+            SaveRecord(record);
             return true;
         };
         fileReader->ReadDataSection(record_callback);
@@ -1669,22 +1821,20 @@ void SubCommandRecord::SymbolicHits()
 }
 #endif
 
-bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
+bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
 {
-    CHECK_TRUE(record == nullptr, false, 0, "");
-    if (record->GetType() == PERF_RECORD_SAMPLE) {
-        PerfRecordSample *sample = static_cast<PerfRecordSample *>(record.get());
+    CHECK_TRUE(record.GetName() == nullptr, false, 0, "");
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
+        PerfRecordSample* sample = static_cast<PerfRecordSample*>(&record);
 #if USE_COLLECT_SYMBOLIC
         CollectSymbol(sample);
 #else
         virtualRuntime_.SymbolicRecord(*sample);
 #endif
-        // the record is allowed from a cache memory, does not free memory after use
-        record.release();
     }
 
-    if (isSpe_ && record->GetType() == PERF_RECORD_AUXTRACE) {
-        PerfRecordAuxtrace *sample = static_cast<PerfRecordAuxtrace *>(record.get());
+    if (isSpe_ && record.GetType() == PERF_RECORD_AUXTRACE) {
+        PerfRecordAuxtrace* sample = static_cast<PerfRecordAuxtrace*>(&record);
         virtualRuntime_.SymbolSpeRecord(*sample);
     }
 
@@ -1694,7 +1844,7 @@ bool SubCommandRecord::CollectionSymbol(std::unique_ptr<PerfEventRecord> record)
 void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
 {
     CHECK_TRUE(sample == nullptr, NO_RETVAL, 0, "");
-    perf_callchain_context context = sample->inKernel() ? PERF_CONTEXT_KERNEL
+    perf_callchain_context context = sample->InKernel() ? PERF_CONTEXT_KERNEL
                                                         : PERF_CONTEXT_USER;
     pid_t serverPid;
     // if no nr use ip ? remove stack nr == 0?
@@ -1754,8 +1904,8 @@ bool SubCommandRecord::FinishWriteRecordFile()
             virtualRuntime_.CollectDedupSymbol(kernelSymbolsHits_, userSymbolsHits_);
         } else {
             fileWriter_->ReadDataSection(
-                [this] (std::unique_ptr<PerfEventRecord> record) -> bool {
-                    return this->CollectionSymbol(std::move(record));
+                [this] (PerfEventRecord& record) -> bool {
+                    return this->CollectionSymbol(record);
                 });
         }
 #if USE_COLLECT_SYMBOLIC
@@ -1771,6 +1921,16 @@ bool SubCommandRecord::FinishWriteRecordFile()
     }
 #endif
     CHECK_TRUE(dedupStack_ && !fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable()), false, 0, "");
+
+    if (backtrack_) {
+        virtualRuntime_.ClearSymbolCache();
+#if USE_COLLECT_SYMBOLIC
+        kernelThreadSymbolsHits_.clear();
+        kernelSymbolsHits_.clear();
+        userSymbolsHits_.clear();
+#endif
+    }
+
     CHECK_TRUE(!fileWriter_->Close(), false, 1, "Fail to close record file %s", outputFilename_.c_str());
 #ifdef HIPERF_DEBUG_TIME
     saveFeatureTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
@@ -1855,7 +2015,7 @@ bool SubCommandRecord::RecordCompleted()
 
 bool SubCommandRecord::RegisterSubCommandRecord(void)
 {
-    return SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
+    return SubCommand::RegisterSubCommand("record", SubCommandRecord::GetInstance);
 }
 
 void SubCommandRecord::SetHM()
@@ -1947,10 +2107,40 @@ void SubCommandRecord::AddReportArgs(CommandReporter& reporter)
     } else if (!appPackage_.empty()) {
         reporter.targetProcess_ = appPackage_;
     } else {
-        reporter.targetProcess_ = VectorToString<pid_t>(selectPids_);
+        std::unordered_set<std::string> processNames = {};
+        for_each(selectPids_.begin(), selectPids_.end(), [&processNames] (const pid_t& pid) {
+            processNames.insert(GetProcessName(pid));
+        });
+        reporter.targetProcess_ = SetToString<std::string>(processNames);
     }
 }
 
+void SubCommandRecord::CollectExcludeThread()
+{
+    CollectPidsByAppname(excludePids_, excludeProcessNameArgs_);
+    if (excludeHiperf_) {
+        excludePids_.emplace(getpid());
+    }
+
+    excludeTids_.insert(excludeTidArgs_.begin(), excludeTidArgs_.end());
+}
+
+bool SubCommandRecord::IsThreadExcluded(pid_t pid, pid_t tid)
+{
+    if (excludePids_.find(pid) != excludePids_.end()) {
+        return true;
+    }
+    if (excludeTids_.find(tid) != excludeTids_.end()) {
+        return true;
+    }
+    return false;
+}
+
+SubCommand* SubCommandRecord::GetInstance()
+{
+    static SubCommandRecord subCommand;
+    return &subCommand;
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

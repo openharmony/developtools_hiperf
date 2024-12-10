@@ -750,6 +750,23 @@ bool Client::Resume()
     return false;
 }
 
+bool Client::Output()
+{
+    if (!ready_) {
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        return false;
+    }
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    if (SendCommandAndWait(ReplyOutput)) {
+        // wait output process exit really
+        while (SendCommandAndWait(ReplyOutputCheck)) {
+            std::this_thread::sleep_for(1s);
+        }
+        return true;
+    }
+    return false;
+}
+
 bool Client::Stop()
 {
     if (!ready_) {
