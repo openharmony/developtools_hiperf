@@ -28,7 +28,6 @@
         "hisysevent",
         "init",
         "ipc",
-        "libunwind",
         "napi",
         "protobuf",
         "samgr",

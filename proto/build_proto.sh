@@ -30,6 +30,21 @@ echo protoc_cmdline $protoc_cmdline
 PREBUILD_HOST_CLANG_RUNTIME=$BUILD_TOP/prebuilts/clang/host/linux-x86/clang-r353983c/lib64
 PREBUILD_OHOS_CLANG_RUNTIME=$BUILD_TOP/prebuilts/clang/ohos/linux-x86_64/llvm/lib
 export LD_LIBRARY_PATH=$PREBUILD_HOST_CLANG_RUNTIME:$PREBUILD_OHOS_CLANG_RUNTIME:$LD_LIBRARY_PATH
-cmd="$protoc_cmdline"
-echo $cmd
-$cmd
+
+PROTO_PATH="../../../binarys/third_party/protobuf/innerapis/protoc/clang_x64/libs/protoc"
+echo PROTO_PATH $PROTO_PATH
+if [ -e "$PROTO_PATH" ]; then
+    if [[ $(pwd) == *src_test* ]]; then
+        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/default/src_test/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
+    elif [[ $(pwd) == *test* ]]; then
+        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/default/test/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
+    else
+        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/default/src/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
+    fi
+    echo $cmd
+    $cmd
+else
+    cmd="$protoc_cmdline"
+    echo $cmd
+    $cmd
+fi
