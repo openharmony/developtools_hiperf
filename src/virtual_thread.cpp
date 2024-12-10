@@ -159,9 +159,8 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) co
         for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
             if (symbolsFiles_[i]->filePath_ == map->name) {
                 HLOGD("found symbol for map '%s'", map->name.c_str());
+                map->symbolFileIndex = static_cast<int32_t>(i);
                 if (symbolsFiles_[i]->LoadDebugInfo(map)) {
-                    HLOGD("found symbol for map '%s'", map->name.c_str());
-                    map->symbolFileIndex = static_cast<int32_t>(i);
                     return symbolsFiles_[i].get();
                 }
             }

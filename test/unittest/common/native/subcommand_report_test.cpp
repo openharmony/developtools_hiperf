@@ -56,7 +56,7 @@ void SubCommandReportTest::TearDownTestCase() {
 void SubCommandReportTest::SetUp()
 {
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommand::RegisterSubCommand("report", std::make_unique<SubCommandReport>());
+    ASSERT_EQ(SubCommand::RegisterSubCommand("report", std::make_unique<SubCommandReport>()), true);
     SubCommand::RegisterSubCommand("TEST_CMD_1", std::make_unique<SubCommandTest>("TEST_CMD_1"));
 }
 

@@ -64,7 +64,7 @@ bool SubCommandList::ShowSupportEventsTypes(vector<perf_type_id> requestEventTyp
 
 void SubCommandList::RegisterSubCommandList()
 {
-    SubCommand::RegisterSubCommand("list", make_unique<SubCommandList>());
+    SubCommand::RegisterSubCommand("list", SubCommandList::GetInstance);
 }
 
 void SubCommandList::SetHM()
@@ -76,6 +76,12 @@ void SubCommandList::SetHM()
     }
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
+}
+
+SubCommand* SubCommandList::GetInstance()
+{
+    static SubCommandList subCommand;
+    return &subCommand;
 }
 } // namespace HiPerf
 } // namespace Developtools
