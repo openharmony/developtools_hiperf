@@ -462,8 +462,8 @@ bool SubCommandRecord::CheckArgsRange()
         return false;
     }
     if (CheckOutOfRange<uint64_t>(backtrackTime_, MIN_BACKTRACK_TIME_SEC, MAX_BACKTRACK_TIME_SEC)) {
-        printf("Invalid --backtrack-sec value '%" PRIu64 " ', value should be in %" PRIu64 "~%" PRIu64 " \n", backtrackTime_,
-               MIN_BACKTRACK_TIME_SEC, MAX_BACKTRACK_TIME_SEC);
+        printf("Invalid --backtrack-sec value '%" PRIu64 " ', value should be in %" PRIu64 "~%" PRIu64 " \n",
+               backtrackTime_, MIN_BACKTRACK_TIME_SEC, MAX_BACKTRACK_TIME_SEC);
         return false;
     }
     if (CheckOutOfRange<int>(mmapPages_, MIN_PERF_MMAP_PAGE, MAX_PERF_MMAP_PAGE) ||

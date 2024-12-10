@@ -901,7 +901,7 @@ public:
 #if defined(is_ohos) && is_ohos
         abcDataPtr_ = nullptr;
         if (arkExtractorptr_ != 0) {
-            DfxArk::ArkDestoryJsSymbolExtractor(arkExtractorptr_);
+            DfxArk::Instance().ArkDestoryJsSymbolExtractor(arkExtractorptr_);
             arkExtractorptr_ = 0;
         }
 #endif
@@ -948,7 +948,7 @@ public:
             HLOGD("symbol file name %s loadOffSet %u abcDataSize_ %u",
                   filePath_.c_str(), (uint32_t)loadOffSet_, (uint32_t)abcDataSize_);
         }
-        auto ret = DfxArk::ArkCreateJsSymbolExtractor(&arkExtractorptr_);
+        auto ret = DfxArk::Instance().ArkCreateJsSymbolExtractor(&arkExtractorptr_);
         if (ret < 0) {
             arkExtractorptr_ = 0;
             HLOGE("failed to call ArkCreateJsSymbolExtractor, the symbol file is:%s", filePath_.c_str());
@@ -1011,7 +1011,7 @@ public:
             JsFunction jsFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
-            auto ret = DfxArk::ParseArkFrameInfo(static_cast<uintptr_t>(ip), static_cast<uintptr_t>(map->begin),
+            auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip), static_cast<uintptr_t>(map->begin),
                                                  loadOffSet_, abcDataPtr_.get(), abcDataSize_,
                                                  arkExtractorptr_, &jsFunc);
             if (ret == -1) {
