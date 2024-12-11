@@ -219,7 +219,7 @@ public:
         {"min_latency", 0},      {"event_filter", 0},
     };
 
-    static SubCommand* GetInstance();
+    static SubCommand& GetInstance();
 
 private:
     PerfEvents perfEvents_;

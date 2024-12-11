@@ -641,10 +641,10 @@ void SubCommandReport::SetHM()
     }
 }
 
-SubCommand* SubCommandReport::GetInstance()
+SubCommand& SubCommandReport::GetInstance()
 {
     static SubCommandReport subCommand;
-    return &subCommand;
+    return subCommand;
 }
 } // namespace HiPerf
 } // namespace Developtools

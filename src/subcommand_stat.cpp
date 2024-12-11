@@ -827,10 +827,10 @@ void SubCommandStat::AddReportArgs(CommandReporter& reporter)
     }
 }
 
-SubCommand* SubCommandStat::GetInstance()
+SubCommand& SubCommandStat::GetInstance()
 {
     static SubCommandStat subCommand;
-    return &subCommand;
+    return subCommand;
 }
 } // namespace HiPerf
 } // namespace Developtools

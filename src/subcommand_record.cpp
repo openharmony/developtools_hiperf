@@ -643,8 +643,15 @@ bool SubCommandRecord::CheckReportOption()
 
 bool SubCommandRecord::CheckBacktrackOption()
 {
-    if (backtrack_ && (controlCmd_.empty() && (clientPipeInput_ == -1))) {
+    CHECK_TRUE(!backtrack_, true, 0, "");
+    if (controlCmd_.empty() && (clientPipeInput_ == -1)) {
         printf("--backtrack must be used with --control\n");
+        return false;
+    }
+    CHECK_TRUE(clockId_.empty(), true, 0, "");
+    if (GetClockId(clockId_) != CLOCK_BOOTTIME && GetClockId(clockId_) != CLOCK_MONOTONIC &&
+        GetClockId(clockId_) != CLOCK_MONOTONIC_RAW) {
+        printf("--backtrack not support the clockid\n");
         return false;
     }
     return true;
@@ -2157,10 +2164,10 @@ bool SubCommandRecord::IsThreadExcluded(pid_t pid, pid_t tid)
     return false;
 }
 
-SubCommand* SubCommandRecord::GetInstance()
+SubCommand& SubCommandRecord::GetInstance()
 {
     static SubCommandRecord subCommand;
-    return &subCommand;
+    return subCommand;
 }
 } // namespace HiPerf
 } // namespace Developtools

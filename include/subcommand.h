@@ -80,14 +80,14 @@ public:
     };
 
     // get some cmd
-    static bool RegisterSubCommand(const std::string& cmdName, std::function<SubCommand*()> func);
-    static const std::map<std::string, std::function<SubCommand*()>> &GetSubCommands();
+    static bool RegisterSubCommand(const std::string& cmdName, std::function<SubCommand&()> func);
+    static const std::map<std::string, std::function<SubCommand&()>> &GetSubCommands();
     static SubCommand *FindSubCommand(std::string &cmdName);
 
     // for test code
     static bool RegisterSubCommand(const std::string& cmdName, std::unique_ptr<SubCommand> subCommand);
     static void ClearSubCommands();
-    
+
     // check restart option
     bool CheckRestartOption(std::string &appPackage, bool targetSystemWide, bool restart,
                                                     std::vector<pid_t> &selectPids);
@@ -103,7 +103,7 @@ private:
 
     static std::mutex subCommandMutex_;
     static std::map<std::string, std::unique_ptr<SubCommand>> subCommandMap_;
-    static std::map<std::string, std::function<SubCommand*()>> subCommandFuncMap_;
+    static std::map<std::string, std::function<SubCommand&()>> subCommandFuncMap_;
     // Above guarded by subCommandMutex_
 protected:
     const std::string name_;

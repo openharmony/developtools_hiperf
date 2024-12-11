@@ -51,7 +51,7 @@ public:
 
     static void RegisterSubCommandList(void);
 
-    static SubCommand* GetInstance();
+    static SubCommand& GetInstance();
 private:
     PerfEvents perfEvents_;
 

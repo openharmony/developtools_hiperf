@@ -613,10 +613,10 @@ void SubCommandDump::DumpSpeReport()
 #endif
 }
 
-SubCommand* SubCommandDump::GetInstance()
+SubCommand& SubCommandDump::GetInstance()
 {
     static SubCommandDump subCommand;
-    return &subCommand;
+    return subCommand;
 }
 
 } // namespace HiPerf

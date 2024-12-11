@@ -78,10 +78,10 @@ void SubCommandList::SetHM()
     HLOGD("Set isHM_: %d", isHM_);
 }
 
-SubCommand* SubCommandList::GetInstance()
+SubCommand& SubCommandList::GetInstance()
 {
     static SubCommandList subCommand;
-    return &subCommand;
+    return subCommand;
 }
 } // namespace HiPerf
 } // namespace Developtools

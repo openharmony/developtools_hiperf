@@ -23,9 +23,9 @@ namespace Developtools {
 namespace HiPerf {
 std::mutex SubCommand::subCommandMutex_;
 std::map<std::string, std::unique_ptr<SubCommand>> SubCommand::subCommandMap_ = {};
-std::map<std::string, std::function<SubCommand*()>> SubCommand::subCommandFuncMap_ = {};
+std::map<std::string, std::function<SubCommand&()>> SubCommand::subCommandFuncMap_ = {};
 
-bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::function<SubCommand*()> func)
+bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::function<SubCommand&()> func)
 {
     HLOGV("%s", cmdName.c_str());
     if (cmdName.empty()) {
@@ -171,8 +171,8 @@ void SubCommand::ExcludeThreadsFromSelectTids(const std::vector<std::string> &ex
 bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::unique_ptr<SubCommand> subCommand)
 {
     SubCommand* subCommandPtr = subCommand.get();
-    auto func = [subCommandPtr]() -> SubCommand* {
-        return subCommandPtr;
+    auto func = [subCommandPtr]() -> SubCommand& {
+        return *subCommandPtr;
     };
     if (RegisterSubCommand(cmdName, func)) {
         std::lock_guard<std::mutex> lock(subCommandMutex_);
@@ -189,7 +189,7 @@ void SubCommand::ClearSubCommands()
     subCommandMap_.clear();
 }
 
-const std::map<std::string, std::function<SubCommand*()>>& SubCommand::GetSubCommands()
+const std::map<std::string, std::function<SubCommand&()>>& SubCommand::GetSubCommands()
 {
     return subCommandFuncMap_;
 }
@@ -200,7 +200,7 @@ SubCommand *SubCommand::FindSubCommand(std::string &cmdName)
     std::lock_guard<std::mutex> lock(subCommandMutex_);
     auto found = subCommandFuncMap_.find(cmdName);
     if (found != subCommandFuncMap_.end()) {
-        return found->second();
+        return &(found->second());
     } else {
         return nullptr;
     }

@@ -76,7 +76,7 @@ public:
     static void DumpPrintEventAttr(const perf_event_attr &attr, int indent = 0);
     std::unique_ptr<PerfFileReader> reader_;
 
-    static SubCommand* GetInstance();
+    static SubCommand& GetInstance();
 
 private:
     static void DumpSampleType(uint64_t sampleType, int indent);
