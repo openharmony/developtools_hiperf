@@ -693,6 +693,7 @@ private:
     std::unique_ptr<perf_event_attr> CreateDefaultAttr(perf_type_id type, __u64 config);
 
     // for update time thread
+    static bool updateTimeThreadRunning_;
     static std::atomic<uint64_t> currentTimeSecond_;
     static void UpdateCurrentTime();
 

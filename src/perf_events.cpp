@@ -42,6 +42,7 @@ using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+bool PerfEvents::updateTimeThreadRunning_ = true;
 std::atomic<uint64_t> PerfEvents::currentTimeSecond_ = 0;
 static std::atomic_bool g_trackRunning = false;
 static constexpr int32_t UPDATE_TIME_INTERVAL = 10;    // 10ms
@@ -1672,8 +1673,7 @@ inline bool PerfEvents::ProcessRecord(const perf_event_attr* attr, uint8_t* data
 #endif
     recordEventCount_++;
 #ifdef HIPERF_DEBUG_TIME
-    recordCallBackTime_ +=
-        duration_cast<milliseconds>(steady_clock::now() - readingStartTime_);
+    recordCallBackTime_ += duration_cast<milliseconds>(steady_clock::now() - readingStartTime_);
 #endif
     recordBuf_->EndRead();
     return true;
@@ -1858,7 +1858,7 @@ const std::string PerfEvents::GetTypeName(perf_type_id type_id)
 void PerfEvents::UpdateCurrentTime()
 {
     pthread_setname_np(pthread_self(), "UpdateTimeThread");
-    while (true) {
+    while (updateTimeThreadRunning_) {
         struct timespec ts = {0};
         if (clock_gettime(CLOCK_MONOTONIC, &ts) != -1) {
             currentTimeSecond_.store(static_cast<uint64_t>(ts.tv_sec));

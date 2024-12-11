@@ -1230,8 +1230,13 @@ void SubCommandRecord::ProcessStopCommand(bool ret)
         }
         HLOGI("wait reply check end.");
     }
-    remove(CONTROL_FIFO_FILE_C2S.c_str());
-    remove(CONTROL_FIFO_FILE_S2C.c_str());
+
+    if (remove(CONTROL_FIFO_FILE_C2S.c_str()) != 0) {
+        HLOGE("remove fifo file %s failed", CONTROL_FIFO_FILE_C2S.c_str());
+    }
+    if (remove(CONTROL_FIFO_FILE_S2C.c_str()) != 0) {
+        HLOGE("remove fifo file %s failed", CONTROL_FIFO_FILE_S2C.c_str());
+    }
 }
 
 void SubCommandRecord::ProcessOutputCommand(bool ret)

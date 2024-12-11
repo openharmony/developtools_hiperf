@@ -1011,9 +1011,10 @@ public:
             JsFunction jsFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
-            auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip), static_cast<uintptr_t>(map->begin),
-                                                 loadOffSet_, abcDataPtr_.get(), abcDataSize_,
-                                                 arkExtractorptr_, &jsFunc);
+            auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip),
+                                                            static_cast<uintptr_t>(map->begin),
+                                                            loadOffSet_, abcDataPtr_.get(), abcDataSize_,
+                                                            arkExtractorptr_, &jsFunc);
             if (ret == -1) {
                 HLOGD("failed to call ParseArkFrameInfo, the symbol file is : %s", map->name.c_str());
                 return DfxSymbol(ip, "");
