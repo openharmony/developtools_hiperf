@@ -149,6 +149,17 @@ HWTEST_F(PerfFileReaderTest, ReadIdsForAttr3, TestSize.Level1)
     EXPECT_TRUE(reader.ReadIdsForAttr(attr, &v));
     EXPECT_TRUE(v.size() * sizeof(uint64_t) >= attr.ids.size);
 }
+
+HWTEST_F(PerfFileReaderTest, Test_OverAttrSize, TestSize.Level1)
+{
+    const uint64_t overSize = 100 * sizeof(perf_file_attr);
+    const std::string filename = "perf.data";
+    FILE *fp = stdout;
+    PerfFileReader *hiperfFileReader = new PerfFileReader(filename, fp);
+    perf_file_header header = hiperfFileReader->GetHeader();
+    header.attrSize = overSize;
+    EXPECT_EQ(hiperfFileReader->ReadAttrSection(), false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

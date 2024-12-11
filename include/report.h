@@ -506,12 +506,13 @@ public:
     std::map<uint64_t, size_t> configIdIndexMaps_; // index of configNames_
     std::string GetConfigName(uint64_t id)
     {
-        return configs_[GetConfigIndex(id)].eventName_;
+        size_t index = GetConfigIndex(id);
+        HIPERF_ASSERT(index < configs_.size(), "unable found config index %zu\n", index);
+        return configs_[index].eventName_;
     }
     size_t GetConfigIndex(uint64_t id)
     {
-        HLOG_ASSERT_MESSAGE(configIdIndexMaps_.find(id) != configIdIndexMaps_.end(),
-                            "unable found id %" PRIx64 "", id);
+        HIPERF_ASSERT(configIdIndexMaps_.find(id) != configIdIndexMaps_.end(), "unable found id %" PRIx64 "\n", id);
         return configIdIndexMaps_.at(id);
     }
 
