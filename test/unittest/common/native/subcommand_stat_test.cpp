@@ -2245,18 +2245,19 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_app_running, TestSize.Level1)
  */
 HWTEST_F(SubCommandStatTest, CheckPidAndApp, TestSize.Level1)
 {
+    std::string cmd = "stat -p " + std::to_string(INT_MAX) + " -d 2";
+    EXPECT_EQ(Command::DispatchCommand(cmd), false);
     pid_t existPid = -1;
     const std::string basePath {"/proc/"};
     std::vector<std::string> subDirs = GetSubDirs(basePath);
-    for (const auto &subDir : subDirs) {
+    for (int i = subDirs.size() - 1; i >= 0; i--) {
+        std::string subDir = subDirs[i];
         if (!IsDigits(subDir)) {
             continue;
         }
-        pid_t pid = std::stoll(subDir);
-        existPid = max(existPid, pid);
+        existPid = std::stoll(subDir);
+        break;
     }
-    std::string cmd = "stat -p " + std::to_string(existPid + rand() % 100 + 1) + " -d 2";
-    EXPECT_EQ(Command::DispatchCommand(cmd), false);
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
