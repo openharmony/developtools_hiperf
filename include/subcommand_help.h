@@ -31,8 +31,6 @@ public:
         )
     // clang-format on
     {
-        Option::RegisterMainOption("--help", "show help", OnHelp);
-        Option::RegisterMainOption("-h", "show help", OnHelp);
     }
 
     bool OnSubCommand(std::vector<std::string> &args) override;

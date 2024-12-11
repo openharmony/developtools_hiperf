@@ -29,6 +29,8 @@ bool SubCommandHelp::OnSubCommand(std::vector<std::string> &args)
 void SubCommandHelp::RegisterSubCommandHelp()
 {
     HLOGV("enter");
+    Option::RegisterMainOption("--help", "show help", OnHelp);
+    Option::RegisterMainOption("-h", "show help", OnHelp);
     SubCommand::RegisterSubCommand("help", SubCommandHelp::GetInstance);
 }
 
