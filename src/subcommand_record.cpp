@@ -535,6 +535,9 @@ bool SubCommandRecord::CheckOptions()
     if (!CheckReportOption()) {
         return false;
     }
+    if (!CheckBacktrackOption()) {
+        return false;
+    }
     return true;
 }
 
@@ -633,6 +636,15 @@ bool SubCommandRecord::CheckReportOption()
 {
     if (targetSystemWide_ && report_) {
         printf("--report options conflict, please check usage\n");
+        return false;
+    }
+    return true;
+}
+
+bool SubCommandRecord::CheckBacktrackOption()
+{
+    if (backtrack_ && (controlCmd_.empty() && (clientPipeInput_ == -1))) {
+        printf("--backtrack must be used with --control\n");
         return false;
     }
     return true;
@@ -743,7 +755,7 @@ bool SubCommandRecord::ParseControlCmd(const std::string cmd)
         return true;
     }
 
-    printf("Invalid --control %s option, command should be: prepare, start, pause, resume, stop.\n",
+    printf("Invalid --control %s option, command should be: prepare, start, pause, resume, output, stop.\n",
            cmd.c_str());
     return false;
 }
@@ -991,6 +1003,7 @@ bool SubCommandRecord::PrepareVirtualRuntime()
 void SubCommandRecord::WriteCommEventBeforeSampling()
 {
     CHECK_TRUE(restart_, NO_RETVAL, 0, "");
+    CHECK_TRUE(backtrack_, NO_RETVAL, 0, "");
     for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
         virtualRuntime_.GetThread(it->first, it->first);
         for (auto tid : it->second) {
@@ -1527,6 +1540,9 @@ bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 
 bool SubCommandRecord::SaveRecord(const PerfEventRecord& record)
 {
+    if (fileWriter_ == nullptr) {
+        return false;
+    }
 #if HIDEBUG_RECORD_NOT_SAVE
     return true;
 #endif

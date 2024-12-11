@@ -386,6 +386,7 @@ private:
     bool CheckTargetProcessOptions();
     bool CheckTargetPids();
     bool CheckReportOption();
+    bool CheckBacktrackOption();
     void WriteCommEventBeforeSampling();
     void RemoveVdsoTmpFile();
 
