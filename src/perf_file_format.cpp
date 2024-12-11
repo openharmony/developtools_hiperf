@@ -35,6 +35,7 @@ static const std::vector<std::string> FEATURE_NAMES = {
     "branch_stack",    "pmu_mappings", "group_desc",   "auxtrace",     "stat",
     "cache",           "sample_time",  "mem_topology", "last_feature",
 };
+static constexpr size_t MAX_VECTOR_RESIZE_COUNT = 100000;
 #ifdef FUZZER_TEST
     // issue from fuzz test and also will lead to PerfFileSectionSymbolsFiles uncompletely construct
 static constexpr size_t MAX_SYMBOLS_FILE_NUMBER = 300;
@@ -500,6 +501,7 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
             HLOGW("nrIds is too large ! %u", nrIds);
         }
         CHECK_TRUE(!Read(eventDesc.name), NO_RETVAL, 0, "");
+        HIPERF_ASSERT(nrIds <= MAX_VECTOR_RESIZE_COUNT, "nrIds exceeds 100000\n");
         eventDesc.ids.resize(nrIds, 0);
         CHECK_TRUE(!Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds), NO_RETVAL, 0, "");
         eventDesces_.emplace_back(std::move(eventDesc));

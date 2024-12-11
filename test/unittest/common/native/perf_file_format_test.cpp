@@ -249,6 +249,40 @@ HWTEST_F(PerfFileFormatTest, PerfFileSectionEventDesc, TestSize.Level1)
     CompareEventDesc(eventDesc, eventDescOut);
     ASSERT_EQ(withBuff.featureId_, FEATURE::EVENT_DESC);
 }
+
+HWTEST_F(PerfFileFormatTest, PerfFileSectionEventDesc2, TestSize.Level1)
+{
+    pid_t pid = fork();
+    ASSERT_NE(pid, -1);
+
+    if (pid == 0) {
+        char buff[BIGK] = {0};
+        buff[0] = 1;
+        buff[4] = sizeof(perf_event_attr);
+        for (uint32_t i = 8; i < BIGK; i += 4) {
+            buff[i] = 0;
+        }
+        // data for nrId
+        buff[sizeof(perf_event_attr) + 8] = 0x7f;
+        buff[sizeof(perf_event_attr) + 9] = 0x7f;
+        buff[sizeof(perf_event_attr) + 10] = 0x7f;
+        buff[sizeof(perf_event_attr) + 11] = 0x7f;
+
+        // data for size of eventDesc.name
+        buff[sizeof(perf_event_attr) + 12] = 0x02;
+        buff[sizeof(perf_event_attr) + 13] = 0x00;
+        buff[sizeof(perf_event_attr) + 14] = 0x00;
+        buff[sizeof(perf_event_attr) + 15] = 0x00;
+
+        PerfFileSectionEventDesc(FEATURE::EVENT_DESC, buff, sizeof(buff));
+        _exit(-2);
+    } else {
+        int status = 0;
+        waitpid(pid, &status, 0);
+        ASSERT_TRUE(WIFEXITED(status));
+        EXPECT_EQ(WEXITSTATUS(status), static_cast<uint8_t>(-1));
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
