@@ -22,8 +22,6 @@
 #include <unistd.h>
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 
 namespace OHOS {
 namespace Developtools {
@@ -51,7 +49,7 @@ public:
         EXPECT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA), true);
         return symbolsFile->LoadSymbols(nullptr, path);
     }
-    default_random_engine rnd_;
+    std::default_random_engine rnd_;
 };
 
 void SymbolsFileTest::SetUpTestCase() {}

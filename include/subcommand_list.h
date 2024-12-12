@@ -59,7 +59,7 @@ private:
         {"cache", PERF_TYPE_HW_CACHE}, {"raw", PERF_TYPE_RAW},
     };
 
-    bool ShowSupportEventsTypes(std::vector<perf_type_id> requestEventTypes);
+    bool ShowSupportEventsTypes(std::vector<perf_type_id> &requestEventTypes);
     void SetHM();
 };
 } // namespace HiPerf

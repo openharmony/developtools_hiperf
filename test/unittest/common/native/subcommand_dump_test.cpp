@@ -28,8 +28,6 @@
 
 using namespace std::literals::chrono_literals;
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -78,10 +76,10 @@ void SubCommandDumpTest::TestDumpCommand(const std::string &option, bool expect)
     ScopeDebugLevel tempLogLevel {LEVEL_DEBUG};
 
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     bool ret = Command::DispatchCommand(cmdString);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     std::string stringOut = stdoutRecord.Stop();
 
     printf("command : %s(run %" PRId64 " ms) return %s(expect %s)\n", cmdString.c_str(),

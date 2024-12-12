@@ -20,8 +20,6 @@
 #include "tracked_command_test.h"
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -46,7 +44,7 @@ void TrackedCommandTest::TearDown() {}
 
 HWTEST_F(TrackedCommandTest, CommandExisted, TestSize.Level1)
 {
-    unique_ptr<TrackedCommand> trackedCMD = TrackedCommand::CreateInstance(cmd_);
+    std::unique_ptr<TrackedCommand> trackedCMD = TrackedCommand::CreateInstance(cmd_);
     ASSERT_NE(trackedCMD, nullptr);
     auto cmdName = trackedCMD->GetCommandName();
     EXPECT_EQ(cmdName, cmd_[0]);
@@ -70,7 +68,7 @@ HWTEST_F(TrackedCommandTest, CommandExisted, TestSize.Level1)
 
 HWTEST_F(TrackedCommandTest, CommandNotExisted, TestSize.Level1)
 {
-    unique_ptr<TrackedCommand> trackedCMD = TrackedCommand::CreateInstance(cmdNotExist_);
+    std::unique_ptr<TrackedCommand> trackedCMD = TrackedCommand::CreateInstance(cmdNotExist_);
     ASSERT_NE(trackedCMD, nullptr);
     auto cmdName = trackedCMD->GetCommandName();
     EXPECT_EQ(cmdName, cmdNotExist_[0]);

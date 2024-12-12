@@ -24,8 +24,6 @@
 #include "utilities.h"
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -65,7 +63,7 @@ void RingBufferTest::ReadBufferAndCheck(RingBuffer &buf)
         p += sizeof(perf_event_header);
         uint8_t data = static_cast<uint8_t>(checkSize & U8MASK);
         for (size_t i = 0; i < (checkSize - sizeof(perf_event_header)); i++) {
-            ASSERT_EQ(*p, data) << "checkSize = " << hex << checkSize;
+            ASSERT_EQ(*p, data) << "checkSize = " << std::hex << checkSize;
             p++;
         }
         checkSize++;

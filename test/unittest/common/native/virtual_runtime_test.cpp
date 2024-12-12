@@ -26,8 +26,6 @@
 #include "symbols_file_test.h"
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -39,7 +37,7 @@ public:
     void TearDown();
     const std::string TEST_LOG_MESSAGE = "<HELLO_TEST_LOG_MESSAGE>";
     void LogLevelTest(std::vector<std::string> args, DebugLevel level);
-    default_random_engine rnd_;
+    std::default_random_engine rnd_;
     std::unique_ptr<VirtualRuntime> runtime_;
     bool RecordCallBack(PerfEventRecord& record);
     size_t callbackCount_ = 0;

@@ -21,9 +21,6 @@
 
 using namespace Proto;
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
-using namespace ::testing;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -118,11 +115,11 @@ HWTEST_F(ReportProtobufFileTest, ProcessRecord, TestSize.Level1)
     const PerfRecordComm comm(false, 2, 3, "dummy");
     const PerfRecordLost lost(false, 1, 99);
 
-    EXPECT_CALL(protobufOutputFileWriter, ProcessRecord(Matcher<const PerfRecordComm &>(_)))
+    EXPECT_CALL(protobufOutputFileWriter, ProcessRecord(testing::Matcher<const PerfRecordComm &>(testing::_)))
         .Times(1);
     protobufOutputFileWriter.ProcessRecord(comm);
 
-    EXPECT_CALL(protobufOutputFileWriter, ProcessRecord(Matcher<const PerfRecordLost &>(_)))
+    EXPECT_CALL(protobufOutputFileWriter, ProcessRecord(testing::Matcher<const PerfRecordLost &>(testing::_)))
         .Times(2);
     protobufOutputFileWriter.ProcessRecord(lost);
     protobufOutputFileWriter.ProcessRecord(lost);

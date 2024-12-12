@@ -15,7 +15,6 @@
 
 #include "cpu_usage_test.h"
 #include "test_utilities.h"
-using namespace std;
 using namespace testing::ext;
 using namespace std::chrono;
 namespace OHOS {
@@ -134,7 +133,7 @@ unsigned long CpuUsageTest::GetCpuTotalUsage()
     fgets (buff, sizeof(buff), fd);
     char name[64] = {0};
     // get first line cpu time data
-    stringstream stream;
+    std::stringstream stream;
     stream << buff;
     stream >> name >> userTime >> niceTime >> systemTime >> idleTime;
     fclose(fd);
@@ -160,7 +159,7 @@ unsigned long CpuUsageTest::GetCpuProcUsage(int pid)
         return 0;
     }
     fgets(lineBuff, sizeof(lineBuff), fd);
-    stringstream stream;
+    std::stringstream stream;
     stream << lineBuff;
     stream >> tmpPid;
     const char* q = GetItems(lineBuff, PROCESS_ITEM);

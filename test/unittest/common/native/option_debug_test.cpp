@@ -22,8 +22,6 @@
 #include <hilog/log.h>
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -35,7 +33,7 @@ public:
     void TearDown();
     const std::string TEST_LOG_MESSAGE = "<HELLO_TEST_LOG_MESSAGE>";
     void LogLevelTest(std::vector<std::string> args, DebugLevel level, bool result = true);
-    default_random_engine rnd_;
+    std::default_random_engine rnd_;
 };
 
 void OptionDebugTest::SetUpTestCase()

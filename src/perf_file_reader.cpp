@@ -92,10 +92,10 @@ PerfFileReader::PerfFileReader(const std::string &fileName, FILE *fp) : fp_(fp),
 PerfFileReader::~PerfFileReader()
 {
     // if file was not closed properly
-    if (fp_ != nullptr) {
+    if (fp_ != nullptr && fp_ != stdout) {
         fclose(fp_);
-        fp_ = nullptr;
     }
+    fp_ = nullptr;
 
     // remove the uncompressed .perf.data
     if (compressData_) {

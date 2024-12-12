@@ -73,7 +73,7 @@ bool FuzzPerfFileReader(const uint8_t *data, size_t size)
     }
 
     reader->ReadFeatureSection();
-    auto recordCallback = [&](PerfEventRecord& record) {
+    auto recordCallback = [](PerfEventRecord& record) {
         // nothing to do
         return true;
     };

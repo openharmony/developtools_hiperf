@@ -16,8 +16,6 @@
 #include "command_test.h"
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -51,8 +49,8 @@ void CommandTest::SetUp()
     ASSERT_EQ(Option::RegisterMainOption(TEST_OPTION_FALSE, TEST_OPTION_HELP, OptionAlwaysFalse),
               true);
 
-    EXPECT_CALL(*subCommandAlwaysTure, OnSubCommand(_)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*subCommandAlwaysFalse, OnSubCommand(_)).WillRepeatedly(Return(false));
+    EXPECT_CALL(*subCommandAlwaysTure, OnSubCommand(testing::_)).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*subCommandAlwaysFalse, OnSubCommand(testing::_)).WillRepeatedly(testing::Return(false));
 
     ASSERT_TRUE(SubCommand::RegisterSubCommand(subCommandAlwaysTure.get()->Name(),
                                                std::move(subCommandAlwaysTure)));

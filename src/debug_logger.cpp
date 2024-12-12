@@ -135,7 +135,7 @@ bool DebugLogger::EnableHiLog(bool enable)
     enableHilog_ = enable;
     if (enable) {
         if (fprintf(stdout, "change to use hilog\n") < 0) {
-            // what can we do here ???
+            printf("fprintf failed.\n");
         }
     }
     return enableHilog_;
