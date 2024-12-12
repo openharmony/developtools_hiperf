@@ -201,7 +201,7 @@ ohos_source_set("hiperf_platform_common") {
   if (is_ohos) {
     external_deps = [
       "c_utils:utils",
-      "faultloggerd:libunwinder_static",
+      "faultloggerd:libunwinder",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "init:libbegetutil",
@@ -245,7 +245,7 @@ ohos_source_set("hiperf_platform_linux") {
 
   if (is_ohos) {
     external_deps = [
-      "faultloggerd:libunwinder_static",
+      "faultloggerd:libunwinder",
       "hilog:libhilog",
       "init:libbegetutil",
     ]
@@ -293,7 +293,7 @@ ohos_source_set("support_protobuf") {
   public_deps = [ ":proto_file_cpp" ]
 
   if (is_ohos) {
-    external_deps = [ "faultloggerd:libunwinder_static" ]
+    external_deps = [ "faultloggerd:libunwinder" ]
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
@@ -413,7 +413,7 @@ ohos_executable("hiperf") {
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libunwinder_static",
+    "faultloggerd:libunwinder",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "protobuf:protobuf_lite",
