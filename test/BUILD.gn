@@ -60,15 +60,18 @@ sources_interface = [
   "unittest/common/native/subcommand_record_test.cpp",
   "unittest/common/native/subcommand_stat_test.cpp",
   "unittest/common/native/subcommand_report_test.cpp",
-  "unittest/common/native/hiperf_libreport_test.cpp",
 ]
 
 common_deps = [
   "${hiperf_path}/:hiperf_platform_common",
-  "${hiperf_path}/:hiperf_platform_host",
   "${hiperf_path}/:hiperf_platform_linux",
   "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static",
 ]
+
+if (!ohos_indep_compiler_enable) {
+  common_deps += [ "${hiperf_path}/:hiperf_platform_host" ]
+  sources_interface += [ "unittest/common/native/hiperf_libreport_test.cpp" ]
+}
 
 config("hiperf_test_config") {
   cflags = code_check_flag
@@ -97,7 +100,7 @@ ohos_unittest("hiperf_unittest") {
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libunwinder_static",
+    "faultloggerd:libunwinder",
     "googletest:gmock",
     "hilog:libhilog",
     "protobuf:protobuf_lite",
@@ -118,23 +121,16 @@ fuzz_cflags = [
   "-fno-omit-frame-pointer",
 ]
 
-fuzz_deps = [
-  "${hiperf_path}/:hiperf_platform_common",
-  "${hiperf_path}/:hiperf_platform_host",
-  "${hiperf_path}/:hiperf_platform_linux",
-  "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static",
-]
-
 ohos_fuzztest("CommandLineFuzzTest") {
   module_out_path = hiperf_fuzz_test_output_path
   fuzz_config_file = "${hiperf_path}/test/fuzztest/commandline_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
-  deps = fuzz_deps
+  deps = common_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libunwinder_static",
+    "faultloggerd:libunwinder",
     "hilog:libhilog",
     "protobuf:protobuf_lite",
   ]
@@ -150,7 +146,7 @@ ohos_fuzztest("LibReportFuzzTest") {
   fuzz_config_file = "${hiperf_path}/test/fuzztest/libreport_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
-  deps = fuzz_deps
+  deps = common_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
@@ -166,7 +162,7 @@ ohos_fuzztest("ClientApiFuzzTest") {
   fuzz_config_file = "${hiperf_path}/test/fuzztest/clientapi_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
-  deps = fuzz_deps
+  deps = common_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
@@ -182,7 +178,7 @@ ohos_fuzztest("SpeDecoderFuzzTest") {
   fuzz_config_file = "${hiperf_path}/test/fuzztest/spedecoder_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
-  deps = fuzz_deps
+  deps = common_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
@@ -199,11 +195,11 @@ ohos_fuzztest("PerfFileFuzzTest") {
   resource_config_file = "fuzztest/resource/ohos_test.xml"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
-  deps = fuzz_deps
+  deps = common_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libunwinder_static",
+    "faultloggerd:libunwinder",
     "hilog:libhilog",
     "protobuf:protobuf_lite",
   ]
@@ -216,11 +212,11 @@ ohos_fuzztest("PerfFileFormatFuzzTest") {
   fuzz_config_file = "${hiperf_path}/test/fuzztest/perffileformat_fuzzer"
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
-  deps = fuzz_deps
+  deps = common_deps
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libunwinder_static",
+    "faultloggerd:libunwinder",
     "hilog:libhilog",
     "protobuf:protobuf_lite",
   ]
@@ -233,16 +229,18 @@ group("hiperf_fuzztest") {
   deps = [
     ":ClientApiFuzzTest",
     ":CommandLineFuzzTest",
-    ":LibReportFuzzTest",
     ":PerfFileFormatFuzzTest",
     ":PerfFileFuzzTest",
     ":SpeDecoderFuzzTest",
   ]
+  if (!ohos_indep_compiler_enable) {
+    deps += [ ":LibReportFuzzTest" ]
+  }
 }
 
 group("hiperf_test") {
   testonly = true
-  if (hiperf_target_host) {
+  if (hiperf_target_host && !ohos_indep_compiler_enable) {
     deps = [
       ":hiperf_fuzztest(${host_toolchain})",
       ":hiperf_unittest(${host_toolchain})",
