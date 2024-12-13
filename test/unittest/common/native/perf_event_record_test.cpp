@@ -699,7 +699,7 @@ HWTEST_F(PerfEventRecordTest, SwitchCpuWide, TestSize.Level1)
     ASSERT_EQ(CompareByteStream((uint8_t *)&data, buff.data(), sizeof(data)), 0);
 }
 
-HWTEST_F(PerfEventRecordTest, GetPerfEventRecord, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord1, TestSize.Level1)
 {
     struct PerfRecordSwitchCpuWidest {
         perf_event_header h;
@@ -857,7 +857,58 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level1)
     record.Init(p);
     ASSERT_NE(record.rawData_, nullptr);
 
-    free(p); 
+    free(p);
+}
+
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level1)
+{
+    std::vector<PerfRecordType> types = {
+        PERF_RECORD_MMAP,
+        PERF_RECORD_MMAP2,
+        PERF_RECORD_LOST,
+        PERF_RECORD_COMM,
+        PERF_RECORD_EXIT,
+        PERF_RECORD_THROTTLE,
+        PERF_RECORD_UNTHROTTLE,
+        PERF_RECORD_FORK,
+        PERF_RECORD_READ,
+        PERF_RECORD_AUX,
+        PERF_RECORD_AUXTRACE,
+        PERF_RECORD_ITRACE_START,
+        PERF_RECORD_LOST_SAMPLES,
+        PERF_RECORD_SWITCH,
+        PERF_RECORD_SWITCH_CPU_WIDE
+    };
+    perf_event_header header;
+    size_t size = sizeof(perf_event_header) + 20;
+    header.size = size;
+    uint8_t* data = static_cast<uint8_t*>(malloc(size));
+    ASSERT_EQ(memset_s(data, size, 0, size), 0);
+    ASSERT_EQ(memcpy_s(data, sizeof(perf_event_header),
+        reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header)), 0);
+    for (PerfRecordType type : types) {
+        perf_event_attr attr = {};
+        PerfEventRecord& record =
+            PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(type),
+                                                       data, attr);
+        EXPECT_NE(record.GetName(), nullptr);
+    }
+}
+
+HWTEST_F(PerfEventRecordTest, SetDumpRemoveStack, TestSize.Level1)
+{
+    bool dump = PerfRecordSample::IsDumpRemoveStack();
+    PerfRecordSample::SetDumpRemoveStack(!dump);
+    EXPECT_EQ(PerfRecordSample::IsDumpRemoveStack(), !dump);
+    PerfRecordSample::SetDumpRemoveStack(dump);
+    EXPECT_EQ(PerfRecordSample::IsDumpRemoveStack(), dump);
+}
+
+HWTEST_F(PerfEventRecordTest, GetTime, TestSize.Level1)
+{
+    PerfRecordSample sample;
+    sample.data_.time = 1234u;
+    EXPECT_EQ(sample.GetTime(), 1234u);
 }
 } // namespace HiPerf
 } // namespace Developtools

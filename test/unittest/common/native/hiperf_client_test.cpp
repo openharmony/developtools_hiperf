@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -461,6 +461,27 @@ HWTEST_F(HiperfClientTest, SetReport, TestSize.Level1)
     vector<pid_t> selectPids = {getpid()};
     opt.SetSelectPids(selectPids);
     opt.SetReport(true);
+
+    TestCaseOption(opt);
+}
+
+HWTEST_F(HiperfClientTest, SetExcludeProcess, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    opt.SetExcludeProcess({"hiperf"});
+
+    TestCaseOption(opt);
+}
+
+HWTEST_F(HiperfClientTest, SetBackTrack, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    opt.SetBackTrack(true);
+    opt.SetBackTrackSec(15);
 
     TestCaseOption(opt);
 }

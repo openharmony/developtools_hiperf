@@ -31,6 +31,7 @@ using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+static constexpr uint64_t NANO_SECONDS_PER_SECOND = 1000000000;
 class PerfEventsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -319,6 +320,214 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level1)
     EXPECT_GT(g_statCount, statCount) << "should have more stats";
 
     std::string stringOut = stdoutRecord.Stop();
+}
+
+HWTEST_F(PerfEventsTest, CreateUpdateTimeThread2, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    PerfEvents event;
+    event.backtrack_ = true;
+    event.eventGroupItem_.emplace_back();
+    event.eventGroupItem_[0].eventItems.emplace_back();
+    event.readRecordThreadRunning_ = true;
+    EXPECT_EQ(event.PrepareRecordThread(), true);
+    this_thread::sleep_for(1s);
+    std::vector<pid_t> tids = GetSubthreadIDs(getpid());
+    EXPECT_FALSE(tids.empty());
+    bool get = 0;
+    for (const pid_t tid : tids) {
+        std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", tid));
+        while (threadName.back() == '\0' || threadName.back() == '\n') {
+            threadName.pop_back();
+        }
+        if (threadName == "timer_thread") {
+            get = true;
+            break;
+        }
+    }
+    EXPECT_EQ(get, true);
+    PerfEvents::updateTimeThreadRunning_ = false;
+    this_thread::sleep_for(1s);
+}
+
+HWTEST_F(PerfEventsTest, IsOutputTracking, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    PerfEvents event;
+    EXPECT_EQ(event.IsOutputTracking(), false);
+    event.outputTracking_ = true;
+    EXPECT_EQ(event.IsOutputTracking(), true);
+}
+
+HWTEST_F(PerfEventsTest, SetBackTrack, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    PerfEvents event;
+    event.SetBackTrack(true);
+    EXPECT_EQ(event.backtrack_, true);
+}
+
+HWTEST_F(PerfEventsTest, CalcBufferSizeLittleMemory, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    if (!LittleMemory()) {
+        return;
+    }
+
+    PerfEvents event;
+    event.backtrack_ = false;
+    event.systemTarget_ = true;
+    EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MAX_BUFFER_SIZE_LITTLE);
+
+    event.backtrack_ = true;
+    event.cpuMmap_.clear();
+    EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MIN_BUFFER_SIZE);
+
+    event.cpuMmap_[0] = {};
+    event.mmapPages_ = 10000u;
+    event.pageSize_ = 10000u;
+    EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MAX_BUFFER_SIZE_LITTLE);
+
+    while (event.cpuMmap_.size() < 17u) {
+        event.cpuMmap_[event.cpuMmap_.size()] = {};
+    }
+    event.mmapPages_ = 1024u;
+    event.pageSize_ = 1024u;
+    size_t size = 17U * 1024u * 1024u * 4;
+    EXPECT_EQ(event.CalcBufferSize(), size);
+}
+
+HWTEST_F(PerfEventsTest, CalcBufferSizeLargeMemory, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    if (LittleMemory()) {
+        return;
+    }
+
+    PerfEvents event;
+    event.backtrack_ = false;
+    event.systemTarget_ = true;
+    EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MAX_BUFFER_SIZE_LARGE);
+
+    event.backtrack_ = true;
+    event.cpuMmap_.clear();
+    EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MIN_BUFFER_SIZE);
+
+    event.cpuMmap_[0] = {};
+    event.mmapPages_ = 10000u;
+    event.pageSize_ = 10000u;
+    EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MAX_BUFFER_SIZE_LARGE);
+
+    while (event.cpuMmap_.size() < 17u) {
+        event.cpuMmap_[event.cpuMmap_.size()] = {};
+    }
+    event.mmapPages_ = 1024u;
+    event.pageSize_ = 1024u;
+    size_t size = 17U * 1024u * 1024u * 4;
+    EXPECT_EQ(event.CalcBufferSize(), size);
+}
+
+HWTEST_F(PerfEventsTest, UpdateCurrentTime, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    std::thread t1(&PerfEvents::UpdateCurrentTime);
+    uint64_t time = PerfEvents::currentTimeSecond_.load();
+    this_thread::sleep_for(2s);
+    EXPECT_GE(PerfEvents::currentTimeSecond_.load() - time, 1u);
+    PerfEvents::updateTimeThreadRunning_ = false;
+    this_thread::sleep_for(1s);
+    ASSERT_EQ(t1.joinable(), false);
+}
+
+
+HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack1, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    PerfEvents event;
+    event.outputTracking_ = false;
+    event.backtrackTime_ = 2000u * NANO_SECONDS_PER_SECOND;
+    event.currentTimeSecond_.store(event.backtrackTime_);
+
+    PerfRecordSample sample;
+    sample.data_.time = 1234u * NANO_SECONDS_PER_SECOND;
+
+    EXPECT_EQ(event.IsSkipRecordForBacktrack(sample), true);
+}
+
+HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack2, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    PerfEvents event;
+    event.outputTracking_ = true;
+    event.outputEndTime_ = 2000u * NANO_SECONDS_PER_SECOND;
+
+    PerfRecordSample sample;
+    sample.data_.time = 1234u * NANO_SECONDS_PER_SECOND;
+
+    EXPECT_EQ(event.IsSkipRecordForBacktrack(sample), false);
+}
+
+HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack3, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    PerfEvents event;
+    event.outputTracking_ = true;
+    event.outputEndTime_ = 1000u;
+
+    PerfRecordSample sample;
+    sample.data_.time = 1234u * NANO_SECONDS_PER_SECOND;
+
+    EXPECT_EQ(event.IsSkipRecordForBacktrack(sample), true);
+    EXPECT_EQ(event.outputTracking_, false);
+    EXPECT_EQ(event.outputEndTime_, 0);
+}
+
+HWTEST_F(PerfEventsTest, OutputTracking, TestSize.Level1)
+{
+    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    PerfEvents event;
+    event.startedTracking_ = false;
+    EXPECT_EQ(event.OutputTracking(), false);
+
+    event.startedTracking_ = true;
+    event.outputTracking_ = true;
+    EXPECT_EQ(event.OutputTracking(), true);
+
+    event.outputTracking_ = false;
+    PerfEvents::currentTimeSecond_.store(123u);
+    EXPECT_EQ(event.OutputTracking(), true);
+    EXPECT_EQ(event.outputEndTime_, 123u);
+    EXPECT_EQ(event.outputTracking_, true);
 }
 } // namespace HiPerf
 } // namespace Developtools

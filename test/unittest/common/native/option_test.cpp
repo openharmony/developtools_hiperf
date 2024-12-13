@@ -513,6 +513,30 @@ HWTEST_F(OptionTest, TestGetOptionTrackedCommand, TestSize.Level1)
     EXPECT_EQ(trackedCommand.size(), 3u);
     EXPECT_EQ(args.size(), 0u);
 }
+
+/**
+ * @tc.name: TestGetValueFromStringUINT64_T
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T1, TestSize.Level1)
+{
+    uint64_t value = 0;
+    EXPECT_EQ(Option::GetValueFromString("1234", OPTION_NAME, value), true);
+    EXPECT_EQ(value, 1234);
+}
+
+/**
+ * @tc.name: TestGetValueFromStringUINT64_T
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T2, TestSize.Level1)
+{
+    uint64_t value = 0;
+    EXPECT_EQ(Option::GetValueFromString("abc", OPTION_NAME, value), false);
+    EXPECT_EQ(value, 0);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
