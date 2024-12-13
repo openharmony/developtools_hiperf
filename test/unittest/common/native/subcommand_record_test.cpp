@@ -1630,6 +1630,235 @@ HWTEST_F(SubCommandRecordTest, ReportSampleApp, TestSize.Level1)
     EXPECT_EQ(reporter.targetProcess_, "com.test.app");
 }
 
+/**
+ * @tc.name: GetInstance
+ * @tc.desc: Test GetInstance
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandRecord::GetInstance().Name(), "record");
+}
+
+/**
+ * @tc.name: CheckExcludeArgs
+ * @tc.desc: Test CheckExcludeArgs
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CheckExcludeArgs, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.targetSystemWide_ = true;
+    record.excludeTidArgs_ = { 1, 2, 3 };
+    EXPECT_EQ(record.CheckExcludeArgs(), false);
+
+    record.excludeTidArgs_ = {};
+    record.excludeThreadNameArgs_ = { "a" };
+    EXPECT_EQ(record.CheckExcludeArgs(), false);
+
+    record.targetSystemWide_ = false;
+    record.excludeProcessNameArgs_ = { "a" };
+    EXPECT_EQ(record.CheckExcludeArgs(), false);
+
+    record.excludeProcessNameArgs_ = {};
+    record.excludeHiperf_ = true;
+    EXPECT_EQ(record.CheckExcludeArgs(), false);
+
+    record.excludeHiperf_ = false;
+    EXPECT_EQ(record.CheckExcludeArgs(), true);
+}
+
+/**
+ * @tc.name: ParseControlCmd
+ * @tc.desc: Test ParseControlCmd
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ParseControlCmd, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    std::vector<std::string> strs {"prepare", "start", "pause", "resume", "output", "stop", ""};
+    for (const auto& str : strs) {
+        EXPECT_TRUE(record.ParseControlCmd(str));
+    }
+
+    EXPECT_FALSE(record.ParseControlCmd("ABC"));
+}
+
+/**
+ * @tc.name: PostOutputRecordFile
+ * @tc.desc: Test PostOutputRecordFile
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, PostOutputRecordFile, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.fileWriter_ = std::make_unique<PerfFileWriter>();
+    record.outputEnd_ = false;
+    EXPECT_EQ(record.PostOutputRecordFile(false), true);
+    EXPECT_EQ(record.fileWriter_, nullptr);
+    EXPECT_EQ(record.outputEnd_, true);
+}
+
+/**
+ * @tc.name: InitControlCommandHandlerMap
+ * @tc.desc: Test InitControlCommandHandlerMap
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, InitControlCommandHandlerMap, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.InitControlCommandHandlerMap();
+    EXPECT_EQ(record.controlCommandHandlerMap_.size(), 7u);
+}
+
+/**
+ * @tc.name: CollectExcludeThread
+ * @tc.desc: Test CollectExcludeThread
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CollectExcludeThread1, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.excludeHiperf_ = false;
+    record.excludeTids_ = {};
+    pid_t pid = getpid();
+    std::string name = GetProcessName(pid);
+    size_t pos = name.find_last_of("/");
+    if (pos != std::string::npos) {
+        name = name.substr(pos + 1);
+    }
+    record.excludeProcessNameArgs_ = { name };
+    record.excludeTidArgs_ = {};
+    record.CollectExcludeThread();
+
+    ASSERT_GE(record.excludePids_.size(), 1u);
+    EXPECT_EQ(record.excludeTids_.size(), 0u);
+    bool get = 0;
+    for (pid_t id : record.excludePids_) {
+        if (pid == id) {
+            get = true;
+            break;
+        }
+    }
+    EXPECT_EQ(get, true);
+}
+
+/**
+ * @tc.name: CollectExcludeThread
+ * @tc.desc: Test CollectExcludeThread
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CollectExcludeThread2, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.excludeHiperf_ = true;
+    record.excludeTids_ = {};
+    pid_t pid = getpid();
+    record.excludeProcessNameArgs_ = {};
+    record.excludeTidArgs_ = {};
+    record.CollectExcludeThread();
+
+    ASSERT_EQ(record.excludePids_.size(), 1u);
+    ASSERT_EQ(record.excludeTids_.size(), 0u);
+    EXPECT_EQ(*(record.excludePids_.begin()), pid);
+}
+
+/**
+ * @tc.name: CollectExcludeThread
+ * @tc.desc: Test CollectExcludeThread
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CollectExcludeThread3, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.excludeHiperf_ = false;
+    record.excludeTids_ = {};
+    record.excludeProcessNameArgs_ = {};
+    record.excludeTidArgs_ = {1, 2, 3};
+    record.CollectExcludeThread();
+
+    ASSERT_EQ(record.excludePids_.size(), 0u);
+    ASSERT_EQ(record.excludeTids_.size(), 3u);
+
+    for (const auto& tid : record.excludeTidArgs_) {
+        EXPECT_TRUE(record.excludeTids_.find(tid) != record.excludeTids_.end());
+    }
+}
+
+/**
+ * @tc.name: IsThreadExcluded
+ * @tc.desc: Test IsThreadExcluded
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, IsThreadExcluded, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.excludePids_ = { 1, 2 };
+    record.excludeTids_ = { 1, 2, 3 };
+
+    EXPECT_EQ(record.IsThreadExcluded(1, 1), true);
+    EXPECT_EQ(record.IsThreadExcluded(1, 3), true);
+    EXPECT_EQ(record.IsThreadExcluded(1, 4), true);
+    EXPECT_EQ(record.IsThreadExcluded(3, 1), true);
+    EXPECT_EQ(record.IsThreadExcluded(3, 5), false);
+}
+
+/**
+ * @tc.name: CheckBacktrackOption
+ * @tc.desc: Test CheckBacktrackOption
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CheckBacktrackOption, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    SubCommandRecord record;
+    record.backtrack_ = false;
+    EXPECT_EQ(record.CheckBacktrackOption(), true);
+
+    record.backtrack_ = true;
+    record.controlCmd_ = {};
+    record.clientPipeInput_ = -1;
+    EXPECT_EQ(record.CheckBacktrackOption(), false);
+
+    record.clientPipeInput_ = 0;
+    record.clockId_ = "";
+    EXPECT_EQ(record.CheckBacktrackOption(), true);
+
+    record.clockId_ = "realtime";
+    EXPECT_EQ(record.CheckBacktrackOption(), false);
+
+    record.clockId_ = "boottime";
+    EXPECT_EQ(record.CheckBacktrackOption(), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

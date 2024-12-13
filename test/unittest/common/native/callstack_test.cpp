@@ -641,6 +641,34 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
         ASSERT_LE(TEST_DWARF_FRAMES.size(), callFrames.size());
     }
 }
+
+/**
+ * @tc.name: ClearCache
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(CallStackTest, ClearCache, TestSize.Level1)
+{
+    CallStack callStack;
+    callStack.lastPid_ = 1;
+    callStack.lastAddr_ = 2;
+    callStack.lastData_ = 3;
+    callStack.stackPoint_ = 4;
+    callStack.stackEnd_ = 5;
+    callStack.regsNum_ = 6;
+    callStack.stackSize_ = 7;
+    callStack.ClearCache();
+    EXPECT_EQ(callStack.lastPid_, -1);
+    EXPECT_EQ(callStack.lastAddr_, 0);
+    EXPECT_EQ(callStack.lastData_, 0);
+    EXPECT_EQ(callStack.stackPoint_, 0);
+    EXPECT_EQ(callStack.stackEnd_, 0);
+    EXPECT_EQ(callStack.regs_, nullptr);
+    EXPECT_EQ(callStack.regsNum_, 0);
+    EXPECT_EQ(callStack.stack_, nullptr);
+    EXPECT_EQ(callStack.stackSize_, 0);
+    EXPECT_EQ(callStack.cachedCallFramesMap_.size(), 0);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

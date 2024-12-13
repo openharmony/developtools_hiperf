@@ -2322,6 +2322,19 @@ HWTEST_F(SubCommandStatTest, ReportSampleApp, TestSize.Level1)
     command.AddReportArgs(reporter);
     EXPECT_EQ(reporter.targetProcess_, "com.test.app");
 }
+
+/**
+ * @tc.name: GetInstance
+ * @tc.desc: Test GetInstance
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandStat::GetInstance().Name(), "stat");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

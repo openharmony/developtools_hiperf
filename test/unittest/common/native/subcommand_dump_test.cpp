@@ -830,6 +830,14 @@ HWTEST_F(SubCommandDumpTest, DumpOutputFail, TestSize.Level1)
     std::string symbol = "unable open file";
     EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
 }
+
+HWTEST_F(SubCommandDumpTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandDump::GetInstance().Name(), "dump");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

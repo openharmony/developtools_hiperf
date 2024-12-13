@@ -1292,6 +1292,19 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_offcpu, TestSize.Level1)
         printf("output:\n%s", stringOut.c_str());
     }
 }
+
+/**
+ * @tc.name: GetInstance
+ * @tc.desc: Test GetInstance
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandReport::GetInstance().Name(), "report");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

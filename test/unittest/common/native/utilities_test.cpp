@@ -680,6 +680,139 @@ HWTEST_F(UtilitiesTest, RecordStdoutInit, TestSize.Level1)
     StdoutRecord stdexceptoutRecord("/data/local/tmp/../hiperf_log.txt");
     EXPECT_EQ(stdexceptoutRecord.Stop().empty(), true);
 }
+
+/**
+ * @tc.name: CollectPidsByAppname1
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CollectPidsByAppname1, TestSize.Level1)
+{
+    pid_t pid = getpid();
+    std::string name = GetProcessName(pid);
+    size_t pos = name.find_last_of("/");
+    if (pos != std::string::npos) {
+        name = name.substr(pos + 1);
+    }
+    std::set<pid_t> pids = {};
+    CollectPidsByAppname(pids, name);
+    ASSERT_GE(pids.size(), 1u);
+    bool get = 0;
+    for (pid_t id : pids) {
+        if (pid == id) {
+            get = true;
+            break;
+        }
+    }
+    EXPECT_EQ(get, true);
+}
+
+/**
+ * @tc.name: CollectPidsByAppname2
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CollectPidsByAppname2, TestSize.Level1)
+{
+    pid_t pid = getpid();
+    std::string name = GetProcessName(pid);
+    size_t pos = name.find_last_of("/");
+    if (pos != std::string::npos) {
+        name = name.substr(pos + 1);
+    }
+    std::vector<std::string> names = { name };
+    std::set<pid_t> pids = {};
+    CollectPidsByAppname(pids, names);
+    ASSERT_GE(pids.size(), 1u);
+    bool get = 0;
+    for (pid_t id : pids) {
+        if (pid == id) {
+            get = true;
+            break;
+        }
+    }
+    EXPECT_EQ(get, true);
+}
+
+/**
+ * @tc.name: CheckOutOfRange1
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CheckOutOfRange1, TestSize.Level1)
+{
+    int min = 10;
+    int max = 20;
+    int val = 8;
+    EXPECT_EQ(CheckOutOfRange<int>(val, min, max), true);
+}
+
+/**
+ * @tc.name: CheckOutOfRange2
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CheckOutOfRange2, TestSize.Level1)
+{
+    int min = 10;
+    int max = 20;
+    int val = 10;
+    EXPECT_EQ(CheckOutOfRange<int>(val, min, max), false);
+}
+
+/**
+ * @tc.name: CheckOutOfRange3
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CheckOutOfRange3, TestSize.Level1)
+{
+    int min = 10;
+    int max = 20;
+    int val = 15;
+    EXPECT_EQ(CheckOutOfRange<int>(val, min, max), false);
+}
+
+/**
+ * @tc.name: CheckOutOfRange4
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CheckOutOfRange4, TestSize.Level1)
+{
+    int min = 10;
+    int max = 20;
+    int val = 20;
+    EXPECT_EQ(CheckOutOfRange<int>(val, min, max), false);
+}
+
+/**
+ * @tc.name: CheckOutOfRange5
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CheckOutOfRange5, TestSize.Level1)
+{
+    int min = 10;
+    int max = 20;
+    int val = 25;
+    EXPECT_EQ(CheckOutOfRange<int>(val, min, max), true);
+}
+
+/**
+ * @tc.name: IsSameCommand
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsSameCommand2, TestSize.Level1)
+{
+    std::vector<std::string> v = {""};
+    EXPECT_EQ(IsSameCommand("", v), false);
+    EXPECT_EQ(IsSameCommand("a", v), false);
+
+    v = {"", "a"};
+    EXPECT_EQ(IsSameCommand("a", v), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

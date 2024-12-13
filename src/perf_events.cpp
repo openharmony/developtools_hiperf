@@ -1857,7 +1857,7 @@ const std::string PerfEvents::GetTypeName(perf_type_id type_id)
 
 void PerfEvents::UpdateCurrentTime()
 {
-    pthread_setname_np(pthread_self(), "UpdateTimeThread");
+    pthread_setname_np(pthread_self(), "timer_thread");
     while (updateTimeThreadRunning_) {
         struct timespec ts = {0};
         if (clock_gettime(CLOCK_MONOTONIC, &ts) != -1) {

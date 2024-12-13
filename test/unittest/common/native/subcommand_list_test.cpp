@@ -167,6 +167,19 @@ HWTEST_F(SubCommandListTest, TestRegisterSubCommandList, TestSize.Level1)
     SubCommand::RegisterSubCommand("list", std::make_unique<SubCommandList>());
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
 }
+
+/**
+ * @tc.name: GetInstance
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandListTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandList::GetInstance().Name(), "list");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
