@@ -106,6 +106,19 @@ bool GetValueFromString(const std::string &optionValue, const std::string &optio
     return false;
 }
 
+bool GetValueFromString(const std::string& optionValue, const std::string& optionName, uint64_t& value)
+{
+    try {
+        value = std::stoull(optionValue);
+        HLOGD("get uint64_t result:'%s':'%" PRIu64 "'", optionName.c_str(), value);
+        return true;
+    } catch (...) {
+        HLOGE("get uint64_t failed: %s", optionValue.c_str());
+        value = 0;
+    }
+    return false;
+}
+
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::string &value)
 {
     value = optionValue;

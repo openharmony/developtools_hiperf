@@ -107,10 +107,11 @@ public:
     bool ParseOption(std::vector<std::string> &args) override;
     void DumpOptions(void) const override;
     static bool RegisterSubCommandReport(void);
-    bool RecordCallBack(std::unique_ptr<PerfEventRecord> record);
+    bool RecordCallBack(PerfEventRecord& record);
 
     ~SubCommandReport();
 
+    static SubCommand& GetInstance();
 private:
     void ProcessSample(std::unique_ptr<PerfRecordSample> &);
     void BroadcastSample(std::unique_ptr<PerfRecordSample> &);

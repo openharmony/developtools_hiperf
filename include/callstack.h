@@ -55,6 +55,7 @@ class CallStack {
 public:
     CallStack();
     ~CallStack();
+    void ClearCache();
     bool UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *regs, u64 regsNum,
                          const u8 *stack, u64 stackSize, std::vector<DfxFrame> &,
                          size_t maxStackLevel = MAX_CALL_FRAME_UNWIND_SIZE);

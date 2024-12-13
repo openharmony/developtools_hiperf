@@ -43,8 +43,8 @@ void SpeDecoderTest::SetUp()
 {
     SubCommand::ClearSubCommands(); // clear the subCommands left from other UT
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommandRecord::RegisterSubCommandRecord();
-    SubCommandDump::RegisterSubCommandDump();
+    SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
+    SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 2u); // 2u: 2 size
 }
 

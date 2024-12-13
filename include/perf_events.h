@@ -354,6 +354,7 @@ public:
     bool StopTracking(void);
     bool PauseTracking(void);
     bool ResumeTracking(void);
+    bool OutputTracking();
     /* call sequence
        1. setXXX
        2. AddEvents()
@@ -362,6 +363,7 @@ public:
     */
     bool EnableTracking();
     bool IsTrackRunning();
+    bool IsOutputTracking();
 
     void SetSystemTarget(bool systemTarget);
     void SetCpu(const std::vector<pid_t> cpus); // cpu id must be [0~N]
@@ -380,6 +382,10 @@ public:
 
     void SetSampleFrequency(unsigned int frequency);
     void SetSamplePeriod(unsigned int period);
+
+    // for background track
+    void SetBackTrack(bool backtrack);
+    void SetBackTrackTime(uint64_t backtrackTime);
 
     enum SampleStackType {
         NONE,
@@ -443,7 +449,7 @@ public:
     };
     using StatCallBack =
         std::function<void(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &)>;
-    using RecordCallBack = std::function<bool(std::unique_ptr<PerfEventRecord>)>;
+    using RecordCallBack = std::function<bool(PerfEventRecord&)>;
 
     void SetStatCallBack(StatCallBack reportCallBack);
     void SetRecordCallBack(RecordCallBack recordCallBack);
@@ -558,6 +564,8 @@ private:
     size_t GetCallChainPosInSampleRecord(const perf_event_attr &attr);
     size_t GetStackSizePosInSampleRecord(MmapFd &mmap);
     bool CutStackAndMove(MmapFd &mmap);
+    inline void WaitDataFromRingBuffer();
+    inline bool ProcessRecord(const perf_event_attr* attr, uint8_t* data);
     void ReadRecordFromBuf();
     size_t CalcBufferSize();
     bool PrepareRecordThread();
@@ -683,6 +691,18 @@ private:
     OHOS::UniqueFd Open(perf_event_attr &attr, pid_t pid = 0, int cpu = -1, int groupFd = -1,
                         unsigned long flags = 0);
     std::unique_ptr<perf_event_attr> CreateDefaultAttr(perf_type_id type, __u64 config);
+
+    // for update time thread
+    static bool updateTimeThreadRunning_;
+    static std::atomic<uint64_t> currentTimeSecond_;
+    static void UpdateCurrentTime();
+
+    // for background track
+    bool backtrack_ = false;
+    bool outputTracking_ = false;
+    uint64_t backtrackTime_ = 0;
+    uint64_t outputEndTime_ = 0;
+    bool IsSkipRecordForBacktrack(const PerfRecordSample& sample);
 };
 } // namespace HiPerf
 } // namespace Developtools

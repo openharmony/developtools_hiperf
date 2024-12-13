@@ -42,7 +42,11 @@ using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+bool PerfEvents::updateTimeThreadRunning_ = true;
+std::atomic<uint64_t> PerfEvents::currentTimeSecond_ = 0;
 static std::atomic_bool g_trackRunning = false;
+static constexpr int32_t UPDATE_TIME_INTERVAL = 10;    // 10ms
+static constexpr uint64_t NANO_SECONDS_PER_SECOND = 1000000000;
 
 OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, pid_t pid, int cpu, int groupFd,
                                 unsigned long flags)
@@ -117,16 +121,16 @@ void PerfEvents::ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxS
                                                            arm_spe_reference(), cpu, tid, cpu, pid);
     static std::vector<u8> vbuf(RECORD_SIZE_LIMIT);
     uint8_t *buf;
-    if ((buf = recordBuf_->AllocForWrite(auxtraceRecord.header.size + auxSize)) == nullptr) {
+    if ((buf = recordBuf_->AllocForWrite(auxtraceRecord.header_.size + auxSize)) == nullptr) {
         HLOGD("alloc buffer failed: PerfRecordAuxtrace record, readSize: %llu", auxSize);
         return;
     }
     auxtraceRecord.GetBinary1(vbuf);
-    if (memcpy_s(buf, auxtraceRecord.header.size, vbuf.data(), auxtraceRecord.header.size) != 0) {
+    if (memcpy_s(buf, auxtraceRecord.header_.size, vbuf.data(), auxtraceRecord.header_.size) != 0) {
         HLOGE("memcpy_s return failed");
         return;
     }
-    buf += auxtraceRecord.header.size;
+    buf += auxtraceRecord.header_.size;
 
     while (auxSize > 0) {
         u64 readSize = pageSize_;
@@ -602,6 +606,10 @@ bool PerfEvents::PrepareRecordThread()
     }
     readRecordThreadRunning_ = true;
     readRecordBufThread_ = std::thread(&PerfEvents::ReadRecordFromBuf, this);
+    if (backtrack_) {
+        std::thread updateTimeThread(&PerfEvents::UpdateCurrentTime);
+        updateTimeThread.detach();
+    }
 
     rlimit rlim;
     int result = getrlimit(RLIMIT_NICE, &rlim);
@@ -730,6 +738,23 @@ bool PerfEvents::ResumeTracking(void)
     return PerfEventsEnable(true);
 }
 
+bool PerfEvents::OutputTracking()
+{
+    if (!startedTracking_) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "OutputTracking failed, not start tracking...");
+        return false;
+    }
+
+    if (IsOutputTracking()) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "output in progress");
+        return true;
+    }
+
+    outputEndTime_ = currentTimeSecond_.load();
+    outputTracking_ = true;
+    return true;
+}
+
 bool PerfEvents::EnableTracking()
 {
     CHECK_TRUE(startedTracking_, true, 0, "");
@@ -758,6 +783,11 @@ bool PerfEvents::EnableTracking()
 bool PerfEvents::IsTrackRunning()
 {
     return g_trackRunning;
+}
+
+bool PerfEvents::IsOutputTracking()
+{
+    return outputTracking_;
 }
 
 void PerfEvents::SetSystemTarget(bool systemTarget)
@@ -896,6 +926,16 @@ void PerfEvents::SetSamplePeriod(unsigned int period)
     if (period > 0) {
         samplePeriod_ = period;
     }
+}
+
+void PerfEvents::SetBackTrack(bool backtrack)
+{
+    backtrack_ = backtrack;
+}
+
+void PerfEvents::SetBackTrackTime(uint64_t backtrackTime)
+{
+    backtrackTime_ = backtrackTime;
 }
 
 void PerfEvents::SetMmapPages(size_t mmapPages)
@@ -1307,7 +1347,7 @@ size_t PerfEvents::CalcBufferSize()
     }
 
     size_t bufferSize = maxBufferSize;
-    if (!systemTarget_) {
+    if (backtrack_ || !systemTarget_) {
         // suppose ring buffer is 4 times as much as mmap
         static constexpr int TIMES = 4;
         bufferSize = cpuMmap_.size() * mmapPages_ * pageSize_ * TIMES;
@@ -1602,54 +1642,66 @@ RETURN:
     mmap.dataSize -= mmap.header.size;
 }
 
+inline void PerfEvents::WaitDataFromRingBuffer()
+{
+    std::unique_lock<std::mutex> lock(mtxRrecordBuf_);
+    cvRecordBuf_.wait(lock, [this] {
+        if (recordBufReady_) {
+            recordBufReady_ = false;
+            return true;
+        }
+        return !readRecordThreadRunning_;
+    });
+}
+
+inline bool PerfEvents::ProcessRecord(const perf_event_attr* attr, uint8_t* data)
+{
+    uint32_t* type = reinterpret_cast<uint32_t *>(data);
+#ifdef HIPERF_DEBUG_TIME
+    const auto readingStartTime_ = steady_clock::now();
+#endif
+#if !HIDEBUG_SKIP_CALLBACK
+    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(*type, data, *attr);
+    if (backtrack_ && readRecordThreadRunning_ && record.GetType() == PERF_RECORD_SAMPLE) {
+        const PerfRecordSample& sample = static_cast<const PerfRecordSample&>(record);
+        if (IsSkipRecordForBacktrack(sample)) {
+            return false;
+        }
+    }
+
+    recordCallBack_(record);
+#endif
+    recordEventCount_++;
+#ifdef HIPERF_DEBUG_TIME
+    recordCallBackTime_ += duration_cast<milliseconds>(steady_clock::now() - readingStartTime_);
+#endif
+    recordBuf_->EndRead();
+    return true;
+}
+
 void PerfEvents::ReadRecordFromBuf()
 {
     const perf_event_attr *attr = GetDefaultAttr();
     uint8_t *p = nullptr;
 
     while (readRecordThreadRunning_) {
-        {
-            std::unique_lock<std::mutex> lk(mtxRrecordBuf_);
-            cvRecordBuf_.wait(lk, [this] {
-                if (recordBufReady_) {
-                    recordBufReady_ = false;
-                    return true;
-                }
-                return !readRecordThreadRunning_;
-            });
-        }
+        WaitDataFromRingBuffer();
+        bool output = outputTracking_;
         while ((p = recordBuf_->GetReadData()) != nullptr) {
-            uint32_t *type = reinterpret_cast<uint32_t *>(p);
-#ifdef HIPERF_DEBUG_TIME
-            const auto readingStartTime_ = steady_clock::now();
-#endif
-#if !HIDEBUG_SKIP_CALLBACK
-            recordCallBack_(GetPerfSampleFromCache(*type, p, *attr));
-#endif
-            recordEventCount_++;
-#ifdef HIPERF_DEBUG_TIME
-            recordCallBackTime_ +=
-                duration_cast<milliseconds>(steady_clock::now() - readingStartTime_);
-#endif
-            recordBuf_->EndRead();
+            if (!ProcessRecord(attr, p)) {
+                break;
+            }
+        }
+        if (backtrack_ && output) {
+            outputTracking_ = false;
+            outputEndTime_ = 0;
         }
     }
     HLOGD("exit because trackStoped");
 
     // read the data left over in buffer
     while ((p = recordBuf_->GetReadData()) != nullptr) {
-        uint32_t *type = reinterpret_cast<uint32_t *>(p);
-#ifdef HIPERF_DEBUG_TIME
-        const auto readingStartTime_ = steady_clock::now();
-#endif
-#if !HIDEBUG_SKIP_CALLBACK
-        recordCallBack_(GetPerfSampleFromCache(*type, p, *attr));
-#endif
-        recordEventCount_++;
-#ifdef HIPERF_DEBUG_TIME
-        recordCallBackTime_ += duration_cast<milliseconds>(steady_clock::now() - readingStartTime_);
-#endif
-        recordBuf_->EndRead();
+        ProcessRecord(attr, p);
     }
     HLOGD("read all records from buffer");
 }
@@ -1707,7 +1759,7 @@ void PerfEvents::RecordLoop()
             ++count;
         }
 
-        if (thisTime >= endTime) {
+        if (!backtrack_ && thisTime >= endTime) {
             printf("Timeout exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
             if (trackedCommand_) {
                 trackedCommand_->Stop();
@@ -1801,6 +1853,39 @@ const std::string PerfEvents::GetTypeName(perf_type_id type_id)
     } else {
         return "<not found>";
     }
+}
+
+void PerfEvents::UpdateCurrentTime()
+{
+    pthread_setname_np(pthread_self(), "UpdateTimeThread");
+    while (updateTimeThreadRunning_) {
+        struct timespec ts = {0};
+        if (clock_gettime(CLOCK_MONOTONIC, &ts) != -1) {
+            currentTimeSecond_.store(static_cast<uint64_t>(ts.tv_sec));
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_TIME_INTERVAL));
+    }
+}
+
+// check if this record should be saved, this function only can called in back track mode
+bool PerfEvents::IsSkipRecordForBacktrack(const PerfRecordSample& sample)
+{
+    if (outputTracking_) {
+        // when outputing record, only skip what later than end time
+        if (sample.GetTime() / NANO_SECONDS_PER_SECOND > outputEndTime_) {
+            outputTracking_ = false;
+            outputEndTime_ = 0;
+            return true;
+        }
+        return false;
+    }
+
+    // only keep recent record in backtrack time
+    if ((currentTimeSecond_.load() - sample.GetTime() / NANO_SECONDS_PER_SECOND) > backtrackTime_) {
+        return false;
+    }
+    return true;
 }
 } // namespace HiPerf
 } // namespace Developtools

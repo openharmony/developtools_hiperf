@@ -896,6 +896,17 @@ public:
         pid_ = pid;
     }
 
+    ~HapFileSymbols() override
+    {
+#if defined(is_ohos) && is_ohos
+        abcDataPtr_ = nullptr;
+        if (arkExtractorptr_ != 0) {
+            DfxArk::Instance().ArkDestoryJsSymbolExtractor(arkExtractorptr_);
+            arkExtractorptr_ = 0;
+        }
+#endif
+    }
+
     bool IsHapAbc()
     {
 #if defined(is_ohos) && is_ohos

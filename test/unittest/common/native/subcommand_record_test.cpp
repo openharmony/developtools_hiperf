@@ -98,7 +98,7 @@ void SubCommandRecordTest::SetUp()
     }
     SubCommand::ClearSubCommands(); // clear the subCommands left from other UT
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommandRecord::RegisterSubCommandRecord();
+    SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
 }
 
@@ -1605,12 +1605,13 @@ HWTEST_F(SubCommandRecordTest, ReportSampleAll, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, ReportSamplePid, TestSize.Level1)
 {
     SubCommandRecord command;
-    command.selectPids_ = {1, 2, 3};
+    command.selectPids_ = { getpid() };
+    std::string name = GetProcessName(getpid());
 
     CommandReporter reporter("record");
     reporter.isReported_ = true;
     command.AddReportArgs(reporter);
-    EXPECT_EQ(reporter.targetProcess_, "1,2,3");
+    EXPECT_EQ(reporter.targetProcess_, name);
 }
 
 /**

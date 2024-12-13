@@ -57,6 +57,9 @@ public:
     static constexpr int MIN_SAVED_CMDLINES_SIZE = 512;
     static constexpr int DEFAULT_SAVED_CMDLINES_SIZE = 2048;
     static constexpr int MAX_SAVED_CMDLINES_SIZE = 4096;
+    static constexpr uint64_t MIN_BACKTRACK_TIME_SEC = 5;
+    static constexpr uint64_t DEFAULT_BACKTRACK_TIME_SEC = 10;
+    static constexpr uint64_t MAX_BACKTRACK_TIME_SEC = 30;
 
     SubCommandRecord()
         // clang-format off
@@ -108,6 +111,8 @@ public:
         "         Exclude threads of the collection target by thread ids. Conflicts with the -a option.\n"
         "   --exclude-thread <tname1>[,tname2]...\n"
         "         Exclude threads of the collection target by thread names. Conflicts with the -a option.\n"
+        "   --exclude-process <pname1>[,pname2]...\n"
+        "         Exclude processes by process names. Must be used with -a.\n"
         "   --offcpu\n"
         "         Trace when threads are scheduled off cpu.\n"
         "   -j <branch_filter1>[,branch_filter2]...\n"
@@ -177,6 +182,7 @@ public:
         "           start: start sampling\n"
         "           pause: pause sampling\n"
         "           resume: resume sampling\n"
+        "           output: output sampling data\n"
         "           stop: stop sampling\n"
         "   --dedup_stack\n"
         "         Remove duplicated stacks in perf record, conflicts with -a, only restrain using with -p\n"
@@ -185,6 +191,11 @@ public:
         "         the value should be between 512 and 4096\n"
         "   --report\n"
         "         Report with callstack after record. Conflicts with the -a option.\n"
+        "   --backtrack\n"
+        "         Collect data of the previous period. only restrain using with --control.\n"
+        "   --backtrack-sec\n"
+        "         If '--backtrack' is used, stop in <sec> seconds. seconds is in range [5-30]\n"
+        "         default is 10\n"
         "   --dumpoptions\n"
         "         Dump command options.\n"
         )
@@ -207,6 +218,8 @@ public:
         {"pa_enable", 0},       {"jitter", 0},
         {"min_latency", 0},      {"event_filter", 0},
     };
+
+    static SubCommand& GetInstance();
 
 private:
     PerfEvents perfEvents_;
@@ -240,7 +253,6 @@ private:
     std::vector<pid_t> selectCpus_ = {};
     std::vector<pid_t> selectPids_ = {};
     std::vector<pid_t> selectTids_ = {};
-    std::vector<pid_t> excludeTids_ = {};
     bool restart_ = false;
     std::vector<std::string> selectEvents_ = {};
     std::vector<std::string> speOptions_ = {};
@@ -248,10 +260,27 @@ private:
     std::vector<std::string> callStackType_ = {};
     std::vector<std::string> vecBranchFilters_ = {};
     std::vector<std::string> trackedCommand_ = {};
-    std::vector<std::string> excludeThreadNames_ = {};
+
+    // for exclude process and thread
+    std::vector<pid_t> excludeTidArgs_ = {};
+    std::vector<std::string> excludeThreadNameArgs_ = {};
+    std::vector<std::string> excludeProcessNameArgs_ = {};
+    std::set<pid_t> excludePids_ = {};
+    std::set<pid_t> excludeTids_ = {};
+    void CollectExcludeThread();
+    bool IsThreadExcluded(pid_t pid, pid_t tid);
+
+    // for background track
+    bool backtrack_ = false;
+    uint64_t backtrackTime_ = DEFAULT_BACKTRACK_TIME_SEC;   // 10 seconds
+    bool outputEnd_ = false;
+    bool PreOutputRecordFile();
+    void OutputRecordFile();
+    bool PostOutputRecordFile(bool output);
 
     bool GetOptions(std::vector<std::string> &args);
     bool CheckArgsRange();
+    bool CheckExcludeArgs();
     bool CheckOptions();
     bool GetSpeOptions();
     bool CheckDataLimitOption();
@@ -272,11 +301,21 @@ private:
     int clientPipeOutput_ = -1;
     int nullFd_ = -1;
     std::thread clientCommandHanle_;
-    bool clientExit_ = false;
+    bool clientRunning_ = true;
+    struct ControlCommandHandler {
+        std::function<bool()> preProcess = []() -> bool {
+            return false;
+        };
+        std::function<void(bool)> postProcess = [](bool) {};
+    };
+    std::unordered_map<std::string, ControlCommandHandler> controlCommandHandlerMap_ = {};
     void ClientCommandHandle();
+    void InitControlCommandHandlerMap();
+    void DispatchControlCommand(const std::string& command);
     bool ClientCommandResponse(bool response);
     bool ClientCommandResponse(const std::string& str);
     bool IsSamplingRunning();
+
     // for cmdline client
     bool allowIpc_ = true;
     std::string controlCmd_ = {};
@@ -285,6 +324,8 @@ private:
     bool dedupStack_ = false;
     std::map<pid_t, std::vector<pid_t>> mapPids_;
     bool ProcessControl();
+    void ProcessStopCommand(bool ret);
+    void ProcessOutputCommand(bool ret);
     bool CreateFifoServer();
     bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
     bool WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut);
@@ -294,6 +335,7 @@ private:
 
     bool PreparePerfEvent();
     bool PrepareSysKernel();
+    void PrepareKernelMaps();
     bool PrepareVirtualRuntime();
 
     size_t recordSamples_ = 0;
@@ -303,8 +345,8 @@ private:
     bool isSpe_ = false;
 
     // callback to process record
-    bool ProcessRecord(std::unique_ptr<PerfEventRecord>);
-    bool SaveRecord(std::unique_ptr<PerfEventRecord>, bool ptrReleaseFlag = false);
+    bool ProcessRecord(PerfEventRecord& record);
+    bool SaveRecord(const PerfEventRecord& record);
 
     // file format like as 0,1-3,4-6,7,8
     uint32_t GetCountFromFile(const std::string &fileName);
@@ -327,7 +369,7 @@ private:
     void ReportTime();
 #endif
 
-    bool CollectionSymbol(std::unique_ptr<PerfEventRecord> record);
+    bool CollectionSymbol(PerfEventRecord& record);
     void CollectSymbol(PerfRecordSample *sample);
     bool SetPerfLimit(const std::string& file, int value, std::function<bool (int, int)> const& cmd,
         const std::string& param);
@@ -344,6 +386,7 @@ private:
     bool CheckTargetProcessOptions();
     bool CheckTargetPids();
     bool CheckReportOption();
+    bool CheckBacktrackOption();
     void WriteCommEventBeforeSampling();
     void RemoveVdsoTmpFile();
 

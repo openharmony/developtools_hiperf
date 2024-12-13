@@ -61,7 +61,7 @@ public:
     uint GetRecordCount() const;
     std::chrono::microseconds writeTimes_ = std::chrono::microseconds::zero();
 
-    using ProcessRecordCB = const std::function<bool(std::unique_ptr<PerfEventRecord> record)>;
+    using ProcessRecordCB = const std::function<bool(PerfEventRecord& record)>;
     bool ReadDataSection(ProcessRecordCB &callback);
     bool ReadRecords(ProcessRecordCB &callback);
     bool Read(void *buf, size_t len);

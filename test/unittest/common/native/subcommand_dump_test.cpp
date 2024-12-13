@@ -55,7 +55,7 @@ void SubCommandDumpTest::SetUp()
     // clear the subCommands left from other UT
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommandDump::RegisterSubCommandDump();
+    SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
 }
 

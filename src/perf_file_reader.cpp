@@ -31,6 +31,7 @@ namespace Developtools {
 namespace HiPerf {
 const int FETURE_MAX = 256;
 const int SIZE_FETURE_COUNT = 8;
+constexpr size_t MAX_VECTOR_RESIZE_COUNT = 100000;
 constexpr char UNCOMPRESS_TMP_FILE[] = "/data/local/tmp/.perf.data";
 
 std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &fileName)
@@ -187,7 +188,11 @@ bool PerfFileReader::ReadAttrSection()
 bool PerfFileReader::ReadIdsForAttr(const perf_file_attr &attr, std::vector<uint64_t> *ids)
 {
     if (attr.ids.size > 0) {
-        size_t count = attr.ids.size / sizeof(uint64_t);
+        size_t count = attr.ids.size / sizeof(uint64_t) + 1;
+        if (count > MAX_VECTOR_RESIZE_COUNT) {
+            HLOGE("count(%zu) out of range", count);
+            return false;
+        }
         if (fseek(fp_, attr.ids.offset, SEEK_SET) != 0) {
             HLOGE("fseek() failed");
             return false;
@@ -278,20 +283,20 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
                         }
                     }
                     uint8_t *data = buf;
-                    std::unique_ptr<PerfEventRecord> record = GetPerfEventRecord(
+                    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
                         static_cast<perf_event_type>(header->type), data, *attr);
                     // unknown record , break the process
-                    if (!record) {
+                    if (record.GetName() == nullptr) {
                         return false;
                     } else {
-                        HLOGV("record type %u", record->GetType());
+                        HLOGV("record type %u", record.GetType());
                     }
                     remainingSize = remainingSize - header->size - speSize;
 #ifdef HIPERF_DEBUG_TIME
                     const auto startCallbackTime = steady_clock::now();
 #endif
                     // call callback to process, then destroy record
-                    callback(std::move(record));
+                    callback(record);
                     recordNumber++;
 #ifdef HIPERF_DEBUG_TIME
                     readCallbackTime_ +=
@@ -425,7 +430,7 @@ bool PerfFileReader::ReadFeatureSection()
         } else if (feature == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
             perfFileSections_.emplace_back(
                 std::make_unique<PerfFileSectionUniStackTable>(feature, (char *)&buf[0], buf.size()));
-            PerfRecordSample::dumpRemoveStack_ = true;
+            PerfRecordSample::SetDumpRemoveStack(true);
         } else {
             HLOGW("still not imp how to process with feature %d", feature);
         }
