@@ -31,8 +31,6 @@
 #include "tracked_command.h"
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -237,10 +235,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat -a -c 0 -d 3 --dumpoptions"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -263,10 +261,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat -a -d 3 --dumpoptions"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -290,10 +288,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat -a -d 3"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -316,10 +314,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a3, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat -a -c 0 -d 3"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -342,10 +340,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a4, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat -a test"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -387,7 +385,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -396,7 +394,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -437,7 +435,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c1, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -446,7 +444,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c1, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -480,7 +478,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c2, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -489,7 +487,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c2, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -513,10 +511,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c3, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat -a -c 0,1 -d 3"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -549,10 +547,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c4, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -585,10 +583,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c5, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -621,7 +619,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -630,7 +628,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -661,10 +659,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -695,10 +693,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p1, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -729,10 +727,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -763,10 +761,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -797,10 +795,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_aa, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -823,10 +821,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat -a -d 3 --dumpoptions"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -858,10 +856,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d2, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -893,10 +891,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d3, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -928,7 +926,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -937,7 +935,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -971,7 +969,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d5, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -980,7 +978,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d5, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1009,7 +1007,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d6, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1018,7 +1016,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d6, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1047,7 +1045,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1056,7 +1054,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1093,7 +1091,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1102,7 +1100,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1137,10 +1135,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i2, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1172,10 +1170,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i3, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1207,7 +1205,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1216,7 +1214,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1251,7 +1249,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1260,7 +1258,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1292,7 +1290,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e1, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1301,7 +1299,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e1, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1333,7 +1331,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1342,7 +1340,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1374,7 +1372,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1383,7 +1381,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1415,10 +1413,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e4, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1451,7 +1449,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1460,7 +1458,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     const std::string stringOut = stdoutRecord.Stop();
@@ -1498,7 +1496,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1507,7 +1505,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     const std::string stringOut = stdoutRecord.Stop();
@@ -1544,7 +1542,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1553,7 +1551,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     const std::string stringOut = stdoutRecord.Stop();
@@ -1590,10 +1588,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g3, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     const std::string stringOut = stdoutRecord.Stop();
@@ -1627,7 +1625,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     g_wait = true;
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     g_wait = false;
@@ -1636,7 +1634,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1675,7 +1673,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     std::string tidString = " -t ";
     tidString += std::to_string(tid1) + ",";
@@ -1692,7 +1690,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1723,7 +1721,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t1, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     std::string tidString = " -t ";
     tidString += std::to_string(tid1);
@@ -1739,7 +1737,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t1, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1762,7 +1760,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     std::string tidString = " -t ";
     tidString += "-1";
@@ -1773,7 +1771,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t2, TestSize.Level1)
 
     EXPECT_EQ(Command::DispatchCommand(cmdString), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1794,7 +1792,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t3, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     std::string tidString = " -t ";
     tidString += "test";
@@ -1805,7 +1803,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t3, TestSize.Level1)
 
     EXPECT_EQ(Command::DispatchCommand(cmdString), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1834,7 +1832,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     std::string tidString = " -t ";
     tidString += std::to_string(tid1);
@@ -1850,7 +1848,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1881,7 +1879,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     std::string tidString = " -t ";
     tidString += std::to_string(tid1);
@@ -1897,7 +1895,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1927,7 +1925,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     std::string tidString = " -t ";
     tidString += std::to_string(tid1);
@@ -1943,7 +1941,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level1)
         cv.notify_all();
     }
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1967,10 +1965,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_cmd, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand(cmdstr), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -2139,7 +2137,7 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level1)
     stdoutRecord.Start();
     std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> countEvents;
     for (int i = 0; i < 8; i++) {
-        auto countEvent = make_unique<PerfEvents::CountEvent>(PerfEvents::CountEvent {});
+        auto countEvent = std::make_unique<PerfEvents::CountEvent>(PerfEvents::CountEvent {});
         std::string configName = eventNames[i];
         countEvents[configName] = std::move(countEvent);
         countEvents[configName]->userOnly = false;
@@ -2209,10 +2207,10 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_restart_fail, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("stat --restart"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -2261,11 +2259,11 @@ HWTEST_F(SubCommandStatTest, CheckPidAndApp, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     std::string existCmd = "stat -p " + std::to_string(existPid) + " -d 2";
     EXPECT_EQ(Command::DispatchCommand(existCmd), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
 
     std::string stringOut = stdoutRecord.Stop();

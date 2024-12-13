@@ -16,13 +16,12 @@
 #include <sys/utsname.h>
 #include "subcommand_list.h"
 
-using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-bool SubCommandList::OnSubCommand(vector<string> &args)
+bool SubCommandList::OnSubCommand(std::vector<std::string> &args)
 {
-    vector<perf_type_id> requestEventTypes;
+    std::vector<perf_type_id> requestEventTypes;
 
     SetHM();
 
@@ -32,7 +31,7 @@ bool SubCommandList::OnSubCommand(vector<string> &args)
             requestEventTypes.push_back(it.first);
         }
     } else {
-        string requestEventType = args.front().c_str();
+        std::string requestEventType = args.front().c_str();
         auto it = SUPPORT_NAME_OPTIONS.find(requestEventType);
         if (it == SUPPORT_NAME_OPTIONS.end()) {
             printf("not support option: '%s'\n", requestEventType.c_str());
@@ -44,7 +43,7 @@ bool SubCommandList::OnSubCommand(vector<string> &args)
     ShowSupportEventsTypes(requestEventTypes);
     return true;
 }
-bool SubCommandList::ShowSupportEventsTypes(vector<perf_type_id> requestEventTypes)
+bool SubCommandList::ShowSupportEventsTypes(std::vector<perf_type_id> &requestEventTypes)
 {
     // each type
     for (perf_type_id id : requestEventTypes) {
@@ -64,7 +63,7 @@ bool SubCommandList::ShowSupportEventsTypes(vector<perf_type_id> requestEventTyp
 
 void SubCommandList::RegisterSubCommandList()
 {
-    SubCommand::RegisterSubCommand("list", make_unique<SubCommandList>());
+    SubCommand::RegisterSubCommand("list", std::make_unique<SubCommandList>());
 }
 
 void SubCommandList::SetHM()

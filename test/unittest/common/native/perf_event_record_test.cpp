@@ -19,8 +19,6 @@
 #include <thread>
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 
 namespace OHOS {
 namespace Developtools {
@@ -816,7 +814,6 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordMmap, TestSize.Level1)
     for (char c : str) {
         EXPECT_EQ(c, 'a');
     }
-
     free(p);
 }
 
@@ -843,7 +840,6 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordComm, TestSize.Level1)
     for (char c : str) {
         EXPECT_EQ(c, 'a');
     }
-
     free(p);
 }
 
@@ -856,7 +852,6 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level1)
     PerfRecordAuxtrace record;
     record.Init(p);
     ASSERT_NE(record.rawData_, nullptr);
-
     free(p);
 }
 

@@ -266,7 +266,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
         hi3516cv500_base,sys_config,hi_proc,hi_irq,Live 0xbf000000 (O)
         */
         int ret = sscanf_s(line.c_str(), "%s%" PRIu64 "%*u%*s%*s 0x%" PRIx64 "", module,
-                           lineSize, &size, &addr, sizeof(addr));
+                           lineSize, &size, &addr);
         constexpr int numSlices {3};
         if (ret == numSlices) {
             auto &map = koMaps.emplace_back(addr, addr + size, 0, "", std::string(module));

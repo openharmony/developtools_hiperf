@@ -20,8 +20,6 @@
 #include "test_utilities.h"
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -105,10 +103,10 @@ HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level1)
 
     // it need load some symbols and much more log
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     bool ret = Command::DispatchCommand(cmdString);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     std::string stringOut = stdoutRecord.Stop();
     printf("run %" PRId64 " ms return %d\n", (uint64_t)costMs.count(), static_cast<int>(ret));
     EXPECT_EQ(true, ret);
@@ -130,10 +128,10 @@ HWTEST_F(SpeDecoderTest, TestDump, TestSize.Level1)
         ScopeDebugLevel tempLogLevel {LEVEL_DEBUG};
 
         stdoutRecord.Start();
-        const auto startTime = chrono::steady_clock::now();
+        const auto startTime = std::chrono::steady_clock::now();
         bool ret = Command::DispatchCommand(cmdString);
         const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-            chrono::steady_clock::now() - startTime);
+            std::chrono::steady_clock::now() - startTime);
         std::string stringOut = stdoutRecord.Stop();
 
         printf("command : %s(run %" PRId64 " ms) return %d\n", cmdString.c_str(),

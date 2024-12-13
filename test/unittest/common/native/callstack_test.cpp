@@ -16,9 +16,6 @@
 #include "callstack_test.h"
 
 using namespace testing::ext;
-using namespace testing;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -28,7 +25,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    default_random_engine rnd_;
+    std::default_random_engine rnd_;
 };
 
 void CallStackTest::SetUpTestCase()
@@ -555,7 +552,7 @@ HWTEST_F(CallStackTest, ExpendCallStackLimit, TestSize.Level1)
     ASSERT_EQ(callStack.ExpandCallStack(0, stack1, 2u), 0u);
     ASSERT_EQ(callStack.ExpandCallStack(0, stack2, 2u), 0u);
     ASSERT_EQ(callStack.ExpandCallStack(0, stack3, 2u), 1u);
-    EXPECT_THAT(stack1, ContainerEq(stack3));
+    EXPECT_THAT(stack1, testing::ContainerEq(stack3));
     ASSERT_EQ(callStack.ExpandCallStack(0, stack4, 2u), 0u);
 }
 

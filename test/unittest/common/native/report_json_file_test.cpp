@@ -19,9 +19,6 @@
 #include <memory>
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
-using namespace ::testing;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {

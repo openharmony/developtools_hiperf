@@ -33,7 +33,6 @@
 #include "subcommand_dump.h"
 #include "subcommand_report.h"
 
-using namespace std;
 using namespace OHOS::Developtools::HiPerf;
 
 #ifdef FUZZER_TEST
@@ -52,7 +51,7 @@ int main(const int argc, const char *argv[])
         return -1;
     }
     std::ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+    std::cin.tie(nullptr);
 
 #if defined(is_ohos) && is_ohos
     WriteStringToFile("/proc/self/oom_score_adj", "0");
@@ -63,7 +62,7 @@ int main(const int argc, const char *argv[])
 #endif
 
     // pass the argv to next
-    vector<string> args;
+    std::vector<std::string> args;
     for (int i = 1; i < argc; i++) {
         args.push_back(argv[i]);
     }

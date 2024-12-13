@@ -381,7 +381,7 @@ bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
 
 size_t PerfFileSectionUniStackTable::GetSize()
 {
-    CHECK_TRUE(processStackTable_ == nullptr, 0, 0, "");
+    CHECK_TRUE(processStackTable_ == nullptr, 0, 1, "processStackTable_ is nullptr");
     size_t size = 0;
     // section header info size
     size += sizeof(uint32_t); // how many tables/process

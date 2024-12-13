@@ -19,9 +19,6 @@
 #include <sys/ioctl.h>
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
-using namespace ::testing;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -517,13 +514,13 @@ HWTEST_F(ReportTest, MultiLevelSame, TestSize.Level1)
     } report;
     ReportItem dummy(0, 0, "comm", "", "", 0, 0);
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_)).WillOnce(testing::Return(0));
     EXPECT_EQ(report.MultiLevelSame(dummy, dummy), true);
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _)).WillOnce(Return(1));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_)).WillOnce(testing::Return(1));
     EXPECT_EQ(report.MultiLevelSame(dummy, dummy), false);
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_)).WillOnce(testing::Return(-1));
     EXPECT_EQ(report.MultiLevelSame(dummy, dummy), false);
 }
 
@@ -540,24 +537,24 @@ HWTEST_F(ReportTest, MultiLevelSorting, TestSize.Level1)
     } report;
     ReportItem dummy(0, 0, "comm", "", "", 0, 0);
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _))
-        .WillOnce(Return(0))
-        .WillOnce(Return(0))
-        .WillOnce(Return(0));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_))
+        .WillOnce(testing::Return(0))
+        .WillOnce(testing::Return(0))
+        .WillOnce(testing::Return(0));
     EXPECT_EQ(report.MultiLevelCompare(dummy, dummy), 0);     // 1st
     EXPECT_EQ(report.MultiLevelSorting(dummy, dummy), false); // 2nd 3rd and > 0?
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _))
-        .WillOnce(Return(1))
-        .WillOnce(Return(1))
-        .WillOnce(Return(-1));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_))
+        .WillOnce(testing::Return(1))
+        .WillOnce(testing::Return(1))
+        .WillOnce(testing::Return(-1));
     EXPECT_EQ(report.MultiLevelCompare(dummy, dummy), 1);
     EXPECT_EQ(report.MultiLevelSorting(dummy, dummy), true); // > 0?
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _))
-        .WillOnce(Return(-1))
-        .WillOnce(Return(-1))
-        .WillOnce(Return(1));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_))
+        .WillOnce(testing::Return(-1))
+        .WillOnce(testing::Return(-1))
+        .WillOnce(testing::Return(1));
     EXPECT_EQ(report.MultiLevelCompare(dummy, dummy), -1);
     EXPECT_EQ(report.MultiLevelSorting(dummy, dummy), false); // > 0?
 }
@@ -579,17 +576,17 @@ HWTEST_F(ReportTest, MultiLevelSameAndUpdateCount, TestSize.Level1)
 
     EXPECT_EQ(dummy100.eventCount_, 100u);
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_)).WillOnce(testing::Return(0));
     EXPECT_EQ(report.MultiLevelSameAndUpdateCount(dummy100, dummy200), true);
     // if true , 100 + 200
     EXPECT_EQ(dummy100.eventCount_, 300u);
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _)).WillOnce(Return(1));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_)).WillOnce(testing::Return(1));
     EXPECT_EQ(report.MultiLevelSameAndUpdateCount(dummy200, dummy200), false);
     EXPECT_EQ(dummy200.eventCount_, 200u);
     EXPECT_EQ(dummy300.eventCount_, 300u);
 
-    EXPECT_CALL(report, MultiLevelCompare(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(report, MultiLevelCompare(testing::_, testing::_)).WillOnce(testing::Return(-1));
     EXPECT_EQ(report.MultiLevelSameAndUpdateCount(dummy200, dummy200), false);
     EXPECT_EQ(dummy200.eventCount_, 200u);
     EXPECT_EQ(dummy300.eventCount_, 300u);

@@ -79,7 +79,11 @@ static std::string GetJsStringFromOption(const napi_env &env, const napi_callbac
     NAPI_ASSERT_BASE(env, argc == 1, "requires 1 parameter", "");
 
     napi_valuetype inputType = napi_undefined;
-    napi_typeof(env, args[0], &inputType);
+    napi_status status = napi_typeof(env, args[0], &inputType);
+    if (status != napi_ok) {
+        HILOG_ERROR(LOG_CORE, "GetJsStringFromOption failed to napi_typeof.");
+        return "";
+    }
     NAPI_ASSERT_BASE(env, inputType == napi_string, "type mismatch for parameter path", "");
 
     char value[PATH_MAX] = {0};
@@ -100,7 +104,11 @@ static bool GetBoolFromOption(const napi_env &env, const napi_callback_info &inf
     NAPI_ASSERT_BASE(env, argc == 1, "requires 1 parameter", false);
 
     napi_valuetype inputType = napi_undefined;
-    napi_typeof(env, args[0], &inputType);
+    napi_status status = napi_typeof(env, args[0], &inputType);
+    if (status != napi_ok) {
+        HILOG_ERROR(LOG_CORE, "GetBoolFromOption failed to napi_typeof.");
+        return false;
+    }
     NAPI_ASSERT_BASE(env, (inputType == napi_boolean), "type mismatch for parameter path", false);
 
     bool result = false;
@@ -117,7 +125,11 @@ static uint32_t GetUintFromOption(const napi_env &env, const napi_callback_info 
     NAPI_ASSERT_BASE(env, argc == 1, "requires 1 parameter", 0);
 
     napi_valuetype inputType = napi_undefined;
-    napi_typeof(env, args[0], &inputType);
+    napi_status status = napi_typeof(env, args[0], &inputType);
+    if (status != napi_ok) {
+        HILOG_ERROR(LOG_CORE, "GetUintFromOption failed to napi_typeof.");
+        return 0;
+    }
     NAPI_ASSERT_BASE(env, (inputType == napi_number), "type mismatch for parameter path", false);
 
     uint32_t result = 0;

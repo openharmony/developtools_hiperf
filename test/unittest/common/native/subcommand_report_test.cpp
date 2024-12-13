@@ -20,8 +20,6 @@
 #include "subcommand_test.h"
 
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -191,10 +189,10 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -214,12 +212,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     std::string cmd = "tar -czvf " + RESOURCE_PATH + "report_test.data.tar.gz " + RESOURCE_PATH + "report_test.data";
     std::system(cmd.c_str());
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data.tar.gz"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -237,10 +235,10 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/perf.data.tar.gz"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -258,10 +256,10 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "perf1.data --debug"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -282,10 +280,10 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report " + RESOURCE_PATH + "report_test.data -i"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -305,12 +303,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_diff, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "perf1.data --diff " +
                                        RESOURCE_PATH + "report_test.data"),
               false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -331,13 +329,13 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_Diff_Same, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
 
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --diff " +
                                        RESOURCE_PATH + "report_test.data"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -357,12 +355,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --sort pid"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -382,12 +380,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --sort pid,tid"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -407,12 +405,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --sort func"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -432,11 +430,11 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort3, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "perf1.data --sort pid"),
               false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -457,12 +455,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort4, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --sort pids"),
         false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -482,12 +480,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_symbol, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --symbol-dir ./"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -507,12 +505,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --limit-percent 5"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -532,12 +530,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --limit-percent 1"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -557,12 +555,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --limit-percent 99"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -582,12 +580,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit3, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --limit-percent -1"),
               false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -607,12 +605,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit4, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --limit-percent 101"),
               false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -632,12 +630,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_callstack, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --call-stack"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -657,12 +655,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_comms, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --comms hiperf"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -682,12 +680,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --pids 1204"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -707,12 +705,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --pids 485"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -732,12 +730,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --pids 11111"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -757,12 +755,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids3, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --pids -106"),
         false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -782,12 +780,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --tids 1205"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -807,12 +805,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --tids 905"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -832,12 +830,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --tids 11111"),
         true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -857,12 +855,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids3, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(
         Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --tids -109"),
         false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -882,12 +880,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --dsos [kernel.kallsyms]"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -907,12 +905,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --dsos /system/lib/libcamera.so"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -932,11 +930,11 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos2, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --dso"),
               false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -956,12 +954,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --funcs finish_task_switch"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -981,11 +979,11 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --func"),
               false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1005,11 +1003,11 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_json, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --json"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1029,10 +1027,10 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_json1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "perf1.data --json"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1053,11 +1051,11 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_proto, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data --proto"),
               true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1077,10 +1075,10 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_proto1, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "perf1.data --proto"), false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
 
     std::string stringOut = stdoutRecord.Stop();
@@ -1260,12 +1258,12 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_from_funcs_fail, TestSize.Level1
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH +
                                        "report_test.data --from_funcs"),
               false);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {
@@ -1282,10 +1280,10 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_offcpu, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/offcpu_perf.data"), true);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     EXPECT_LE(costMs.count(), DEFAULT_RUN_TIMEOUT_MS);
     std::string stringOut = stdoutRecord.Stop();
     if (HasFailure()) {

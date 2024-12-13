@@ -35,8 +35,6 @@
 
 using namespace std::literals::chrono_literals;
 using namespace testing::ext;
-using namespace std;
-using namespace OHOS::HiviewDFX;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -145,10 +143,10 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
 
     // it need load some symbols and much more log
     stdoutRecord.Start();
-    const auto startTime = chrono::steady_clock::now();
+    const auto startTime = std::chrono::steady_clock::now();
     bool ret = Command::DispatchCommand(cmdString);
     const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        chrono::steady_clock::now() - startTime);
+        std::chrono::steady_clock::now() - startTime);
     std::string stringOut = stdoutRecord.Stop();
     if (expect) {
         EXPECT_EQ(stringOut.find("Sample records:") != std::string::npos, true);
@@ -164,7 +162,9 @@ size_t SubCommandRecordTest::GetFileSize(const char* fileName)
         return 0;
     }
     struct stat statbuf;
-    stat(fileName, &statbuf);
+    if (stat(fileName, &statbuf) == -1) {
+        return 0;
+    }
     size_t fileSize = statbuf.st_size;
     return fileSize;
 }

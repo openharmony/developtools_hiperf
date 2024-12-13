@@ -189,7 +189,7 @@ PerfEvents::~PerfEvents()
 bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
 {
     std::unique_ptr<perf_event_attr> attr = PerfEvents::CreateDefaultAttr(type, config);
-    CHECK_TRUE(attr == nullptr, false, 0, "");
+    CHECK_TRUE(attr == nullptr, false, 1, "attr is nullptr");
     UniqueFd fd = Open(*attr.get());
     if (fd < 0) {
         printf("event not support %s\n", GetStaticConfigName(type, config).c_str());
@@ -1735,7 +1735,7 @@ void PerfEvents::StatLoop()
     auto nextReportTime = startTime + timeReport_;
     milliseconds usedTimeMsTick {};
     __u64 durationInSec = 0;
-    int64_t thesholdTimeInMs = 2 * HUNDREDS;
+    int64_t thresholdTimeInMs = 2 * HUNDREDS;
 
     while (g_trackRunning) {
         // time check point
@@ -1772,9 +1772,9 @@ void PerfEvents::StatLoop()
         // lefttime > 200ms sleep 100ms, else sleep 200us
         uint64_t defaultSleepUs = 2 * HUNDREDS; // 200us
         if (timeReport_ == milliseconds::zero()
-            && (timeOut_.count() * THOUSANDS) > thesholdTimeInMs) {
+            && (timeOut_.count() * THOUSANDS) > thresholdTimeInMs) {
             milliseconds leftTimeMsTmp = duration_cast<milliseconds>(endTime - thisTime);
-            if (leftTimeMsTmp.count() > thesholdTimeInMs) {
+            if (leftTimeMsTmp.count() > thresholdTimeInMs) {
                 defaultSleepUs = HUNDREDS * THOUSANDS; // 100ms
             }
         }
