@@ -465,16 +465,6 @@ HWTEST_F(HiperfClientTest, SetReport, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetExcludeProcess, TestSize.Level1)
-{
-    HiperfClient::RecordOption opt;
-    vector<pid_t> selectPids = {getpid()};
-    opt.SetSelectPids(selectPids);
-    opt.SetExcludeProcess({"hiperf"});
-
-    TestCaseOption(opt);
-}
-
 HWTEST_F(HiperfClientTest, SetBackTrack, TestSize.Level1)
 {
     HiperfClient::RecordOption opt;

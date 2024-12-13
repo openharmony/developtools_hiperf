@@ -145,7 +145,7 @@ HWTEST_F(SubCommandHelpTest, RegisterSubCommandHelp, TestSize.Level1)
     SubCommandHelp::RegisterSubCommandHelp();
     const std::map<std::string, std::unique_ptr<Option::MainOption>>& optionMap = Option::GetMainOptions();
     EXPECT_TRUE(optionMap.find("--help") != optionMap.end());
-    EXPECT_TRUE(optionMap.find("--h") != optionMap.end());
+    EXPECT_TRUE(optionMap.find("-h") != optionMap.end());
     std::string help = "help";
     EXPECT_TRUE(SubCommand::FindSubCommand(help) != nullptr);
 }

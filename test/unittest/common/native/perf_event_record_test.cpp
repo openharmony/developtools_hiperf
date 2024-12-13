@@ -893,6 +893,7 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level1)
                                                        data, attr);
         EXPECT_NE(record.GetName(), nullptr);
     }
+    free(data);
 }
 
 HWTEST_F(PerfEventRecordTest, SetDumpRemoveStack, TestSize.Level1)

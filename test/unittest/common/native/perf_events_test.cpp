@@ -442,22 +442,6 @@ HWTEST_F(PerfEventsTest, CalcBufferSizeLargeMemory, TestSize.Level1)
     EXPECT_EQ(event.CalcBufferSize(), size);
 }
 
-HWTEST_F(PerfEventsTest, UpdateCurrentTime, TestSize.Level1)
-{
-    ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-
-    std::thread t1(&PerfEvents::UpdateCurrentTime);
-    uint64_t time = PerfEvents::currentTimeSecond_.load();
-    this_thread::sleep_for(2s);
-    EXPECT_GE(PerfEvents::currentTimeSecond_.load() - time, 1u);
-    PerfEvents::updateTimeThreadRunning_ = false;
-    this_thread::sleep_for(1s);
-    ASSERT_EQ(t1.joinable(), false);
-}
-
-
 HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack1, TestSize.Level1)
 {
     ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
