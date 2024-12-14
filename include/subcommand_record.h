@@ -268,6 +268,7 @@ private:
     std::set<pid_t> excludePids_ = {};
     std::set<pid_t> excludeTids_ = {};
     void CollectExcludeThread();
+    void SetExcludeHiperf();
     bool IsThreadExcluded(pid_t pid, pid_t tid);
 
     // for background track
