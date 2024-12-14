@@ -1430,6 +1430,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
 
     //write comm event
     WriteCommEventBeforeSampling();
+    SetExcludeHiperf();
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord StartTracking");
     // start tracking
     if (isDataSizeLimitStop_) {
@@ -2145,12 +2146,17 @@ void SubCommandRecord::AddReportArgs(CommandReporter& reporter)
 
 void SubCommandRecord::CollectExcludeThread()
 {
-    CollectPidsByAppname(excludePids_, excludeProcessNameArgs_);
+    if (!excludeProcessNameArgs_.empty()) {
+        CollectPidsByAppname(excludePids_, excludeProcessNameArgs_);
+    }
+    excludeTids_.insert(excludeTidArgs_.begin(), excludeTidArgs_.end());
+}
+
+void SubCommandRecord::SetExcludeHiperf()
+{
     if (excludeHiperf_) {
         excludePids_.emplace(getpid());
     }
-
-    excludeTids_.insert(excludeTidArgs_.begin(), excludeTidArgs_.end());
 }
 
 bool SubCommandRecord::IsThreadExcluded(pid_t pid, pid_t tid)

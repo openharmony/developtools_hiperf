@@ -1762,25 +1762,21 @@ HWTEST_F(SubCommandRecordTest, CollectExcludeThread1, TestSize.Level1)
 }
 
 /**
- * @tc.name: CollectExcludeThread
- * @tc.desc: Test CollectExcludeThread
+ * @tc.name: SetExcludeHiperf
+ * @tc.desc: Test SetExcludeHiperf
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandRecordTest, CollectExcludeThread2, TestSize.Level1)
+HWTEST_F(SubCommandRecordTest, SetExcludeHiperf, TestSize.Level1)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
 
     SubCommandRecord record;
     record.excludeHiperf_ = true;
-    record.excludeTids_ = {};
     pid_t pid = getpid();
-    record.excludeProcessNameArgs_ = {};
-    record.excludeTidArgs_ = {};
-    record.CollectExcludeThread();
+    record.SetExcludeHiperf();
 
     ASSERT_EQ(record.excludePids_.size(), 1u);
-    ASSERT_EQ(record.excludeTids_.size(), 0u);
     EXPECT_EQ(*(record.excludePids_.begin()), pid);
 }
 
