@@ -2146,7 +2146,9 @@ void SubCommandRecord::AddReportArgs(CommandReporter& reporter)
 
 void SubCommandRecord::CollectExcludeThread()
 {
-    CollectPidsByAppname(excludePids_, excludeProcessNameArgs_);
+    if (!excludeProcessNameArgs_.empty()) {
+        CollectPidsByAppname(excludePids_, excludeProcessNameArgs_);
+    }
     excludeTids_.insert(excludeTidArgs_.begin(), excludeTidArgs_.end());
 }
 
