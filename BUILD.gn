@@ -384,7 +384,7 @@ ohos_source_set("proto_file_cpp") {
   deps = [ ":hiperf_host_build_proto" ]
   external_deps = [
     "c_utils:utils",
-    "protobuf:protobuf_lite_static",
+    "protobuf:protobuf_lite",
   ]
   sources = proto_file_codegen
   public_configs = [ ":proto_file_cpp_config" ]
