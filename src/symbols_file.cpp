@@ -284,7 +284,7 @@ private:
     uint64_t ehFrameHDRFdeCount_ {0};
     uint64_t ehFrameHDRFdeTableItemSize_ {0};
     uint64_t ehFrameHDRFdeTableElfOffset_ {0};
-    std::shared_ptr<DfxElf> elfFile_;
+    std::shared_ptr<DfxElf> elfFile_ = nullptr;
     std::unordered_map<uint64_t, ElfLoadInfo> info_;
 
     bool GetSectionInfo(const std::string &name, uint64_t &sectionVaddr, uint64_t &sectionSize,

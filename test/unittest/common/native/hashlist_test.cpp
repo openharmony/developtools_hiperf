@@ -239,8 +239,8 @@ HWTEST_F(HashListTest, find, TestSize.Level1)
 HWTEST_F(HashListTest, push_front, TestSize.Level1)
 {
     HashList<std::size_t, std::size_t> hashList {size_};
-    constexpr std::size_t size_ {20};
-    for (std::size_t curSize = 0; curSize < size_; ++curSize) {
+    constexpr std::size_t size {20};
+    for (std::size_t curSize = 0; curSize < size; ++curSize) {
         hashList.push_front(curSize, curSize);
         std::size_t tmp = hashList.front();
         EXPECT_EQ(tmp, curSize);
@@ -250,8 +250,8 @@ HWTEST_F(HashListTest, push_front, TestSize.Level1)
 HWTEST_F(HashListTest, push_back, TestSize.Level1)
 {
     HashList<std::size_t, std::size_t> hashList {size_};
-    constexpr std::size_t size_ {20};
-    for (std::size_t curSize = 0; curSize < size_; ++curSize) {
+    constexpr std::size_t size {20};
+    for (std::size_t curSize = 0; curSize < size; ++curSize) {
         hashList.push_back(curSize, curSize);
         std::size_t tmp = hashList.back();
         EXPECT_EQ(tmp, curSize);
