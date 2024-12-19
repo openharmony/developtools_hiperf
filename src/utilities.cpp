@@ -701,9 +701,14 @@ bool IsSupportNonDebuggableApp()
         return true;
     }
     // user mode
-    CHECK_TRUE(!IsBeta(), false, 0, "");
-    // restricted aplication for beta
-    CHECK_TRUE(!IsAllowProfilingUid(), false, 0, "");
+    if (!IsBeta()) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsSupportNonDebuggableApp error, not beta");
+        return false;
+    }
+    if (!IsAllowProfilingUid()) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsSupportNonDebuggableApp error, not allow profiling uid");
+        return false;
+    }
     return true;
 }
 

@@ -37,19 +37,51 @@ bool IsDebugableApp(const std::string& bundleName)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     g_haveIpc.store(true);
-    CHECK_TRUE(bundleName.empty(), false, LOG_TYPE_PRINTF, "bundleName is empty!\n");
-    sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_TRUE(sam == nullptr, false, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
-    sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    CHECK_TRUE(remoteObject == nullptr, false, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
-    sptr<AppExecFwk::BundleMgrProxy> proxy = iface_cast<AppExecFwk::BundleMgrProxy>(remoteObject);
-    CHECK_TRUE(proxy == nullptr, false, LOG_TYPE_PRINTF, "iface_cast failed!\n");
-    AppExecFwk::ApplicationInfo appInfo;
-    bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::GET_APPLICATION_INFO_WITH_DISABLE,
-                                         AppExecFwk::Constants::ANY_USERID, appInfo);
-    CHECK_TRUE(!ret, false, 1, "%s GetApplicationInfo failed!", bundleName.c_str());
-    HLOGD("bundleName is %s,appProvisionType: %s", bundleName.c_str(), appInfo.appProvisionType.c_str());
-    return appInfo.appProvisionType == AppExecFwk::Constants::APP_PROVISION_TYPE_DEBUG;
+    std::string err = "";
+    do {
+        if (bundleName.empty()) {
+            err = "bundleName is empty!";
+            break;
+        }
+
+        sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (sam == nullptr) {
+            err = "GetSystemAbilityManager failed!";
+            break;
+        }
+
+        sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (remoteObject == nullptr) {
+            err = "Get BundleMgr SA failed!";
+            break;
+        }
+
+        sptr<AppExecFwk::BundleMgrProxy> proxy = iface_cast<AppExecFwk::BundleMgrProxy>(remoteObject);
+        if (proxy == nullptr) {
+            err = "iface_cast failed!";
+            break;
+        }
+
+        AppExecFwk::ApplicationInfo appInfo;
+        bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::GET_APPLICATION_INFO_WITH_DISABLE,
+                                             AppExecFwk::Constants::ANY_USERID, appInfo);
+        if (!ret) {
+            err = "GetApplicationInfo failed!";
+            break;
+        }
+
+        if (appInfo.appProvisionType != AppExecFwk::Constants::APP_PROVISION_TYPE_DEBUG) {
+            err = "appProvisionType is " + appInfo.appProvisionType;
+            break;
+        }
+        HIPERF_HILOGI(MODULE_DEFAULT, "bundleName is %{public}s,appProvisionType: %{public}s",
+                      bundleName.c_str(), appInfo.appProvisionType.c_str());
+        return true;
+    } while (0);
+
+    HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, bundleName: [%{public}s] err: [%{public}s]",
+                  bundleName.c_str(), err.c_str());
+    return false;
 #else
     return false;
 #endif
