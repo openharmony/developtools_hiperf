@@ -55,6 +55,7 @@ class CallStack {
 public:
     CallStack();
     ~CallStack();
+    void ClearCache();
     bool UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *regs, u64 regsNum,
                          const u8 *stack, u64 stackSize, std::vector<DfxFrame> &,
                          size_t maxStackLevel = MAX_CALL_FRAME_UNWIND_SIZE);
@@ -109,7 +110,7 @@ private:
     std::unordered_map<pid_t, dsoUnwDynInfoMap> unwindTableInfoMap_;
 
     using unwMemoryCache = std::unordered_map<unw_word_t, unw_word_t>;
-    std::unordered_map<pid_t, unwMemoryCache> porcessMemoryMap_;
+    std::unordered_map<pid_t, unwMemoryCache> processMemoryMap_;
 
     unw_accessors_t accessors_ = {
         .find_proc_info = FindProcInfo,

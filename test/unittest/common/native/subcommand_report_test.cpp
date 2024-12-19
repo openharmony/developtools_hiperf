@@ -54,7 +54,7 @@ void SubCommandReportTest::TearDownTestCase() {
 void SubCommandReportTest::SetUp()
 {
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    ASSERT_EQ(SubCommandReport::RegisterSubCommandReport(), true);
+    ASSERT_EQ(SubCommand::RegisterSubCommand("report", std::make_unique<SubCommandReport>()), true);
     SubCommand::RegisterSubCommand("TEST_CMD_1", std::make_unique<SubCommandTest>("TEST_CMD_1"));
 }
 
@@ -1289,6 +1289,19 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_offcpu, TestSize.Level1)
     if (HasFailure()) {
         printf("output:\n%s", stringOut.c_str());
     }
+}
+
+/**
+ * @tc.name: GetInstance
+ * @tc.desc: Test GetInstance
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandReport::GetInstance().Name(), "report");
 }
 } // namespace HiPerf
 } // namespace Developtools

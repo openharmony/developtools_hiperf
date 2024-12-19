@@ -175,6 +175,24 @@ HWTEST_F(HiPerfSubcommandTest, TestClearSubCommands, TestSize.Level1)
     SubCommand::ClearSubCommands();
     EXPECT_EQ(SubCommand::GetSubCommands().size(), 0u);
 }
+
+/**
+ * @tc.name: TestRegisterSubCommand
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, TestRegisterSubCommand2, TestSize.Level1)
+{
+    SubcommandObj obj;
+    auto func = [&obj]() -> SubCommand& {
+        return obj;
+    };
+    SubCommand::ClearSubCommands();
+    EXPECT_EQ(SubCommand::RegisterSubCommand("", func), false);
+    EXPECT_EQ(SubCommand::RegisterSubCommand("-abc", func), false);
+    EXPECT_EQ(SubCommand::RegisterSubCommand("null", func), true);
+    EXPECT_EQ(SubCommand::RegisterSubCommand("null", func), false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

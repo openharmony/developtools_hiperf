@@ -622,8 +622,7 @@ bool SubCommandReport::OnSubCommand(std::vector<std::string> &args)
 
 bool SubCommandReport::RegisterSubCommandReport()
 {
-    std::unique_ptr<SubCommand> cmd = std::make_unique<SubCommandReport>();
-    return SubCommand::RegisterSubCommand("report", std::move(cmd));
+    return SubCommand::RegisterSubCommand("report", SubCommandReport::GetInstance);
 }
 
 void SubCommandReport::SetHM()
@@ -640,6 +639,12 @@ void SubCommandReport::SetHM()
         }
         GetReport().virtualRuntime_.SetDevhostPid(devhost);
     }
+}
+
+SubCommand& SubCommandReport::GetInstance()
+{
+    static SubCommandReport subCommand;
+    return subCommand;
 }
 } // namespace HiPerf
 } // namespace Developtools

@@ -27,6 +27,8 @@ const std::string TempBinPath = "/data/local/tmp/";
 const std::string ReplyOK = "OK\n";
 const std::string ReplyFAIL = "FAIL\n";
 const std::string ReplyStart = "START\n";
+const std::string ReplyOutput = "OUTPUT\n";
+const std::string ReplyOutputCheck = "OUTPUT_CHECK\n";
 const std::string ReplyStop = "STOP\n";
 const std::string ReplyPause = "PAUSE\n";
 const std::string ReplyResume = "RESUME\n";
@@ -187,6 +189,20 @@ public:
      * Set to report with callstack after recording, default is disable
      */
     void SetReport(bool report);
+    /**
+     * Set the limit processes that do not need to be recorded,
+     * must be used with the SetTargetSystemWide(true).
+     */
+    void SetExcludeProcess(const std::vector<std::string>& excludeProcess);
+    /**
+     * Set record mode of collect data of the previous period, default is disable
+     */
+    void SetBackTrack(bool backtrack);
+    /**
+     * Set the time of collect data of the previous period, default is 10 seconds.
+     * Must be used with the SetBackTrack(true).
+     */
+    void SetBackTrackSec(int backTracesec);
 
     /**
      * Get the string vector of all options.
@@ -255,6 +271,10 @@ public:
      * Resume recording
      */
     bool Resume();
+    /**
+     * Output recording
+     */
+    bool Output();
     /**
      * Stop recording
      */

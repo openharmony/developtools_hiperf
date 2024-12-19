@@ -82,7 +82,7 @@ void SubCommandStatTest::TearDownTestCase() {}
 void SubCommandStatTest::SetUp()
 {
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    ASSERT_EQ(RegisterSubCommandStat(), true);
+    ASSERT_EQ(SubCommand::RegisterSubCommand("stat", std::make_unique<SubCommandStat>()), true);
 }
 
 void SubCommandStatTest::TearDown()
@@ -2319,6 +2319,19 @@ HWTEST_F(SubCommandStatTest, ReportSampleApp, TestSize.Level1)
     reporter.isReported_ = true;
     command.AddReportArgs(reporter);
     EXPECT_EQ(reporter.targetProcess_, "com.test.app");
+}
+
+/**
+ * @tc.name: GetInstance
+ * @tc.desc: Test GetInstance
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandStat::GetInstance().Name(), "stat");
 }
 } // namespace HiPerf
 } // namespace Developtools

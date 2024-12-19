@@ -200,6 +200,7 @@ public:
     void push_back(const Key &key, Val &&val);
     void pop_front();
     void pop_back();
+    void clear();
     Iterator erase(const Key &key);
     Iterator erase(const Iterator pos);
     Iterator erase(const Iterator first, const Iterator last);
@@ -985,6 +986,17 @@ void HashList<Key, Val>::pop_back()
     if (pnode != nullptr) {
         valueTab_.erase(pnode->key_);
         ReclaimNode(pnode);
+    }
+}
+
+template<typename Key, typename Val>
+void HashList<Key, Val>::clear()
+{
+    Iterator curPos = begin();
+    LinkNode<Key, Val> *curNode = curPos.GetNode();
+    while (curNode != nullptr) {
+        curPos = erase(curPos);
+        curNode = curPos.GetNode();
     }
 }
 

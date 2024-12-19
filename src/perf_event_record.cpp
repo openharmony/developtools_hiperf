@@ -25,6 +25,9 @@ namespace Developtools {
 namespace HiPerf {
 
 bool PerfRecordSample::dumpRemoveStack_ = false;
+std::vector<u64> PerfRecordSample::ips_ = {};
+std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
+std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
 thread_local std::unordered_map<PerfRecordType, PerfEventRecord*> PerfEventRecordFactory::recordMap_ = {};
 
 static PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
@@ -119,32 +122,6 @@ inline void SetPointerOffset(uint8_t*& p, u64 offset, u64& size)
     p += offset;
 }
 
-// PerfEventRecord
-void PerfEventRecord::Init(perf_event_type type, bool inKernel)
-{
-    header_.type = type;
-    header_.misc = inKernel ? PERF_RECORD_MISC_KERNEL : PERF_RECORD_MISC_USER;
-    header_.size = sizeof(header_);
-};
-
-void PerfEventRecord::Init(perf_event_hiperf_ext_type type)
-{
-    header_.type = type;
-    header_.misc = PERF_RECORD_MISC_USER;
-    header_.size = sizeof(header_);
-}
-
-void PerfEventRecord::InitHeader(uint8_t* p)
-{
-    if (p == nullptr) {
-        header_.type = PERF_RECORD_MMAP;
-        header_.misc = PERF_RECORD_MISC_USER;
-        header_.size = 0;
-        return;
-    }
-    header_ = *(reinterpret_cast<perf_event_header*>(p));
-}
-
 void PerfEventRecord::GetHeaderBinary(std::vector<uint8_t> &buf) const
 {
     if (buf.size() < GetHeaderSize()) {
@@ -178,9 +155,30 @@ void PerfEventRecord::DumpLog(const std::string &prefix) const
           GetType(), GetMisc(), GetSize());
 }
 
-std::vector<u64> PerfRecordSample::ips_ = {};
-std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
-std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
+void PerfEventRecord::Init(perf_event_type type, bool inKernel)
+{
+    header_.type = type;
+    header_.misc = inKernel ? PERF_RECORD_MISC_KERNEL : PERF_RECORD_MISC_USER;
+    header_.size = sizeof(header_);
+};
+
+void PerfEventRecord::Init(perf_event_hiperf_ext_type type)
+{
+    header_.type = type;
+    header_.misc = PERF_RECORD_MISC_USER;
+    header_.size = sizeof(header_);
+}
+
+void PerfEventRecord::InitHeader(uint8_t* p)
+{
+    if (p == nullptr) {
+        header_.type = PERF_RECORD_MMAP;
+        header_.misc = PERF_RECORD_MISC_USER;
+        header_.size = 0;
+        return;
+    }
+    header_ = *(reinterpret_cast<perf_event_header*>(p));
+}
 
 void PerfRecordAuxtrace::Init(uint8_t* data, const perf_event_attr& attr)
 {
@@ -265,306 +263,6 @@ void PerfRecordAuxtrace::DumpLog(const std::string &prefix) const
 size_t PerfRecordAuxtrace::GetSize() const
 {
     return header_.size + data_.size;
-}
-
-void PerfRecordSample::DumpLog(const std::string &prefix) const
-{
-    HLOGV("%s: SAMPLE: id= %llu size %d pid %u tid %u ips %llu regs %llu, stacks %llu time %llu",
-          prefix.c_str(), data_.sample_id, header_.size, data_.pid, data_.tid, data_.nr,
-          data_.reg_nr, data_.dyn_size, data_.time);
-}
-
-void PerfRecordSample::RecoverCallStack()
-{
-    data_.ips = ips_.data();
-    data_.nr = ips_.size();
-    removeStack_ = true;
-}
-
-void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
-{
-    // first we check if we have some user unwind stack need to merge ?
-    if (callFrames_.size() != 0) {
-        // when we have some kernel ips , we cp it first
-        // new size is user call frames + kernel call frames
-        // + PERF_CONTEXT_USER(last + 1) + expand mark(also PERF_CONTEXT_USER)
-        const unsigned int perfContextSize = 2;
-        ips_.reserve(data_.nr + callFrames_.size() + perfContextSize);
-        if (data_.nr > 0) {
-            ips_.assign(data_.ips, data_.ips + data_.nr);
-        }
-        // add user context mark
-        ips_.emplace_back(PERF_CONTEXT_USER);
-        // we also need make a expand mark just for debug only
-        const size_t beginIpsSize = ips_.size();
-        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const DfxFrame &frame) {
-            ips_.emplace_back(frame.pc);
-            if (originalSize != 0 && (originalSize != callFrames_.size()) &&
-                ips_.size() == (originalSize + beginIpsSize)) {
-                // just for debug
-                // so we can see which frame begin is expand call frames
-                ips_.emplace_back(PERF_CONTEXT_USER);
-            }
-            return true;
-        });
-        if (ret) {
-            HLOGV("combed %zu", callFrames_.size());
-        } else {
-            HLOGV("failed to combed %zu", callFrames_.size());
-        }
-
-        if (sampleType_ & PERF_SAMPLE_REGS_USER) {
-            header_.size -= data_.reg_nr * sizeof(u64);
-            data_.reg_nr = 0;
-            data_.user_abi = 0;
-        }
-
-        if (sampleType_ & PERF_SAMPLE_STACK_USER) {
-            // 1. remove the user stack
-            header_.size -= data_.stack_size;
-            header_.size -= sizeof(data_.dyn_size);
-
-            // 2. clean the size
-            data_.stack_size = 0;
-            data_.dyn_size = 0;
-        }
-
-        if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
-            HLOGV("ips change from %llu -> %zu", data_.nr, ips_.size());
-
-            // 3. remove the nr size
-            header_.size -= data_.nr * sizeof(u64);
-
-            // 4. add new nr size
-            data_.nr = ips_.size();
-            header_.size += data_.nr * sizeof(u64);
-
-            // 5. change ips potin to our ips array and hold it.
-            data_.ips = ips_.data();
-        }
-    } else {
-        // nothing need change
-        return;
-    }
-}
-
-void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
-{
-    PerfEventRecord::InitHeader(p);
-
-    HLOG_ASSERT(p != nullptr);
-    // clear the vector data
-    Clean();
-    sampleType_ = attr.sample_type;
-    skipKernel_ = 0;
-    skipPid_ = 0;
-    stackId_ = {0};
-    removeStack_ = false;
-    data_ = {};
-    uint8_t *start = p;
-    u64 dataSize = static_cast<u64>(RECORD_SIZE_LIMIT);
-    SetPointerOffset(p, sizeof(header_), dataSize);
-
-    // parse record according SAMPLE_TYPE
-    PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip, dataSize);
-    PopFromBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id, dataSize);
-    PopFromBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr, dataSize);
-    if (data_.nr > 0) {
-        // the pointer is from input(p), require caller keep input(p) with *this together
-        // think it in next time
-        data_.ips = reinterpret_cast<u64 *>(p);
-        SetPointerOffset(p, data_.nr * sizeof(u64), dataSize);
-    }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_RAW, p, data_.raw_size, dataSize);
-    if (data_.raw_size > 0) {
-        data_.raw_data = p;
-        SetPointerOffset(p, data_.raw_size * sizeof(u8), dataSize);
-    }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr, dataSize);
-    if (data_.bnr > 0) {
-        data_.lbr = reinterpret_cast<PerfBranchEntry *>(p);
-        SetPointerOffset(p, data_.bnr * sizeof(PerfBranchEntry), dataSize);
-    }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi, dataSize);
-    if (data_.user_abi > 0) {
-        data_.reg_mask = attr.sample_regs_user;
-        data_.reg_nr = __builtin_popcountll(data_.reg_mask);
-        data_.user_regs = reinterpret_cast<u64 *>(p);
-        SetPointerOffset(p, data_.reg_nr * sizeof(u64), dataSize);
-    }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr, dataSize);
-    if (data_.server_nr > 0) {
-        data_.server_pids = reinterpret_cast<u64 *>(p);
-        SetPointerOffset(p, data_.server_nr * sizeof(u64), dataSize);
-    }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size, dataSize);
-    if (data_.stack_size > 0) {
-        data_.stack_data = p;
-        SetPointerOffset(p, data_.stack_size, dataSize);
-        PopFromBinary(true, p, data_.dyn_size, dataSize);
-    }
-    uint32_t remain = header_.size - (p - start);
-    if (data_.nr == 0 && dumpRemoveStack_ && remain == sizeof(stackId_)) {
-        PopFromBinary(true, p, stackId_.value, dataSize);
-    }
-}
-
-bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
-{
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
-    }
-
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-
-    PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id);
-    PushToBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip);
-    PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid);
-    PushToBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time);
-    PushToBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr);
-    PushToBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id);
-    PushToBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id);
-    PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res);
-    PushToBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period);
-    PushToBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr);
-    if (data_.nr > 0 && !removeStack_) {
-        std::copy(data_.ips + skipKernel_, data_.ips + data_.nr + skipKernel_,
-                  reinterpret_cast<u64 *>(p));
-        p += data_.nr * sizeof(u64);
-    }
-    PushToBinary(sampleType_ & PERF_SAMPLE_RAW, p, data_.raw_size);
-    if (data_.raw_size > 0) {
-        std::copy(data_.raw_data, data_.raw_data + data_.raw_size, p);
-        p += data_.raw_size * sizeof(u8);
-    }
-    PushToBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr);
-    if (data_.bnr > 0) {
-        std::copy(data_.lbr, data_.lbr + data_.bnr, reinterpret_cast<PerfBranchEntry *>(p));
-        p += data_.bnr * sizeof(PerfBranchEntry);
-    }
-    PushToBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi);
-    if (data_.user_abi > 0 && data_.reg_nr > 0) {
-        std::copy(data_.user_regs, data_.user_regs + data_.reg_nr, reinterpret_cast<u64 *>(p));
-        p += data_.reg_nr * sizeof(u64);
-    }
-    PushToBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr);
-    if (data_.server_nr > 0) {
-        std::copy(data_.server_pids + skipPid_, data_.server_pids + data_.server_nr + skipPid_,
-                  reinterpret_cast<u64 *>(p));
-        p += data_.server_nr * sizeof(u64);
-    }
-    PushToBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size);
-    if (data_.stack_size > 0) {
-        std::copy(data_.stack_data, data_.stack_data + data_.stack_size, p);
-        p += data_.stack_size * sizeof(u8);
-        PushToBinary(true, p, data_.dyn_size);
-    }
-    PushToBinary(removeStack_, p, stackId_.value);
-    return true;
-}
-
-void PerfRecordSample::DumpData(int indent) const
-{
-    PRINT_INDENT(indent, "sample_type: 0x%" PRIx64 "\n", sampleType_);
-
-    // dump record according sampleType
-    if (sampleType_ & (PERF_SAMPLE_ID | PERF_SAMPLE_IDENTIFIER)) {
-        PRINT_INDENT(indent, "ID %" PRIu64 "\n", static_cast<uint64_t>(data_.sample_id));
-    }
-    if (sampleType_ & PERF_SAMPLE_IP) {
-        PRINT_INDENT(indent, "ip %llx\n", data_.ip);
-    }
-    if (sampleType_ & PERF_SAMPLE_TID) {
-        PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
-    }
-    if (sampleType_ & PERF_SAMPLE_TIME) {
-        PRINT_INDENT(indent, "time %llu\n", data_.time);
-    }
-    if (sampleType_ & PERF_SAMPLE_ADDR) {
-        PRINT_INDENT(indent, "addr %p\n", reinterpret_cast<void *>(data_.addr));
-    }
-    if (sampleType_ & PERF_SAMPLE_STREAM_ID) {
-        PRINT_INDENT(indent, "stream_id %" PRIu64 "\n", static_cast<uint64_t>(data_.stream_id));
-    }
-    if (sampleType_ & PERF_SAMPLE_CPU) {
-        PRINT_INDENT(indent, "cpu %u, res %u\n", data_.cpu, data_.res);
-    }
-    if (sampleType_ & PERF_SAMPLE_PERIOD) {
-        PRINT_INDENT(indent, "period %" PRIu64 "\n", static_cast<uint64_t>(data_.period));
-    }
-    if (stackId_.section.id > 0) {
-        PRINT_INDENT(indent, "stackid %" PRIu64 "\n", static_cast<uint64_t>(stackId_.section.id));
-    }
-    if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
-        bool userContext = false;
-        PRINT_INDENT(indent, "callchain nr=%lld\n", data_.nr);
-        for (uint64_t i = 0; i < data_.nr; ++i) {
-            std::string_view supplement = "";
-            if ((sampleType_ & PERF_SAMPLE_STACK_USER) == 0 || data_.ips[i] != PERF_CONTEXT_USER) {
-                PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
-                continue;
-            }
-            // is PERF_SAMPLE_STACK_USER type and is PERF_CONTEXT_USER
-            if (!userContext) {
-                userContext = true;
-                supplement = " <unwind callstack>";
-            } else {
-                supplement = " <expand callstack>";
-            }
-            PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_RAW) {
-        PRINT_INDENT(indent, "raw size=%u\n", data_.raw_size);
-        const uint32_t *data = reinterpret_cast<const uint32_t *>(data_.raw_data);
-        size_t size = data_.raw_size / sizeof(uint32_t);
-        for (size_t i = 0; i < size; ++i) {
-            PRINT_INDENT(indent + 1, "0x%08x (%x)\n", data[i], data[i]);
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_BRANCH_STACK) {
-        PRINT_INDENT(indent, "branch_stack nr=%lld\n", data_.bnr);
-        for (uint64_t i = 0; i < data_.bnr; ++i) {
-            auto &item = data_.lbr[i];
-            PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx, flags 0x%llx\n", item.from, item.to, item.flags);
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_REGS_USER) {
-        PRINT_INDENT(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
-        for (uint64_t i = 0; i < data_.reg_nr; ++i) {
-            PRINT_INDENT(indent + 1, "0x%llx\n", data_.user_regs[i]);
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_SERVER_PID) {
-        PRINT_INDENT(indent, "server nr=%lld\n", data_.server_nr);
-        for (uint64_t i = 0; i < data_.server_nr; ++i) {
-            PRINT_INDENT(indent + 1, "pid: %llu\n", data_.server_pids[i]);
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_STACK_USER) {
-        PRINT_INDENT(indent, "user stack: size %llu dyn_size %lld\n", data_.stack_size,
-                     data_.dyn_size);
-    }
-}
-
-inline pid_t PerfRecordSample::GetPid() const
-{
-    return data_.pid;
-}
-
-void PerfRecordSample::Clean()
-{
-    ips_.clear();
-    callFrames_.clear();
-    serverPidMap_.clear();
 }
 
 void PerfRecordMmap::Init(uint8_t* data, const perf_event_attr&)
@@ -797,6 +495,74 @@ PerfRecordSample::PerfRecordSample(const PerfRecordSample& sample)
     removeStack_ = sample.removeStack_;
 }
 
+void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
+{
+    PerfEventRecord::InitHeader(p);
+
+    HLOG_ASSERT(p != nullptr);
+    // clear the vector data
+    Clean();
+    sampleType_ = attr.sample_type;
+    skipKernel_ = 0;
+    skipPid_ = 0;
+    stackId_ = {0};
+    removeStack_ = false;
+    data_ = {};
+    uint8_t *start = p;
+    u64 dataSize = static_cast<u64>(RECORD_SIZE_LIMIT);
+    SetPointerOffset(p, sizeof(header_), dataSize);
+
+    // parse record according SAMPLE_TYPE
+    PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip, dataSize);
+    PopFromBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id, dataSize);
+    PopFromBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr, dataSize);
+    if (data_.nr > 0) {
+        // the pointer is from input(p), require caller keep input(p) with *this together
+        // think it in next time
+        data_.ips = reinterpret_cast<u64 *>(p);
+        SetPointerOffset(p, data_.nr * sizeof(u64), dataSize);
+    }
+    PopFromBinary(sampleType_ & PERF_SAMPLE_RAW, p, data_.raw_size, dataSize);
+    if (data_.raw_size > 0) {
+        data_.raw_data = p;
+        SetPointerOffset(p, data_.raw_size * sizeof(u8), dataSize);
+    }
+    PopFromBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr, dataSize);
+    if (data_.bnr > 0) {
+        data_.lbr = reinterpret_cast<PerfBranchEntry *>(p);
+        SetPointerOffset(p, data_.bnr * sizeof(PerfBranchEntry), dataSize);
+    }
+    PopFromBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi, dataSize);
+    if (data_.user_abi > 0) {
+        data_.reg_mask = attr.sample_regs_user;
+        data_.reg_nr = __builtin_popcountll(data_.reg_mask);
+        data_.user_regs = reinterpret_cast<u64 *>(p);
+        SetPointerOffset(p, data_.reg_nr * sizeof(u64), dataSize);
+    }
+    PopFromBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr, dataSize);
+    if (data_.server_nr > 0) {
+        data_.server_pids = reinterpret_cast<u64 *>(p);
+        SetPointerOffset(p, data_.server_nr * sizeof(u64), dataSize);
+    }
+    PopFromBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size, dataSize);
+    if (data_.stack_size > 0) {
+        data_.stack_data = p;
+        SetPointerOffset(p, data_.stack_size, dataSize);
+        PopFromBinary(true, p, data_.dyn_size, dataSize);
+    }
+    uint32_t remain = header_.size - (p - start);
+    if (data_.nr == 0 && dumpRemoveStack_ && remain == sizeof(stackId_)) {
+        PopFromBinary(true, p, stackId_.value, dataSize);
+    }
+}
+
 void PerfRecordSample::SetDumpRemoveStack(bool dumpRemoveStack)
 {
     dumpRemoveStack_ = dumpRemoveStack;
@@ -805,6 +571,300 @@ void PerfRecordSample::SetDumpRemoveStack(bool dumpRemoveStack)
 bool PerfRecordSample::IsDumpRemoveStack()
 {
     return dumpRemoveStack_;
+}
+
+bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+
+    PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id);
+    PushToBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip);
+    PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid);
+    PushToBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time);
+    PushToBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr);
+    PushToBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id);
+    PushToBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id);
+    PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res);
+    PushToBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period);
+    PushToBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr);
+    if (data_.nr > 0 && !removeStack_) {
+        std::copy(data_.ips + skipKernel_, data_.ips + data_.nr + skipKernel_,
+                  reinterpret_cast<u64 *>(p));
+        p += data_.nr * sizeof(u64);
+    }
+    PushToBinary(sampleType_ & PERF_SAMPLE_RAW, p, data_.raw_size);
+    if (data_.raw_size > 0) {
+        std::copy(data_.raw_data, data_.raw_data + data_.raw_size, p);
+        p += data_.raw_size * sizeof(u8);
+    }
+    PushToBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr);
+    if (data_.bnr > 0) {
+        std::copy(data_.lbr, data_.lbr + data_.bnr, reinterpret_cast<PerfBranchEntry *>(p));
+        p += data_.bnr * sizeof(PerfBranchEntry);
+    }
+    PushToBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi);
+    if (data_.user_abi > 0 && data_.reg_nr > 0) {
+        std::copy(data_.user_regs, data_.user_regs + data_.reg_nr, reinterpret_cast<u64 *>(p));
+        p += data_.reg_nr * sizeof(u64);
+    }
+    PushToBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr);
+    if (data_.server_nr > 0) {
+        std::copy(data_.server_pids + skipPid_, data_.server_pids + data_.server_nr + skipPid_,
+                  reinterpret_cast<u64 *>(p));
+        p += data_.server_nr * sizeof(u64);
+    }
+    PushToBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size);
+    if (data_.stack_size > 0) {
+        std::copy(data_.stack_data, data_.stack_data + data_.stack_size, p);
+        p += data_.stack_size * sizeof(u8);
+        PushToBinary(true, p, data_.dyn_size);
+    }
+    PushToBinary(removeStack_, p, stackId_.value);
+    return true;
+}
+
+void PerfRecordSample::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "sample_type: 0x%" PRIx64 "\n", sampleType_);
+
+    // dump record according sampleType
+    if (sampleType_ & (PERF_SAMPLE_ID | PERF_SAMPLE_IDENTIFIER)) {
+        PRINT_INDENT(indent, "ID %" PRIu64 "\n", static_cast<uint64_t>(data_.sample_id));
+    }
+    if (sampleType_ & PERF_SAMPLE_IP) {
+        PRINT_INDENT(indent, "ip %llx\n", data_.ip);
+    }
+    if (sampleType_ & PERF_SAMPLE_TID) {
+        PRINT_INDENT(indent, "pid %u, tid %u\n", data_.pid, data_.tid);
+    }
+    if (sampleType_ & PERF_SAMPLE_TIME) {
+        PRINT_INDENT(indent, "time %llu\n", data_.time);
+    }
+    if (sampleType_ & PERF_SAMPLE_ADDR) {
+        PRINT_INDENT(indent, "addr %p\n", reinterpret_cast<void *>(data_.addr));
+    }
+    if (sampleType_ & PERF_SAMPLE_STREAM_ID) {
+        PRINT_INDENT(indent, "stream_id %" PRIu64 "\n", static_cast<uint64_t>(data_.stream_id));
+    }
+    if (sampleType_ & PERF_SAMPLE_CPU) {
+        PRINT_INDENT(indent, "cpu %u, res %u\n", data_.cpu, data_.res);
+    }
+    if (sampleType_ & PERF_SAMPLE_PERIOD) {
+        PRINT_INDENT(indent, "period %" PRIu64 "\n", static_cast<uint64_t>(data_.period));
+    }
+    if (stackId_.section.id > 0) {
+        PRINT_INDENT(indent, "stackid %" PRIu64 "\n", static_cast<uint64_t>(stackId_.section.id));
+    }
+    if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
+        bool userContext = false;
+        PRINT_INDENT(indent, "callchain nr=%lld\n", data_.nr);
+        for (uint64_t i = 0; i < data_.nr; ++i) {
+            std::string_view supplement = "";
+            if ((sampleType_ & PERF_SAMPLE_STACK_USER) == 0 || data_.ips[i] != PERF_CONTEXT_USER) {
+                PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
+                continue;
+            }
+            // is PERF_SAMPLE_STACK_USER type and is PERF_CONTEXT_USER
+            if (!userContext) {
+                userContext = true;
+                supplement = " <unwind callstack>";
+            } else {
+                supplement = " <expand callstack>";
+            }
+            PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
+        }
+    }
+    if (sampleType_ & PERF_SAMPLE_RAW) {
+        PRINT_INDENT(indent, "raw size=%u\n", data_.raw_size);
+        const uint32_t *data = reinterpret_cast<const uint32_t *>(data_.raw_data);
+        size_t size = data_.raw_size / sizeof(uint32_t);
+        for (size_t i = 0; i < size; ++i) {
+            PRINT_INDENT(indent + 1, "0x%08x (%x)\n", data[i], data[i]);
+        }
+    }
+    if (sampleType_ & PERF_SAMPLE_BRANCH_STACK) {
+        PRINT_INDENT(indent, "branch_stack nr=%lld\n", data_.bnr);
+        for (uint64_t i = 0; i < data_.bnr; ++i) {
+            auto &item = data_.lbr[i];
+            PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx, flags 0x%llx\n", item.from, item.to, item.flags);
+        }
+    }
+    if (sampleType_ & PERF_SAMPLE_REGS_USER) {
+        PRINT_INDENT(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
+        for (uint64_t i = 0; i < data_.reg_nr; ++i) {
+            PRINT_INDENT(indent + 1, "0x%llx\n", data_.user_regs[i]);
+        }
+    }
+    if (sampleType_ & PERF_SAMPLE_SERVER_PID) {
+        PRINT_INDENT(indent, "server nr=%lld\n", data_.server_nr);
+        for (uint64_t i = 0; i < data_.server_nr; ++i) {
+            PRINT_INDENT(indent + 1, "pid: %llu\n", data_.server_pids[i]);
+        }
+    }
+    if (sampleType_ & PERF_SAMPLE_STACK_USER) {
+        PRINT_INDENT(indent, "user stack: size %llu dyn_size %lld\n", data_.stack_size,
+                     data_.dyn_size);
+    }
+}
+
+void PerfRecordSample::DumpLog(const std::string &prefix) const
+{
+    HLOGV("%s: SAMPLE: id= %llu size %d pid %u tid %u ips %llu regs %llu, stacks %llu time %llu",
+          prefix.c_str(), data_.sample_id, header_.size, data_.pid, data_.tid, data_.nr,
+          data_.reg_nr, data_.dyn_size, data_.time);
+}
+
+void PerfRecordSample::RecoverCallStack()
+{
+    data_.ips = ips_.data();
+    data_.nr = ips_.size();
+    removeStack_ = true;
+}
+
+void PerfRecordSample::ReplaceWithCallStack(size_t originalSize)
+{
+    // first we check if we have some user unwind stack need to merge ?
+    if (callFrames_.size() != 0) {
+        // when we have some kernel ips , we cp it first
+        // new size is user call frames + kernel call frames
+        // + PERF_CONTEXT_USER(last + 1) + expand mark(also PERF_CONTEXT_USER)
+        const unsigned int perfContextSize = 2;
+        ips_.reserve(data_.nr + callFrames_.size() + perfContextSize);
+        if (data_.nr > 0) {
+            ips_.assign(data_.ips, data_.ips + data_.nr);
+        }
+        // add user context mark
+        ips_.emplace_back(PERF_CONTEXT_USER);
+        // we also need make a expand mark just for debug only
+        const size_t beginIpsSize = ips_.size();
+        bool ret = std::all_of(callFrames_.begin(), callFrames_.end(), [&](const DfxFrame &frame) {
+            ips_.emplace_back(frame.pc);
+            if (originalSize != 0 && (originalSize != callFrames_.size()) &&
+                ips_.size() == (originalSize + beginIpsSize)) {
+                // just for debug
+                // so we can see which frame begin is expand call frames
+                ips_.emplace_back(PERF_CONTEXT_USER);
+            }
+            return true;
+        });
+        if (ret) {
+            HLOGV("combed %zu", callFrames_.size());
+        } else {
+            HLOGV("failed to combed %zu", callFrames_.size());
+        }
+
+        if (sampleType_ & PERF_SAMPLE_REGS_USER) {
+            header_.size -= data_.reg_nr * sizeof(u64);
+            data_.reg_nr = 0;
+            data_.user_abi = 0;
+        }
+
+        if (sampleType_ & PERF_SAMPLE_STACK_USER) {
+            // 1. remove the user stack
+            header_.size -= data_.stack_size;
+            header_.size -= sizeof(data_.dyn_size);
+
+            // 2. clean the size
+            data_.stack_size = 0;
+            data_.dyn_size = 0;
+        }
+
+        if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
+            HLOGV("ips change from %llu -> %zu", data_.nr, ips_.size());
+
+            // 3. remove the nr size
+            header_.size -= data_.nr * sizeof(u64);
+
+            // 4. add new nr size
+            data_.nr = ips_.size();
+            header_.size += data_.nr * sizeof(u64);
+
+            // 5. change ips potin to our ips array and hold it.
+            data_.ips = ips_.data();
+        }
+    }
+}
+
+inline pid_t PerfRecordSample::GetPid() const
+{
+    return data_.pid;
+}
+
+uint64_t PerfRecordSample::GetTime() const
+{
+    return data_.time;
+}
+
+void PerfRecordSample::Clean()
+{
+    ips_.clear();
+    callFrames_.clear();
+    serverPidMap_.clear();
+}
+
+pid_t PerfRecordSample::GetUstackServerPid()
+{
+    if (!data_.server_nr) {
+        return data_.pid;
+    }
+
+    size_t currServer = 0;
+    // ipNr == 1...nr: server_pid of data_.ips[nr]
+    for (size_t i = 0; i < data_.nr; i++) {
+        // context change, use next server pid
+        if (data_.ips[i] >= PERF_CONTEXT_MAX) {
+            currServer++;
+        }
+    }
+    // ipNr == nr + 1: server_pid of ustack
+    if (currServer > 0) {
+        currServer++;
+    }
+    if (currServer >= data_.server_nr) {
+        HLOGE("ustack server pid nr %zu out of range", currServer);
+        return data_.pid;
+    }
+
+    // return server pid
+    return data_.server_pids[currServer];
+}
+
+pid_t PerfRecordSample::GetServerPidof(unsigned int ipNr)
+{
+    if (!data_.server_nr) {
+        return data_.pid;
+    }
+
+    // init serverPidMap_
+    if (!serverPidMap_.size()) {
+        size_t currServer = 0;
+        // ipNr == 0: server_pid of data_.ip
+        serverPidMap_.emplace_back(data_.server_pids[currServer]);
+        // ipNr == 1...nr: server_pid of data_.ips[nr]
+        for (size_t i = 1; i < data_.nr; i++) {
+            // context change, use next server pid
+            if (data_.ips[i] >= PERF_CONTEXT_MAX) {
+                currServer++;
+            }
+            if (currServer >= data_.server_nr) {
+                HLOGE("callchain server pid nr %zu out of range", currServer);
+                break;
+            }
+            serverPidMap_.emplace_back(data_.server_pids[currServer]);
+        }
+    }
+
+    // return server pid
+    if (ipNr >= serverPidMap_.size()) {
+        return data_.pid;
+    } else {
+        return serverPidMap_[ipNr];
+    }
 }
 
 bool PerfRecordExit::GetBinary(std::vector<uint8_t> &buf) const
@@ -1009,66 +1069,6 @@ void PerfRecordSwitchCpuWide::DumpData(int indent) const
                  data_.next_prev_tid);
 }
 
-pid_t PerfRecordSample::GetUstackServerPid()
-{
-    if (!data_.server_nr) {
-        return data_.pid;
-    }
-
-    size_t currServer = 0;
-    // ipNr == 1...nr: server_pid of data_.ips[nr]
-    for (size_t i = 0; i < data_.nr; i++) {
-        // context change, use next server pid
-        if (data_.ips[i] >= PERF_CONTEXT_MAX) {
-            currServer++;
-        }
-    }
-    // ipNr == nr + 1: server_pid of ustack
-    if (currServer > 0) {
-        currServer++;
-    }
-    if (currServer >= data_.server_nr) {
-        HLOGE("ustack server pid nr %zu out of range", currServer);
-        return data_.pid;
-    }
-
-    // return server pid
-    return data_.server_pids[currServer];
-}
-
-pid_t PerfRecordSample::GetServerPidof(unsigned int ipNr)
-{
-    if (!data_.server_nr) {
-        return data_.pid;
-    }
-
-    // init serverPidMap_
-    if (!serverPidMap_.size()) {
-        size_t currServer = 0;
-        // ipNr == 0: server_pid of data_.ip
-        serverPidMap_.emplace_back(data_.server_pids[currServer]);
-        // ipNr == 1...nr: server_pid of data_.ips[nr]
-        for (size_t i = 1; i < data_.nr; i++) {
-            // context change, use next server pid
-            if (data_.ips[i] >= PERF_CONTEXT_MAX) {
-                currServer++;
-            }
-            if (currServer >= data_.server_nr) {
-                HLOGE("callchain server pid nr %zu out of range", currServer);
-                break;
-            }
-            serverPidMap_.emplace_back(data_.server_pids[currServer]);
-        }
-    }
-
-    // return server pid
-    if (ipNr >= serverPidMap_.size()) {
-        return data_.pid;
-    } else {
-        return serverPidMap_[ipNr];
-    }
-}
-
 PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type, uint8_t* data,
                                                             const perf_event_attr &attr)
 {
@@ -1087,7 +1087,6 @@ PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type,
     record->Init(data, attr);
     return *record;
 }
-
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

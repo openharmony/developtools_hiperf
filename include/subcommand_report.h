@@ -111,6 +111,7 @@ public:
 
     ~SubCommandReport();
 
+    static SubCommand& GetInstance();
 private:
     void ProcessSample(std::unique_ptr<PerfRecordSample> &);
     void BroadcastSample(std::unique_ptr<PerfRecordSample> &);

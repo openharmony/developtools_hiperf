@@ -53,7 +53,7 @@ void SubCommandDumpTest::SetUp()
     // clear the subCommands left from other UT
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommandDump::RegisterSubCommandDump();
+    SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
 }
 
@@ -827,6 +827,14 @@ HWTEST_F(SubCommandDumpTest, DumpOutputFail, TestSize.Level1)
     std::string stringOut = stdoutRecord.Stop();
     std::string symbol = "unable open file";
     EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
+}
+
+HWTEST_F(SubCommandDumpTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandDump::GetInstance().Name(), "dump");
 }
 } // namespace HiPerf
 } // namespace Developtools

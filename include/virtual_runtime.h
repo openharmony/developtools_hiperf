@@ -131,6 +131,7 @@ public:
     }
     DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
+    void ClearSymbolCache();
 
     VirtualThread &GetThread(pid_t pid, pid_t tid, const std::string name = "");
     const std::map<pid_t, VirtualThread> &GetThreads() const

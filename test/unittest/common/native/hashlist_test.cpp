@@ -302,6 +302,19 @@ HWTEST_F(HashListTest, erase, TestSize.Level1)
     }
     EXPECT_TRUE(hashList.empty());
 }
+
+HWTEST_F(HashListTest, clear, TestSize.Level1)
+{
+    HashList<std::size_t, std::size_t> hashList {size_};
+    constexpr std::size_t size = 20;
+    for (std::size_t curSize = 0; curSize < size; ++curSize) {
+        hashList.push_back(curSize, curSize);
+        std::size_t tmp = hashList.back();
+        EXPECT_EQ(tmp, curSize);
+    }
+    hashList.clear();
+    EXPECT_TRUE(hashList.empty());
+}
 } // end of namespace HiPerf
 } // end of namespace Developtools
 } // end of namespace OHOS
