@@ -114,7 +114,7 @@ inline void PopFromBinary2(bool condition, uint8_t*& p, T1& v1, T2& v2, u64& siz
 
 inline void SetPointerOffset(uint8_t*& p, u64 offset, u64& size)
 {
-    HIPERF_ASSERT(offset <= size, "SetPointerOffset error\n");
+    HIPERF_ASSERT(offset <= size && offset <= RECORD_SIZE_LIMIT, "SetPointerOffset error\n");
     size -= offset;
     p += offset;
 }
@@ -184,6 +184,10 @@ std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
 
 void PerfRecordAuxtrace::Init(uint8_t* data, const perf_event_attr& attr)
 {
+    if (data == nullptr || header_.size > sizeof(perf_event_header)) {
+        HLOGE("Init failed");
+        return;
+    }
     PerfEventRecordTemplate::Init(data);
     rawData_ = data + header_.size;
 }

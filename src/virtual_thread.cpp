@@ -37,6 +37,9 @@ static constexpr int MAP_PROT_EXEC_INDEX = 2;
 
 bool VirtualThread::IsSorted() const
 {
+    if (memMapsIndexs_.empty()) {
+        return true;
+    }
     for (std::size_t index = 1; index < memMaps_.size(); ++index) {
         if (memMaps_[memMapsIndexs_[index - 1]]->end > memMaps_[memMapsIndexs_[index]]->begin) {
             std::cout << "memMaps_ order error:\n"

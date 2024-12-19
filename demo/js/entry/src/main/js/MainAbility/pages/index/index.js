@@ -172,4 +172,4 @@ export default {
     console.info('onclick testOnclick' + this.clickTimes);
     this.output = this.clickTimes;
   }
-}
+};

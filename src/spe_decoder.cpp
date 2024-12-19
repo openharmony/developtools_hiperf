@@ -31,9 +31,9 @@ namespace Developtools {
 namespace HiPerf {
 constexpr const int UN_PRMT = -1;
 
-const char *SpePktName(enum SpePktType type)
+const std::string SpePktName(enum SpePktType type)
 {
-    const char* spePacketName;
+    std::string spePacketName = "";
     switch (type) {
         case PERF_SPE_PAD:         spePacketName = "PAD"; break;
         case PERF_SPE_END:         spePacketName = "END"; break;
@@ -495,10 +495,10 @@ static int SpePktDesCont(const struct SpePkt *packet,
 {
     CHECK_TRUE(buf == nullptr || packet == nullptr, -1, 1, "Invalid pointer!");
     u64 payload = packet->payload;
-    const char *name = SpePktName(packet->type);
+    const std::string name = SpePktName(packet->type);
     int err = 0;
 
-    SpePktOutString(&err, &buf, &bufLen, "%s %d ", name,
+    SpePktOutString(&err, &buf, &bufLen, "%s %d ", name.c_str(),
                     (unsigned short)payload);
 
     switch (packet->index) {
@@ -524,7 +524,7 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
     CHECK_TRUE(buf == nullptr || packet == nullptr, -1, 1, "Invalid pointer!");
     int idx = packet->index;
     unsigned long long payload = packet->payload;
-    const char *name = SpePktName(packet->type);
+    const std::string name = SpePktName(packet->type);
     char *bufOrig = buf;
     size_t blen = bufLen;
     int err = 0;
@@ -533,7 +533,7 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
         case PERF_SPE_BAD:
         case PERF_SPE_PAD:
         case PERF_SPE_END:
-            SpePktOutString(&err, &buf, &blen, "%s", name);
+            SpePktOutString(&err, &buf, &blen, "%s", name.c_str());
             break;
         case PERF_SPE_EVENTS:
             err = SpePktDescEvent(packet, buf, bufLen);
@@ -543,14 +543,14 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
             break;
         case PERF_SPE_DATA_SOURCE:
         case PERF_SPE_TIMESTAMP:
-            SpePktOutString(&err, &buf, &blen, "%s %lld", name, payload);
+            SpePktOutString(&err, &buf, &blen, "%s %lld", name.c_str(), payload);
             break;
         case PERF_SPE_ADDRESS:
             err = SpePktDescAddr(packet, buf, bufLen);
             break;
         case PERF_SPE_CONTEXT:
             SpePktOutString(&err, &buf, &blen, "%s 0x%lx el%d",
-                            name, (unsigned long)payload, idx + 1);
+                            name.c_str(), (unsigned long)payload, idx + 1);
             break;
         case PERF_SPE_COUNTER:
             err = SpePktDesCont(packet, buf, bufLen);
@@ -565,7 +565,7 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
     if (err) {
         err = 0;
         SpePktOutString(&err, &bufOrig, &bufLen, "%s 0x%llx (%d)",
-                        name, payload, packet->index);
+                        name.c_str(), payload, packet->index);
     }
 
     return err;

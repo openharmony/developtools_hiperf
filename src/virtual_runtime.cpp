@@ -87,9 +87,9 @@ std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
     } else if (tid == devhostPid_) {
         comm = DEVHOST_FILE_NAME;
     } else if (isThread) {
-        comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid)).c_str();
+        comm = ReadFileToString(StringPrintf("/proc/%d/comm", tid));
     } else {
-        comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid)).c_str();
+        comm = ReadFileToString(StringPrintf("/proc/%d/cmdline", tid));
     }
     if (comm == EMPTY_STRING) {
         comm = ReadFromSavedCmdLines(tid);

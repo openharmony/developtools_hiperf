@@ -55,8 +55,8 @@ public:
     static constexpr auto DEFAULT_STAT_REPORT_TIME = 500;
     static constexpr auto DEFAULT_SAMPLE_MMAPAGE = 256;
 
-    static uint64_t g_recordCount;
-    static uint64_t g_statCount;
+    static uint64_t gRecordCount;
+    static uint64_t gStatCount;
 };
 
 void PerfEventsTest::SetUpTestCase() {}
@@ -67,19 +67,19 @@ void PerfEventsTest::SetUp() {}
 
 void PerfEventsTest::TearDown() {}
 
-uint64_t PerfEventsTest::g_recordCount = 0;
-uint64_t PerfEventsTest::g_statCount = 0;
+uint64_t PerfEventsTest::gRecordCount = 0;
+uint64_t PerfEventsTest::gStatCount = 0;
 
 bool PerfEventsTest::RecordCount(PerfEventRecord& record)
 {
-    g_recordCount++;
+    gRecordCount++;
     return true;
 }
 
 void PerfEventsTest::StatCount(
     const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
 {
-    g_statCount++;
+    gStatCount++;
 }
 
 void PerfEventsTest::TestCodeThread()
@@ -193,7 +193,7 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
 
     PerfEvents event;
     // prepare
-    g_recordCount = 0;
+    gRecordCount = 0;
     event.SetMmapPages(DEFAULT_SAMPLE_MMAPAGE);
     event.SetRecordCallBack(RecordCount);
 
@@ -219,9 +219,9 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(event.PauseTracking(), true);
     std::this_thread::sleep_for(TEST_TIME); // wait for clearing mmap buffer
-    uint64_t recordCount = g_recordCount;
+    uint64_t recordCount = gRecordCount;
     std::this_thread::sleep_for(TEST_TIME);
-    EXPECT_EQ(recordCount, g_recordCount) << "now should have no record";
+    EXPECT_EQ(recordCount, gRecordCount) << "now should have no record";
     EXPECT_EQ(event.ResumeTracking(), true);
     TestCodeThread();
     std::this_thread::sleep_for(TEST_TIME);
@@ -230,7 +230,7 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     for (std::thread &t : testThreads) {
         t.join();
     }
-    ASSERT_GT(g_recordCount, recordCount) << "should have more records";
+    ASSERT_GT(gRecordCount, recordCount) << "should have more records";
 
     size_t lostSamples = 0;
     size_t lostNonSamples = 0;
@@ -247,7 +247,7 @@ HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level1)
 
     PerfEvents event;
     // prepare
-    g_recordCount = 0;
+    gRecordCount = 0;
     event.SetMmapPages(DEFAULT_SAMPLE_MMAPAGE);
     event.SetRecordCallBack(RecordCount);
     SetAllConfig(event);
@@ -259,9 +259,9 @@ HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level1)
     std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(event.PauseTracking(), true);
     std::this_thread::sleep_for(TEST_TIME); // wait for clearing mmap buffer
-    uint64_t recordCount = g_recordCount;
+    uint64_t recordCount = gRecordCount;
     std::this_thread::sleep_for(TEST_TIME);
-    EXPECT_EQ(recordCount, g_recordCount) << "now should have no record";
+    EXPECT_EQ(recordCount, gRecordCount) << "now should have no record";
     EXPECT_EQ(event.ResumeTracking(), true);
     TestCodeThread();
     std::this_thread::sleep_for(TEST_TIME);
@@ -270,7 +270,7 @@ HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level1)
     for (std::thread &t : testThreads) {
         t.join();
     }
-    ASSERT_GT(g_recordCount, recordCount) << "should have more records";
+    ASSERT_GT(gRecordCount, recordCount) << "should have more records";
 
     std::string stringOut = stdoutRecord.Stop();
 }
@@ -283,7 +283,7 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level1)
 
     PerfEvents event;
     // prepare
-    g_statCount = 0;
+    gStatCount = 0;
     std::vector<pid_t> selectCpus_;
     event.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
@@ -305,8 +305,8 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level1)
 
     std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(event.PauseTracking(), true);
-    EXPECT_GT(g_statCount, 0u) << "should have stats";
-    uint64_t statCount = g_statCount;
+    EXPECT_GT(gStatCount, 0u) << "should have stats";
+    uint64_t statCount = gStatCount;
     std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(event.ResumeTracking(), true);
     std::this_thread::sleep_for(TEST_TIME);
@@ -315,7 +315,7 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level1)
     for (std::thread &t : testThreads) {
         t.join();
     }
-    EXPECT_GT(g_statCount, statCount) << "should have more stats";
+    EXPECT_GT(gStatCount, statCount) << "should have more stats";
 
     std::string stringOut = stdoutRecord.Stop();
 }

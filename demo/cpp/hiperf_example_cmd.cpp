@@ -31,8 +31,8 @@ using namespace std::chrono_literals;
 
 namespace {
 #define USED_FUNCTION __attribute__((__used__)) __attribute__((optnone))
-constexpr milliseconds eachStackFunRunTime = 100ms;
-constexpr milliseconds msDuartion = 1000ms;
+constexpr milliseconds EACH_STACK_FUN_RUN_TIME = 100ms;
+constexpr milliseconds MS_DUARTION = 1000ms;
 const ssize_t ERRINFOLEN = 512;
 
 extern USED_FUNCTION void LoopBranch0(std::default_random_engine &rnd, int level);
@@ -195,7 +195,7 @@ inline void Loop(milliseconds timeOutMS, const Option &option)
 USED_FUNCTION void CallStack10(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -203,11 +203,11 @@ USED_FUNCTION void CallStack9(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack10(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -215,11 +215,11 @@ USED_FUNCTION void CallStack8(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack9(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -227,11 +227,11 @@ USED_FUNCTION void CallStack7(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack8(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -239,11 +239,11 @@ USED_FUNCTION void CallStack6(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack7(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -251,11 +251,11 @@ USED_FUNCTION void CallStack5(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack6(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -263,11 +263,11 @@ USED_FUNCTION void CallStack4(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack5(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -275,11 +275,11 @@ USED_FUNCTION void CallStack3(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack4(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -287,11 +287,11 @@ USED_FUNCTION void CallStack2(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack3(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -299,11 +299,11 @@ USED_FUNCTION void CallStack1(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack2(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
@@ -311,11 +311,11 @@ USED_FUNCTION void CallStack0(int currentStack, const Option &option)
 {
     if (option.stack > 0) {
         if (option.dynamicStack) {
-            Loop(eachStackFunRunTime, option); // loop 100 ms
+            Loop(EACH_STACK_FUN_RUN_TIME, option); // loop 100 ms
         }
         CallStack1(currentStack - 1, option);
     } else {
-        Loop(option.second * msDuartion, option);
+        Loop(option.second * MS_DUARTION, option);
     }
 }
 
