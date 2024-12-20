@@ -135,23 +135,34 @@ inline void PushToBinary2(bool condition, uint8_t *&p, const T1 &v1, const T2 &v
 }
 
 template<typename T>
-inline void PopFromBinary(bool condition, uint8_t *&p, T &v)
+inline void PopFromBinary(bool condition, uint8_t*& p, T& v, u64& size)
 {
+    HIPERF_ASSERT(sizeof(T) <= size, "PopFromBinary error\n");
     if (condition) {
         v = *(reinterpret_cast<const T *>(p));
         p += sizeof(T);
+        size -= sizeof(T);
     }
 }
 
 template<typename T1, typename T2>
-inline void PopFromBinary2(bool condition, uint8_t *&p, T1 &v1, T2 &v2)
+inline void PopFromBinary2(bool condition, uint8_t*& p, T1& v1, T2& v2, u64& size)
 {
+    HIPERF_ASSERT(sizeof(T1) + sizeof(T2) <= size, "PopFromBinary2 error\n");
     if (condition) {
         v1 = *(reinterpret_cast<const T1 *>(p));
         p += sizeof(T1);
         v2 = *(reinterpret_cast<const T2 *>(p));
         p += sizeof(T2);
+        size -= (sizeof(T1) + sizeof(T2));
     }
+}
+
+inline void SetPointerOffset(uint8_t*& p, u64 offset, u64& size)
+{
+    HIPERF_ASSERT(offset <= size, "SetPointerOffset error\n");
+    size -= offset;
+    p += offset;
 }
 
 // PerfEventRecord
@@ -398,57 +409,57 @@ PerfRecordSample::PerfRecordSample(uint8_t *p, const perf_event_attr &attr)
     sampleType_ = attr.sample_type;
 
     uint8_t *start = p;
-
-    p += sizeof(header);
+    u64 dataSize = static_cast<u64>(RECORD_SIZE_LIMIT);
+    SetPointerOffset(p, sizeof(header), dataSize);
 
     // parse record according SAMPLE_TYPE
-    PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip);
-    PopFromBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id);
-    PopFromBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip, dataSize);
+    PopFromBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id, dataSize);
+    PopFromBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr, dataSize);
     if (data_.nr > 0) {
         // the pointer is from input(p), require caller keep input(p) with *this together
         // think it in next time
         data_.ips = reinterpret_cast<u64 *>(p);
-        p += data_.nr * sizeof(u64);
+        SetPointerOffset(p, data_.nr * sizeof(u64), dataSize);
     }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_RAW, p, data_.raw_size);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_RAW, p, data_.raw_size, dataSize);
     if (data_.raw_size > 0) {
         data_.raw_data = p;
-        p += data_.raw_size * sizeof(u8);
+        SetPointerOffset(p, data_.raw_size * sizeof(u8), dataSize);
     }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_BRANCH_STACK, p, data_.bnr, dataSize);
     if (data_.bnr > 0) {
         data_.lbr = reinterpret_cast<PerfBranchEntry *>(p);
-        p += data_.bnr * sizeof(PerfBranchEntry);
+        SetPointerOffset(p, data_.bnr * sizeof(PerfBranchEntry), dataSize);
     }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_REGS_USER, p, data_.user_abi, dataSize);
     if (data_.user_abi > 0) {
         data_.reg_mask = attr.sample_regs_user;
         data_.reg_nr = __builtin_popcountll(data_.reg_mask);
         data_.user_regs = reinterpret_cast<u64 *>(p);
-        p += data_.reg_nr * sizeof(u64);
+        SetPointerOffset(p, data_.reg_nr * sizeof(u64), dataSize);
     }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_SERVER_PID, p, data_.server_nr, dataSize);
     if (data_.server_nr > 0) {
         data_.server_pids = reinterpret_cast<u64 *>(p);
-        p += data_.server_nr * sizeof(u64);
+        SetPointerOffset(p, data_.server_nr * sizeof(u64), dataSize);
     }
-    PopFromBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_STACK_USER, p, data_.stack_size, dataSize);
     if (data_.stack_size > 0) {
         data_.stack_data = p;
-        p += data_.stack_size;
-        PopFromBinary(true, p, data_.dyn_size);
+        SetPointerOffset(p, data_.stack_size, dataSize);
+        PopFromBinary(true, p, data_.dyn_size, dataSize);
     }
     uint32_t remain = header.size - (p - start);
     if (data_.nr == 0 && dumpRemoveStack_ && remain == sizeof(stackId_)) {
-        PopFromBinary(true, p, stackId_.value);
+        PopFromBinary(true, p, stackId_.value, dataSize);
     }
 }
 
@@ -614,6 +625,7 @@ PerfRecordMmap::PerfRecordMmap(uint8_t *p) : PerfEventRecord(p, "mmap")
     } else {
         HLOGE("PerfRecordMmap retren failed !!!");
     }
+    data_.filename[KILO - 1] = '\0';
 }
 
 PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
@@ -814,6 +826,7 @@ PerfRecordComm::PerfRecordComm(uint8_t *p) : PerfEventRecord(p, "comm")
     } else {
         HLOGE("PerfRecordComm retren failed !!!");
     }
+    data_.comm[KILO - 1] = '\0';
 }
 
 PerfRecordComm::PerfRecordComm(bool inKernel, u32 pid, u32 tid, const std::string &comm)

@@ -294,6 +294,14 @@ private:
 #define HLOG_ASSERT(condition) HLOG_ASSERT_MESSAGE(condition, "")
 #endif
 
+#ifndef HIPERF_ASSERT
+#define HIPERF_ASSERT(condition, format, ...)                                                      \
+    if (!(condition)) [[unlikely]] {                                                               \
+        printf(format, ##__VA_ARGS__);                                                             \
+        exit(-1);                                                                                  \
+    }
+#endif
+
 #undef assert
 #else
 #define HLOGDUMMY(...)                                                                             \

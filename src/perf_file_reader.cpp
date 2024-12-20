@@ -31,6 +31,7 @@ namespace Developtools {
 namespace HiPerf {
 const int FETURE_MAX = 256;
 const int SIZE_FETURE_COUNT = 8;
+constexpr size_t MAX_VECTOR_RESIZE_COUNT = 100000;
 
 std::unique_ptr<PerfFileReader> PerfFileReader::Instance(const std::string &fileName)
 {
@@ -140,6 +141,7 @@ bool PerfFileReader::ReadAttrSection()
               sizeof(perf_file_attr));
     }
     CHECK_TRUE(header_.attrSize == 0, false, 0, "");
+    CHECK_TRUE(header_.attrSize > THOUSANDS, false, 1, "attr size exceeds 1000");
     int attrCount = header_.attrs.size / header_.attrSize;
     CHECK_TRUE(attrCount == 0, false, 1, "no attr in file");
     if (fseek(fp_, header_.attrs.offset, SEEK_SET) != 0) {
@@ -184,7 +186,11 @@ bool PerfFileReader::ReadAttrSection()
 bool PerfFileReader::ReadIdsForAttr(const perf_file_attr &attr, std::vector<uint64_t> *ids)
 {
     if (attr.ids.size > 0) {
-        size_t count = attr.ids.size / sizeof(uint64_t);
+        size_t count = attr.ids.size / sizeof(uint64_t) + 1;
+        if (count > MAX_VECTOR_RESIZE_COUNT) {
+            HLOGE("count(%zu) out of range", count);
+            return false;
+        }
         if (fseek(fp_, attr.ids.offset, SEEK_SET) != 0) {
             HLOGE("fseek() failed");
             return false;

@@ -93,6 +93,8 @@ private:
 #ifdef HIPERF_DEBUG_TIME
     std::chrono::microseconds readRecordTime_ = std::chrono::microseconds::zero();
     std::chrono::microseconds readCallbackTime_ = std::chrono::microseconds::zero();
+
+    FRIEND_TEST(PerfFileReaderTest, Test_OverAttrSize);
 #endif
 };
 } // namespace HiPerf
