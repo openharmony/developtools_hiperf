@@ -31,13 +31,13 @@ public:
         )
     // clang-format on
     {
-        Option::RegisterMainOption("--help", "show help", OnHelp);
-        Option::RegisterMainOption("-h", "show help", OnHelp);
     }
 
     bool OnSubCommand(std::vector<std::string> &args) override;
     static void RegisterSubCommandHelp(void);
     static bool OnHelp(std::vector<std::string> &args);
+
+    static SubCommand& GetInstance();
 };
 } // namespace HiPerf
 } // namespace Developtools

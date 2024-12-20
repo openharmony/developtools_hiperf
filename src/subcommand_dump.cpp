@@ -582,7 +582,7 @@ void SubCommandDump::DumpUniqueStackTableNode(int indent, const PerfFileSectionU
 
 bool SubCommandDump::RegisterSubCommandDump()
 {
-    return SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
+    return SubCommand::RegisterSubCommand("dump", SubCommandDump::GetInstance);
 }
 
 void SubCommandDump::SetHM()
@@ -611,6 +611,12 @@ void SubCommandDump::DumpSpeReport()
         DumpSpeReportData(indent_, g_outputDump);
     }
 #endif
+}
+
+SubCommand& SubCommandDump::GetInstance()
+{
+    static SubCommandDump subCommand;
+    return subCommand;
 }
 
 } // namespace HiPerf

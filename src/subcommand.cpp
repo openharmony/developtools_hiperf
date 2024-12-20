@@ -21,8 +21,9 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-static std::map<std::string, std::unique_ptr<SubCommand>> g_SubCommandsMap;
-std::mutex g_subCommandMutex;
+std::mutex SubCommand::subCommandMutex_;
+std::map<std::string, std::unique_ptr<SubCommand>> SubCommand::subCommandMap_ = {};
+std::map<std::string, std::function<SubCommand&()>> SubCommand::subCommandFuncMap_ = {};
 
 // parse option first
 bool SubCommand::OnSubCommandOptions(std::vector<std::string> args)
@@ -76,7 +77,7 @@ bool SubCommand::CheckRestartOption(std::string &appPackage, bool targetSystemWi
         printf("option --restart and -p/-a is conflict, please check usage\n");
         return false;
     }
-    
+
     if (!appPackage.empty()) {
         return IsRestarted(appPackage);
     }
@@ -145,7 +146,7 @@ void SubCommand::ExcludeThreadsFromSelectTids(const std::vector<std::string> &ex
     }
 }
 
-bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::unique_ptr<SubCommand> subCommand)
+bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::function<SubCommand&()> func)
 {
     HLOGV("%s", cmdName.c_str());
     if (cmdName.empty()) {
@@ -157,9 +158,9 @@ bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::unique_ptr<
         return false;
     }
 
-    if (g_SubCommandsMap.find(cmdName) == g_SubCommandsMap.end()) {
-        std::lock_guard<std::mutex> lock(g_subCommandMutex);
-        g_SubCommandsMap.insert(std::make_pair(cmdName, std::move(subCommand)));
+    if (subCommandFuncMap_.find(cmdName) == subCommandFuncMap_.end()) {
+        std::lock_guard<std::mutex> lock(subCommandMutex_);
+        subCommandFuncMap_.insert(std::make_pair(cmdName, func));
         return true;
     } else {
         HLOGE("subcommand '%s' already registered!", cmdName.c_str());
@@ -167,25 +168,39 @@ bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::unique_ptr<
     }
 }
 
-void SubCommand::ClearSubCommands()
+bool SubCommand::RegisterSubCommand(const std::string& cmdName, std::unique_ptr<SubCommand> subCommand)
 {
-    std::lock_guard<std::mutex> lock(g_subCommandMutex);
-    g_SubCommandsMap.clear();
+    SubCommand* subCommandPtr = subCommand.get();
+    auto func = [subCommandPtr]() -> SubCommand& {
+        return *subCommandPtr;
+    };
+    if (RegisterSubCommand(cmdName, func)) {
+        std::lock_guard<std::mutex> lock(subCommandMutex_);
+        subCommandMap_[cmdName] = std::move(subCommand);
+        return true;
+    }
+    return false;
 }
 
-const std::map<std::string, std::unique_ptr<SubCommand>> &SubCommand::GetSubCommands()
+void SubCommand::ClearSubCommands()
 {
-    return g_SubCommandsMap;
+    std::lock_guard<std::mutex> lock(subCommandMutex_);
+    subCommandFuncMap_.clear();
+    subCommandMap_.clear();
+}
+
+const std::map<std::string, std::function<SubCommand&()>>& SubCommand::GetSubCommands()
+{
+    return subCommandFuncMap_;
 }
 
 SubCommand *SubCommand::FindSubCommand(std::string &cmdName)
 {
     HLOGV("%s", cmdName.c_str());
-    std::lock_guard<std::mutex> lock(g_subCommandMutex);
-    auto found = g_SubCommandsMap.find(cmdName);
-    if (found != g_SubCommandsMap.end()) {
-        // remove the subcmd itself
-        return found->second.get();
+    std::lock_guard<std::mutex> lock(subCommandMutex_);
+    auto found = subCommandFuncMap_.find(cmdName);
+    if (found != subCommandFuncMap_.end()) {
+        return &(found->second());
     } else {
         return nullptr;
     }

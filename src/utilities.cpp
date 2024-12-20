@@ -486,6 +486,21 @@ bool IsSameCommand(const std::string &cmdLine, const std::string &cmdName)
     return false;
 }
 
+bool IsSameCommand(const std::string &cmdLine, const std::vector<std::string>& cmdNames)
+{
+    std::vector<std::string> cmdpaths = StringSplit(cmdLine, "/");
+    if (cmdpaths.empty()) {
+        return false;
+    }
+
+    for (const auto& cmdName : cmdNames) {
+        if (strcmp(cmdpaths.back().c_str(), cmdName.c_str()) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<pid_t> GetSubthreadIDs(const pid_t pid)
 {
     std::string path {"/proc/"};
@@ -572,22 +587,6 @@ std::string BufferToHexString(const unsigned char buf[], size_t size)
            << (unsigned short)buf[i];
     }
     return ss.str();
-}
-
-void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage)
-{
-    const std::string basePath {"/proc/"};
-    const std::string cmdline {"/cmdline"};
-    std::vector<std::string> subDirs = GetSubDirs(basePath);
-    for (const auto &subDir : subDirs) {
-        if (!IsDigits(subDir)) {
-            continue;
-        }
-        std::string fileName {basePath + subDir + cmdline};
-        if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
-            pids.emplace(std::stoul(subDir, nullptr));
-        }
-    }
 }
 
 bool IsRestarted(const std::string &appPackage)

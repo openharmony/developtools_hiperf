@@ -50,7 +50,7 @@ public:
 void SubCommandHelpTest::SetUpTestCase()
 {
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
-    SubCommandHelp::RegisterSubCommandHelp();
+    SubCommand::RegisterSubCommand("help", std::make_unique<SubCommandHelp>());
 }
 
 void SubCommandHelpTest::TearDownTestCase()
@@ -112,6 +112,40 @@ HWTEST_F(SubCommandHelpTest, TestOnHelpUnknownCmd, TestSize.Level1)
 
     args = {"unknowcmd"};
     EXPECT_EQ(subCommandHelp.OnHelp(args), false);
+}
+
+/**
+ * @tc.name: GetInstance
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandHelpTest, GetInstance, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    EXPECT_EQ(SubCommandHelp::GetInstance().Name(), "help");
+}
+
+/**
+ * @tc.name: GetInstance
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandHelpTest, RegisterSubCommandHelp, TestSize.Level1)
+{
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    Option::ClearMainOptions();
+    ASSERT_EQ(Option::GetMainOptions().size(), 0u);
+
+    SubCommandHelp::RegisterSubCommandHelp();
+    const std::map<std::string, std::unique_ptr<Option::MainOption>>& optionMap = Option::GetMainOptions();
+    EXPECT_TRUE(optionMap.find("--help") != optionMap.end());
+    EXPECT_TRUE(optionMap.find("-h") != optionMap.end());
+    std::string help = "help";
+    EXPECT_TRUE(SubCommand::FindSubCommand(help) != nullptr);
 }
 } // namespace HiPerf
 } // namespace Developtools

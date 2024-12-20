@@ -182,7 +182,7 @@ public:
     void DumpData(int indent) const override;
     void DumpLog(const std::string &prefix) const override;
 
-    virtual size_t GetSize() const override;
+    size_t GetSize() const override;
 };
 
 class PerfRecordMmap : public PerfEventRecordTemplate<PerfRecordMmapData, PERF_RECORD_TYPE_MMAP> {
@@ -272,6 +272,7 @@ public:
     // originalSize is use for expand callstack
     void ReplaceWithCallStack(size_t originalSize = 0);
     pid_t GetPid() const override;
+    uint64_t GetTime() const;
     void Clean();
 
     // only for UT

@@ -1379,6 +1379,22 @@ bool VirtualRuntime::IsKernelThread(pid_t pid)
     return pid == SYSMGR_PID || pid == devhostPid_;
 }
 
+void VirtualRuntime::ClearSymbolCache()
+{
+    userSpaceThreadMap_.clear();
+    kernelSpaceMemMaps_.clear();
+    processStackMap_.clear();
+    symbolsFiles_.clear();
+    userSymbolCache_.clear();
+    kernelSymbolCache_.clear();
+    kThreadSymbolCache_.clear();
+    symbolsPaths_.clear();
+
+#if defined(is_ohos) && is_ohos
+    callstack_.ClearCache();
+#endif
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

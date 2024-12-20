@@ -692,7 +692,7 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
 
 bool RegisterSubCommandStat()
 {
-    return SubCommand::RegisterSubCommand("stat", std::make_unique<SubCommandStat>());
+    return SubCommand::RegisterSubCommand("stat", SubCommandStat::GetInstance);
 }
 
 bool SubCommandStat::PrepairEvents()
@@ -827,6 +827,11 @@ void SubCommandStat::AddReportArgs(CommandReporter& reporter)
     }
 }
 
+SubCommand& SubCommandStat::GetInstance()
+{
+    static SubCommandStat subCommand;
+    return subCommand;
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

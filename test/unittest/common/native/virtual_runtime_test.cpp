@@ -397,6 +397,37 @@ HWTEST_F(VirtualRuntimeTest, Update, TestSize.Level1)
     runtime_->UpdateServiceSymbols();
     runtime_->UpdateDevhostSymbols();
 }
+
+/**
+ * @tc.name: ClearSymbolCache
+ * @tc.desc: Test Clear Symbol Cache
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, ClearSymbolCache, TestSize.Level1)
+{
+    VirtualRuntime runtime;
+    std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles = {};
+    VirtualThread virtualThread(1, symbolsFiles);
+    runtime.userSpaceThreadMap_.emplace(std::piecewise_construct, std::forward_as_tuple(1),
+                                    std::forward_as_tuple(1, symbolsFiles));
+    runtime.kernelSpaceMemMaps_ = {{}, {}};
+    runtime.processStackMap_ = {{1, nullptr}, {2, nullptr}};
+    runtime.symbolsPaths_ = {"abc", "def"};
+    DfxSymbol symbol;
+    runtime.userSymbolCache_.reserve(1);
+    runtime.userSymbolCache_[0] = symbol;
+    runtime.kernelSymbolCache_[0] = symbol;
+    runtime.kThreadSymbolCache_[0] = symbol;
+    runtime.ClearSymbolCache();
+    EXPECT_EQ(runtime.userSpaceThreadMap_.size(), 0);
+    EXPECT_EQ(runtime.kernelSpaceMemMaps_.size(), 0);
+    EXPECT_EQ(runtime.processStackMap_.size(), 0);
+    EXPECT_EQ(runtime.symbolsFiles_.size(), 0);
+    EXPECT_EQ(runtime.userSymbolCache_.size(), 0);
+    EXPECT_EQ(runtime.kernelSymbolCache_.size(), 0);
+    EXPECT_EQ(runtime.kThreadSymbolCache_.size(), 0);
+    EXPECT_EQ(runtime.symbolsPaths_.size(), 0);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

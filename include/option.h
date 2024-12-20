@@ -47,6 +47,7 @@ argsVector::iterator FindOption(argsVector &args, const std::string &optionName)
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, bool &value);
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, int &value);
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, float &value);
+bool GetValueFromString(const std::string &optionValue, const std::string &optionName, uint64_t &value);
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::string &value);
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::vector<int> &values);
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName,

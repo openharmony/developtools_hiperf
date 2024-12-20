@@ -196,6 +196,7 @@ bool StringStartsWith(const std::string &string, const std::string &with);
 bool StringEndsWith(const std::string &string, const std::string &with);
 
 bool IsSameCommand(const std::string &cmdLine, const std::string &cmdName);
+bool IsSameCommand(const std::string &cmdLine, const std::vector<std::string>& cmdNames);
 
 std::vector<pid_t> GetSubthreadIDs(const pid_t pid);
 
@@ -355,7 +356,24 @@ const std::string HMKERNEL = "HongMeng";
 pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
                        const uint64_t waitAppTimeOut);
 bool IsRestarted(const std::string &appPackage);
-void CollectPidsByAppname(std::set<pid_t> &pids, const std::string &appPackage);
+
+template<typename Container>
+void CollectPidsByAppname(std::set<pid_t> &pids, const Container& appPackage)
+{
+    const std::string basePath {"/proc/"};
+    const std::string cmdline {"/cmdline"};
+    std::vector<std::string> subDirs = GetSubDirs(basePath);
+    for (const auto &subDir : subDirs) {
+        if (!IsDigits(subDir)) {
+            continue;
+        }
+        std::string fileName {basePath + subDir + cmdline};
+        if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+            pids.emplace(std::stoul(subDir, nullptr));
+        }
+    }
+}
+
 bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err);
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
@@ -366,6 +384,12 @@ bool IsArkJsFile(const std::string& filepath);
 std::string GetProcessName(int pid);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname);
+
+template<typename T>
+inline bool CheckOutOfRange(const T& value, const T& min, const T& max)
+{
+    return value < min || value > max;
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

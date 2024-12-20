@@ -65,6 +65,9 @@ static const std::string ARG_CLOCK_ID = "--clockid";
 static const std::string ARG_VEC_BRANCH_SAMPLE_TYPES = "-j";
 static const std::string ARG_MMAP_PAGES = "-m";
 static const std::string ARG_REPORT = "--report";
+static const std::string ARG_EXCLUDE_PROCESS = "--exclude-process";
+static const std::string ARG_BACKTRACK = "--backtrack";
+static const std::string ARG_BACKTRACK_SEC = "--backtrack-sec";
 
 static constexpr int DEFAULT_DURATION_TIME = 10;
 static constexpr int DEFAULT_FREQUENCY_TIME = 100;
@@ -314,6 +317,19 @@ void RecordOption::SetMmapPages(int mmapPages)
 void RecordOption::SetReport(bool report)
 {
     SetOption(ARG_REPORT, report);
+}
+
+void RecordOption::SetExcludeProcess(const std::vector<std::string> &excludeProcess)
+{
+    SetOption(ARG_EXCLUDE_PROCESS, excludeProcess);
+}
+void RecordOption::SetBackTrack(bool backtrack)
+{
+    SetOption(ARG_BACKTRACK, backtrack);
+}
+void RecordOption::SetBackTrackSec(int backTracesec)
+{
+    SetOption(ARG_BACKTRACK_SEC, backTracesec);
 }
 
 Client::Client(const std::string &outputDir)
@@ -643,6 +659,10 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
 
     // wait some data
     int polled = poll(&pollFd, 1, timeOut.count());
+    if (polled <= 0) {
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:command poll failed, retry.");
+        polled = poll(&pollFd, 1, timeOut.count());
+    }
     if (polled > 0) {
         while (true) {
             char c;
@@ -745,6 +765,23 @@ bool Client::Resume()
     }
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
     if (SendCommandAndWait(ReplyResume)) {
+        return true;
+    }
+    return false;
+}
+
+bool Client::Output()
+{
+    if (!ready_) {
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
+        return false;
+    }
+    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    if (SendCommandAndWait(ReplyOutput)) {
+        // wait output process exit really
+        while (SendCommandAndWait(ReplyOutputCheck)) {
+            std::this_thread::sleep_for(1s);
+        }
         return true;
     }
     return false;

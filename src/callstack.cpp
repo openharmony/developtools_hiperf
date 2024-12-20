@@ -832,6 +832,30 @@ CallStack::~CallStack()
     }
 #endif
 }
+
+void CallStack::ClearCache()
+{
+    cachedCallFramesMap_.clear();
+    lastPid_ = -1;
+    lastAddr_ = 0;
+    lastData_ = 0;
+    stackPoint_ = 0;
+    stackEnd_ = 0;
+    regs_ = nullptr;
+    regsNum_ = 0;
+    stack_ = nullptr;
+    stackSize_ = 0;
+
+#if HAVE_LIBUNWIND
+    unwindTableInfoMap_.clear();
+    processMemoryMap_.clear();
+#endif
+
+#if defined(HAVE_LIBUNWINDER) && HAVE_LIBUNWINDER
+    pidUnwinder_.clear();
+    unwindTableInfoMap_.clear();
+#endif
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
