@@ -35,6 +35,7 @@ static const std::vector<std::string> FEATURE_NAMES = {
     "branch_stack",    "pmu_mappings", "group_desc",   "auxtrace",     "stat",
     "cache",           "sample_time",  "mem_topology", "last_feature",
 };
+static constexpr size_t MAX_VECTOR_RESIZE_COUNT = 100000;
 #ifdef FUZZER_TEST
     // issue from fuzz test and also will lead to PerfFileSectionSymbolsFiles uncompletely construct
 static constexpr size_t MAX_SYMBOLS_FILE_NUMBER = 300;
@@ -134,12 +135,24 @@ bool PerfFileSection::Read(std::string &value)
     CHECK_TRUE(!Read(size), false, 0, "");
     // if size large than buf size or 0 size ?
     // don't assert for fuzz test
-    CHECK_TRUE(size == 0 or size > maxSize_, false, 0, "");
-    char buf[size];
-    CHECK_TRUE(!Read(buf, size), false, 0, "");
-    CHECK_TRUE(buf[size - 1] != 0, false, 0, "");
+    CHECK_TRUE(size == 0 || size > maxSize_, false, 0, "");
+    char *buf = new char[size];
+    if (buf == nullptr) {
+        return false;
+    }
+    if (!Read(buf, size)) {
+        HLOGE("Read failed.");
+        delete []buf;
+        return false;
+    }
+    if (buf[size - 1] != 0) {
+        HLOGE("buf is invalid.");
+        delete []buf;
+        return false;
+    }
     value = buf;
     HLOGDUMMY("Read String size %u buf : %s", size, value.c_str());
+    delete []buf;
     return true;
 }
 void PerfFileSection::Skip(size_t size)
@@ -491,6 +504,7 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
             HLOGW("nrIds is too large ! %u", nrIds);
         }
         CHECK_TRUE(!Read(eventDesc.name), NO_RETVAL, 0, "");
+        HIPERF_ASSERT(nrIds <= MAX_VECTOR_RESIZE_COUNT, "nrIds exceeds 100000\n");
         eventDesc.ids.resize(nrIds, 0);
         CHECK_TRUE(!Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds), NO_RETVAL, 0, "");
         eventDesces_.emplace_back(std::move(eventDesc));

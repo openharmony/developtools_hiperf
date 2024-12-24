@@ -705,6 +705,79 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord, TestSize.Level1)
                            reinterpret_cast<uint8_t *>(&data), attr);
     ASSERT_EQ(perfEventRecord != nullptr, true);
 }
+
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordMmap, TestSize.Level1)
+{
+    perf_event_header header;
+    header.size = sizeof(PerfRecordMmapData) + sizeof(perf_event_header);
+    PerfRecordMmapData data;
+    for (uint32_t i = 0; i < KILO; i++) {
+        data.filename[i] = 'a';
+    }
+    size_t size = sizeof(PerfRecordMmapData) + sizeof(perf_event_header) + 10;
+    uint8_t* p = static_cast<uint8_t*>(malloc(size));
+    ASSERT_EQ(memset_s(p, size, 5, size), 0);
+    ASSERT_EQ(memcpy_s(p, sizeof(perf_event_header),
+        reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header)), 0);
+    ASSERT_EQ(memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordMmapData),
+        reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordMmapData)), 0);
+
+    PerfRecordMmap record(p);
+    std::string str = record.data_.filename;
+    ASSERT_EQ(str.size(), KILO - 1);
+    for (char c : str) {
+        EXPECT_EQ(c, 'a');
+    }
+    free(p);
+}
+
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordComm, TestSize.Level1)
+{
+    perf_event_header header;
+    header.size = sizeof(PerfRecordCommData) + sizeof(perf_event_header);
+    PerfRecordCommData data;
+    for (uint32_t i = 0; i < KILO; i++) {
+        data.comm[i] = 'a';
+    }
+    size_t size = sizeof(PerfRecordCommData) + sizeof(perf_event_header) + 10;
+    uint8_t* p = static_cast<uint8_t*>(malloc(size));
+    ASSERT_EQ(memset_s(p, size, 5, size), 0);
+    ASSERT_EQ(memcpy_s(p, sizeof(perf_event_header),
+        reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header)), 0);
+    ASSERT_EQ(memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordCommData),
+        reinterpret_cast<uint8_t*>(&data), sizeof(PerfRecordCommData)), 0);
+
+    PerfRecordComm record(p);
+    std::string str = record.data_.comm;
+    ASSERT_EQ(str.size(), KILO - 1);
+    for (char c : str) {
+        EXPECT_EQ(c, 'a');
+    }
+    free(p);
+}
+
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordSample, TestSize.Level1)
+{
+    pid_t pid = fork();
+    ASSERT_NE(pid, -1);
+
+    if (pid == 0) {
+        perf_event_attr attr = {};
+        attr.sample_type = PERF_SAMPLE_CALLCHAIN + PERF_SAMPLE_RAW + PERF_SAMPLE_BRANCH_STACK + PERF_SAMPLE_REGS_USER;
+        std::vector<uint8_t> data = {};
+        data.resize(200);
+        for (auto i = 0; i < 200; i++) {
+            data[i] = UINT8_MAX;
+        }
+        PerfRecordSample record(data.data(), attr);
+        _exit(-2);
+    } else {
+        int status = 0;
+        waitpid(pid, &status, 0);
+        ASSERT_TRUE(WIFEXITED(status));
+        EXPECT_EQ(WEXITSTATUS(status), static_cast<uint8_t>(-1));
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

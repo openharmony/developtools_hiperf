@@ -627,6 +627,19 @@ void Report::OutputStdDiff(FILE *output, Report &other)
         left++; // go on left
     }
 }
+
+std::string Report::GetConfigName(uint64_t id)
+{
+    size_t index = GetConfigIndex(id);
+    HIPERF_ASSERT(index < configs_.size(), "unable found config index %zu\n", index);
+    return configs_[index].eventName_;
+}
+
+size_t Report::GetConfigIndex(uint64_t id)
+{
+    HIPERF_ASSERT(configIdIndexMaps_.find(id) != configIdIndexMaps_.end(), "unable found id %" PRIx64 "\n", id);
+    return configIdIndexMaps_.at(id);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

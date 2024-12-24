@@ -504,16 +504,8 @@ public:
     virtual ~Report() {}
 
     std::map<uint64_t, size_t> configIdIndexMaps_; // index of configNames_
-    std::string GetConfigName(uint64_t id)
-    {
-        return configs_[GetConfigIndex(id)].eventName_;
-    }
-    size_t GetConfigIndex(uint64_t id)
-    {
-        HLOG_ASSERT_MESSAGE(configIdIndexMaps_.find(id) != configIdIndexMaps_.end(),
-                            "unable found id %" PRIx64 "", id);
-        return configIdIndexMaps_.at(id);
-    }
+    std::string GetConfigName(uint64_t id);
+    size_t GetConfigIndex(uint64_t id);
 
 private:
     FILE *output_ = nullptr;
