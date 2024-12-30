@@ -892,6 +892,59 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level1)
     free(p);
 }
 
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace2, TestSize.Level1)
+{
+    PerfRecordAuxtrace* record = new PerfRecordAuxtrace();
+    record->Init(nullptr, {});
+
+    EXPECT_EQ(record->header_.type, PERF_RECORD_MMAP);
+    EXPECT_EQ(record->header_.misc, PERF_RECORD_MISC_USER);
+    EXPECT_EQ(record->header_.size, 0);
+
+    EXPECT_EQ(record->data_.size, 0);
+    EXPECT_EQ(record->data_.offset, 0);
+    EXPECT_EQ(record->data_.reference, 0);
+    EXPECT_EQ(record->data_.idx, 0);
+    EXPECT_EQ(record->data_.tid, 0);
+    EXPECT_EQ(record->data_.cpu, 0);
+    EXPECT_EQ(record->data_.reserved__, 0);
+
+    EXPECT_EQ(record->rawData_, nullptr);
+}
+
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace3, TestSize.Level1)
+{
+    PerfRecordAuxtrace* record = new PerfRecordAuxtrace();
+    record->Init(nullptr, {});
+    record->header_.type = PERF_RECORD_AUXTRACE;
+    record->header_.misc = PERF_RECORD_MISC_KERNEL;
+    record->header_.size = PERF_RECORD_AUXTRACE;
+    record->data_.size = 1;
+    record->data_.offset = 1;
+    record->data_.reference = 1;
+    record->data_.idx = 1;
+    record->data_.tid = 1;
+    record->data_.cpu = 1;
+    record->data_.reserved__ = 1;
+    std::shared_ptr<u8> ptr = std::make_shared<u8>();
+    record->rawData_ = ptr.get();
+
+    record->Init(nullptr, {});
+    EXPECT_EQ(record->header_.type, PERF_RECORD_MMAP);
+    EXPECT_EQ(record->header_.misc, PERF_RECORD_MISC_USER);
+    EXPECT_EQ(record->header_.size, 0);
+
+    EXPECT_EQ(record->data_.size, 0);
+    EXPECT_EQ(record->data_.offset, 0);
+    EXPECT_EQ(record->data_.reference, 0);
+    EXPECT_EQ(record->data_.idx, 0);
+    EXPECT_EQ(record->data_.tid, 0);
+    EXPECT_EQ(record->data_.cpu, 0);
+    EXPECT_EQ(record->data_.reserved__, 0);
+
+    EXPECT_EQ(record->rawData_, nullptr);
+}
+
 HWTEST_F(PerfEventRecordTest, CreatePerfRecordSample, TestSize.Level1)
 {
     pid_t pid = fork();
