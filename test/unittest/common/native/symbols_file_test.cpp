@@ -811,9 +811,11 @@ HWTEST_F(SymbolsFileTest, CreateSymbolsFile, TestSize.Level1)
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(), nullptr);
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE), nullptr);
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE), nullptr);
+    EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_THREAD_FILE), nullptr);
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE), nullptr);
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_JAVA_FILE), nullptr);
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_JS_FILE), nullptr);
+    EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_HAP_FILE), nullptr);
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE), nullptr);
     EXPECT_NE(SymbolsFile::CreateSymbolsFile(SymbolsFileType(-1)), nullptr);
     EXPECT_EQ(SymbolsFile::CreateSymbolsFile(SymbolsFileType(-2))->symbolFileType_,
