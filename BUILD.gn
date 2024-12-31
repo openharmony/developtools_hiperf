@@ -416,6 +416,7 @@ ohos_executable("hiperf") {
     "faultloggerd:libunwinder",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
 

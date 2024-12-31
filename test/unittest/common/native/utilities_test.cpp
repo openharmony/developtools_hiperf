@@ -811,6 +811,21 @@ HWTEST_F(UtilitiesTest, IsSameCommand2, TestSize.Level1)
     v = {"", "a"};
     EXPECT_EQ(IsSameCommand("a", v), true);
 }
+
+/**
+ * @tc.name: IsArkJsFile
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsArkJsFile, TestSize.Level1)
+{
+    EXPECT_EQ(IsArkJsFile("test.hap"), true);
+    EXPECT_EQ(IsArkJsFile("[anon:ArkTS Code:test.so/buffer.js]"), true);
+    EXPECT_EQ(IsArkJsFile("test.hsp"), true);
+    EXPECT_EQ(IsArkJsFile("test.abc"), true);
+    EXPECT_EQ(IsArkJsFile("test.hqf"), true);
+    EXPECT_EQ(IsArkJsFile("test.so"), false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
