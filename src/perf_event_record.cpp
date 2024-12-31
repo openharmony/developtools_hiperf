@@ -182,7 +182,10 @@ void PerfEventRecord::InitHeader(uint8_t* p)
 
 void PerfRecordAuxtrace::Init(uint8_t* data, const perf_event_attr& attr)
 {
-    if (data == nullptr || header_.size > sizeof(perf_event_header)) {
+    data_ = {};
+    rawData_ = nullptr;
+    if (data == nullptr) {
+        PerfEventRecord::InitHeader(data);
         HLOGE("Init failed");
         return;
     }
