@@ -103,6 +103,7 @@ ohos_unittest("hiperf_unittest") {
     "faultloggerd:libunwinder",
     "googletest:gmock",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
   cflags = [
@@ -132,6 +133,7 @@ ohos_fuzztest("CommandLineFuzzTest") {
     "c_utils:utils",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -151,6 +153,7 @@ ohos_fuzztest("LibReportFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -167,6 +170,7 @@ ohos_fuzztest("ClientApiFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -183,6 +187,7 @@ ohos_fuzztest("SpeDecoderFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -201,6 +206,7 @@ ohos_fuzztest("PerfFileFuzzTest") {
     "c_utils:utils",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
@@ -218,6 +224,7 @@ ohos_fuzztest("PerfFileFormatFuzzTest") {
     "c_utils:utils",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]
   defines = [ "FUZZER_TEST" ]
