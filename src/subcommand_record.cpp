@@ -74,7 +74,8 @@ constexpr uint64_t TYPE_PERF_SAMPLE_BRANCH = PERF_SAMPLE_BRANCH_ANY | PERF_SAMPL
                                              PERF_SAMPLE_BRANCH_IND_CALL | PERF_SAMPLE_BRANCH_COND |
                                              PERF_SAMPLE_BRANCH_CALL;
 static constexpr uint64_t CHECK_WAIT_TIME_MS = 200;
-static constexpr uint32_t MAX_WAIT_COUNT = 6000;
+static constexpr uint32_t MAX_SERVER_OUTPUT_WAIT_COUNT = 600;
+static constexpr uint32_t MAX_CLIENT_OUTPUT_WAIT_COUNT = 240;
 
 int GetClockId(const std::string &name)
 {
@@ -1088,7 +1089,7 @@ void SubCommandRecord::OutputRecordFile()
     uint32_t loopCount = 0;
     while (perfEvents_.IsOutputTracking()) {
         std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
-        if (loopCount++ > MAX_WAIT_COUNT) {
+        if (loopCount++ > MAX_SERVER_OUTPUT_WAIT_COUNT) {
             HLOGE("wait time out");
             perfEvents_.SetOutputTrackingStatus(false);
             break;
@@ -1266,9 +1267,10 @@ void SubCommandRecord::ProcessOutputCommand(bool ret)
     }
 
     std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
+    uint32_t outputFailCount = 0;
     while (!outputEnd_) {
         ret = SendFifoAndWaitReply(HiperfClient::ReplyOutputCheck, CONTROL_WAITREPY_TOMEOUT_CHECK);
-        if (ret) {
+        if (outputFailCount++ > MAX_CLIENT_OUTPUT_WAIT_COUNT || ret) {
             break;
         }
         std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
