@@ -44,13 +44,15 @@ void CommandTest::TearDownTestCase() {}
 
 void CommandTest::SetUp()
 {
+    static constexpr HiperfError noError = HiperfError::NO_ERROR;
+    static constexpr HiperfError optionNotSupport = HiperfError::OPTION_NOT_SUPPORT;
     ASSERT_EQ(Option::RegisterMainOption(TEST_OPTION_TRUE, TEST_OPTION_HELP, OptionAlwaysTrue),
               true);
     ASSERT_EQ(Option::RegisterMainOption(TEST_OPTION_FALSE, TEST_OPTION_HELP, OptionAlwaysFalse),
               true);
 
-    EXPECT_CALL(*subCommandAlwaysTure, OnSubCommand(testing::_)).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(*subCommandAlwaysFalse, OnSubCommand(testing::_)).WillRepeatedly(testing::Return(false));
+    EXPECT_CALL(*subCommandAlwaysTure, OnSubCommand(testing::_)).WillRepeatedly(testing::Return(noError));
+    EXPECT_CALL(*subCommandAlwaysFalse, OnSubCommand(testing::_)).WillRepeatedly(testing::Return(optionNotSupport));
 
     ASSERT_TRUE(SubCommand::RegisterSubCommand(subCommandAlwaysTure.get()->Name(),
                                                std::move(subCommandAlwaysTure)));

@@ -59,21 +59,23 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
                 HLOGD("OnSubCommandOptions -> %s", subCommand->Name().c_str());
                 if (subCommand->OnSubCommandOptions(arguments)) {
                     subCommand->AddReportArgs(reporter);
-                    reporter.ReportCommand();
                     // if some help cmd ?
                     if (subCommand->OnPreSubCommand()) {
                         return true;
                     }
 
                     HLOGD("OnSubCommand -> %s", subCommand->Name().c_str());
-                    if (!subCommand->OnSubCommand(arguments)) {
+                    HiperfError err = subCommand->OnSubCommand(arguments);
+                    if (err != HiperfError::NO_ERROR) {
                         printf("subcommand '%s' failed\n", subCommand->Name().c_str());
+                        reporter.errorCode_ = err;
                         return false;
                     } else {
                         HLOGD("OnSubCommand successed");
                         return true;
                     }
                 } else {
+                    reporter.errorCode_ = HiperfError::SUBCOMMAND_OPTIONS_ERROR;
                     HLOGD("OnSubCommandOptions interrupt the process.");
                     return false;
                 }

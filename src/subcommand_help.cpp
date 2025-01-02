@@ -19,11 +19,11 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-bool SubCommandHelp::OnSubCommand(std::vector<std::string> &args)
+HiperfError SubCommandHelp::OnSubCommand(std::vector<std::string>& args)
 {
     HLOGV("enter");
     OnHelp(args);
-    return true;
+    return HiperfError::NO_ERROR;
 }
 
 void SubCommandHelp::RegisterSubCommandHelp()

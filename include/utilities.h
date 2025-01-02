@@ -390,6 +390,13 @@ inline bool CheckOutOfRange(const T& value, const T& min, const T& max)
 {
     return value < min || value > max;
 }
+
+#define RETURN_IF(condition, retValue) do {         \
+    if (condition) {                                \
+        return retValue;                            \
+    }                                               \
+} while (0)
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

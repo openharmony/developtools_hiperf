@@ -41,9 +41,9 @@ class SubCommandTest : public SubCommand {
 public:
     explicit SubCommandTest(std::string name) : SubCommand(name, TEST_BRIEF, TEST_HELP) {}
 
-    bool OnSubCommand(std::vector<std::string> &args) override
+    HiperfError OnSubCommand(std::vector<std::string>& args) override
     {
-        return true;
+        return HiperfError::NO_ERROR;
     }
 };
 
@@ -54,7 +54,7 @@ class MockSubCommand : public SubCommand {
 public:
     explicit MockSubCommand(std::string name) : SubCommand(name, TEST_BRIEF, TEST_HELP) {}
     MockSubCommand() : MockSubCommand("mock") {}
-    MOCK_METHOD1(OnSubCommand, bool(std::vector<std::string> &args));
+    MOCK_METHOD1(OnSubCommand, HiperfError(std::vector<std::string> &args));
 };
 } // namespace HiPerf
 } // namespace Developtools

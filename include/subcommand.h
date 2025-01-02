@@ -70,13 +70,13 @@ public:
     // add args for hisysevent
     virtual void AddReportArgs(CommandReporter& reporter) {};
 
-    // return false means cmd failed
-    virtual bool OnSubCommand(std::vector<std::string> &args) = 0;
+    // return NO_ERROR means cmd success
+    virtual HiperfError OnSubCommand(std::vector<std::string>& args) = 0;
     // some test code will use this for simple
     bool OnSubCommand(std::string stringArgs)
     {
         auto args = StringSplit(stringArgs, " ");
-        return OnSubCommand(args);
+        return OnSubCommand(args) != HiperfError::NO_ERROR;
     };
 
     // get some cmd

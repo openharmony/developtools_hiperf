@@ -134,32 +134,30 @@ SubCommandDump::~SubCommandDump()
     SymbolsFile::onRecording_ = true; // back to default for UT
 }
 
-bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
+HiperfError SubCommandDump::OnSubCommand(std::vector<std::string>& args)
 {
-    if (!PrepareDumpOutput()) {
-        return false;
-    }
+    RETURN_IF(!PrepareDumpOutput(), HiperfError::PREPARE_DUMP_OUTPUT_FAIL);
 
     if (!elfFileName_.empty()) {
-        return DumpElfFile();
+        return DumpElfFile() ? HiperfError::NO_ERROR : HiperfError::DUMP_ELF_FILE_ERROR;
     }
 
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     if (!protobufDumpFileName_.empty()) {
-        return DumpProtoFile();
+        return DumpProtoFile() ? HiperfError::NO_ERROR : HiperfError::DUMP_PROTO_FILE_ERROR;
     }
 #endif
 
     if (access(dumpFileName_.c_str(), F_OK) != 0) {
         printf("Can not access data file %s\n", dumpFileName_.c_str());
-        return false;
+        return HiperfError::ACCESS_DATA_FILE_FAIL;
     }
     // only one file should created
     HLOG_ASSERT_MESSAGE(reader_ == nullptr, " perf file reader for %s\n", dumpFileName_.c_str());
     reader_ = PerfFileReader::Instance(dumpFileName_);
     if (reader_ == nullptr) {
         HLOGE("HiperfFileReader::Instance(%s) return null", dumpFileName_.c_str());
-        return false;
+        return HiperfError::OPEN_DATA_FILE_FAIL;
     }
 
     // any way tell symbols this is not on device
@@ -171,7 +169,7 @@ bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
         // user give us path , we enable unwind
         if (!vr_.SetSymbolsPaths(dumpSymbolsPaths_)) {
             printf("Failed to set symbol path(%s)\n", VectorToString(dumpSymbolsPaths_).c_str());
-            return false;
+            return HiperfError::SET_SYMBOLS_PATH_FAIL;
         }
     }
 
@@ -191,7 +189,7 @@ bool SubCommandDump::OnSubCommand(std::vector<std::string> &args)
         DumpFeaturePortion(indent_);
     }
 
-    return true;
+    return HiperfError::NO_ERROR;
 }
 
 bool SubCommandDump::DumpElfFile()

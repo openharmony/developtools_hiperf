@@ -103,7 +103,7 @@ public:
     // clang-format on
     {
     }
-    bool OnSubCommand(std::vector<std::string> &args) override;
+    HiperfError OnSubCommand(std::vector<std::string>& args) override;
     bool ParseOption(std::vector<std::string> &args) override;
     void DumpOptions(void) const override;
     static bool RegisterSubCommandReport(void);

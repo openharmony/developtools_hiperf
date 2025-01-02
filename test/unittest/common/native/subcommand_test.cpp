@@ -33,9 +33,9 @@ public:
 class SubcommandObj : public SubCommand {
 public:
     SubcommandObj() : SubCommand("subcomm", "test subcomm", "ut test subcomm") {}
-    bool OnSubCommand(std::vector<std::string> &args) override
+    HiperfError OnSubCommand(std::vector<std::string>& args) override
     {
-        return true;
+        return HiperfError::NO_ERROR;
     }
 };
 
