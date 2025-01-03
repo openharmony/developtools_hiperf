@@ -14,6 +14,11 @@
  */
 
 #include "CommandLine_fuzzer.h"
+#include "subcommand_help.h"
+#include "subcommand_list.h"
+#include "subcommand_record.h"
+#include "subcommand_report.h"
+#include "subcommand_stat.h"
 
 namespace OHOS {
 const static int32_t MAX_TEST_ARGS_NUMBER = 20;
@@ -69,11 +74,26 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 #endif
     /* Run your code on data */
     OHOS::FuzzCommandLine("", data, size);
+    OHOS::Developtools::HiPerf::SubCommand::ClearSubCommands();
+    OHOS::Developtools::HiPerf::SubCommand::RegisterSubCommand("stat",
+        std::make_unique<OHOS::Developtools::HiPerf::SubCommandStat>());
     OHOS::FuzzCommandLine("stat", data, size);
+    OHOS::Developtools::HiPerf::SubCommand::ClearSubCommands();
+    OHOS::Developtools::HiPerf::SubCommand::RegisterSubCommand("record",
+        std::make_unique<OHOS::Developtools::HiPerf::SubCommandRecord>());
     OHOS::FuzzCommandLine("record", data, size);
     usleep(100000); // sleep 100000 us
+    OHOS::Developtools::HiPerf::SubCommand::ClearSubCommands();
+    OHOS::Developtools::HiPerf::SubCommand::RegisterSubCommand("report",
+        std::make_unique<OHOS::Developtools::HiPerf::SubCommandReport>());
     OHOS::FuzzCommandLine("report", data, size);
+    OHOS::Developtools::HiPerf::SubCommand::ClearSubCommands();
+    OHOS::Developtools::HiPerf::SubCommand::RegisterSubCommand("list",
+        std::make_unique<OHOS::Developtools::HiPerf::SubCommandList>());
     OHOS::FuzzCommandLine("list", data, size);
+    OHOS::Developtools::HiPerf::SubCommand::ClearSubCommands();
+    OHOS::Developtools::HiPerf::SubCommand::RegisterSubCommand("help",
+        std::make_unique<OHOS::Developtools::HiPerf::SubCommandHelp>());
     OHOS::FuzzCommandLine("help", data, size);
     return 0;
 }
