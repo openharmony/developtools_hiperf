@@ -31,7 +31,7 @@ def get_used_binaries(perf_data, report_file, local_lib_dir, html_template):
         get_lib().ReportJson(perf_data.encode("utf-8"),
                              'json.txt'.encode("utf-8"))
     time.sleep(2)
-    with open('json.txt', 'r') as json_file:
+    with open('json.txt', 'r', errors='ignore') as json_file:
         all_json = json_file.read()
         template = os.path.join(html_template, 'report.html')
     with open(template, 'r', encoding='utf-8') as html_file:

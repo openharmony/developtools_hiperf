@@ -136,7 +136,11 @@ bool PerfFileSection::Read(std::string &value)
     // if size large than buf size or 0 size ?
     // don't assert for fuzz test
     CHECK_TRUE(size == 0 || size > maxSize_, false, 0, "");
-    char *buf = new char[size];
+    char *buf = new(std::nothrow) char[size];
+    if (buf == nullptr) {
+        HLOGE("buf is nullptr.");
+        return false;
+    }
     if (!Read(buf, size)) {
         HLOGE("Read failed.");
         delete []buf;
