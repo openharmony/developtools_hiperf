@@ -52,7 +52,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandHW, TestSize.Level1)
     stdoutRecord.Start();
 
     args = {"hw"};
-    EXPECT_EQ(subCommandList.OnSubCommand(args), true);
+    EXPECT_EQ(subCommandList.OnSubCommand(args), HiperfError::NO_ERROR);
     std::string stringOut = stdoutRecord.Stop();
 }
 
@@ -68,7 +68,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandSW, TestSize.Level1)
     stdoutRecord.Start();
 
     args = {"sw"};
-    EXPECT_EQ(subCommandList.OnSubCommand(args), true);
+    EXPECT_EQ(subCommandList.OnSubCommand(args), HiperfError::NO_ERROR);
     std::string stringOut = stdoutRecord.Stop();
 }
 
@@ -84,7 +84,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandTP, TestSize.Level1)
     stdoutRecord.Start();
 
     args = {"tp"};
-    EXPECT_EQ(subCommandList.OnSubCommand(args), true); // still not support
+    EXPECT_EQ(subCommandList.OnSubCommand(args), HiperfError::NO_ERROR); // still not support
     std::string stringOut = stdoutRecord.Stop();
 }
 
@@ -100,7 +100,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandCACHE, TestSize.Level1)
     stdoutRecord.Start();
 
     args = {"cache"};
-    EXPECT_EQ(subCommandList.OnSubCommand(args), true);
+    EXPECT_EQ(subCommandList.OnSubCommand(args), HiperfError::NO_ERROR);
     std::string stringOut = stdoutRecord.Stop();
 }
 
@@ -116,7 +116,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandRAW, TestSize.Level1)
     stdoutRecord.Start();
 
     args = {"raw"};
-    EXPECT_EQ(subCommandList.OnSubCommand(args), true);
+    EXPECT_EQ(subCommandList.OnSubCommand(args), HiperfError::NO_ERROR);
     std::string stringOut = stdoutRecord.Stop();
 }
 
@@ -132,7 +132,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandERROR, TestSize.Level1)
     stdoutRecord.Start();
 
     args = {"error"};
-    EXPECT_EQ(subCommandList.OnSubCommand(args), false);
+    EXPECT_EQ(subCommandList.OnSubCommand(args), HiperfError::OPTION_NOT_SUPPORT);
     std::string stringOut = stdoutRecord.Stop();
 }
 
@@ -148,7 +148,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandEmpty, TestSize.Level1)
     stdoutRecord.Start();
 
     args.clear();
-    EXPECT_EQ(subCommandList.OnSubCommand(args), true);
+    EXPECT_EQ(subCommandList.OnSubCommand(args), HiperfError::NO_ERROR);
     std::string stringOut = stdoutRecord.Stop();
 }
 

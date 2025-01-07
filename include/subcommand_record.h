@@ -204,7 +204,7 @@ public:
     }
 
     ~SubCommandRecord();
-    bool OnSubCommand(std::vector<std::string> &args) override;
+    HiperfError OnSubCommand(std::vector<std::string>& args) override;
     bool ParseOption(std::vector<std::string> &args) override;
     void DumpOptions(void) const override;
 
@@ -310,6 +310,7 @@ private:
         std::function<void(bool)> postProcess = [](bool) {};
     };
     std::unordered_map<std::string, ControlCommandHandler> controlCommandHandlerMap_ = {};
+    inline void CreateClientThread();
     void ClientCommandHandle();
     void InitControlCommandHandlerMap();
     void DispatchControlCommand(const std::string& command);

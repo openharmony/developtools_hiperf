@@ -635,27 +635,27 @@ void SubCommandStat::SetPerfEvent()
     perfEvents_.SetStatCallBack(Report);
 }
 
-bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
+HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
 {
-    CHECK_TRUE(HelpOption(), true, 0, "");
+    CHECK_TRUE(HelpOption(), HiperfError::NO_ERROR, 0, "");
     if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
-        return false;
+        return HiperfError::CHECK_RESTART_OPTION_FAIL;
     }
     // check option
     if (!CheckSelectCpuPidOption()) {
-        return false;
+        return HiperfError::CHECK_SELECT_CPU_PID_FAIL;
     }
     if (!CheckOptions(selectPids_)) {
         HLOGV("CheckOptions() failed");
-        return false;
+        return HiperfError::CHECK_STAT_OPTION_FAIL;
     }
     if (!CheckAppIsRunning(selectPids_, appPackage_, checkAppMs_)) {
         HLOGV("CheckAppIsRunning() failed");
-        return false;
+        return HiperfError::CHECK_APP_RUNNING_FAIL;
     }
     if (!CheckOptionPid(selectPids_)) {
         HLOGV("CheckOptionPid() failed");
-        return false;
+        return HiperfError::CHECK_OPTION_PID_FAIL;
     }
 
     perfEvents_.SetCpu(selectCpus_);
@@ -673,12 +673,12 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     perfEvents_.SetPid(pids);
     if (!CheckOptionPidAndApp(pids)) {
         HLOGV("CheckOptionPidAndApp() failed");
-        return false;
+        return HiperfError::CHECK_OPTION_PID_APP_FAIL;
     }
     SetPerfEvent();
     if (!PrepairEvents()) {
         HLOGV("PrepairEvents() failed");
-        return false;
+        return HiperfError::PREPAIR_EVENTS_FAIL;
     }
 
     // preapare fd
@@ -687,7 +687,7 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     // start tracking
     perfEvents_.StartTracking();
 
-    return true;
+    return HiperfError::NO_ERROR;
 }
 
 bool RegisterSubCommandStat()

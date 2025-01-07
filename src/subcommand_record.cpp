@@ -1147,6 +1147,14 @@ void SubCommandRecord::InitControlCommandHandlerMap()
     });
 }
 
+inline void SubCommandRecord::CreateClientThread()
+{
+    // make a thread wait the other command
+    if (clientPipeOutput_ != -1) {
+        clientCommandHanle_ = std::thread(&SubCommandRecord::ClientCommandHandle, this);
+    }
+}
+
 void SubCommandRecord::ClientCommandHandle()
 {
     using namespace HiperfClient;
@@ -1407,53 +1415,47 @@ void SubCommandRecord::WaitFifoReply(int fd, const std::chrono::milliseconds &ti
     }
 }
 
-bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
+HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
 {
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord onSubCommand start");
     if (!ProcessControl()) {
-        return false;
+        return HiperfError::PROCESS_CONTROL_FAIL;
     } else if (isFifoClient_) {
-        return true;
+        return HiperfError::NO_ERROR;
     }
 
     // prepare PerfEvents
-    if (!PrepareSysKernel() || !PreparePerfEvent()) {
-        return false;
-    }
+    RETURN_IF(!PrepareSysKernel(), HiperfError::PREPARE_SYS_KERNEL_FAIL);
+    RETURN_IF(!PreparePerfEvent(), HiperfError::PREPARE_PERF_EVENT_FAIL);
 
     // prepar some attr before CreateInitRecordFile
-    CHECK_TRUE(!perfEvents_.PrepareTracking(), false, LOG_TYPE_WITH_HILOG, "Fail to prepare tracking ");
+    CHECK_TRUE(!perfEvents_.PrepareTracking(), HiperfError::PREPARE_TACKING_FAIL,
+               LOG_TYPE_WITH_HILOG, "Fail to prepare tracking ");
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents prepared");
 
     if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         HLOGE("Fail to create record file %s", outputFilename_.c_str());
         HIPERF_HILOGE(MODULE_DEFAULT, "Fail to create record file %s", outputFilename_.c_str());
-        return false;
+        return HiperfError::CREATE_OUTPUT_FILE_FAIL;
     }
 
-    if (!PrepareVirtualRuntime()) {
-        return false;
-    }
+    RETURN_IF(!PrepareVirtualRuntime(), HiperfError::PREPARE_VIRTUAL_RUNTIME_FAIL);
 
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord virtualRuntime prepared");
 
-    // make a thread wait the other command
-    if (clientPipeOutput_ != -1) {
-        clientCommandHanle_ = std::thread(&SubCommandRecord::ClientCommandHandle, this);
-    }
+    CreateClientThread();
 
     //write comm event
     WriteCommEventBeforeSampling();
     SetExcludeHiperf();
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord StartTracking");
-    // start tracking
-    if (isDataSizeLimitStop_) {
-        // mmap record size has been larger than limit, dont start sampling.
-    } else if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
-        CHECK_TRUE(!perfEvents_.StartTracking(isFifoServer_), false, 0, "");
-    } else {
-        if (!perfEvents_.StartTracking((!isFifoServer_) && (clientPipeInput_ == -1))) {
-            return false;
+    // if mmap record size has been larger than limit, dont start sampling.
+    if (!isDataSizeLimitStop_) {
+        if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
+            RETURN_IF(!perfEvents_.StartTracking(isFifoServer_), HiperfError::PREPARE_START_TRACKING_FAIL);
+        } else {
+            RETURN_IF(!perfEvents_.StartTracking((!isFifoServer_) && (clientPipeInput_ == -1)),
+                      HiperfError::START_TRACKING_FAIL);
         }
     }
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents tracking finish");
@@ -1467,11 +1469,11 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
         if (!FinishWriteRecordFile()) {
             HLOGE("Fail to finish record file %s", outputFilename_.c_str());
             HIPERF_HILOGE(MODULE_DEFAULT, "Fail to finish record file %s", outputFilename_.c_str());
-            return false;
+            return HiperfError::FINISH_WRITE_RECORD_FILE_FAIL;
         } else if (!PostProcessRecordFile()) {
             HLOGE("Fail to post process record file");
             HIPERF_HILOGE(MODULE_DEFAULT, "Fail to post process record file");
-            return false;
+            return HiperfError::POST_PROCESS_RECORD_FILE;
         }
         RecordCompleted();
     }
@@ -1483,7 +1485,7 @@ bool SubCommandRecord::OnSubCommand(std::vector<std::string> &args)
     CloseClientThread();
     RemoveVdsoTmpFile();
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord finish");
-    return true;
+    return HiperfError::NO_ERROR;
 }
 
 void SubCommandRecord::CloseClientThread()
@@ -2116,7 +2118,7 @@ bool SubCommandRecord::OnlineReportData()
     args.emplace_back(outputFilename_);
     args.emplace_back("-s");
     if (reporter->ParseOption(args)) {
-        ret =  reporter->OnSubCommand(args);
+        ret =  (reporter->OnSubCommand(args) != HiperfError::NO_ERROR);
     }
 
     if (remove(tempFileName.c_str()) != 0) {

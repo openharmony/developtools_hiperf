@@ -587,37 +587,35 @@ SubCommandReport::~SubCommandReport()
     SymbolsFile::onRecording_ = true; // back to default for UT
 }
 
-bool SubCommandReport::OnSubCommand(std::vector<std::string> &args)
+HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
 {
-    if (!PrepareOutput()) {
-        return false;
-    }
+    RETURN_IF(!PrepareOutput(), HiperfError::PREPARE_OUTPUT_FAIL);
 
     // any way tell symbols this is not on recording
     SymbolsFile::onRecording_ = false;
 
     printf("loading data\n");
     if (!LoadPerfData()) {
-        return false;
+        return HiperfError::LOAD_PERF_DATA_FAIL;
     }
 
     if (diffMode_) {
         // we are in diff mode
         index_ = SECOND;
         // load again with second file
-        CHECK_TRUE(!LoadPerfData(), false, 0, "");
+        CHECK_TRUE(!LoadPerfData(), HiperfError::LOAD_SECOND_PERF_DATA_FAIL, 0, "");
         // back to first
         index_ = FIRST;
     }
     printf("prepare report\n");
-    CHECK_TRUE(!OutputReport(), false, 1, "OutputReport failed");
+    CHECK_TRUE(!OutputReport(), HiperfError::OUTPUT_REPORT_FAIL, 1, "OutputReport failed");
 #ifdef HIPERF_DEBUG_TIME
     printf("SymbolicRecordTimes: %0.3f ms\n",
            GetReport(FIRST).virtualRuntime_.symbolicRecordTimes_.count() / MS_DURATION);
 #endif
 
     printf("report done\n");
-    return true;
+    return HiperfError::NO_ERROR;
 }
 
 bool SubCommandReport::RegisterSubCommandReport()

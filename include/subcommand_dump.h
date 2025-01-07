@@ -68,7 +68,7 @@ public:
     }
     ~SubCommandDump() override;
 
-    bool OnSubCommand(std::vector<std::string> &args) override;
+    HiperfError OnSubCommand(std::vector<std::string>& args) override;
     bool ParseOption(std::vector<std::string> &args) override;
 
     static bool RegisterSubCommandDump(void);

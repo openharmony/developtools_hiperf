@@ -41,9 +41,9 @@ public:
     {
     }
 
-    bool OnSubCommand(std::vector<std::string> &args) override
+    HiperfError OnSubCommand(std::vector<std::string>& args) override
     {
-        return true;
+        return HiperfError::NO_ERROR;
     }
 };
 
@@ -73,7 +73,7 @@ HWTEST_F(SubCommandHelpTest, TestOnSubCommand, TestSize.Level1)
     std::vector<std::string> args;
 
     args = {"--help"};
-    EXPECT_EQ(subCommandHelp.OnSubCommand(args), true);
+    EXPECT_EQ(subCommandHelp.OnSubCommand(args), HiperfError::NO_ERROR);
 }
 
 /**

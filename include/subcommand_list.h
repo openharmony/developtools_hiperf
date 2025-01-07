@@ -47,7 +47,7 @@ public:
     {
     }
 
-    bool OnSubCommand(std::vector<std::string> &args) override;
+    HiperfError OnSubCommand(std::vector<std::string>& args) override;
 
     static void RegisterSubCommandList(void);
 

@@ -19,7 +19,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-bool SubCommandList::OnSubCommand(std::vector<std::string> &args)
+HiperfError SubCommandList::OnSubCommand(std::vector<std::string>& args)
 {
     std::vector<perf_type_id> requestEventTypes;
 
@@ -35,14 +35,15 @@ bool SubCommandList::OnSubCommand(std::vector<std::string> &args)
         auto it = SUPPORT_NAME_OPTIONS.find(requestEventType);
         if (it == SUPPORT_NAME_OPTIONS.end()) {
             printf("not support option: '%s'\n", requestEventType.c_str());
-            return false;
+            return HiperfError::OPTION_NOT_SUPPORT;
         } else {
             requestEventTypes.push_back(it->second);
         }
     }
     ShowSupportEventsTypes(requestEventTypes);
-    return true;
+    return HiperfError::NO_ERROR;
 }
+
 bool SubCommandList::ShowSupportEventsTypes(std::vector<perf_type_id> &requestEventTypes)
 {
     // each type

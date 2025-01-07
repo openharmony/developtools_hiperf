@@ -88,7 +88,7 @@ public:
     {
     }
 
-    bool OnSubCommand(std::vector<std::string> &args) override;
+    HiperfError OnSubCommand(std::vector<std::string>& args) override;
     bool ParseOption(std::vector<std::string> &args) override;
     bool ParseSpecialOption(std::vector<std::string> &args);
     void DumpOptions(void) const override;

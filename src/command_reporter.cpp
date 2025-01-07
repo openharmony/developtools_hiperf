@@ -23,6 +23,11 @@
 
 namespace OHOS::Developtools::HiPerf {
 
+#define FOR_ERROR_NAME(x) #x
+static const char* const ERROR_MESSAGE[] = {
+    MAKE_ERROR_ITEM(FOR_ERROR_NAME)
+};
+
 CommandReporter::CommandReporter(const std::string& fullArgument) : subCommand_(fullArgument)
 {
 #if defined(is_ohos) && is_ohos
@@ -43,6 +48,8 @@ void CommandReporter::ReportCommand()
         return;
     }
 
+    int32_t errorCode = static_cast<int32_t>(errorCode_);
+
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE",
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
@@ -50,8 +57,8 @@ void CommandReporter::ReportCommand()
         "SUB_CMD", subCommand_,
         "CALLER", caller_,
         "TARGET_PROCESS", targetProcess_,
-        "ERROR_CODE", errorCode_,
-        "ERROR_MESSAGE", errorMessage_);
+        "ERROR_CODE", errorCode,
+        "ERROR_MESSAGE", ERROR_MESSAGE[errorCode]);
     if (ret != 0) {
         HIPERF_HILOGE(MODULE_DEFAULT, "hisysevent report failed, err:%{public}d", ret);
     }
