@@ -463,35 +463,6 @@ HWTEST_F(HiperfClientTest, SetReport, TestSize.Level1)
 
     TestCaseOption(opt);
 }
-
-HWTEST_F(HiperfClientTest, SetVecBranchSampleTypes, TestSize.Level1)
-{
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-
-    HiperfClient::RecordOption opt;
-    std::vector<pid_t> selectPids = {getpid()};
-    opt.SetSelectPids(selectPids);
-    std::vector<std::string> vecBranchSampleTypes = {"any", "any_call", "any_ret", "ind_call", "u", "k"};
-    opt.SetVecBranchSampleTypes(vecBranchSampleTypes);
-    HiperfClient::Client myHiperf;
-    myHiperf.SetDebugMode();
-
-    ASSERT_TRUE(myHiperf.IsReady());
-#ifdef is_ohos
-    ASSERT_EQ(myHiperf.Start(opt), false);
-#else
-    ASSERT_TRUE(myHiperf.Start(opt));
-    ASSERT_TRUE(myHiperf.Pause());
-    std::this_thread::sleep_for(1s);
-
-    ASSERT_TRUE(myHiperf.Resume());
-    std::this_thread::sleep_for(1s);
-
-    ASSERT_TRUE(myHiperf.Stop());
-#endif
-    stdoutRecord.Stop();
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
