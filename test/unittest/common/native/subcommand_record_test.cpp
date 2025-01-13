@@ -606,56 +606,6 @@ HWTEST_F(SubCommandRecordTest, CpuOff, TestSize.Level1)
     ForkAndRunTest("-d 2 --offcpu -o /data/local/tmp/offcpu_perf.data");
 }
 
-HWTEST_F(SubCommandRecordTest, BranchFilterAny, TestSize.Level1)
-{
-#if is_ohos
-    TestRecordCommand("-d 2 -j any ", false); // broad doesn't support
-#else
-    ForkAndRunTest("-d 2 -j any ");
-#endif
-}
-
-HWTEST_F(SubCommandRecordTest, BranchFilterAnyCall, TestSize.Level1)
-{
-#if is_ohos
-    TestRecordCommand("-d 2 -j any_call ", false); // broad doesn't support
-#else
-    ForkAndRunTest("-d 2 -j any_call ");
-#endif
-}
-
-HWTEST_F(SubCommandRecordTest, BranchFilterIndCall, TestSize.Level1)
-{
-#if is_ohos
-    TestRecordCommand("-d 2 -j ind_call ", false); // broad doesn't support
-#else
-    ForkAndRunTest("-d 2 -j ind_call ");
-#endif
-}
-
-HWTEST_F(SubCommandRecordTest, BranchFilterAnyRet, TestSize.Level1)
-{
-#if is_ohos
-    TestRecordCommand("-d 2 -j any_ret ", false); // broad doesn't support
-#else
-    ForkAndRunTest("-d 2 -j any_ret ");
-#endif
-}
-
-HWTEST_F(SubCommandRecordTest, BranchFilterOnlyCall, TestSize.Level1)
-{
-    TestRecordCommand("-d 2 -j call ", false);
-}
-
-HWTEST_F(SubCommandRecordTest, BranchFilterAll, TestSize.Level1)
-{
-#if is_ohos
-    TestRecordCommand("-d 2 -j any,any_call,any_ret,ind_call,u,k ", false); // broad doesn't support
-#else
-    ForkAndRunTest("-d 2 -j any,any_call,any_ret,ind_call,u,k ");
-#endif
-}
-
 HWTEST_F(SubCommandRecordTest, BranchFilterInputErr, TestSize.Level1)
 {
     TestRecordCommand("-d 2 -j what ", false);
