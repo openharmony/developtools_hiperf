@@ -190,7 +190,7 @@ void PerfRecordAuxtrace::Init(uint8_t* data, const perf_event_attr& attr)
         return;
     }
     PerfEventRecordTemplate::Init(data);
-    if (header_.size > sizeof(header_) + sizeof(data_)) {
+    if (header_.size != sizeof(header_) + sizeof(data_)) {
         HLOGE("header_.size invalid");
         return;
     }
