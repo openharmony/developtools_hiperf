@@ -43,6 +43,7 @@ CommandReporter::~CommandReporter()
 void CommandReporter::ReportCommand()
 {
 #if defined(is_ohos) && is_ohos
+#ifndef FUZZER_TEST
     if (isReported_) {
         HIPERF_HILOGD(MODULE_DEFAULT, "command has been reported");
         return;
@@ -62,6 +63,7 @@ void CommandReporter::ReportCommand()
     if (ret != 0) {
         HIPERF_HILOGE(MODULE_DEFAULT, "hisysevent report failed, err:%{public}d", ret);
     }
+#endif
 #endif
     isReported_ = true;
 }
