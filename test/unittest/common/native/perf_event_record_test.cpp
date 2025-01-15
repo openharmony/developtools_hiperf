@@ -985,6 +985,69 @@ HWTEST_F(PerfEventRecordTest, GetTime, TestSize.Level1)
     sample.data_.time = time;
     EXPECT_EQ(sample.GetTime(), time);
 }
+
+HWTEST_F(PerfEventRecordTest, AuxtraceInit, TestSize.Level1)
+{
+    const char* rawData = "rawData";
+    size_t len = strlen(rawData) + 1;
+    perf_event_header header;
+    header.size = sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header);
+    header.type = PERF_RECORD_AUXTRACE;
+    header.misc = PERF_RECORD_MISC_USER;
+    PerfRecordAuxtraceData data;
+    uint8_t* p = static_cast<uint8_t*>(malloc(header.size + len));
+    EXPECT_EQ(memset_s(p, header.size + len, 0, header.size + len), 0);
+    if (memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<const uint8_t *>(&header),
+                 sizeof(perf_event_header)) != 0) {
+        printf("memcpy_s perf_event_header return failed");
+    }
+    if (memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordAuxtraceData),
+                 reinterpret_cast<const uint8_t *>(&data), sizeof(PerfRecordAuxtraceData)) != 0) {
+        printf("memcpy_s data return failed");
+    }
+    if (memcpy_s(p + header.size, len, reinterpret_cast<const uint8_t *>(rawData), len) != 0) {
+        printf("memcpy_s rawData return failed");
+    }
+    PerfRecordAuxtrace record;
+    record.Init(p);
+    ASSERT_NE(record.rawData_, nullptr);
+    EXPECT_EQ(strcmp(reinterpret_cast<char*>(record.rawData_), "rawData"), 0);
+    EXPECT_EQ(record.header_.type, PERF_RECORD_AUXTRACE);
+    EXPECT_EQ(record.header_.misc, PERF_RECORD_MISC_USER);
+    EXPECT_EQ(record.header_.size, sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header));
+    EXPECT_EQ(record.data_.size, 0);
+    EXPECT_EQ(record.data_.offset, 0);
+    EXPECT_EQ(record.data_.reference, 0);
+    EXPECT_EQ(record.data_.idx, 0);
+    EXPECT_EQ(record.data_.tid, 0);
+    EXPECT_EQ(record.data_.cpu, 0);
+    EXPECT_EQ(record.data_.reserved__, 0);
+    free(p);
+}
+
+HWTEST_F(PerfEventRecordTest, AuxtraceInitErr, TestSize.Level1)
+{
+    perf_event_header header;
+    header.size = sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header) - 1;
+    header.type = PERF_RECORD_AUXTRACE;
+    header.misc = PERF_RECORD_MISC_USER;
+    PerfRecordAuxtraceData data;
+    uint8_t* p = static_cast<uint8_t*>(malloc(header.size));
+    EXPECT_EQ(memset_s(p, header.size, 0, header.size), 0);
+    if (memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<const uint8_t *>(&header),
+                 sizeof(perf_event_header)) != 0) {
+        printf("memcpy_s perf_event_header return failed");
+    }
+    if (memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordAuxtraceData),
+                 reinterpret_cast<const uint8_t *>(&data), sizeof(PerfRecordAuxtraceData)) != 0) {
+        printf("memcpy_s data return failed");
+    }
+    PerfRecordAuxtrace record;
+    record.Init(p);
+    EXPECT_EQ(record.rawData_, nullptr);
+    EXPECT_NE(record.header_.size, sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header));
+    free(p);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
