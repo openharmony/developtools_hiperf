@@ -60,6 +60,7 @@ sources_interface = [
   "unittest/common/native/subcommand_record_test.cpp",
   "unittest/common/native/subcommand_stat_test.cpp",
   "unittest/common/native/subcommand_report_test.cpp",
+  "unittest/common/native/test_hiperf_event_listener.cpp",
 ]
 
 common_deps = [
@@ -103,6 +104,8 @@ ohos_unittest("hiperf_unittest") {
     "faultloggerd:libunwinder",
     "googletest:gmock",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hisysevent:libhisyseventmanager",
     "ipc:ipc_single",
     "protobuf:protobuf_lite",
   ]

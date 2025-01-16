@@ -21,9 +21,10 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-std::string Command::fullArgument;
+std::string Command::fullArgument = "";
 bool Command::DispatchCommands(std::vector<std::string> arguments)
 {
+    fullArgument.clear();
     for (std::string arg : arguments) {
         fullArgument.append(" ");
         fullArgument.append(arg);
@@ -65,8 +66,7 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
                     }
 
                     HLOGD("OnSubCommand -> %s", subCommand->Name().c_str());
-                    HiperfError err = subCommand->OnSubCommand(arguments);
-                    if (err != HiperfError::NO_ERROR) {
+                    if (HiperfError err = subCommand->OnSubCommand(arguments); err != HiperfError::NO_ERROR) {
                         printf("subcommand '%s' failed\n", subCommand->Name().c_str());
                         reporter.errorCode_ = err;
                         return false;
