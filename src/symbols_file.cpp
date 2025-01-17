@@ -230,7 +230,14 @@ protected:
 
         if (elfFile_ == nullptr) {
             if (StringEndsWith(elfPath, ".hap")) {
-                CHECK_TRUE(map == nullptr, false, 1, "map should not be nullptr.");
+                if (map == nullptr) {
+                    HLOGW("map should not be nullptr.");
+                    return false;
+                }
+                if (!map->IsMapExec()) {
+                    HLOGW("map is not exec, no need parse elf.");
+                    return false;
+                }
                 elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
                 HLOGD("try create elf from hap");
             } else {
@@ -414,6 +421,10 @@ private:
 #endif
         if (elfFile_ == nullptr) {
             if (StringEndsWith(elfPath, ".hap") && map != nullptr) {
+                if (!map->IsMapExec()) {
+                    HLOGW("map is not exec, no need parse elf.");
+                    return false;
+                }
                 elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
                 map->elf = elfFile_;
             } else {
@@ -961,7 +972,7 @@ public:
         }
         CHECK_TRUE(!onRecording_, true, 0, "");
 
-        if (!IsHapAbc()) {
+        if (!IsHapAbc() && map_->IsMapExec()) {
             ElfFileSymbols::LoadDebugInfo(map, "");
         }
         debugInfoLoaded_ = true;
@@ -974,7 +985,7 @@ public:
         HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         CHECK_TRUE(symbolsLoaded_ || !onRecording_, true, 0, "");
         symbolsLoaded_ = true;
-        if (!IsHapAbc()) {
+        if (!IsHapAbc() && map_->IsMapExec()) {
             ElfFileSymbols::LoadSymbols(map, "");
         }
         return true;
