@@ -149,7 +149,6 @@ public:
           vaddr_(vaddr),
           eventCount_(eventCount)
     {
-        HLOGV("comm is empty");
         index_ = allIndex_++;
     }
 
