@@ -188,14 +188,16 @@ bool SubCommandRecord::GetSpeOptions()
         for (auto item: valueExpressions) {
             std::vector<std::string> expressions = StringSplit(item, "=");
             size_t itemNum = 2;
-            if (expressions.size() == itemNum && IsNumeric(expressions[1])) {
+            if (expressions.size() == itemNum && (IsNumeric(expressions[1]) || IsHexDigits(expressions[1]))) {
                 std::string name = expressions[0];
-                unsigned long long num = std::stoull(expressions[1]);
+                uint64_t num = 0;
+                if (IsNumeric(expressions[1])) {
+                    num = std::stoull(expressions[1]);
+                } else {
+                    num = std::stoull(expressions[1], nullptr, NUMBER_FORMAT_HEX_BASE);
+                }
                 if (speOptMap_.find(name) != speOptMap_.end()) {
                     speOptMap_[name] = num;
-                }
-                if (num != 0) {
-                    speOptions_.emplace_back(name);
                 }
             }
         }
@@ -540,6 +542,9 @@ bool SubCommandRecord::CheckOptions()
     if (!CheckBacktrackOption()) {
         return false;
     }
+    if (!CheckSpeOption()) {
+        return false;
+    }
     return true;
 }
 
@@ -655,6 +660,23 @@ bool SubCommandRecord::CheckBacktrackOption()
         GetClockId(clockId_) != CLOCK_MONOTONIC_RAW) {
         printf("--backtrack not support the clockid\n");
         return false;
+    }
+    return true;
+}
+
+bool SubCommandRecord::CheckSpeOption()
+{
+    constexpr uint64_t disable = 0;
+    constexpr uint64_t enable  = 1;
+    const std::vector<std::string> optionNames = {"ts_enable", "pa_enable", "pct_enable",
+                                                  "jitter", "branch_filter", "load_filter",
+                                                  "store_filter"};
+    for (const auto &optionName : optionNames) {
+        if (CheckOutOfRange<uint64_t>(speOptMap_[optionName], disable, enable)) {
+            printf("Invalid %s value '%" PRIu64 "', value should be 0 or 1\n",
+                   optionName.c_str(), speOptMap_[optionName]);
+            return false;
+        }
     }
     return true;
 }
@@ -1779,7 +1801,7 @@ bool SubCommandRecord::CreateInitRecordFile(bool compressData)
         return false;
     }
 
-    CHECK_TRUE(!fileWriter_->WriteAttrAndId(perfEvents_.GetAttrWithId()), false, 0, "");
+    CHECK_TRUE(!fileWriter_->WriteAttrAndId(perfEvents_.GetAttrWithId(), isSpe_), false, 0, "");
 
     CHECK_TRUE(!AddFeatureRecordFile(), false, 0, "");
 

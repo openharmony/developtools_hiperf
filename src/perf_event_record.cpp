@@ -57,6 +57,12 @@ static PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
             return new PerfRecordAux();
         case PERF_RECORD_AUXTRACE:
             return new PerfRecordAuxtrace();
+        case PERF_RECORD_AUXTRACE_INFO:
+            return new PerfRecordAuxTraceInfo();
+        case PERF_RECORD_TIME_CONV:
+            return new PerfRecordTimeConv();
+        case PERF_RECORD_CPU_MAP:
+            return new PerfRecordCpuMap();
         case PERF_RECORD_ITRACE_START:
             return new PerfRecordItraceStart();
         case PERF_RECORD_LOST_SAMPLES:
@@ -1002,6 +1008,60 @@ void PerfRecordAux::DumpData(int indent) const
     PRINT_INDENT(indent, "aux_offset 0x%llx aux_size 0x%llx flags 0x%llx pid %u tid %u time %llu",
                  data_.aux_offset, data_.aux_size, data_.flags, data_.sample_id.pid, data_.sample_id.tid,
                  data_.sample_id.time);
+}
+
+bool PerfRecordAuxTraceInfo::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    return true;
+}
+
+void PerfRecordAuxTraceInfo::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "aux_trace_event");
+}
+
+bool PerfRecordTimeConv::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    return true;
+}
+
+void PerfRecordTimeConv::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "aux_time_event");
+}
+
+bool PerfRecordCpuMap::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+    std::copy(reinterpret_cast<const uint8_t *>(&data_),
+              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    return true;
+}
+
+void PerfRecordCpuMap::DumpData(int indent) const
+{
+    PRINT_INDENT(indent, "cpu_map_event");
 }
 
 bool PerfRecordItraceStart::GetBinary(std::vector<uint8_t> &buf) const

@@ -523,6 +523,40 @@ HWTEST_F(PerfEventsTest, OutputTracking, TestSize.Level1)
     EXPECT_EQ(event.outputEndTime_, TIME);
     EXPECT_EQ(event.outputTracking_, true);
 }
+
+HWTEST_F(PerfEventsTest, SetConfig, TestSize.Level1)
+{
+    constexpr uint64_t config = 0x700010007;
+    constexpr uint64_t config1 = 8;
+    constexpr uint64_t config2 = 10;
+    PerfEvents event;
+    std::map<const std::string, uint64_t> speOptMap = {
+        {"branch_filter", 1},   {"load_filter", 1},
+        {"store_filter", 1},    {"ts_enable", 1},
+        {"pa_enable", 1},       {"jitter", 1},
+        {"min_latency", config2},      {"event_filter", config1},
+        {"pct_enable", 1},
+    };
+    event.SetConfig(speOptMap);
+    EXPECT_EQ(event.config_, config);
+    EXPECT_EQ(event.config1_, config1);
+    EXPECT_EQ(event.config2_, config2);
+}
+
+HWTEST_F(PerfEventsTest, SetConfig1, TestSize.Level1)
+{
+    constexpr uint64_t config = 0x700010003;
+    PerfEvents event;
+    std::map<const std::string, uint64_t> speOptMap = {
+        {"branch_filter", 1},   {"load_filter", 1},
+        {"store_filter", 1},    {"ts_enable", 1},
+        {"pa_enable", 1},       {"jitter", 1},
+        {"min_latency", 0},      {"event_filter", 0},
+        {"pct_enable", 0},
+    };
+    event.SetConfig(speOptMap);
+    EXPECT_EQ(event.config_, config);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

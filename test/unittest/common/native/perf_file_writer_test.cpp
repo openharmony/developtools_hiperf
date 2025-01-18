@@ -137,6 +137,45 @@ HWTEST_F(PerfFileWriterTest, TestFileWriter_Compress, TestSize.Level1)
     ASSERT_TRUE((access(filename.c_str(), F_OK) != 0));
 }
 
+HWTEST_F(PerfFileWriterTest, TestFileWriter_AuxTraceInfo, TestSize.Level1)
+{
+    std::string filename = "./TestFileWriter_AuxTraceInfo";
+    PerfFileWriter fileWriter;
+    ASSERT_TRUE(fileWriter.Open(filename)) << "current path no write permission?";
+
+    std::vector<AttrWithId> attrIds;
+    AttrWithId attrId;
+    perf_event_attr attr;
+    attrId.attr = attr;
+    attrId.ids.emplace_back(0);
+    attrIds.emplace_back(attrId);
+    uint64_t dataSize = 0;
+    ASSERT_TRUE(fileWriter.WriteAttrAndId(attrIds, true));
+    dataSize = dataSize + sizeof(perf_event_header) + sizeof(PerfRecordTtimeConvData) +
+               sizeof(perf_event_header) + sizeof(PerfRecordAuxtraceInfoData) +
+               sizeof(perf_event_header) + sizeof(PerfRecordCpuMapData);
+
+    for (uint i = 0; i < TESTRECORDCOUNT; i++) {
+        std::string testStr = "testFeature " + std::to_string(i);
+        PerfRecordMmap recordmmap(true, i, i, i, i, i, testStr);
+        dataSize += recordmmap.GetSize();
+        ASSERT_TRUE(fileWriter.WriteRecord(recordmmap));
+        ASSERT_TRUE(fileWriter.AddStringFeature(FEATURE::RESERVED, testStr));
+        ASSERT_TRUE(fileWriter.AddNrCpusFeature(FEATURE::RESERVED, 0, TESTNUMBER1));
+        ASSERT_TRUE(fileWriter.AddU64Feature(FEATURE::RESERVED, TESTNUMBER2));
+        std::vector<AttrWithId> eventDesces;
+        TestEventDescInit(eventDesces);
+        ASSERT_TRUE(fileWriter.AddEventDescFeature(FEATURE::RESERVED, eventDesces));
+        VirtualRuntime vr;
+        ASSERT_TRUE(fileWriter.AddSymbolsFeature(vr.GetSymbolsFiles()));
+    }
+    ASSERT_EQ(fileWriter.GetDataSize(), dataSize);
+    ASSERT_EQ(fileWriter.GetRecordCount(), TESTRECORDCOUNT);
+    ASSERT_TRUE(fileWriter.Close());
+    // check file
+    ASSERT_TRUE((access(filename.c_str(), F_OK) == 0));
+}
+
 HWTEST_F(PerfFileWriterTest, TestFileWriter_NoWriteAttrAndId, TestSize.Level1)
 {
     std::string filename = "./TestFileWriter_NoWriteAttrAndId";

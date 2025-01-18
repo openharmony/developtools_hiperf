@@ -55,6 +55,9 @@ struct PerfRecordAuxtraceData {
     u32 tid = 0;
     u32 cpu = 0;
     u32 reserved__ = 0;
+#if SAMPLE_ID_ALL
+    struct sample_id sample_id;
+#endif
 };
 
 /*
@@ -379,6 +382,30 @@ struct PerfRecordNamespacesData {
 #if SAMPLE_ID_ALL
     struct sample_id sample_id;
 #endif
+};
+
+struct PerfRecordTtimeConvData {
+    u64 time_shift = 0;
+    u64 time_mult = 0;
+    u64 time_zero = 0;
+    u64 time_cycles = 0;
+    u64 time_mask = 0;
+    u8  cap_user_time_zero = 0;
+    u8  cap_user_time_short = 0;
+    u8  reserved[6] = {0}; // 6 : For alignment
+};
+
+struct PerfRecordAuxtraceInfoData {
+    u32 type = 0;
+    u32 reserved = 0;
+    u64 priv[2] = {0};
+};
+
+struct PerfRecordCpuMapData {
+    u16 type = 0;
+    u16 nr = 0;
+    u16 cpu[16] = {0};     // 16 : cpus
+    u8  reserved[4] = {0}; // 4 : For alignment
 };
 } // namespace HiPerf
 } // namespace Developtools

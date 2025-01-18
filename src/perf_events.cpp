@@ -389,21 +389,36 @@ bool PerfEvents::AddSpeEvent(u32 type, bool followGroup)
     eventItem.attr.size = sizeof(perf_event_attr);
     eventItem.attr.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING | PERF_FORMAT_ID;
     eventItem.attr.inherit = (inherit_ ? 1 : 0);
-    eventItem.attr.sample_type = SAMPLE_ID;
+    eventItem.attr.sample_type = SAMPLE_ID | PERF_SAMPLE_IP;
     eventItem.attr.sample_id_all = 1;
     eventItem.attr.disabled = 1;
-    eventItem.attr.config = 0x700010007; // temp type
+    eventItem.attr.config = 0x700010007; // 0x700010007 : enable all
+    if (config_ != 0) {
+        eventItem.attr.config = config_;
+    }
+    if (config1_ != 0) {
+        eventItem.attr.config1 = config1_;
+    }
+    if (config2_ != 0) {
+        eventItem.attr.config2 = config2_;
+    }
+    HLOGD("config_ is 0x%" PRIx64 ", config1_ is 0x%" PRIx64 ", config2_ is 0x%" PRIx64 "",
+          config_, config1_, config2_);
     return true;
 }
 
-void PerfEvents::SetConfig(std::map<const std::string, unsigned long long> &speOptMaps)
+void PerfEvents::SetConfig(std::map<const std::string, uint64_t> &speOptMaps)
 {
-    int jitterOffset = 16;
-    int branchOffset = 32;
-    int loadOffset = 33;
-    int storeOffset = 34;
-    config_ |= (speOptMaps["ts_enable"] & 0x1) << 0;
-    config_ |= (speOptMaps["pa_enable"] & 0x1) << 1;
+    constexpr uint tsOffset = 0;
+    constexpr uint paOffset = 1;
+    constexpr uint pctOffset = 2;
+    constexpr uint jitterOffset = 16;
+    constexpr uint branchOffset = 32;
+    constexpr uint loadOffset = 33;
+    constexpr uint storeOffset = 34;
+    config_ |= (speOptMaps["ts_enable"] & 0x1) << tsOffset;
+    config_ |= (speOptMaps["pa_enable"] & 0x1) << paOffset;
+    config_ |= (speOptMaps["pct_enable"] & 0x1) << pctOffset;
     config_ |= (speOptMaps["jitter"] & 0x1) << jitterOffset;
     config_ |= (speOptMaps["branch_filter"] & 0x1) << branchOffset;
     config_ |= (speOptMaps["load_filter"] & 0x1) << loadOffset;
