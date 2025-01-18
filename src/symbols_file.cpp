@@ -38,6 +38,7 @@
 #include "dfx_extractor_utils.h"
 #include "dfx_symbols.h"
 #include "dwarf_encoding.h"
+#include "elf_factory.h"
 #include "hiperf_hilog.h"
 #include "unwinder_config.h"
 #include "utilities.h"
@@ -230,7 +231,7 @@ protected:
             return false;
         }
         if (elfFile_ == nullptr) {
-            if (StringEndsWith(elfPath, ".hap")) {
+            if (StringEndsWith(elfPath, ".hap") && StringStartsWith(elfPath, "/proc")) {
                 if (map == nullptr) {
                     HLOGW("map should not be nullptr.");
                     return false;
@@ -239,10 +240,13 @@ protected:
                     HLOGW("map is not exec, no need parse elf.");
                     return false;
                 }
-                elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
+                CompressHapElfFactory elfFactory(elfPath, map->prevMap);
+                elfFile_ = elfFactory.Create();
+                map->offset -= map->prevMap->offset;
                 HLOGD("try create elf from hap");
             } else {
-                elfFile_ = std::make_shared<DfxElf>(elfPath);
+                RegularElfFactory elfFactory(elfPath);
+                elfFile_ = elfFactory.Create();
             }
         }
 
@@ -298,7 +302,7 @@ private:
                         uint64_t &sectionFileOffset) const override
     {
         struct ShdrInfo shdrInfo;
-        if (elfFile_->GetSectionInfo(shdrInfo, name)) {
+        if (elfFile_ != nullptr && elfFile_->GetSectionInfo(shdrInfo, name)) {
             sectionVaddr = shdrInfo.addr;
             sectionSize = shdrInfo.size;
             sectionFileOffset = shdrInfo.offset;
@@ -423,15 +427,18 @@ private:
         const auto startTime = steady_clock::now();
 #endif
         if (elfFile_ == nullptr) {
-            if (StringEndsWith(elfPath, ".hap") && map != nullptr) {
+            if (StringEndsWith(elfPath, ".hap") && StringStartsWith(elfPath, "/proc") && map != nullptr) {
                 if (!map->IsMapExec()) {
                     HLOGW("map is not exec, no need parse elf.");
                     return false;
                 }
-                elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
+                CompressHapElfFactory elfFactory(elfPath, map->prevMap);
+                elfFile_ = elfFactory.Create();
+                map->offset -= map->prevMap->offset;
                 map->elf = elfFile_;
             } else {
-                elfFile_ = std::make_shared<DfxElf>(elfPath);
+                RegularElfFactory elfFactory(elfPath);
+                elfFile_ = elfFactory.Create();
             }
         }
         CHECK_TRUE(elfFile_ == nullptr, false, 1, "Failed to create elf file for %s.", elfPath.c_str());
@@ -1108,7 +1115,8 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
 
 static bool IsCJFile(const std::string& filepath)
 {
-    std::shared_ptr<DfxElf> elfFile_ = std::make_shared<DfxElf>(filepath);
+    RegularElfFactory elfFactory(filepath);
+    std::shared_ptr<DfxElf> elfFile_ = elfFactory.Create();
     ShdrInfo shinfo;
     if (elfFile_->GetSectionInfo(shinfo, ".cjmetadata")) {
         return true;
