@@ -1020,11 +1020,9 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
             virtualRuntime_.GetThread(it->first, tid);
         }
     }
-    if (mapPids_.empty()) {
-        if (!selectPids_.empty()) {
-            for (auto pid : selectPids_) {
-                virtualRuntime_.GetThread(pid, pid);
-            }
+    if (isSpe_ && mapPids_.empty() && !selectPids_.empty()) {
+        for (auto pid : selectPids_) {
+            virtualRuntime_.GetThread(pid, pid);
         }
     }
 }
