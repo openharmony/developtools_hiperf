@@ -883,9 +883,23 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordComm, TestSize.Level1)
 HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level1)
 {
     perf_event_header header;
+    const char* rawData = "rawData";
+    size_t len = strlen(rawData) + 1;
     header.size = sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header);
-    uint8_t* p = static_cast<uint8_t*>(malloc(header.size));
-
+    PerfRecordAuxtraceData data;
+    uint8_t* p = static_cast<uint8_t*>(malloc(header.size + len));
+    EXPECT_EQ(memset_s(p, header.size + len, 0, header.size + len), 0);
+    if (memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<const uint8_t *>(&header),
+                 sizeof(perf_event_header)) != 0) {
+        printf("memcpy_s perf_event_header return failed");
+    }
+    if (memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordAuxtraceData),
+                 reinterpret_cast<const uint8_t *>(&data), sizeof(PerfRecordAuxtraceData)) != 0) {
+        printf("memcpy_s data return failed");
+    }
+    if (memcpy_s(p + header.size, len, reinterpret_cast<const uint8_t *>(rawData), len) != 0) {
+        printf("memcpy_s rawData return failed");
+    }
     PerfRecordAuxtrace record;
     record.Init(p);
     ASSERT_NE(record.rawData_, nullptr);
