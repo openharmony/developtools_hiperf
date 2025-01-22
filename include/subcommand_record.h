@@ -411,6 +411,11 @@ private:
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
     bool OnlineReportData();
+
+    // only used in UT
+    using CheckRecordCallBack = std::function<void(const PerfEventRecord&)>;
+    void SetCheckRecordCallback(CheckRecordCallBack callback);
+    CheckRecordCallBack checkCallback_ = nullptr;
 };
 } // namespace HiPerf
 } // namespace Developtools

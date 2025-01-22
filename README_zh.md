@@ -396,6 +396,4 @@ Z:\OHOS_STD_2.0\developtools\hdc_standard\prebuilt\windows\hdc_std.exe
 
 [developtools\developtools_bytrace](https://gitee.com/openharmony/developtools_bytrace)
 
-[third_party\libunwind](https://gitee.com/openharmony/third_party_libunwind)
-
 [third_party\protobuf](https://gitee.com/openharmony/third_party_protobuf)

@@ -381,6 +381,4 @@ Development Toolchain Subsystem
 
 [developtools\developtools_bytrace](https://gitee.com/openharmony/developtools_bytrace)
 
-[third_party\libunwind](https://gitee.com/openharmony/third_party_libunwind)
-
 [third_party\protobuf](https://gitee.com/openharmony/third_party_protobuf)

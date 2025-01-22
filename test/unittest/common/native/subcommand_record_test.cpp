@@ -41,6 +41,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 static const std::string TEST_FILE = "/data/local/tmp/perf.data";
+const std::string PERF_CPU_TIME_MAX_PERCENT = "/proc/sys/kernel/perf_cpu_time_max_percent";
 static const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2ms;
 
 static constexpr size_t TEST_SIZE_F100_DWARF_SYSTEM = 1.4E4 * 1024;
@@ -78,9 +79,11 @@ public:
 
     void TestEvents(std::string &opt, std::string &uk, bool isFork = true);
 
-    static void ForkAndRunTest(const std::string& cmd, bool expect = true, bool fixPid = true);
+    static void ForkAndRunTest(const std::string& cmd, bool expect = true, bool fixPid = true,
+                               SubCommandRecord::CheckRecordCallBack callback = nullptr);
 
-    static void TestRecordCommand(const std::string &option, bool expect = true, bool fixPid = true);
+    static void TestRecordCommand(const std::string &option, bool expect = true, bool fixPid = true,
+                                  SubCommandRecord::CheckRecordCallBack callback = nullptr);
 
     size_t GetFileSize(const char* fileName);
 
@@ -114,7 +117,8 @@ void SubCommandRecordTest::TearDown()
     MemoryHold::Get().Clean();
 }
 
-void SubCommandRecordTest::ForkAndRunTest(const std::string& cmd, bool expect, bool fixPid)
+void SubCommandRecordTest::ForkAndRunTest(const std::string& cmd, bool expect, bool fixPid,
+                                          SubCommandRecord::CheckRecordCallBack callback)
 {
     pid_t pid = fork();
     if (pid < 0) {
@@ -122,7 +126,7 @@ void SubCommandRecordTest::ForkAndRunTest(const std::string& cmd, bool expect, b
         return;
     }
     if (pid == 0) {
-        TestRecordCommand(cmd, expect, fixPid);
+        TestRecordCommand(cmd, expect, fixPid, callback);
         _exit(0);
     }
     int status;
@@ -131,7 +135,8 @@ void SubCommandRecordTest::ForkAndRunTest(const std::string& cmd, bool expect, b
     ASSERT_EQ(status, 0);
 }
 
-void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool expect, bool fixPid)
+void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool expect, bool fixPid,
+                                             SubCommandRecord::CheckRecordCallBack callback)
 {
     StdoutRecord stdoutRecord;
 
@@ -142,6 +147,14 @@ void SubCommandRecordTest::TestRecordCommand(const std::string &option, bool exp
     }
     cmdString += " " + option;
     printf("command : %s\n", cmdString.c_str());
+
+    if (callback != nullptr) {
+        std::string subcommandName = "record";
+        SubCommand* subcommand = SubCommand::FindSubCommand(subcommandName);
+        ASSERT_NE(subcommand, nullptr);
+        SubCommandRecord* subcommandRecord = static_cast<SubCommandRecord*>(subcommand);
+        subcommandRecord->SetCheckRecordCallback(callback);
+    }
 
     // it need load some symbols and much more log
     stdoutRecord.Start();
@@ -169,6 +182,16 @@ size_t SubCommandRecordTest::GetFileSize(const char* fileName)
     }
     size_t fileSize = statbuf.st_size;
     return fileSize;
+}
+
+static bool CheckIntFromProcFile(const std::string& proc, int expect)
+{
+    int value = -1;
+    if (!ReadIntFromProcFile(proc, value)) {
+        return false;
+    }
+
+    return value == expect;
 }
 
 // app package name
@@ -322,7 +345,15 @@ HWTEST_F(SubCommandRecordTest, HasTargetErr1, TestSize.Level1)
 // exclude hiperf
 HWTEST_F(SubCommandRecordTest, ExcludePerf, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 -a --exclude-hiperf ", true, false);
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            if (recordSample.data_.pid == getpid()) {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 -a --exclude-hiperf ", true, false, callback);
 }
 
 HWTEST_F(SubCommandRecordTest, ExcludePerfErr, TestSize.Level1)
@@ -333,7 +364,15 @@ HWTEST_F(SubCommandRecordTest, ExcludePerfErr, TestSize.Level1)
 // select cpu
 HWTEST_F(SubCommandRecordTest, SelectCpu, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 -c 0 ");
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            if (recordSample.data_.cpu != 0) {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 -c 0 ", true, true, callback);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectCpuMulti, TestSize.Level1)
@@ -346,7 +385,16 @@ HWTEST_F(SubCommandRecordTest, SelectCpuMulti, TestSize.Level1)
     }
     opt.pop_back();
     opt += " ";
-    ForkAndRunTest(opt);
+
+    SubCommandRecord::CheckRecordCallBack callback = [maxCpuid](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            if (recordSample.data_.cpu >= maxCpuid) {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest(opt, true, true, callback);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectCpuMinErr, TestSize.Level1)
@@ -378,6 +426,7 @@ HWTEST_F(SubCommandRecordTest, CheckControlErr, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, CpuLimitMin, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 --cpu-limit 1 ");
+    EXPECT_EQ(CheckIntFromProcFile(PERF_CPU_TIME_MAX_PERCENT, 1), true);
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitErr, TestSize.Level1)
@@ -388,6 +437,7 @@ HWTEST_F(SubCommandRecordTest, CpuLimitErr, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, CpuLimitMax, TestSize.Level1)
 {
     ForkAndRunTest("-d 2 --cpu-limit 100 ");
+    EXPECT_EQ(CheckIntFromProcFile(PERF_CPU_TIME_MAX_PERCENT, 100), true);
 }
 
 HWTEST_F(SubCommandRecordTest, CpuLimitMaxErr, TestSize.Level1)
@@ -1205,7 +1255,16 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Leve
  */
 HWTEST_F(SubCommandRecordTest, ExcludeThreadName, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog ", true);
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", recordSample.data_.tid));
+            if (threadName == "DfxWatchdog") {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog ", true, true, callback);
 }
 
 /**
@@ -1215,7 +1274,16 @@ HWTEST_F(SubCommandRecordTest, ExcludeThreadName, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeThreadNames, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog,GC_WorkerThread ", true);
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", recordSample.data_.tid));
+            if (threadName == "DfxWatchdog" || threadName == "GC_WorkerThread") {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog,GC_WorkerThread ", true, true, callback);
 }
 
 /**
@@ -1225,7 +1293,16 @@ HWTEST_F(SubCommandRecordTest, ExcludeThreadNames, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadName, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 --exclude-thread test ", true);
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", recordSample.data_.tid));
+            if (threadName == "test") {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 --exclude-thread test ", true, true, callback);
 }
 
 /**
@@ -1235,7 +1312,16 @@ HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadName, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadNames, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 --exclude-thread test1,test2 ", true);
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", recordSample.data_.tid));
+            if (threadName == "test1" || threadName == "test2") {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 --exclude-thread test1,test2 ", true, true, callback);
 }
 
 /**
@@ -1245,7 +1331,15 @@ HWTEST_F(SubCommandRecordTest, ExcludeErrorThreadNames, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeTids, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 -s dwarf -f 2000 --exclude-tid 200");
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            if (recordSample.data_.tid == 200) {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 -s dwarf -f 2000 --exclude-tid 200", true, true, callback);
 }
 
 /**
@@ -1255,7 +1349,16 @@ HWTEST_F(SubCommandRecordTest, ExcludeTids, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeThread, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 -s dwarf -f 2000 --exclude-thread com.app.test");
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", recordSample.data_.tid));
+            if (threadName == "com.app.test") {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 -s dwarf -f 2000 --exclude-thread com.app.test", true, true, callback);
 }
 
 /**
@@ -1265,7 +1368,16 @@ HWTEST_F(SubCommandRecordTest, ExcludeThread, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, ExcludeMixedThreadName, TestSize.Level1)
 {
-    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog,test ", true);
+    SubCommandRecord::CheckRecordCallBack callback = [](const PerfEventRecord& record) {
+        if (record.GetType() == PERF_RECORD_SAMPLE) {
+            const PerfRecordSample& recordSample = static_cast<const PerfRecordSample&>(record);
+            std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", recordSample.data_.tid));
+            if (threadName == "DfxWatchdog" || threadName == "test") {
+                _exit(1);
+            }
+        }
+    };
+    ForkAndRunTest("-d 2 --exclude-thread DfxWatchdog,test ", true, true, callback);
 }
 
 // --restart

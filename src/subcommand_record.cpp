@@ -1569,6 +1569,11 @@ bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 
 bool SubCommandRecord::SaveRecord(const PerfEventRecord& record)
 {
+#ifdef HIPERF_UNITTEST
+    if (checkCallback_ != nullptr) {
+        checkCallback_(record);
+    }
+#endif
     if (fileWriter_ == nullptr) {
         return false;
     }
@@ -2190,6 +2195,13 @@ SubCommand& SubCommandRecord::GetInstance()
 {
     static SubCommandRecord subCommand;
     return subCommand;
+}
+
+void SubCommandRecord::SetCheckRecordCallback(CheckRecordCallBack callback)
+{
+#ifdef HIPERF_UNITTEST
+    checkCallback_ = callback;
+#endif
 }
 } // namespace HiPerf
 } // namespace Developtools
