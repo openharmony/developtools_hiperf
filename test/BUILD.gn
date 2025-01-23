@@ -97,26 +97,103 @@ ohos_unittest("hiperf_unittest") {
   configs = [ ":hiperf_test_config" ]
   module_out_path = module_output_path
   resource_config_file = "unittest/resource/ohos_test.xml"
-  deps = common_deps
+  deps = [ "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static" ]
+  use_exceptions = true
+
+  public_configs = [ "${hiperf_path}/:hiperf_inner_config" ]
+
+  defines = [
+    "SUPPORT_PERF_EVENT",
+    "HIPERF_UNITTEST",
+  ]
+
+  public_deps = []
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "faultloggerd:libunwinder",
+    "faultloggerd:unwinder_host",
     "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
     "ipc:ipc_single",
     "protobuf:protobuf_lite",
+    "zlib:libz",
   ]
+
   cflags = [
     "-Dprivate=public",  #allow test code access private members
     "-Dprotected=public",  #allow test code access protected members
   ]
+
   sources = sources_interface
   sources += sources_base
+
+  sources += [
+    "./../src/command.cpp",
+    "./../src/command_reporter.cpp",
+    "./../src/dwarf_encoding.cpp",
+    "./../src/hiperf_libreport.cpp",
+    "./../src/ipc_utilities.cpp",
+    "./../src/option.cpp",
+    "./../src/perf_event_record.cpp",
+    "./../src/perf_events.cpp",
+    "./../src/perf_file_format.cpp",
+    "./../src/perf_file_reader.cpp",
+    "./../src/perf_file_writer.cpp",
+    "./../src/register.cpp",
+    "./../src/report.cpp",
+    "./../src/report_json_file.cpp",
+    "./../src/ring_buffer.cpp",
+    "./../src/spe_decoder.cpp",
+    "./../src/subcommand.cpp",
+    "./../src/subcommand_dump.cpp",
+    "./../src/subcommand_help.cpp",
+    "./../src/subcommand_list.cpp",
+    "./../src/subcommand_record.cpp",
+    "./../src/subcommand_report.cpp",
+    "./../src/subcommand_stat.cpp",
+    "./../src/symbols_file.cpp",
+    "./../src/tracked_command.cpp",
+    "./../src/unique_stack_table.cpp",
+    "./../src/utilities.cpp",
+    "./../src/virtual_runtime.cpp",
+    "./../src/virtual_thread.cpp",
+  ]
+
+  if (is_ohos) {
+    sources += [ "./../src/callstack.cpp" ]
+    external_deps += [
+      "init:libbegetutil",
+      "ipc:ipc_core",
+      "samgr:samgr_proxy",
+    ]
+  }
+
   if (is_linux) {
     static_link = false
+  }
+
+  if (hiperf_use_libunwinder) {
+    defines += [ "HAVE_LIBUNWINDER=1" ]
+  }
+
+  if (!hiperf_target_static) {
+    public_configs += [ "${hiperf_path}/:protobuf_config" ]
+    public_deps += [ "${hiperf_path}/:proto_file_cpp" ]
+    sources += [ "./../src/report_protobuf_file.cpp" ]
+  }
+
+  if (hiperf_debug) {
+    sources += [
+      "./../src/debug_logger.cpp",
+      "./../src/option_debug.cpp",
+    ]
+  }
+
+  if (is_ohos && hiperf_use_syspara) {
+    public_configs += [ "${hiperf_path}/:hiperf_syspara_config" ]
   }
 }
 

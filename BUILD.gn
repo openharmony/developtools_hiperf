@@ -22,7 +22,10 @@ declare_args() {
 function_disable_define = []
 
 config("hiperf_inner_config") {
-  visibility = [ ":*" ]
+  visibility = [
+    ":*",
+    "./test/:*",
+  ]
   ldflags = []
   cflags = code_check_flag
   defines = function_disable_define
@@ -263,10 +266,6 @@ ohos_source_set("hiperf_platform_linux") {
   configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
 
   sources = sources_platform_linux
-}
-
-config("libunwind_config") {
-  defines = [ "HAVE_LIBUNWIND=1" ]
 }
 
 config("elf_config") {
