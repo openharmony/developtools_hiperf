@@ -212,11 +212,12 @@ public:
     void AddReportArgs(CommandReporter& reporter) override;
 
     static bool RegisterSubCommandRecord(void);
-    std::map<const std::string, unsigned long long> speOptMap_ = {
+    std::map<const std::string, uint64_t> speOptMap_ = {
         {"branch_filter", 0},   {"load_filter", 0},
         {"store_filter", 0},    {"ts_enable", 0},
         {"pa_enable", 0},       {"jitter", 0},
         {"min_latency", 0},      {"event_filter", 0},
+        {"pct_enable", 0},
     };
 
     static SubCommand& GetInstance();
@@ -255,7 +256,6 @@ private:
     std::vector<pid_t> selectTids_ = {};
     bool restart_ = false;
     std::vector<std::string> selectEvents_ = {};
-    std::vector<std::string> speOptions_ = {};
     std::vector<std::vector<std::string>> selectGroups_ = {};
     std::vector<std::string> callStackType_ = {};
     std::vector<std::string> vecBranchFilters_ = {};
@@ -389,6 +389,7 @@ private:
     bool CheckTargetPids();
     bool CheckReportOption();
     bool CheckBacktrackOption();
+    bool CheckSpeOption();
     void WriteCommEventBeforeSampling();
     void RemoveVdsoTmpFile();
 

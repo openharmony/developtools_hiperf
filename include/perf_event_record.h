@@ -61,10 +61,16 @@ static constexpr char PERF_RECORD_TYPE_ITRACESTART[] = "itraceStart";
 static constexpr char PERF_RECORD_TYPE_LOSTSAMPLE[] = "lostSamples";
 static constexpr char PERF_RECORD_TYPE_SWITCH[] = "switch";
 static constexpr char PERF_RECORD_TYPE_SWITCHCPUWIDE[] = "switchCpuWide";
+static constexpr char PERF_RECORD_TYPE_AUXTRACEINFO[] = "auxtraceinfo";
+static constexpr char PERF_RECORD_TYPE_TIMECONV[] = "timeconv";
+static constexpr char PERF_RECORD_TYPE_CPUMAP[] = "cpumap";
 static constexpr char* PERF_RECORD_TYPE_NULL = nullptr;
 
 enum perf_event_hiperf_ext_type {
+    PERF_RECORD_AUXTRACE_INFO = 70,
     PERF_RECORD_AUXTRACE = 71,
+    PERF_RECORD_CPU_MAP = 74,
+    PERF_RECORD_TIME_CONV = 79,
     PERF_RECORD_HIPERF_CALLSTACK = UINT32_MAX / 2,
 };
 
@@ -183,6 +189,28 @@ public:
     void DumpLog(const std::string &prefix) const override;
 
     size_t GetSize() const override;
+};
+
+class PerfRecordAuxTraceInfo : public PerfEventRecordTemplate<PerfRecordAuxtraceInfoData,
+                               PERF_RECORD_TYPE_AUXTRACEINFO> {
+public:
+    PerfRecordAuxTraceInfo() = default;
+    bool GetBinary(std::vector<uint8_t> &buf) const override;
+    void DumpData(int indent) const override;
+};
+
+class PerfRecordTimeConv : public PerfEventRecordTemplate<PerfRecordTtimeConvData, PERF_RECORD_TYPE_TIMECONV> {
+public:
+    PerfRecordTimeConv() = default;
+    bool GetBinary(std::vector<uint8_t> &buf) const override;
+    void DumpData(int indent) const override;
+};
+
+class PerfRecordCpuMap : public PerfEventRecordTemplate<PerfRecordCpuMapData, PERF_RECORD_TYPE_CPUMAP> {
+public:
+    PerfRecordCpuMap() = default;
+    bool GetBinary(std::vector<uint8_t> &buf) const override;
+    void DumpData(int indent) const override;
 };
 
 class PerfRecordMmap : public PerfEventRecordTemplate<PerfRecordMmapData, PERF_RECORD_TYPE_MMAP> {

@@ -252,7 +252,7 @@ bool PerfFileWriter::Write(const void *buf, size_t len)
     return true;
 }
 
-bool PerfFileWriter::WriteAttrAndId(const std::vector<AttrWithId> &attrIds)
+bool PerfFileWriter::WriteAttrAndId(const std::vector<AttrWithId> &attrIds, bool isSpe)
 {
     CHECK_TRUE(attrIds.empty(), false, 0, "");
 
@@ -298,9 +298,101 @@ bool PerfFileWriter::WriteAttrAndId(const std::vector<AttrWithId> &attrIds)
     dataSection_.offset = dataSectionOffset;
 
     defaultEventAttr_ = attrIds[0].attr;
-
+    if (!WriteAuxTraceEvent(isSpe)) {
+        HLOGE("WriteAuxTraceEvent failed");
+        return false;
+    }
     isWritingRecord = true;
+    return true;
+}
 
+bool PerfFileWriter::WriteTimeConvEvent()
+{
+    perf_event_header header;
+    PerfRecordTtimeConvData auxTimeConv;
+    header.type = PERF_RECORD_TIME_CONV;
+    header.misc = PERF_RECORD_MISC_KERNEL;
+    header.size = static_cast<uint16_t>(sizeof(perf_event_header) + sizeof(PerfRecordTtimeConvData));
+    constexpr uint32_t timeShift = 21;
+    auxTimeConv.time_shift = timeShift;
+    auxTimeConv.time_mult = 1;
+    auxTimeConv.time_zero = 1;
+    auxTimeConv.time_cycles = 1;
+    auxTimeConv.cap_user_time_zero = 1;
+    auxTimeConv.cap_user_time_short = 1;
+    if (!Write(&header, sizeof(header))) {
+        return false;
+    }
+    if (!Write(&auxTimeConv, sizeof(auxTimeConv))) {
+        return false;
+    }
+    dataSection_.size = dataSection_.size + sizeof(header) + sizeof(auxTimeConv);
+    return true;
+}
+
+bool PerfFileWriter::WriteAuxTraceInfoEvent()
+{
+    perf_event_header header;
+    PerfRecordAuxtraceInfoData auxTraceEvent;
+    header.type = PERF_RECORD_AUXTRACE_INFO;
+    header.misc = PERF_RECORD_MISC_KERNEL;
+    header.size = static_cast<uint16_t>(sizeof(perf_event_header) + sizeof(PerfRecordAuxtraceInfoData));
+    constexpr uint32_t auxTraceType = 4;
+    constexpr uint64_t armSpe = 7;
+    constexpr uint64_t cpuMmaps = 2;
+    auxTraceEvent.type = auxTraceType;
+    auxTraceEvent.priv[0] = armSpe;
+    auxTraceEvent.priv[1] = cpuMmaps;
+    if (!Write(&header, sizeof(header))) {
+        return false;
+    }
+    if (!Write(&auxTraceEvent, sizeof(auxTraceEvent))) {
+        return false;
+    }
+    dataSection_.size = dataSection_.size + sizeof(header) + sizeof(auxTraceEvent);
+    return true;
+}
+
+bool PerfFileWriter::WriteCpuMapEvent()
+{
+        perf_event_header header;
+        PerfRecordCpuMapData cpuMap;
+        header.type = PERF_RECORD_CPU_MAP;
+        header.misc = PERF_RECORD_MISC_KERNEL;
+        header.size = static_cast<uint16_t>(sizeof(perf_event_header) + sizeof(PerfRecordCpuMapData));
+        constexpr uint32_t nrNum = 16;
+        cpuMap.nr = nrNum;
+        for (uint i = 0; i < cpuMap.nr; i++) {
+            cpuMap.cpu[i] = i;
+        }
+        if (!Write(&header, sizeof(header))) {
+            return false;
+        }
+        if (!Write(&cpuMap, sizeof(cpuMap))) {
+            return false;
+        }
+        dataSection_.size = dataSection_.size + sizeof(header) + sizeof(cpuMap);
+        return true;
+}
+
+bool PerfFileWriter::WriteAuxTraceEvent(bool isSpe)
+{
+    if (!isSpe) {
+        return true;
+    }
+    // the following events just for perf parse hiperf spe data
+    if (!WriteTimeConvEvent()) {
+        HLOGE("WriteTimeConvEvent failed");
+        return false;
+    }
+    if (!WriteAuxTraceInfoEvent()) {
+        HLOGE("WriteAuxTraceInfoEvent failed");
+        return false;
+    }
+    if (!WriteCpuMapEvent()) {
+        HLOGE("WriteCpuMapEvent failed");
+        return false;
+    }
     return true;
 }
 

@@ -45,7 +45,7 @@ public:
 
     bool Open(const std::string &fileName, bool compressData = false);
     // WriteAttrAndId() must be called before WriteRecord()
-    bool WriteAttrAndId(const std::vector<AttrWithId> &attrIds);
+    bool WriteAttrAndId(const std::vector<AttrWithId> &attrIds, bool isSpe = false);
     bool WriteRecord(const PerfEventRecord &record);
     bool AddNrCpusFeature(FEATURE feature, uint32_t nrCpusAvailable, uint32_t nrCpusOnline);
     bool AddEventDescFeature(FEATURE feature, const std::vector<AttrWithId> &eventDesces);
@@ -74,6 +74,10 @@ private:
     bool Write(const void *buf, size_t len);
     bool WriteHeader();
     bool WriteFeatureData();
+    bool WriteTimeConvEvent();
+    bool WriteAuxTraceInfoEvent();
+    bool WriteCpuMapEvent();
+    bool WriteAuxTraceEvent(bool isSpe);
 
     std::string fileName_;
     FILE *fp_ = nullptr;

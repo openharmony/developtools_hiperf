@@ -1989,6 +1989,70 @@ HWTEST_F(SubCommandRecordTest, CheckBacktrackOption, TestSize.Level1)
     record.clockId_ = "boottime";
     EXPECT_EQ(record.CheckBacktrackOption(), true);
 }
+
+/**
+ * @tc.name: GetSpeOptions
+ * @tc.desc: Test GetSpeOptions
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, GetSpeOptions, TestSize.Level1)
+{
+    constexpr uint64_t disable     = 0;
+    constexpr uint64_t enable      = 1;
+    constexpr uint64_t minLatency  = 10;
+    constexpr uint64_t eventFilter = 0x8;
+    SubCommandRecord command;
+    command.selectEvents_ = {"arm_spe_0/load_filter=1", "branch_filter=1", "pct_enable=1",
+                             "store_filter=0", "ts_enable=1", "pa_enable=0", "jitter=1",
+                             "min_latency=10", "event_filter=0x8/"};
+    EXPECT_EQ(command.GetSpeOptions(), true);
+    EXPECT_EQ(command.speOptMap_["ts_enable"], enable);
+    EXPECT_EQ(command.speOptMap_["pa_enable"], disable);
+    EXPECT_EQ(command.speOptMap_["pct_enable"], enable);
+    EXPECT_EQ(command.speOptMap_["branch_filter"], enable);
+    EXPECT_EQ(command.speOptMap_["load_filter"], enable);
+    EXPECT_EQ(command.speOptMap_["store_filter"], disable);
+    EXPECT_EQ(command.speOptMap_["jitter"], enable);
+    EXPECT_EQ(command.speOptMap_["min_latency"], minLatency);
+    EXPECT_EQ(command.speOptMap_["event_filter"], eventFilter);
+}
+
+/**
+ * @tc.name: CheckSpeOption
+ * @tc.desc: Test CheckSpeOption
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CheckSpeOption, TestSize.Level1)
+{
+    constexpr uint64_t disable = 0;
+    constexpr uint64_t enable  = 1;
+    SubCommandRecord command;
+    command.speOptMap_["ts_enable"] = enable; // 2 : invalid value
+    command.speOptMap_["pa_enable"] = enable;
+    command.speOptMap_["pct_enable"] = enable;
+    command.speOptMap_["branch_filter"] = enable;
+    command.speOptMap_["load_filter"] = disable;
+    command.speOptMap_["store_filter"] = enable;
+    command.speOptMap_["jitter"] = enable;
+    EXPECT_EQ(command.CheckSpeOption(), true);
+}
+
+/**
+ * @tc.name: CheckSpeOptionErr
+ * @tc.desc: Test CheckSpeOption
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, CheckSpeOptionErr, TestSize.Level1)
+{
+    constexpr uint64_t disable = 0;
+    constexpr uint64_t enable  = 1;
+    constexpr uint64_t invalid = 20;
+    SubCommandRecord command;
+    command.speOptMap_["branch_filter"] = invalid;
+    command.speOptMap_["load_filter"] = disable;
+    command.speOptMap_["jitter"] = enable;
+    EXPECT_EQ(command.CheckSpeOption(), false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

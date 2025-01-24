@@ -1000,6 +1000,78 @@ HWTEST_F(PerfEventRecordTest, GetTime, TestSize.Level1)
     EXPECT_EQ(sample.GetTime(), time);
 }
 
+HWTEST_F(PerfEventRecordTest, AuxTraceInfo, TestSize.Level1)
+{
+    constexpr uint32_t type    = 4;
+    constexpr uint32_t reserve = 0;
+    constexpr uint64_t speType = 7;
+    constexpr uint64_t cpuMmap = 2;
+    struct PerfRecordAuxTraceInfost {
+        perf_event_header h;
+        PerfRecordAuxtraceInfoData d;
+    };
+    PerfRecordAuxTraceInfost data = {{PERF_RECORD_AUXTRACE_INFO, PERF_RECORD_MISC_KERNEL,
+                                     static_cast<uint16_t>(sizeof(PerfRecordAuxTraceInfost))},
+                                     {type, reserve, {speType, cpuMmap}}};
+
+    PerfRecordAuxTraceInfo record;
+    record.Init((uint8_t *)&data);
+    ASSERT_EQ(record.GetType(), PERF_RECORD_AUXTRACE_INFO);
+    ASSERT_EQ(record.GetName(), PERF_RECORD_TYPE_AUXTRACEINFO);
+    ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
+    ASSERT_EQ(record.GetHeaderSize(), HEADER_SIZE);
+    ASSERT_EQ(record.GetSize(), sizeof(data));
+    ASSERT_EQ(record.data_.type, type);
+    ASSERT_EQ(record.data_.priv[0], speType);
+    ASSERT_EQ(record.data_.priv[1], cpuMmap);
+}
+
+HWTEST_F(PerfEventRecordTest, TimeConv, TestSize.Level1)
+{
+    constexpr uint64_t timeShift = 21;
+    constexpr uint64_t timeDefalult = 1;
+    constexpr uint8_t userTime = 1;
+    struct PerfRecordTimeConvst {
+        perf_event_header h;
+        PerfRecordTtimeConvData d;
+    };
+    PerfRecordTimeConvst data = {{PERF_RECORD_TIME_CONV, PERF_RECORD_MISC_KERNEL,
+                                 static_cast<uint16_t>(sizeof(PerfRecordTimeConvst))},
+                                 {timeShift, timeDefalult, timeDefalult, timeDefalult, timeDefalult, userTime}};
+
+    PerfRecordTimeConv record;
+    record.Init((uint8_t *)&data);
+    ASSERT_EQ(record.GetType(), PERF_RECORD_TIME_CONV);
+    ASSERT_EQ(record.GetName(), PERF_RECORD_TYPE_TIMECONV);
+    ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
+    ASSERT_EQ(record.GetHeaderSize(), HEADER_SIZE);
+    ASSERT_EQ(record.GetSize(), sizeof(data));
+    ASSERT_EQ(record.data_.time_shift, timeShift);
+    ASSERT_EQ(record.data_.time_mult, timeDefalult);
+}
+
+HWTEST_F(PerfEventRecordTest, CpuMap, TestSize.Level1)
+{
+    constexpr uint16_t type = 0;
+    constexpr uint16_t cpuNum = 16;
+    struct PerfRecordCpuMapst {
+        perf_event_header h;
+        PerfRecordCpuMapData d;
+    };
+    PerfRecordCpuMapst data = {{PERF_RECORD_CPU_MAP, PERF_RECORD_MISC_KERNEL,
+                               static_cast<uint16_t>(sizeof(PerfRecordCpuMapst))},
+                               {type, cpuNum}};
+
+    PerfRecordCpuMap record;
+    record.Init((uint8_t *)&data);
+    ASSERT_EQ(record.GetType(), PERF_RECORD_CPU_MAP);
+    ASSERT_EQ(record.GetName(), PERF_RECORD_TYPE_CPUMAP);
+    ASSERT_EQ(record.GetMisc(), PERF_RECORD_MISC_KERNEL);
+    ASSERT_EQ(record.GetHeaderSize(), HEADER_SIZE);
+    ASSERT_EQ(record.GetSize(), sizeof(data));
+    ASSERT_EQ(record.data_.nr, cpuNum);
+}
+
 HWTEST_F(PerfEventRecordTest, AuxtraceInit, TestSize.Level1)
 {
     const char* rawData = "rawData";

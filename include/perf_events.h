@@ -533,7 +533,7 @@ public:
     bool isSpe_ = false;
 
     void SetHM(bool isHM);
-    void SetConfig(std::map<const std::string, unsigned long long> &speOptMaps);
+    void SetConfig(std::map<const std::string, uint64_t> &speOptMaps);
 private:
     size_t recordEventCount_ = 0; // only for debug time
 #ifdef HIPERF_DEBUG_TIME
@@ -596,9 +596,9 @@ private:
 
     unsigned int samplePeriod_ = 0;
     unsigned int sampleFreq_ = 0;
-    unsigned long long config_ = 0;
-    unsigned long long config1_ = 0;
-    unsigned long long config2_ = 0;
+    uint64_t config_ = 0;
+    uint64_t config1_ = 0;
+    uint64_t config2_ = 0;
     unsigned int speType_ = 0;
 
     struct FdItem {
