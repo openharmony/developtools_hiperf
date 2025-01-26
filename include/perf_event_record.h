@@ -229,7 +229,7 @@ class PerfRecordMmap2 : public PerfEventRecordTemplate<PerfRecordMmap2Data, PERF
 public:
 
     PerfRecordMmap2() = default;
-
+    void Init(uint8_t* data, const perf_event_attr& attr = {}) override;
     PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff, u32 maj, u32 min,
                     u64 ino, u32 prot, u32 flags, const std::string &filename);
 

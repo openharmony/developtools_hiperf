@@ -729,6 +729,7 @@ bool PerfEvents::StopTracking(void)
 {
     if (g_trackRunning) {
         printf("some one called StopTracking\n");
+        HIPERF_HILOGI(MODULE_DEFAULT, "some one called StopTracking");
         g_trackRunning = false;
         if (trackedCommand_) {
             if (trackedCommand_->GetState() == TrackedCommand::State::COMMAND_STARTED) {
@@ -743,12 +744,14 @@ bool PerfEvents::StopTracking(void)
 bool PerfEvents::PauseTracking(void)
 {
     CHECK_TRUE(!startedTracking_, false, 0, "");
+    HIPERF_HILOGI(MODULE_DEFAULT, "some one called PauseTracking");
     return PerfEventsEnable(false);
 }
 
 bool PerfEvents::ResumeTracking(void)
 {
     CHECK_TRUE(!startedTracking_, false, 0, "");
+    HIPERF_HILOGI(MODULE_DEFAULT, "some one called ResumeTracking");
     return PerfEventsEnable(true);
 }
 

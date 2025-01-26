@@ -1253,9 +1253,6 @@ bool SymbolsFile::CheckPathReadable(const std::string &path) const
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGM("'%s' is unable read,errno: %d, errmsg: %s", path.c_str(), errno, errInfo);
-        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s is unable read errno:%" HILOG_PUBLIC
-                      "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      path.c_str(), errno, errInfo);
 #endif
         return false;
     }
