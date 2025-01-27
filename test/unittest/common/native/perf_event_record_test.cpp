@@ -767,6 +767,54 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord3, TestSize.Level1)
     ASSERT_TRUE(perfEventRecord2.GetName() == nullptr);
 }
 
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecordMmap2, TestSize.Level1)
+{
+    struct PerfRecordMmap2est {
+        perf_event_header h;
+        PerfRecordMmap2Data d;
+    };
+    constexpr uint32_t pid = 10;
+    constexpr uint32_t tid = 11;
+    constexpr uint32_t testNum1 = 12;
+    constexpr uint64_t addr = 111;
+    constexpr uint64_t testNum2 = 13;
+    PerfRecordMmap2est data = {
+        {PERF_RECORD_MMAP2, PERF_RECORD_MISC_KERNEL, sizeof(PerfRecordMmap2est)},
+        {pid, tid, addr, testNum2, testNum2, testNum1, testNum1, testNum2, testNum2,
+         testNum1, testNum1, "testdatammap2"}};
+    size_t size = HEADER_SIZE + sizeof(PerfRecordMmap2Data) - KILO + strlen(data.d.filename) + 1;
+    data.h.size = size;
+    perf_event_attr attr {};
+    attr.sample_type = UINT64_MAX;
+    PerfEventRecord& perfEventRecord1 =
+        PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_MMAP2),
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+    PerfRecordMmap2& record1 = static_cast<PerfRecordMmap2&>(perfEventRecord1);
+    EXPECT_EQ(record1.discard_, false);
+    record1.discard_ = true;
+    PerfEventRecord& perfEventRecord2 =
+        PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(PERF_RECORD_MMAP2),
+                                                   reinterpret_cast<uint8_t *>(&data), attr);
+    PerfRecordMmap2& record2 = static_cast<PerfRecordMmap2&>(perfEventRecord2);
+    EXPECT_EQ(record2.discard_, false);
+    EXPECT_EQ(record2.GetType(), PERF_RECORD_MMAP2);
+    EXPECT_EQ(record2.GetName(), RECORDNAME_MMAP2);
+    EXPECT_EQ(record2.GetMisc(), PERF_RECORD_MISC_KERNEL);
+    EXPECT_EQ(record2.GetHeaderSize(), HEADER_SIZE);
+    EXPECT_EQ(record2.GetSize(), size);
+    EXPECT_EQ(record2.data_.pid, data.d.pid);
+    EXPECT_EQ(record2.data_.tid, data.d.tid);
+    EXPECT_EQ(record2.data_.addr, data.d.addr);
+    EXPECT_EQ(record2.data_.len, data.d.len);
+    EXPECT_EQ(record2.data_.pgoff, data.d.pgoff);
+    EXPECT_EQ(record2.data_.maj, data.d.maj);
+    EXPECT_EQ(record2.data_.min, data.d.min);
+    EXPECT_EQ(record2.data_.ino, data.d.ino);
+    EXPECT_EQ(record2.data_.prot, data.d.prot);
+    EXPECT_EQ(record2.data_.flags, data.d.flags);
+    EXPECT_EQ(strcmp(record2.data_.filename, data.d.filename), 0);
+}
+
 HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level1)
 {
     static constexpr size_t sizeOffset = 20;
