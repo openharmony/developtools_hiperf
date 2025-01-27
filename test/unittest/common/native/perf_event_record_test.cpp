@@ -767,6 +767,43 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord3, TestSize.Level1)
     ASSERT_TRUE(perfEventRecord2.GetName() == nullptr);
 }
 
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level1)
+{
+    static constexpr size_t sizeOffset = 20;
+    std::vector<PerfRecordType> types = {
+        PERF_RECORD_MMAP,
+        PERF_RECORD_MMAP2,
+        PERF_RECORD_LOST,
+        PERF_RECORD_COMM,
+        PERF_RECORD_EXIT,
+        PERF_RECORD_THROTTLE,
+        PERF_RECORD_UNTHROTTLE,
+        PERF_RECORD_FORK,
+        PERF_RECORD_READ,
+        PERF_RECORD_AUX,
+        PERF_RECORD_AUXTRACE,
+        PERF_RECORD_ITRACE_START,
+        PERF_RECORD_LOST_SAMPLES,
+        PERF_RECORD_SWITCH,
+        PERF_RECORD_SWITCH_CPU_WIDE
+    };
+    perf_event_header header;
+    size_t size = sizeof(perf_event_header) + sizeOffset;
+    header.size = size;
+    uint8_t* data = static_cast<uint8_t*>(malloc(size));
+    ASSERT_EQ(memset_s(data, size, 0, size), 0);
+    ASSERT_EQ(memcpy_s(data, sizeof(perf_event_header),
+        reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header)), 0);
+    for (PerfRecordType type : types) {
+        perf_event_attr attr = {};
+        PerfEventRecord& record =
+            PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(type),
+                                                       data, attr);
+        EXPECT_NE(record.GetName(), nullptr);
+    }
+    free(data);
+}
+
 HWTEST_F(PerfEventRecordTest, GetPerfEventRecordMmap2, TestSize.Level1)
 {
     struct PerfRecordMmap2est {
@@ -813,43 +850,6 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecordMmap2, TestSize.Level1)
     EXPECT_EQ(record2.data_.prot, data.d.prot);
     EXPECT_EQ(record2.data_.flags, data.d.flags);
     EXPECT_EQ(strcmp(record2.data_.filename, data.d.filename), 0);
-}
-
-HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level1)
-{
-    static constexpr size_t sizeOffset = 20;
-    std::vector<PerfRecordType> types = {
-        PERF_RECORD_MMAP,
-        PERF_RECORD_MMAP2,
-        PERF_RECORD_LOST,
-        PERF_RECORD_COMM,
-        PERF_RECORD_EXIT,
-        PERF_RECORD_THROTTLE,
-        PERF_RECORD_UNTHROTTLE,
-        PERF_RECORD_FORK,
-        PERF_RECORD_READ,
-        PERF_RECORD_AUX,
-        PERF_RECORD_AUXTRACE,
-        PERF_RECORD_ITRACE_START,
-        PERF_RECORD_LOST_SAMPLES,
-        PERF_RECORD_SWITCH,
-        PERF_RECORD_SWITCH_CPU_WIDE
-    };
-    perf_event_header header;
-    size_t size = sizeof(perf_event_header) + sizeOffset;
-    header.size = size;
-    uint8_t* data = static_cast<uint8_t*>(malloc(size));
-    ASSERT_EQ(memset_s(data, size, 0, size), 0);
-    ASSERT_EQ(memcpy_s(data, sizeof(perf_event_header),
-        reinterpret_cast<uint8_t*>(&header), sizeof(perf_event_header)), 0);
-    for (PerfRecordType type : types) {
-        perf_event_attr attr = {};
-        PerfEventRecord& record =
-            PerfEventRecordFactory::GetPerfEventRecord(static_cast<perf_event_type>(type),
-                                                       data, attr);
-        EXPECT_NE(record.GetName(), nullptr);
-    }
-    free(data);
 }
 
 HWTEST_F(PerfEventRecordTest, MultiThreadGetPerfEventRecord, TestSize.Level1)
