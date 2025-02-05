@@ -333,6 +333,12 @@ void PerfRecordMmap::DumpLog(const std::string &prefix) const
           header_.size, data_.pid, data_.tid, data_.filename, data_.addr, data_.addr + data_.len, data_.pgoff);
 }
 
+void PerfRecordMmap2::Init(uint8_t* data, const perf_event_attr&)
+{
+    PerfEventRecordTemplate::Init(data);
+    discard_ = false;
+}
+
 PerfRecordMmap2::PerfRecordMmap2(bool inKernel, u32 pid, u32 tid, u64 addr, u64 len, u64 pgoff,
                                  u32 maj, u32 min, u64 ino, u32 prot, u32 flags,
                                  const std::string &filename)

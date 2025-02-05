@@ -355,24 +355,24 @@ bool PerfFileWriter::WriteAuxTraceInfoEvent()
 
 bool PerfFileWriter::WriteCpuMapEvent()
 {
-        perf_event_header header;
-        PerfRecordCpuMapData cpuMap;
-        header.type = PERF_RECORD_CPU_MAP;
-        header.misc = PERF_RECORD_MISC_KERNEL;
-        header.size = static_cast<uint16_t>(sizeof(perf_event_header) + sizeof(PerfRecordCpuMapData));
-        constexpr uint32_t nrNum = 16;
-        cpuMap.nr = nrNum;
-        for (uint i = 0; i < cpuMap.nr; i++) {
-            cpuMap.cpu[i] = i;
-        }
-        if (!Write(&header, sizeof(header))) {
-            return false;
-        }
-        if (!Write(&cpuMap, sizeof(cpuMap))) {
-            return false;
-        }
-        dataSection_.size = dataSection_.size + sizeof(header) + sizeof(cpuMap);
-        return true;
+    perf_event_header header;
+    PerfRecordCpuMapData cpuMap;
+    header.type = PERF_RECORD_CPU_MAP;
+    header.misc = PERF_RECORD_MISC_KERNEL;
+    header.size = static_cast<uint16_t>(sizeof(perf_event_header) + sizeof(PerfRecordCpuMapData));
+    constexpr uint32_t nrNum = 16;
+    cpuMap.nr = nrNum;
+    for (uint i = 0; i < cpuMap.nr; i++) {
+        cpuMap.cpu[i] = i;
+    }
+    if (!Write(&header, sizeof(header))) {
+        return false;
+    }
+    if (!Write(&cpuMap, sizeof(cpuMap))) {
+        return false;
+    }
+    dataSection_.size = dataSection_.size + sizeof(header) + sizeof(cpuMap);
+    return true;
 }
 
 bool PerfFileWriter::WriteAuxTraceEvent(bool isSpe)

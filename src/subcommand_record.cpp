@@ -1215,6 +1215,7 @@ void SubCommandRecord::ClientCommandHandle()
             }
         }
         HLOGD("server:new command %s", command.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "server:new command : %{public}s", command.c_str());
         DispatchControlCommand(command);
     }
 }
@@ -1237,7 +1238,7 @@ bool SubCommandRecord::ProcessControl()
     if (controlCmd_.empty()) {
         return true;
     }
-
+    HIPERF_HILOGI(MODULE_DEFAULT, "control cmd : %{public}s", controlCmd_.c_str());
     if (controlCmd_ == CONTROL_CMD_PREPARE) {
         CHECK_TRUE(!CreateFifoServer(), false, 0, "");
         return true;
@@ -1253,6 +1254,9 @@ bool SubCommandRecord::ProcessControl()
         ret = SendFifoAndWaitReply(HiperfClient::ReplyPause, CONTROL_WAITREPY_TOMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_STOP) {
         ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
+        if (!ret) {
+            ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
+        }
         ProcessStopCommand(ret);
     } else if (controlCmd_ == CONTROL_CMD_OUTPUT) {
         ret = SendFifoAndWaitReply(HiperfClient::ReplyOutput, CONTROL_WAITREPY_TOMEOUT);
@@ -1261,8 +1265,10 @@ bool SubCommandRecord::ProcessControl()
 
     if (ret) {
         printf("%s sampling success.\n", controlCmd_.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s sampling success.", controlCmd_.c_str());
     } else {
         printf("%s sampling failed.\n", controlCmd_.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s sampling failed.", controlCmd_.c_str());
     }
     return ret;
 }
@@ -1378,11 +1384,13 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd, const std::c
     int fdRead = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
     if (fdRead == -1) {
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_S2C.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "can not open fifo file: %{public}s.", CONTROL_FIFO_FILE_S2C.c_str());
         return false;
     }
     int fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
     if (fdWrite == -1) {
         HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_C2S.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "can not open fifo file: %{public}s.", CONTROL_FIFO_FILE_C2S.c_str());
         close(fdRead);
         return false;
     }
@@ -1390,6 +1398,7 @@ bool SubCommandRecord::SendFifoAndWaitReply(const std::string &cmd, const std::c
     if (size != cmd.size()) {
         HLOGE("failed to write fifo file(%s) command(%s)", CONTROL_FIFO_FILE_C2S.c_str(),
               cmd.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "failed to write fifo file: %{public}s.", CONTROL_FIFO_FILE_C2S.c_str());
         close(fdWrite);
         close(fdRead);
         return false;
