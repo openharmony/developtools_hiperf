@@ -46,6 +46,7 @@ std::atomic<uint64_t> PerfEvents::currentTimeSecond_ = 0;
 static std::atomic_bool g_trackRunning = false;
 static constexpr int32_t UPDATE_TIME_INTERVAL = 10;    // 10ms
 static constexpr uint64_t NANO_SECONDS_PER_SECOND = 1000000000;
+static constexpr uint32_t POLL_FAIL_COUNT_THRESHOLD = 10;
 
 OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, pid_t pid, int cpu, int groupFd,
                                 unsigned long flags)
@@ -1387,9 +1388,16 @@ inline bool PerfEvents::IsRecordInMmap(int timeout)
 {
     HLOGV("enter");
     if (pollFds_.size() > 0) {
+        static uint32_t pollFailCount = 0;
         if (poll(static_cast<struct pollfd*>(pollFds_.data()), pollFds_.size(), timeout) <= 0) {
             // time out try again
+            if (++pollFailCount >= POLL_FAIL_COUNT_THRESHOLD) {
+                pollFailCount = 0;
+                HIPERF_HILOGW(MODULE_DEFAULT, "mmap have no data for the past 5s");
+            }
             return false;
+        } else {
+            pollFailCount = 0;
         }
     }
     HLOGV("poll record from mmap");
