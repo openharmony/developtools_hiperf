@@ -150,9 +150,10 @@ HWTEST_F(PerfFileReaderTest, ReadIdsForAttr3, TestSize.Level1)
 HWTEST_F(PerfFileReaderTest, Test_OverAttrSize, TestSize.Level1)
 {
     const uint64_t overSize = 100 * sizeof(perf_file_attr);
-    const std::string filename = "perf.data";
-    FILE *fp = stdout;
-    PerfFileReader hiperfFileReader(filename, fp);
+    std::string fileName = "/proc/" + std::to_string(getpid()) + "/cmdline";
+    FILE* fp = fopen(fileName.c_str(), "r");
+    EXPECT_NE(fp, nullptr);
+    PerfFileReader hiperfFileReader("", fp);
     perf_file_header header = hiperfFileReader.GetHeader();
     header.attrSize = overSize;
     EXPECT_EQ(hiperfFileReader.ReadAttrSection(), false);

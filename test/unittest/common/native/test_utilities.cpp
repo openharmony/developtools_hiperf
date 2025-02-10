@@ -12,9 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "test_utilities.h"
+
+#include <securec.h>
+#include <cinttypes>
 #include <cstdio>
 #include <iostream>
-#include "test_utilities.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -32,6 +35,32 @@ bool CheckTestApp(const std::string& appName)
         pclose(fp);
     }
     return true;
+}
+
+bool GetMemMapOffset(pid_t devhostPid, uint64_t &mapOffset,
+                     std::vector<std::shared_ptr<OHOS::HiviewDFX::DfxMap>> &memMaps, std::string &line)
+{
+    pid_t pid = 0;
+    pid_t tid = 0;
+    uint64_t addr = 0;
+    uint64_t len = 0;
+    int ret = sscanf_s(line.c_str(), "  %*s %d, tid %d, addr 0x%" PRIx64 ", len 0x%" PRIx64 "",
+                       &pid, &tid, &addr, &len);
+    constexpr int numSlices {4};
+    if (ret != numSlices) {
+        printf("unknown line %d: '%s' \n", ret, line.c_str());
+        return false;
+    }
+    if (devhostPid != pid || devhostPid != tid) {
+        return false;
+    }
+    for (auto& map: memMaps) {
+        if (map->begin == addr && map->end - map->begin == len) {
+            mapOffset = map->offset;
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace HiPerf
 } // namespace Developtools

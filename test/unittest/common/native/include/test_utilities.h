@@ -15,10 +15,14 @@
 #ifndef HIPERF_TEST_UTILITIES_H_
 #define HIPERF_TEST_UTILITIES_H_
 
+#include "dfx_map.h"
+
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 bool CheckTestApp(const std::string& appName);
+bool GetMemMapOffset(pid_t devhostPid, uint64_t &mapOffset,
+                     std::vector<std::shared_ptr<OHOS::HiviewDFX::DfxMap>> &memMaps, std::string &line);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
