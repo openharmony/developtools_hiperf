@@ -183,7 +183,7 @@ std::string SetToString(const std::unordered_set<T> &items)
 
 std::string BufferToHexString(const std::vector<unsigned char> &vec);
 std::string BufferToHexString(const unsigned char buf[], size_t size);
-void HexDump(const void *buf, size_t size, size_t max_size = 0);
+bool HexDump(const void *buf, size_t size, size_t max_size = 0);
 
 std::string &StringTrim(std::string &s);
 

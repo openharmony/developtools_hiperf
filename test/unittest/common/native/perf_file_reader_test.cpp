@@ -46,11 +46,7 @@ HWTEST_F(PerfFileReaderTest, Test_Instance_success, TestSize.Level1)
     FILE *fp = stdout;
     PerfFileReader hiperfFileReader(filename, fp);
     std::unique_ptr<PerfFileReader> ret = hiperfFileReader.Instance(filename);
-    bool result = true;
-    if (ret != 0) {
-        result = true;
-    }
-    EXPECT_EQ(result, true);
+    EXPECT_EQ(ret == nullptr, true);
 }
 
 HWTEST_F(PerfFileReaderTest, Test_Instance_fail, TestSize.Level1)
@@ -59,11 +55,7 @@ HWTEST_F(PerfFileReaderTest, Test_Instance_fail, TestSize.Level1)
     FILE *fp = nullptr;
     PerfFileReader hiperfFileReader(filename, fp);
     std::unique_ptr<PerfFileReader> ret = hiperfFileReader.Instance(filename);
-    bool result = true;
-    if (ret == 0) {
-        result = false;
-    }
-    EXPECT_EQ(result, false);
+    EXPECT_EQ(ret == nullptr, true);
 }
 
 HWTEST_F(PerfFileReaderTest, Test_ReadFetureSection_success, TestSize.Level1)

@@ -363,7 +363,9 @@ private:
         DwarfEncoding dwTableValue(ehFrameHdr->table_enc, dataPtr);
 
         HLOGD("eh_frame_hdr:");
-        HexDump(ehFrameHdr, BITS_OF_FOUR_BYTE, bufferSize);
+        if (HexDump(ehFrameHdr, BITS_OF_FOUR_BYTE, bufferSize) == false) {
+            HLOGW("HexDump failed.");
+        }
         unsigned char version = ehFrameHdr->version;
         HLOGD("  version:             %02x:%s", version, (version == 1) ? "valid" : "invalid");
         HLOGD("  eh_frame_ptr_enc:    %s", dwEhFramePtr.ToString().c_str());

@@ -556,8 +556,9 @@ bool StringEndsWith(const std::string &string, const std::string &with)
     return string.rfind(with) == (string.length() - with.length());
 }
 
-void HexDump(const void *buf, size_t size, size_t maxSize)
+bool HexDump(const void *buf, size_t size, size_t maxSize)
 {
+    CHECK_TRUE(buf == nullptr, false, 0, "");
     const unsigned char *byteBuf = static_cast<const unsigned char *>(buf);
     const size_t dumpByteEachLine = 8;
     size_t outputBytes = 0;
@@ -571,6 +572,7 @@ void HexDump(const void *buf, size_t size, size_t maxSize)
         HLOGM(" %02zu: %s ", i, BufferToHexString(byteBuf, dumpByteEachLine).c_str());
         byteBuf += dumpByteEachLine;
     }
+    return true;
 }
 
 std::string BufferToHexString(const std::vector<unsigned char> &vec)

@@ -161,8 +161,11 @@ HWTEST_F(PerfEventsTest, GetSupportEvents, TestSize.Level1)
 
     PerfEvents event;
     perf_type_id id = PERF_TYPE_HARDWARE;
+    int index = 0;
+    bool value[] = {false, false, false, false, false, true};
     while (id < PERF_TYPE_MAX) {
         std::map<__u64, std::string> supportEvent = event.GetSupportEvents(id);
+        ASSERT_EQ(supportEvent.empty(), value[index++]);
         for (auto it = supportEvent.begin(); it != supportEvent.end(); ++it) {
             printf("[%lld]\t%s\n", it->first, it->second.c_str());
         }
