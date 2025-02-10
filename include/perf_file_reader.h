@@ -94,8 +94,8 @@ private:
     std::chrono::microseconds readRecordTime_ = std::chrono::microseconds::zero();
     std::chrono::microseconds readCallbackTime_ = std::chrono::microseconds::zero();
 
-    FRIEND_TEST(PerfFileReaderTest, Test_OverAttrSize);
 #endif
+    FRIEND_TEST(PerfFileReaderTest, Test_OverAttrSize);
 };
 } // namespace HiPerf
 } // namespace Developtools
