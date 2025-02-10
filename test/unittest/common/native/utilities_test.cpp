@@ -299,11 +299,11 @@ HWTEST_F(UtilitiesTest, HexDump, TestSize.Level1)
 
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    HexDump(vbuf, 0);
-    HexDump(vbuf, 1);
-    HexDump(vbuf, 4);
-    HexDump(vbuf, 5);
-    HexDump(vbuf, 8);
+    EXPECT_EQ(HexDump(vbuf, 0), true);
+    EXPECT_EQ(HexDump(vbuf, 1), true);
+    EXPECT_EQ(HexDump(vbuf, 4), true);
+    EXPECT_EQ(HexDump(vbuf, 5), true);
+    EXPECT_EQ(HexDump(vbuf, 8), true);
     stdoutRecord.Stop();
 }
 
@@ -695,7 +695,7 @@ HWTEST_F(UtilitiesTest, CollectPidsByAppname1, TestSize.Level1)
     std::set<pid_t> pids = {};
     CollectPidsByAppname(pids, name);
     ASSERT_GE(pids.size(), 1u);
-    bool get = 0;
+    bool get = false;
     for (pid_t id : pids) {
         if (pid == id) {
             get = true;
@@ -722,7 +722,7 @@ HWTEST_F(UtilitiesTest, CollectPidsByAppname2, TestSize.Level1)
     std::set<pid_t> pids = {};
     CollectPidsByAppname(pids, names);
     ASSERT_GE(pids.size(), 1u);
-    bool get = 0;
+    bool get = false;
     for (pid_t id : pids) {
         if (pid == id) {
             get = true;

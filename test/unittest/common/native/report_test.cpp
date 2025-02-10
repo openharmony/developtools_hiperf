@@ -22,6 +22,25 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+template<class T>
+void CompareNumberTest(T &lowValue, T &midValue, T &highValue,
+                       ReportKeyCompareFunction &compareFunction)
+{
+    EXPECT_EQ(compareFunction(lowValue, midValue) < 0, true);
+    EXPECT_EQ(compareFunction(lowValue, highValue) < 0, true);
+    EXPECT_EQ(compareFunction(highValue, midValue) > 0, true);
+    EXPECT_EQ(compareFunction(highValue, lowValue) > 0, true);
+}
+
+template<class T>
+void CompareStringTest(T &lowValue, T &midValue, T &highValue,
+                       ReportKeyCompareFunction &compareFunction)
+{
+    EXPECT_EQ(compareFunction(lowValue, midValue) < 0, true);
+    EXPECT_EQ(compareFunction(lowValue, highValue) < 0, true);
+    EXPECT_EQ(compareFunction(highValue, midValue) > 0, true);
+    EXPECT_EQ(compareFunction(highValue, lowValue) > 0, true);
+}
 class ReportTest : public testing::Test {
 public:
     static void SetUpTestCase(void);

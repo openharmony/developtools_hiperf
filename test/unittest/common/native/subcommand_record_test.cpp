@@ -1885,7 +1885,7 @@ HWTEST_F(SubCommandRecordTest, CollectExcludeThread1, TestSize.Level1)
 
     ASSERT_GE(record.excludePids_.size(), 1u);
     EXPECT_EQ(record.excludeTids_.size(), 0u);
-    bool get = 0;
+    bool get = false;
     for (pid_t id : record.excludePids_) {
         if (pid == id) {
             get = true;

@@ -1304,10 +1304,9 @@ void SubCommandRecord::ProcessOutputCommand(bool ret)
     uint32_t outputFailCount = 0;
     while (!outputEnd_) {
         ret = SendFifoAndWaitReply(HiperfClient::ReplyOutputCheck, CONTROL_WAITREPY_TOMEOUT_CHECK);
-        if (outputFailCount > MAX_CLIENT_OUTPUT_WAIT_COUNT || ret) {
+        if (outputFailCount++ > MAX_CLIENT_OUTPUT_WAIT_COUNT || ret) {
             break;
         }
-        outputFailCount++;
         std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
     }
 }

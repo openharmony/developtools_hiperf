@@ -75,13 +75,6 @@ bool VirtualRuntimeTest::RecordCallBack(PerfEventRecord& record)
 }
 
 /**
- * @tc.name: VirtualRuntimeTest
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(VirtualRuntimeTest, VirtualRuntimeTest, TestSize.Level1) {}
-
-/**
  * @tc.name: SetRecordMode
  * @tc.desc:
  * @tc.type: FUNC
