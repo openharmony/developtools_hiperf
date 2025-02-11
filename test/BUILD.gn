@@ -112,7 +112,6 @@ ohos_unittest("hiperf_unittest") {
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "faultloggerd:libunwinder",
-    "faultloggerd:unwinder_host",
     "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
