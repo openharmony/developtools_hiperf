@@ -253,6 +253,7 @@ private:
     std::string strLimit_ = {};
     std::vector<pid_t> selectCpus_ = {};
     std::vector<pid_t> selectPids_ = {};
+    std::vector<pid_t> inputPids_ = {};
     std::vector<pid_t> selectTids_ = {};
     bool restart_ = false;
     std::vector<std::string> selectEvents_ = {};

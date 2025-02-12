@@ -287,6 +287,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
         return false;
     }
+    inputPids_ = selectPids_;
     if (allowIpc_ && !IsExistDebugByPid(selectPids_, err)) {
         return false;
     }
@@ -2170,11 +2171,14 @@ bool SubCommandRecord::OnlineReportData()
 std::string SubCommandRecord::HandleAppInfo()
 {
     std::string err = "";
-    if (!IsExistDebugByApp(appPackage_, err)) {
-        return err;
-    }
-    if (!IsExistDebugByPid(selectPids_, err)) {
-        return err;
+    if (!appPackage_.empty()) {
+        if (!IsExistDebugByApp(appPackage_, err)) {
+            return err;
+        }
+    } else {
+        if (!IsExistDebugByPid(inputPids_, err)) {
+            return err;
+        }
     }
     return err;
 }
