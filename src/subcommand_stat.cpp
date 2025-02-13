@@ -111,9 +111,6 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         return false;
     }
     inputPidTidArgs_ = selectPids_;
-    if (!IsExistDebugByPid(selectPids_, err)) {
-        return false;
-    }
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
         HLOGD("get option -t failed");
         return false;
