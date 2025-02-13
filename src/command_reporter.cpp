@@ -24,9 +24,6 @@
 namespace OHOS::Developtools::HiPerf {
 
 #define FOR_ERROR_NAME(x) #x
-static const char* const ERROR_MESSAGE[] = {
-    MAKE_ERROR_ITEM(FOR_ERROR_NAME)
-};
 
 CommandReporter::CommandReporter(const std::string& fullArgument) : subCommand_(fullArgument)
 {
@@ -50,7 +47,9 @@ void CommandReporter::ReportCommand()
     }
 
     int32_t errorCode = static_cast<int32_t>(errorCode_);
-
+    static const char* const ERROR_MESSAGE[] = {
+        MAKE_ERROR_ITEM(FOR_ERROR_NAME)
+    };
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE",
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,

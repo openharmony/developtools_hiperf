@@ -1450,7 +1450,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     if (!ProcessControl()) {
         return HiperfError::PROCESS_CONTROL_FAIL;
     } else if (isFifoClient_) {
-        return HiperfError::NO_ERROR;
+        return HiperfError::NO_ERR;
     }
 
     // prepare PerfEvents
@@ -1514,7 +1514,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     CloseClientThread();
     RemoveVdsoTmpFile();
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord finish");
-    return HiperfError::NO_ERROR;
+    return HiperfError::NO_ERR;
 }
 
 void SubCommandRecord::CloseClientThread()
@@ -2152,7 +2152,7 @@ bool SubCommandRecord::OnlineReportData()
     args.emplace_back(outputFilename_);
     args.emplace_back("-s");
     if (reporter->ParseOption(args)) {
-        ret =  (reporter->OnSubCommand(args) != HiperfError::NO_ERROR);
+        ret =  (reporter->OnSubCommand(args) != HiperfError::NO_ERR);
     }
 
     if (remove(tempFileName.c_str()) != 0) {

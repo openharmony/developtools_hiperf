@@ -41,7 +41,7 @@ HiperfError SubCommandList::OnSubCommand(std::vector<std::string>& args)
         }
     }
     ShowSupportEventsTypes(requestEventTypes);
-    return HiperfError::NO_ERROR;
+    return HiperfError::NO_ERR;
 }
 
 bool SubCommandList::ShowSupportEventsTypes(std::vector<perf_type_id> &requestEventTypes)

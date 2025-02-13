@@ -60,7 +60,7 @@ int Report(const char *perfFile, const char *reportFile, const char *reportOptio
             }
         }
         if (report->ParseOption(args)) {
-            return report->OnSubCommand(args) == HiperfError::NO_ERROR ? 0 : -1;
+            return report->OnSubCommand(args) == HiperfError::NO_ERR ? 0 : -1;
         }
     } else {
         printf("path is nullptr\n");
@@ -89,7 +89,7 @@ int ReportUnwindJson(const char *perfFile, const char *reportFile, const char *s
             args.emplace_back(symbolsDir);
         }
         if (report->ParseOption(args)) {
-            return report->OnSubCommand(args) == HiperfError::NO_ERROR ? 0 : -1;
+            return report->OnSubCommand(args) == HiperfError::NO_ERR ? 0 : -1;
         }
     }
     return -1;
@@ -194,7 +194,7 @@ int Dump(const char *fileName)
         std::vector<std::string> args;
         args.emplace_back(fileName);
         if (dump->ParseOption(args)) {
-            return dump->OnSubCommand(args) == HiperfError::NO_ERROR ? 0 : -1;
+            return dump->OnSubCommand(args) == HiperfError::NO_ERR ? 0 : -1;
         }
     }
     return -1;

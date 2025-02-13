@@ -76,7 +76,7 @@ public:
     bool OnSubCommand(std::string stringArgs)
     {
         auto args = StringSplit(stringArgs, " ");
-        return OnSubCommand(args) != HiperfError::NO_ERROR;
+        return OnSubCommand(args) != HiperfError::NO_ERR;
     };
 
     // get some cmd

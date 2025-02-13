@@ -66,7 +66,7 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
                     }
 
                     HLOGD("OnSubCommand -> %s", subCommand->Name().c_str());
-                    if (HiperfError err = subCommand->OnSubCommand(arguments); err != HiperfError::NO_ERROR) {
+                    if (HiperfError err = subCommand->OnSubCommand(arguments); err != HiperfError::NO_ERR) {
                         printf("subcommand '%s' failed\n", subCommand->Name().c_str());
                         reporter.errorCode_ = err;
                         return false;

@@ -637,7 +637,7 @@ void SubCommandStat::SetPerfEvent()
 
 HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
 {
-    CHECK_TRUE(HelpOption(), HiperfError::NO_ERROR, 0, "");
+    CHECK_TRUE(HelpOption(), HiperfError::NO_ERR, 0, "");
     if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
         return HiperfError::CHECK_RESTART_OPTION_FAIL;
     }
@@ -687,7 +687,7 @@ HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
     // start tracking
     perfEvents_.StartTracking();
 
-    return HiperfError::NO_ERROR;
+    return HiperfError::NO_ERR;
 }
 
 bool RegisterSubCommandStat()

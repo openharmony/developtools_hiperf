@@ -43,7 +43,7 @@ public:
 
     HiperfError OnSubCommand(std::vector<std::string>& args) override
     {
-        return HiperfError::NO_ERROR;
+        return HiperfError::NO_ERR;
     }
 };
 
@@ -73,7 +73,7 @@ HWTEST_F(SubCommandHelpTest, TestOnSubCommand, TestSize.Level1)
     std::vector<std::string> args;
 
     args = {"--help"};
-    EXPECT_EQ(subCommandHelp.OnSubCommand(args), HiperfError::NO_ERROR);
+    EXPECT_EQ(subCommandHelp.OnSubCommand(args), HiperfError::NO_ERR);
 }
 
 /**

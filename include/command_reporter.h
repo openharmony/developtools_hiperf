@@ -19,7 +19,7 @@
 namespace OHOS::Developtools::HiPerf {
 
 #define MAKE_ERROR_ITEM(GEN_ITEM)                        \
-    GEN_ITEM(NO_ERROR),                         /*  0 */ \
+    GEN_ITEM(NO_ERR),                           /*  0 */ \
     GEN_ITEM(PROCESS_CONTROL_FAIL),             /*  1 */ \
     GEN_ITEM(PREPARE_SYS_KERNEL_FAIL),          /*  2 */ \
     GEN_ITEM(PREPARE_PERF_EVENT_FAIL),          /*  3 */ \
@@ -67,7 +67,7 @@ public:
     std::string subCommand_ = "";
     std::string caller_ = "";
     std::string targetProcess_ = "";
-    HiperfError errorCode_ = HiperfError::NO_ERROR;
+    HiperfError errorCode_ = HiperfError::NO_ERR;
 
 private:
     bool isReported_ = false;

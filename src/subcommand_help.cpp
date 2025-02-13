@@ -23,7 +23,7 @@ HiperfError SubCommandHelp::OnSubCommand(std::vector<std::string>& args)
 {
     HLOGV("enter");
     OnHelp(args);
-    return HiperfError::NO_ERROR;
+    return HiperfError::NO_ERR;
 }
 
 void SubCommandHelp::RegisterSubCommandHelp()

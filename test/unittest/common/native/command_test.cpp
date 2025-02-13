@@ -44,7 +44,7 @@ void CommandTest::TearDownTestCase() {}
 
 void CommandTest::SetUp()
 {
-    static constexpr HiperfError noError = HiperfError::NO_ERROR;
+    static constexpr HiperfError noError = HiperfError::NO_ERR;
     static constexpr HiperfError optionNotSupport = HiperfError::OPTION_NOT_SUPPORT;
     ASSERT_EQ(Option::RegisterMainOption(TEST_OPTION_TRUE, TEST_OPTION_HELP, OptionAlwaysTrue),
               true);
