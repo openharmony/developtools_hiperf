@@ -316,7 +316,7 @@ HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
     EXPECT_EQ(value, "0");
 
     EXPECT_EQ(eventRecord->GetParamValue("ERROR_MESSAGE", value), VALUE_PARSED_SUCCEED);
-    EXPECT_EQ(value, "NO_ERROR");
+    EXPECT_EQ(value, "NO_ERR");
 }
 
 // system wide
