@@ -292,9 +292,6 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     inputPidTidArgs_.insert(inputPidTidArgs_.end(), selectTids_.begin(), selectTids_.end());
-    if (allowIpc_ && !IsExistDebugByPid(inputPidTidArgs_, err)) {
-        return false;
-    }
     if (!Option::GetOptionValue(args, "-e", selectEvents_)) {
         return false;
     }
@@ -536,6 +533,10 @@ bool SubCommandRecord::CheckOptions()
         return false;
     }
     if (!CheckTargetProcessOptions()) {
+        return false;
+    }
+    std::string err = "";
+    if (allowIpc_ && !IsExistDebugByPid(inputPidTidArgs_, err)) {
         return false;
     }
     if (!CheckReportOption()) {
