@@ -287,11 +287,12 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
         return false;
     }
-    inputPids_ = selectPids_;
-    if (allowIpc_ && !IsExistDebugByPid(selectPids_, err)) {
+    inputPidTidArgs_ = selectPids_;
+    if (!Option::GetOptionValue(args, "-t", selectTids_)) {
         return false;
     }
-    if (!Option::GetOptionValue(args, "-t", selectTids_)) {
+    inputPidTidArgs_.insert(inputPidTidArgs_.end(), selectTids_.begin(), selectTids_.end());
+    if (allowIpc_ && !IsExistDebugByPid(inputPidTidArgs_, err)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "-e", selectEvents_)) {
@@ -2176,7 +2177,7 @@ std::string SubCommandRecord::HandleAppInfo()
             return err;
         }
     } else {
-        if (!IsExistDebugByPid(inputPids_, err)) {
+        if (!IsExistDebugByPid(inputPidTidArgs_, err)) {
             return err;
         }
     }

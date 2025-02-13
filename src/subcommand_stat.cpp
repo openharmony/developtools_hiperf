@@ -117,6 +117,9 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option -t failed");
         return false;
     }
+    if (!IsExistDebugByPid(selectTids_, err)) {
+        return false;
+    }
     if (!Option::GetOptionValue(args, "--restart", restart_)) {
         HLOGD("get option --restart failed");
         return false;
