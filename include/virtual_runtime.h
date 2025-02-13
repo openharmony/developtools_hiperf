@@ -226,7 +226,7 @@ private:
     std::vector<std::string> symbolsPaths_;
 
     // kernel thread
-    void UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, std::string filename);
+    void UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, uint64_t offset, std::string filename);
     bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
 };
 } // namespace HiPerf

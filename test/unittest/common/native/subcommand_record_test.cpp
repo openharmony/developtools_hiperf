@@ -29,6 +29,7 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "hisysevent_manager.h"
+#include "subcommand_dump.h"
 #include "subcommand_report.h"
 #include "subcommand_test.h"
 #include "test_hiperf_event_listener.h"
@@ -105,13 +106,14 @@ void SubCommandRecordTest::SetUp()
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
     SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 1u);
+    SubCommand::RegisterSubCommand("dump", std::make_unique<SubCommandDump>());
     SubCommand::RegisterSubCommand("report", std::make_unique<SubCommandReport>());
     SubCommand::RegisterSubCommand("TEST_CMD_1", std::make_unique<SubCommandTest>("TEST_CMD_1"));
 }
 
 void SubCommandRecordTest::TearDown()
 {
-    ASSERT_EQ(SubCommand::GetSubCommands().size(), 3u);
+    ASSERT_EQ(SubCommand::GetSubCommands().size(), 4u);
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
     MemoryHold::Get().Clean();
@@ -2052,6 +2054,109 @@ HWTEST_F(SubCommandRecordTest, CheckSpeOptionErr, TestSize.Level1)
     command.speOptMap_["load_filter"] = disable;
     command.speOptMap_["jitter"] = enable;
     EXPECT_EQ(command.CheckSpeOption(), false);
+}
+
+HWTEST_F(SubCommandRecordTest, CheckThreadName, TestSize.Level1)
+{
+    bool checkRet = false;
+    SubCommandRecord cmd;
+    PerfEvents event;
+    pid_t timeTid = 0;
+    event.backtrack_ = true;
+    event.eventGroupItem_.emplace_back();
+    event.eventGroupItem_[0].eventItems.emplace_back();
+    event.readRecordThreadRunning_ = true;
+
+    auto saveRecord = [](PerfEventRecord& record) -> bool {
+        return true;
+    };
+    cmd.virtualRuntime_.SetRecordMode(saveRecord);
+    EXPECT_EQ(event.PrepareRecordThread(), true);
+    std::vector<pid_t> tids = GetSubthreadIDs(getpid());
+    EXPECT_FALSE(tids.empty());
+    bool get = false;
+    for (const pid_t tid : tids) {
+        std::string threadName = ReadFileToString(StringPrintf("/proc/%d/comm", tid));
+        while (threadName.back() == '\0' || threadName.back() == '\n') {
+            threadName.pop_back();
+        }
+        if (threadName == "timer_thread") {
+            timeTid = tid;
+            get = true;
+            break;
+        }
+    }
+    EXPECT_EQ(get, true);
+
+    std::string recordCommand = "-t " + std::to_string(timeTid) + " -d 5 -s dwarf -o /data/local/tmp/tid_name.data";
+    TestRecordCommand(recordCommand, true, false);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/tid_name.data -o /data/local/tmp/tid_name.report"),
+              true);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_EQ(stringOut.find("report done") != std::string::npos, true);
+
+    std::ifstream ifs("/data/local/tmp/tid_name.report", std::ifstream::in);
+    EXPECT_EQ(ifs.is_open(), true);
+    std::string line;
+    while (getline(ifs, line)) {
+        if (line.find("timer_thread") != std::string::npos) {
+            checkRet = true;
+            break;
+        }
+    }
+    ifs.close();
+    EXPECT_EQ(checkRet, true);
+}
+
+HWTEST_F(SubCommandRecordTest, CheckDevhostMapOffset, TestSize.Level1)
+{
+    bool checkRet = false;
+    SubCommandRecord cmd;
+    cmd.SetHM();
+    VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.devhostPid_,
+                                                           cmd.virtualRuntime_.devhostPid_);
+    kthread.ParseDevhostMap(cmd.virtualRuntime_.devhostPid_);
+    TestRecordCommand("-d 5 -s dwarf -o /data/local/tmp/test_maps.data", true, true);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(Command::DispatchCommand("dump -i /data/local/tmp/test_maps.data"), true);
+    std::string stringOut = stdoutRecord.Stop();
+    std::istringstream stream(stringOut);
+
+    std::string line;
+    bool isMmapRecord = false;
+    bool isMmapFirstLine = false;
+    uint64_t mapOffset = 0;
+    while (getline(stream, line)) {
+        if (strstr(line.c_str(), "record mmap:") != nullptr) {
+            isMmapRecord = true;
+            continue;
+        }
+        if (strstr(line.c_str(), "record sample:") != nullptr) {
+            break;
+        }
+        if (isMmapFirstLine) {
+            isMmapFirstLine = false;
+            uint64_t pgoff = 0;
+            int ret = sscanf_s(line.c_str(), "  %*s 0x%" PRIx64 ", %*s %*s", &pgoff);
+            constexpr int numSlices {1};
+            if (ret != numSlices) {
+                printf("unknown line %d: '%s' \n", ret, line.c_str());
+                continue;
+            }
+            EXPECT_EQ(mapOffset, pgoff);
+            checkRet = true;
+            continue;
+        }
+
+        if (isMmapRecord) {
+            isMmapRecord = false;
+            isMmapFirstLine = GetMemMapOffset(cmd.virtualRuntime_.devhostPid_, mapOffset, kthread.memMaps_, line);
+        }
+    }
+    EXPECT_EQ(checkRet, true);
 }
 } // namespace HiPerf
 } // namespace Developtools

@@ -670,7 +670,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
     // don't overwrite the vailed mmap , so we also check the recordMmap.data_.len
     if (IsKernelThread(recordMmap.data_.pid)) {
         UpdateKernelThreadMap(recordMmap.data_.pid, recordMmap.data_.addr,
-                              recordMmap.data_.len, recordMmap.data_.filename);
+                              recordMmap.data_.len, recordMmap.data_.pgoff, recordMmap.data_.filename);
     } else if (recordMmap.InKernel()) {
         UpdatekernelMap(recordMmap.data_.addr, recordMmap.data_.addr + recordMmap.data_.len,
                         recordMmap.data_.pgoff, recordMmap.data_.filename);
@@ -1277,13 +1277,13 @@ void VirtualRuntime::UpdateServiceSymbols()
     }
 }
 
-void VirtualRuntime::UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len,
+void VirtualRuntime::UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, uint64_t offset,
                                            std::string filename)
 {
-    HLOGV("update kernel thread map pid %u name:'%s'", pid, filename.c_str());
+    HLOGV("update kernel thread map pid %u offset 0x%" PRIx64 " name:'%s'", pid, offset, filename.c_str());
 
     VirtualThread &thread = GetThread(pid, pid);
-    thread.CreateMapItem(filename, begin, len, 0u);
+    thread.CreateMapItem(filename, begin, len, offset);
 }
 
 void VirtualRuntime::UpdateDevhostSpaceMaps()
@@ -1295,7 +1295,7 @@ void VirtualRuntime::UpdateDevhostSpaceMaps()
             auto record =
             std::make_unique<PerfRecordMmap>(false, devhostPid_, devhostPid_,
                                              map->begin, map->end - map->begin,
-                                             0, map->name);
+                                             map->offset, map->name);
             recordCallBack_(*record);
         }
     }
