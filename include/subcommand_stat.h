@@ -112,6 +112,7 @@ private:
     int checkAppMs_ = DEFAULT_CHECK_APP_MS;
     std::vector<pid_t> selectPids_;
     std::vector<pid_t> selectTids_;
+    std::vector<pid_t> inputPidTidArgs_ = {};
     bool perCpus_ {false};
     bool perThreads_ {false};
     bool verboseReport_ {false};

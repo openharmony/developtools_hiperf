@@ -254,6 +254,7 @@ private:
     std::vector<pid_t> selectCpus_ = {};
     std::vector<pid_t> selectPids_ = {};
     std::vector<pid_t> selectTids_ = {};
+    std::vector<pid_t> inputPidTidArgs_ = {};
     bool restart_ = false;
     std::vector<std::string> selectEvents_ = {};
     std::vector<std::vector<std::string>> selectGroups_ = {};

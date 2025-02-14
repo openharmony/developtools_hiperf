@@ -287,12 +287,11 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-p", selectPids_)) {
         return false;
     }
-    if (allowIpc_ && !IsExistDebugByPid(selectPids_, err)) {
-        return false;
-    }
+    inputPidTidArgs_ = selectPids_;
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
         return false;
     }
+    inputPidTidArgs_.insert(inputPidTidArgs_.end(), selectTids_.begin(), selectTids_.end());
     if (!Option::GetOptionValue(args, "-e", selectEvents_)) {
         return false;
     }
@@ -534,6 +533,10 @@ bool SubCommandRecord::CheckOptions()
         return false;
     }
     if (!CheckTargetProcessOptions()) {
+        return false;
+    }
+    std::string err = "";
+    if (allowIpc_ && !IsExistDebugByPid(inputPidTidArgs_, err)) {
         return false;
     }
     if (!CheckReportOption()) {
@@ -2170,11 +2173,14 @@ bool SubCommandRecord::OnlineReportData()
 std::string SubCommandRecord::HandleAppInfo()
 {
     std::string err = "";
-    if (!IsExistDebugByApp(appPackage_, err)) {
-        return err;
-    }
-    if (!IsExistDebugByPid(selectPids_, err)) {
-        return err;
+    if (!appPackage_.empty()) {
+        if (!IsExistDebugByApp(appPackage_, err)) {
+            return err;
+        }
+    } else {
+        if (!IsExistDebugByPid(inputPidTidArgs_, err)) {
+            return err;
+        }
     }
     return err;
 }
