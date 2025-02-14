@@ -35,7 +35,7 @@ public:
     SubcommandObj() : SubCommand("subcomm", "test subcomm", "ut test subcomm") {}
     HiperfError OnSubCommand(std::vector<std::string>& args) override
     {
-        return HiperfError::NO_ERROR;
+        return HiperfError::NO_ERR;
     }
 };
 

@@ -615,7 +615,7 @@ HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
 #endif
 
     printf("report done\n");
-    return HiperfError::NO_ERROR;
+    return HiperfError::NO_ERR;
 }
 
 bool SubCommandReport::RegisterSubCommandReport()

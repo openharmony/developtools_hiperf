@@ -139,12 +139,12 @@ HiperfError SubCommandDump::OnSubCommand(std::vector<std::string>& args)
     RETURN_IF(!PrepareDumpOutput(), HiperfError::PREPARE_DUMP_OUTPUT_FAIL);
 
     if (!elfFileName_.empty()) {
-        return DumpElfFile() ? HiperfError::NO_ERROR : HiperfError::DUMP_ELF_FILE_ERROR;
+        return DumpElfFile() ? HiperfError::NO_ERR : HiperfError::DUMP_ELF_FILE_ERROR;
     }
 
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     if (!protobufDumpFileName_.empty()) {
-        return DumpProtoFile() ? HiperfError::NO_ERROR : HiperfError::DUMP_PROTO_FILE_ERROR;
+        return DumpProtoFile() ? HiperfError::NO_ERR : HiperfError::DUMP_PROTO_FILE_ERROR;
     }
 #endif
 
@@ -189,7 +189,7 @@ HiperfError SubCommandDump::OnSubCommand(std::vector<std::string>& args)
         DumpFeaturePortion(indent_);
     }
 
-    return HiperfError::NO_ERROR;
+    return HiperfError::NO_ERR;
 }
 
 bool SubCommandDump::DumpElfFile()

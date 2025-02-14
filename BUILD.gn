@@ -228,10 +228,14 @@ ohos_source_set("hiperf_platform_common") {
   }
   external_deps += [
     "bounds_checking_function:libsec_shared",
-    "hisysevent:libhisysevent",
-    "protobuf:protobuf_lite",
     "zlib:libz",
   ]
+  if (hiperf_independent_compilation) {
+    external_deps += [
+      "hisysevent:libhisysevent",
+      "protobuf:protobuf_lite",
+    ]
+  }
   sources = sources_platform_common
 }
 
@@ -258,10 +262,14 @@ ohos_source_set("hiperf_platform_linux") {
   external_deps += [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "hisysevent:libhisysevent",
-    "protobuf:protobuf_lite",
     "zlib:libz",
   ]
+  if (hiperf_independent_compilation) {
+    external_deps += [
+      "hisysevent:libhisysevent",
+      "protobuf:protobuf_lite",
+    ]
+  }
   public_configs += [ ":platform_linux_config" ]
   configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
 
@@ -279,6 +287,9 @@ ohos_source_set("support_elf") {
 
 config("protobuf_config") {
   defines = [ "HAVE_PROTOBUF=1" ]
+  if (!hiperf_independent_compilation) {
+    include_dirs = [ "//third_party/protobuf/src" ]
+  }
 }
 
 ohos_source_set("support_protobuf") {
@@ -296,11 +307,13 @@ ohos_source_set("support_protobuf") {
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
-  external_deps += [
-    "bounds_checking_function:libsec_shared",
-    "c_utils:utils",
-    "protobuf:protobuf_lite",
-  ]
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
+  if (hiperf_independent_compilation) {
+    external_deps += [
+      "c_utils:utils",
+      "protobuf:protobuf_lite",
+    ]
+  }
   sources = [ "./src/report_protobuf_file.cpp" ]
 }
 
@@ -381,10 +394,10 @@ ohos_source_set("proto_file_cpp") {
   cflags = []
 
   deps = [ ":hiperf_host_build_proto" ]
-  external_deps = [
-    "c_utils:utils",
-    "protobuf:protobuf_lite",
-  ]
+  external_deps = [ "protobuf:protobuf_lite_static" ]
+  if (hiperf_independent_compilation) {
+    external_deps += [ "c_utils:utils" ]
+  }
   sources = proto_file_codegen
   public_configs = [ ":proto_file_cpp_config" ]
 }
@@ -414,11 +427,15 @@ ohos_executable("hiperf") {
     "c_utils:utils",
     "faultloggerd:libunwinder",
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
     "ipc:ipc_single",
-    "protobuf:protobuf_lite",
   ]
 
+  if (hiperf_independent_compilation) {
+    external_deps += [
+      "hisysevent:libhisysevent",
+      "protobuf:protobuf_lite",
+    ]
+  }
   subsystem_name = "developtools"
   part_name = "hiperf"
 }
@@ -429,11 +446,15 @@ ohos_executable("hiperf_host") {
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "c_utils:utils",
     "faultloggerd:unwinder_host",
-    "hisysevent:libhisysevent",
   ]
 
+  if (hiperf_independent_compilation) {
+    external_deps += [
+      "c_utils:utils",
+      "hisysevent:libhisysevent",
+    ]
+  }
   subsystem_name = "developtools"
   part_name = "hiperf"
 }
@@ -482,10 +503,14 @@ ohos_source_set("hiperf_platform_host") {
   public_deps = [ ":hiperf_platform_common" ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "c_utils:utils",
     "faultloggerd:unwinder_host",
-    "protobuf:protobuf_lite",
   ]
+  if (hiperf_independent_compilation) {
+    external_deps += [
+      "c_utils:utils",
+      "protobuf:protobuf_lite",
+    ]
+  }
 }
 
 ohos_shared_library("hiperf_host_lib") {
