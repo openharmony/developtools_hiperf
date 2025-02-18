@@ -419,6 +419,9 @@ bool SubCommandRecord::CheckSelectCpuPidOption()
             }
         }
     }
+    if (!IsExistDebugByPid(selectTids_)) {
+        return false;
+    }
     return true;
 }
 

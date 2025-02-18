@@ -109,13 +109,12 @@ bool SubCommandStat::ParseOption(std::vector<std::string> &args)
         HLOGD("get option -p failed");
         return false;
     }
-    if (!IsExistDebugByPid(selectPids_)) {
-        return false;
-    }
+    inputPidTidArgs_ = selectPids_;
     if (!Option::GetOptionValue(args, "-t", selectTids_)) {
         HLOGD("get option -t failed");
         return false;
     }
+    inputPidTidArgs_.insert(inputPidTidArgs_.end(), selectTids_.begin(), selectTids_.end());
     if (!Option::GetOptionValue(args, "--restart", restart_)) {
         HLOGD("get option --restart failed");
         return false;
@@ -666,6 +665,9 @@ bool SubCommandStat::OnSubCommand(std::vector<std::string> &args)
     perfEvents_.SetPid(pids);
     if (!CheckOptionPidAndApp(pids)) {
         HLOGV("CheckOptionPidAndApp() failed");
+        return false;
+    }
+    if (!IsExistDebugByPid(inputPidTidArgs_)) {
         return false;
     }
     SetPerfEvent();
