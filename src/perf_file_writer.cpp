@@ -51,7 +51,7 @@ bool PerfFileWriter::Open(const std::string &fileName, bool compressData)
         }
     }
     std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
-    fp_ = fopen(resolvedPath.c_str(), "web+");
+    fp_ = fopen(resolvedPath.c_str(), "wb+");
     if (fp_ == nullptr) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);

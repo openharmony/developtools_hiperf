@@ -421,8 +421,6 @@ std::string SubCommandStat::GetDetailComments(const std::unique_ptr<PerfEvents::
                 hz = summary.eventCount / (running_time_in_sec / scale);
             }
             comment += hz / 1e9;
-        } else {
-            comment += 0;
         }
         return "hw-cpu-cycles";
     }
