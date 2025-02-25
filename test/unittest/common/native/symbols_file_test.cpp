@@ -950,6 +950,22 @@ HWTEST_F(SymbolsFileTest, UpdateBuildIdIfMatch, TestSize.Level1)
     EXPECT_STREQ(file->buildId_.c_str(), "123");
     EXPECT_STRNE(file->buildId_.c_str(), "456");
 }
+
+/**
+ * @tc.name: CreateCJSymbolsFile
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, CreateCJSymbolsFile, TestSize.Level1)
+{
+    std::string cjLibPath = "/system/lib64/platformsdk/cjsdk/libcangjie-std-core.so";
+    std::filesystem::path cjPath(cjLibPath);
+    if (std::filesystem::exists(cjPath)) {
+        auto file = SymbolsFile::CreateSymbolsFile(cjLibPath);
+        EXPECT_NE(file, nullptr);
+        EXPECT_EQ(file->symbolFileType_, SYMBOL_CJ_FILE);
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
