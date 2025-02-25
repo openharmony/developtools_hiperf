@@ -623,6 +623,7 @@ bool PerfEvents::PrepareRecordThread()
         recordBuf_ = std::make_unique<RingBuffer>(CalcBufferSize());
     } catch (const std::exception &e) {
         printf("create record buffer(size %zu) failed: %s\n", CalcBufferSize(), e.what());
+        HIPERF_HILOGI(MODULE_DEFAULT, "create record buffer failed: %{public}s", e.what());
         return false;
     }
     readRecordThreadRunning_ = true;

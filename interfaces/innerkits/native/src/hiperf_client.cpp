@@ -341,26 +341,14 @@ Client::Client(const std::string &outputDir)
 
 bool Client::Setup(std::string outputDir)
 {
-    std::string CurrentCommandPath = CURRENT_PATH + HIPERF_COMMAND_NAME;
     std::string SystemCommandPath = SYSTEM_BIN_PATH + HIPERF_COMMAND_NAME;
-    std::string TempCommandPath = TempBinPath + HIPERF_COMMAND_NAME;
 
     if (!outputDir.empty() && outputDir.back() != '/') {
         outputDir.push_back('/');
     }
     HIPERF_HILOGI(MODULE_CPP_API, "outputDir setup to %" HILOG_PUBLIC "s\n", outputDir.c_str());
 
-    // found command path
-    if (access(SystemCommandPath.c_str(), X_OK) == 0) {
-        executeCommandPath_ = SystemCommandPath;
-    } else if (access(TempCommandPath.c_str(), X_OK) == 0) {
-        executeCommandPath_ = TempCommandPath;
-    } else if (access(CurrentCommandPath.c_str(), X_OK) == 0) {
-        executeCommandPath_ = CurrentCommandPath;
-    } else {
-        HIPERF_HILOGI(MODULE_CPP_API, "no hiperf command found\n");
-        return ready_;
-    }
+    executeCommandPath_ = SystemCommandPath;
 
     // check output path
     // found command path
