@@ -180,10 +180,16 @@ PerfEvents::~PerfEvents()
     for (auto it = cpuMmap_.begin(); it != cpuMmap_.end();) {
         const MmapFd &mmapItem = it->second;
         if (!isSpe_) {
-            munmap(mmapItem.mmapPage, (1 + mmapPages_) * pageSize_);
+            if (munmap(mmapItem.mmapPage, (1 + mmapPages_) * pageSize_) == -1) {
+                HLOGW("munmap failed.");
+            }
         } else {
-            munmap(mmapItem.mmapPage, (1 + auxMmapPages_) * pageSize_);
-            munmap(mmapItem.auxBuf, auxMmapPages_ * pageSize_);
+            if (munmap(mmapItem.mmapPage, (1 + auxMmapPages_) * pageSize_) == -1) {
+                HLOGW("munmap failed.");
+            }
+            if (munmap(mmapItem.auxBuf, auxMmapPages_ * pageSize_) == -1) {
+                HLOGW("munmap failed.");
+            }
         }
         it = cpuMmap_.erase(it);
     }
@@ -670,6 +676,7 @@ bool PerfEvents::StartTracking(bool immediately)
 
     if (recordCallBack_) {
         if (!PrepareRecordThread()) {
+            HLOGW("PrepareRecordThread failed.");
             return false;
         }
     }

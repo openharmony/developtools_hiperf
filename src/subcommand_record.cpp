@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <memory>
-#include <poll.h>
 #if defined(CONFIG_HAS_SYSPARA)
 #include <parameters.h>
 #endif
@@ -64,8 +63,8 @@ const std::string PROC_VERSION = "/proc/version";
 const std::string SAVED_CMDLINES_SIZE = "/sys/kernel/tracing/saved_cmdlines_size";
 
 // when there are many events, start record will take more time.
-const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2000ms;
-const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT_CHECK = 1000ms;
+const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT = 2000ms;
+const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT_CHECK = 1000ms;
 
 constexpr uint64_t MASK_ALIGNED_8 = 7;
 constexpr size_t MAX_DWARF_CALL_CHAIN = 2;
@@ -1198,7 +1197,7 @@ void SubCommandRecord::ClientCommandHandle()
         struct pollfd pollFd {
             clientPipeInput_, POLLIN, 0
         };
-        int polled = poll(&pollFd, 1, CONTROL_WAITREPY_TOMEOUT.count());
+        int polled = poll(&pollFd, 1, CONTROL_WAITREPY_TIMEOUT.count());
         if (polled <= 0) {
             hasRead = false;
             continue;
@@ -1250,19 +1249,19 @@ bool SubCommandRecord::ProcessControl()
     isFifoClient_ = true;
     bool ret = false;
     if (controlCmd_ == CONTROL_CMD_START) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStart, CONTROL_WAITREPY_TOMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyStart, CONTROL_WAITREPY_TIMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_RESUME) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyResume, CONTROL_WAITREPY_TOMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyResume, CONTROL_WAITREPY_TIMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_PAUSE) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyPause, CONTROL_WAITREPY_TOMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyPause, CONTROL_WAITREPY_TIMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_STOP) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TIMEOUT);
         if (!ret) {
-            ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TOMEOUT);
+            ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TIMEOUT);
         }
         ProcessStopCommand(ret);
     } else if (controlCmd_ == CONTROL_CMD_OUTPUT) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutput, CONTROL_WAITREPY_TOMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutput, CONTROL_WAITREPY_TIMEOUT);
         ProcessOutputCommand(ret);
     }
 
@@ -1282,7 +1281,7 @@ void SubCommandRecord::ProcessStopCommand(bool ret)
         // wait sampling process exit really
         static constexpr uint64_t waitCheckSleepMs = 200;
         std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
-        while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TOMEOUT_CHECK)) {
+        while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TIMEOUT_CHECK)) {
             std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
         }
         HLOGI("wait reply check end.");
@@ -1306,7 +1305,7 @@ void SubCommandRecord::ProcessOutputCommand(bool ret)
     std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
     uint32_t outputFailCount = 0;
     while (!outputEnd_) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutputCheck, CONTROL_WAITREPY_TOMEOUT_CHECK);
+        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutputCheck, CONTROL_WAITREPY_TIMEOUT_CHECK);
         if (outputFailCount++ > MAX_CLIENT_OUTPUT_WAIT_COUNT || ret) {
             break;
         }
@@ -1361,7 +1360,7 @@ bool SubCommandRecord::CreateFifoServer()
         int fd = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
         std::string reply = "";
         if (fd != -1) {
-            WaitFifoReply(fd, CONTROL_WAITREPY_TOMEOUT, reply);
+            WaitFifoReply(fd, CONTROL_WAITREPY_TIMEOUT, reply);
         }
         if (fd == -1 || reply != HiperfClient::ReplyOK) {
             if (reply != HiperfClient::ReplyOK) {

@@ -31,7 +31,7 @@ HiperfError SubCommandList::OnSubCommand(std::vector<std::string>& args)
             requestEventTypes.push_back(it.first);
         }
     } else {
-        std::string requestEventType = args.front().c_str();
+        std::string requestEventType = args.front();
         auto it = SUPPORT_NAME_OPTIONS.find(requestEventType);
         if (it == SUPPORT_NAME_OPTIONS.end()) {
             printf("not support option: '%s'\n", requestEventType.c_str());

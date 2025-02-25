@@ -31,7 +31,10 @@ RingBuffer::RingBuffer(size_t size) : size_(size)
     }
 }
 
-RingBuffer::~RingBuffer() {}
+RingBuffer::~RingBuffer()
+{
+    buf_.reset();
+}
 
 // get size of the writable space
 size_t RingBuffer::GetFreeSize() const

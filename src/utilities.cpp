@@ -42,7 +42,7 @@ std::string CanonicalizeSpecPath(const char* src)
     if (src == nullptr) {
         HLOGE("Error: CanonicalizeSpecPath failed");
         return "";
-    } else if (strlen(src) >= PATH_MAX) {
+    } else if (strlen(src) + 1 >= PATH_MAX) {
         HLOGE("Error: CanonicalizeSpecPath %s failed", src);
         return "";
     }

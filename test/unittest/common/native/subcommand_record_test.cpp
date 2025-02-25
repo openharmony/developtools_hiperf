@@ -2112,51 +2112,60 @@ HWTEST_F(SubCommandRecordTest, CheckThreadName, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, CheckDevhostMapOffset, TestSize.Level1)
 {
-    bool checkRet = false;
-    SubCommandRecord cmd;
-    cmd.SetHM();
-    VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.devhostPid_,
-                                                           cmd.virtualRuntime_.devhostPid_);
-    kthread.ParseDevhostMap(cmd.virtualRuntime_.devhostPid_);
-    TestRecordCommand("-d 5 -s dwarf -o /data/local/tmp/test_maps.data", true, true);
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-    EXPECT_EQ(Command::DispatchCommand("dump -i /data/local/tmp/test_maps.data"), true);
-    std::string stringOut = stdoutRecord.Stop();
-    std::istringstream stream(stringOut);
+    utsname unameBuf;
+    bool isHM = true;
+    if ((uname(&unameBuf)) == 0) {
+        std::string osrelease = unameBuf.release;
+        std::string sysname = unameBuf.sysname;
+        isHM = osrelease.find(HMKERNEL) != std::string::npos;
+    }
+    if (isHM) {
+        bool checkRet = false;
+        SubCommandRecord cmd;
+        cmd.SetHM();
+        VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.devhostPid_,
+                                                            cmd.virtualRuntime_.devhostPid_);
+        kthread.ParseDevhostMap(cmd.virtualRuntime_.devhostPid_);
+        TestRecordCommand("-d 5 -s dwarf -o /data/local/tmp/test_maps.data", true, true);
+        StdoutRecord stdoutRecord;
+        stdoutRecord.Start();
+        EXPECT_EQ(Command::DispatchCommand("dump -i /data/local/tmp/test_maps.data"), true);
+        std::string stringOut = stdoutRecord.Stop();
+        std::istringstream stream(stringOut);
 
-    std::string line;
-    bool isMmapRecord = false;
-    bool isMmapFirstLine = false;
-    uint64_t mapOffset = 0;
-    while (getline(stream, line)) {
-        if (strstr(line.c_str(), "record mmap:") != nullptr) {
-            isMmapRecord = true;
-            continue;
-        }
-        if (strstr(line.c_str(), "record sample:") != nullptr) {
-            break;
-        }
-        if (isMmapFirstLine) {
-            isMmapFirstLine = false;
-            uint64_t pgoff = 0;
-            int ret = sscanf_s(line.c_str(), "  %*s 0x%" PRIx64 ", %*s %*s", &pgoff);
-            constexpr int numSlices {1};
-            if (ret != numSlices) {
-                printf("unknown line %d: '%s' \n", ret, line.c_str());
+        std::string line;
+        bool isMmapRecord = false;
+        bool isMmapFirstLine = false;
+        uint64_t mapOffset = 0;
+        while (getline(stream, line)) {
+            if (strstr(line.c_str(), "record mmap:") != nullptr) {
+                isMmapRecord = true;
                 continue;
             }
-            EXPECT_EQ(mapOffset, pgoff);
-            checkRet = true;
-            continue;
-        }
+            if (strstr(line.c_str(), "record sample:") != nullptr) {
+                break;
+            }
+            if (isMmapFirstLine) {
+                isMmapFirstLine = false;
+                uint64_t pgoff = 0;
+                int ret = sscanf_s(line.c_str(), "  %*s 0x%" PRIx64 ", %*s %*s", &pgoff);
+                constexpr int numSlices {1};
+                if (ret != numSlices) {
+                    printf("unknown line %d: '%s' \n", ret, line.c_str());
+                    continue;
+                }
+                EXPECT_EQ(mapOffset, pgoff);
+                checkRet = true;
+                continue;
+            }
 
-        if (isMmapRecord) {
-            isMmapRecord = false;
-            isMmapFirstLine = GetMemMapOffset(cmd.virtualRuntime_.devhostPid_, mapOffset, kthread.memMaps_, line);
+            if (isMmapRecord) {
+                isMmapRecord = false;
+                isMmapFirstLine = GetMemMapOffset(cmd.virtualRuntime_.devhostPid_, mapOffset, kthread.memMaps_, line);
+            }
         }
+        EXPECT_EQ(checkRet, true);
     }
-    EXPECT_EQ(checkRet, true);
 }
 } // namespace HiPerf
 } // namespace Developtools
