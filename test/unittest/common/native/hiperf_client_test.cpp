@@ -463,6 +463,35 @@ HWTEST_F(HiperfClientTest, SetReport, TestSize.Level1)
 
     TestCaseOption(opt);
 }
+
+HWTEST_F(HiperfClientTest, SetVecBranchSampleTypes, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    std::vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    opt.SetCallStackSamplingConfigs(1);
+    std::vector<std::string> branchSampleTypes = {"any"};
+    opt.SetVecBranchSampleTypes(branchSampleTypes);
+    HiperfClient::Client myHiperf;
+    ASSERT_TRUE(myHiperf.IsReady());
+}
+
+HWTEST_F(HiperfClientTest, Output, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    std::vector<std::string> process = {"hilogd"};
+    opt.SetTargetSystemWide(true);
+    opt.SetBackTrack(true);
+    opt.SetBackTrackSec(10); // 10 : 10s
+    opt.SetExcludeProcess(process);
+
+    HiperfClient::Client myHiperf("/data/local/tmp/");
+    EXPECT_TRUE(myHiperf.PrePare(opt));
+    std::this_thread::sleep_for(1s);
+    EXPECT_FALSE(myHiperf.Output());
+    std::this_thread::sleep_for(1s);
+    EXPECT_TRUE(myHiperf.Stop());
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
