@@ -264,7 +264,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
             return false;
         } else {
             perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
-            if (header->size > RECORD_SIZE_LIMIT) {
+            if (header->size > RECORD_SIZE_LIMIT || header->size < sizeof(perf_event_header)) {
                 HLOGE("read record header size error %hu", header->size);
                 return false;
             }
