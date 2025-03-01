@@ -15,7 +15,7 @@
 #include "hiperf_libreport.h"
 
 #include "debug_logger.h"
-#include "dfx_elf.h"
+#include "elf_factory.h"
 #include "perf_file_reader.h"
 #include "subcommand_dump.h"
 #include "subcommand_report.h"
@@ -156,15 +156,16 @@ const char *ReportGetBuildId(const char *elfPath)
     static std::string buildId; // static for hold the c_str buffer
     buildId.clear();
     std::string path(elfPath);
-    std::shared_ptr<DfxElf> elfFile = std::make_shared<DfxElf>(path);
+    RegularElfFactory elfFactory(path);
+    std::shared_ptr<DfxElf> elfFile = elfFactory.Create();
     buildId = elfFile->GetBuildId();
     return buildId.c_str();
 }
 
 const char *ReportGetElfArch(const char *elfPath)
 {
-    std::string path(elfPath);
-    std::shared_ptr<DfxElf> elfFile = std::make_shared<DfxElf>(path);
+    RegularElfFactory elfFactory(elfPath);
+    std::shared_ptr<DfxElf> elfFile = elfFactory.Create();
     const char *machineName = "unknown";
     switch (elfFile->GetArchType()) {
         case ArchType::ARCH_ARM:
