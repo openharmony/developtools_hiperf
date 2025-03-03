@@ -583,6 +583,25 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
     }
 }
 
+void VirtualRuntime::ProcessKernelCallChain(PerfRecordSample &sample)
+{
+#if defined(is_ohos) && is_ohos
+    if (isRoot_) {
+        return;
+    }
+    if (recordCallBack_ != nullptr) {
+        for (u64 i = 0; i < sample.data_.nr; i++) {
+            if (sample.data_.ips[i] >= PERF_CONTEXT_MAX) {
+                continue;
+            }
+            if (sample.data_.ips[i] >= 0xffff000000000000) {
+                sample.data_.ips[i] = sample.data_.ips[i] & 0xffffff0000000fff;
+            }
+        }
+    }
+#endif
+}
+
 void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
 {
 #if defined(is_ohos) && is_ohos
@@ -590,6 +609,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     const auto startTime = steady_clock::now();
 #endif
     HLOGV("unwind record (time:%llu)", recordSample.data_.time);
+    ProcessKernelCallChain(recordSample);
     // if we have userstack ?
     if (recordSample.data_.stack_size > 0) {
         pid_t serverPid = recordSample.GetUstackServerPid();

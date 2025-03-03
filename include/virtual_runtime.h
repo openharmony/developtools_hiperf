@@ -170,6 +170,7 @@ private:
     bool disableUnwind_ = true;
     bool enableDebugInfoSymbolic_ = false;
     bool dedupStack_ = false;
+    bool isRoot_ = IsRoot();
     size_t callstackMergeLevel_ = 1;
     std::ifstream savedCmdLines_;
 #if defined(is_ohos) && is_ohos
@@ -228,6 +229,7 @@ private:
     // kernel thread
     void UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, uint64_t offset, std::string filename);
     bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
+    void ProcessKernelCallChain(PerfRecordSample &sample);
 };
 } // namespace HiPerf
 } // namespace Developtools
