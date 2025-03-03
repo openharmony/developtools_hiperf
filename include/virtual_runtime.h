@@ -170,7 +170,7 @@ private:
     bool disableUnwind_ = true;
     bool enableDebugInfoSymbolic_ = false;
     bool dedupStack_ = false;
-    bool isRoot_ = IsRoot();
+    const bool isRoot_ = IsRoot();
     size_t callstackMergeLevel_ = 1;
     std::ifstream savedCmdLines_;
 #if defined(is_ohos) && is_ohos
