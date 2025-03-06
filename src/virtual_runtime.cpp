@@ -590,6 +590,9 @@ void VirtualRuntime::ProcessKernelCallChain(PerfRecordSample &sample)
         return;
     }
     if (recordCallBack_ != nullptr) {
+        if (sample.data_.ip >= 0xffff000000000000) {
+            sample.data_.ip = sample.data_.ip & 0xffffff0000000fff;
+        }
         for (u64 i = 0; i < sample.data_.nr; i++) {
             if (sample.data_.ips[i] >= PERF_CONTEXT_MAX) {
                 continue;
