@@ -715,9 +715,13 @@ void PerfRecordSample::DumpData(int indent) const
     }
     if (sampleType_ & PERF_SAMPLE_REGS_USER) {
         PRINT_INDENT(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
-        for (uint64_t i = 0; i < data_.reg_nr; ++i) {
-            PRINT_INDENT(indent + 1, "0x%llx\n", data_.user_regs[i]);
+#if defined(is_ohos) && is_ohos
+        if (IsRoot()) {
+            for (uint64_t i = 0; i < data_.reg_nr; ++i) {
+                PRINT_INDENT(indent + 1, "0x%llx\n", data_.user_regs[i]);
+            }
         }
+#endif
     }
     if (sampleType_ & PERF_SAMPLE_SERVER_PID) {
         PRINT_INDENT(indent, "server nr=%lld\n", data_.server_nr);
