@@ -230,6 +230,8 @@ private:
     void UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, uint64_t offset, std::string filename);
     bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
     void ProcessKernelCallChain(PerfRecordSample &sample);
+    void AdjustCallChain(PerfRecordSample &sample);
+
 };
 } // namespace HiPerf
 } // namespace Developtools

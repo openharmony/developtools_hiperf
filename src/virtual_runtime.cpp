@@ -583,6 +583,28 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
     }
 }
 
+void VirtualRuntime::AdjustCallChain(PerfRecordSample &sample)
+{
+#if defined(is_ohos) && is_ohos
+    if (!isHM_) {
+        return;
+    }
+    if (recordCallBack_ != nullptr) {
+        if (sample.data_.ip >= 0x5) {
+            sample.data_.ip -= 0x4;
+        }
+        for (u64 i = 0; i < sample.data_.nr; i++) {
+            if (sample.data_.ips[i] >= PERF_CONTEXT_MAX) {
+                continue;
+            }
+            if (i>=1 && sample.data_.ips[i] >= 0x5) {
+                sample.data_.ips[i] -= 0x4;
+            }
+        }
+    }
+#endif
+}
+
 void VirtualRuntime::ProcessKernelCallChain(PerfRecordSample &sample)
 {
 #if defined(is_ohos) && is_ohos
@@ -673,6 +695,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
             UpdateThread(pid, pid);
         }
     }
+    AdjustCallChain(recordSample);
     ProcessKernelCallChain(recordSample);
     // unwind
     if (disableUnwind_) {
