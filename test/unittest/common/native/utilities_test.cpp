@@ -546,15 +546,42 @@ HWTEST_F(UtilitiesTest, CopyFromBufferAndMove, TestSize.Level1)
 }
 
 /**
- * @tc.name: ReadIntFromProcFile
+ * @tc.name: ReadIntFromProcFile01
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, ReadIntFromProcFile, TestSize.Level1)
+HWTEST_F(UtilitiesTest, ReadIntFromProcFile01, TestSize.Level1)
 {
     std::string strPath = "/proc/sys/kernel/perf_cpu_time_max_percent";
     int strLen = 0;
     EXPECT_EQ(ReadIntFromProcFile(strPath, strLen), true);
+    ASSERT_GT(strLen, 0);
+}
+
+/**
+ * @tc.name: ReadIntFromProcFile02
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadIntFromProcFile02, TestSize.Level1)
+{
+    std::string strPath = "/proc/sys/kernel/perf_event_max_sample_rate";
+    int strLen = 0;
+    EXPECT_EQ(ReadIntFromProcFile(strPath, strLen), true);
+    ASSERT_GT(strLen, 0);
+}
+
+/**
+ * @tc.name: ReadIntFromProcFile03
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadIntFromProcFile03, TestSize.Level1)
+{
+    std::string strPath = "/sys/kernel/tracing/saved_cmdlines_size";
+    int strLen = 0;
+    EXPECT_EQ(ReadIntFromProcFile(strPath, strLen), true);
+    ASSERT_GT(strLen, 0);
 }
 
 /**

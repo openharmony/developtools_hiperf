@@ -437,11 +437,11 @@ HWTEST_F(OptionTest, TestGetValueFromStringBool, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestGetValueFromStringInt
+ * @tc.name: TestGetValueFromStringInt01
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInt, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInt01, TestSize.Level1)
 {
     int intValue;
     EXPECT_EQ(Option::GetValueFromString(OPTION_STRING_VALUE, OPTION_NAME, intValue), true);
@@ -449,15 +449,97 @@ HWTEST_F(OptionTest, TestGetValueFromStringInt, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestGetValueFromStringFloat
+ * @tc.name: TestGetValueFromStringInt02
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringFloat, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInt02, TestSize.Level1)
+{
+    int intValue = 0;
+    EXPECT_EQ(Option::GetValueFromString("a111", OPTION_NAME, intValue), false);  // "a111" can not trans to int
+}
+
+/**
+ * @tc.name: TestGetValueFromStringInt03
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringInt03, TestSize.Level1)
+{
+    int intValue;
+    EXPECT_EQ(Option::GetValueFromString("1a11", OPTION_NAME, intValue), false);  // "1a11" can not trans to int
+}
+
+/**
+ * @tc.name: TestGetValueFromStringInt04
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringInt04, TestSize.Level1)
+{
+    int intValue;
+    EXPECT_EQ(Option::GetValueFromString("-1", OPTION_NAME, intValue), true);  // "-1" can trans to int -1
+    EXPECT_EQ(intValue, -1);
+}
+
+/**
+ * @tc.name: TestGetValueFromStringInt05
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringInt05, TestSize.Level1)
+{
+    int intValue;
+    EXPECT_EQ(Option::GetValueFromString("2147483648", OPTION_NAME, intValue), false);  // "2147483648": INT_MAX + 1
+    EXPECT_EQ(intValue, 0);
+}
+
+/**
+ * @tc.name: TestGetValueFromStringFloat01
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringFloat01, TestSize.Level1)
 {
     float floatValue;
     EXPECT_EQ(Option::GetValueFromString(OPTION_STRING_VALUE, OPTION_NAME, floatValue), true);
     EXPECT_EQ(floatValue, 3.0);
+}
+
+/**
+ * @tc.name: TestGetValueFromStringFloat02
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringFloat02, TestSize.Level1)
+{
+    float floatValue;
+    EXPECT_EQ(Option::GetValueFromString("a13", OPTION_NAME, floatValue), false);  // "a.13" can not trans to float
+}
+
+/**
+ * @tc.name: TestGetValueFromStringFloat03
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringFloat03, TestSize.Level1)
+{
+    float floatValue;
+    float result = 0.1;  // 0.1: test value
+    EXPECT_EQ(Option::GetValueFromString(".1", OPTION_NAME, floatValue), true);  // ".1" can trans to float 0.1
+    EXPECT_EQ(floatValue, result);
+}
+
+/**
+ * @tc.name: TestGetValueFromStringFloat04
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringFloat04, TestSize.Level1)
+{
+    float floatValue;
+    double doubleMax = DBL_MAX;
+    EXPECT_EQ(Option::GetValueFromString(std::to_string(doubleMax), OPTION_NAME, floatValue), false);
 }
 
 /**
@@ -473,15 +555,27 @@ HWTEST_F(OptionTest, TestGetValueFromStringString, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestGetValueFromStringInts
+ * @tc.name: TestGetValueFromStringInts01
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInts, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInts01, TestSize.Level1)
 {
     std::vector<int> values;
     EXPECT_EQ(Option::GetValueFromString(OPTION_STRING_THREE_VALUES, OPTION_NAME, values), true);
     EXPECT_EQ(values.size(), 3u);
+}
+
+/**
+ * @tc.name: TestGetValueFromStringInts02
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringInts02, TestSize.Level1)
+{
+    std::vector<int> values;
+    EXPECT_EQ(Option::GetValueFromString(OPTION_STRING_THREE_ILLEGAL_VALUES, OPTION_NAME, values), false);
+    EXPECT_EQ(values.size(), 1u); // values: {1}
 }
 
 /**
@@ -512,11 +606,11 @@ HWTEST_F(OptionTest, TestGetOptionTrackedCommand, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestGetValueFromStringUINT64_T
+ * @tc.name: TestGetValueFromStringUINT64_T01
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T1, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T01, TestSize.Level1)
 {
     static constexpr uint64_t EXPECT = 1234;
     uint64_t value = 0;
@@ -525,15 +619,26 @@ HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T1, TestSize.Level1)
 }
 
 /**
- * @tc.name: TestGetValueFromStringUINT64_T
+ * @tc.name: TestGetValueFromStringUINT64_T02
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T2, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T02, TestSize.Level1)
+{
+    uint64_t value;
+    EXPECT_EQ(Option::GetValueFromString("1a00", OPTION_NAME, value), false); // "1a00" can not trans to uint64_t
+}
+
+/**
+ * @tc.name: TestGetValueFromStringUINT64_T03
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T03, TestSize.Level1)
 {
     uint64_t value = 0;
-    EXPECT_EQ(Option::GetValueFromString("abc", OPTION_NAME, value), false);
-    EXPECT_EQ(value, 0);
+    // 18446744073709551616: UINT64_T_MAX +1
+    EXPECT_EQ(Option::GetValueFromString("18446744073709551616", OPTION_NAME, value), false);
 }
 } // namespace HiPerf
 } // namespace Developtools

@@ -340,10 +340,38 @@ bool PowerOfTwo(uint64_t n)
     return n && (!(n & (n - 1)));
 }
 
+bool IscontainDigits(const std::string& str)
+{
+    for (char c : str) {
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            return true;
+        }
+    }
+    HLOGE("not contain [0-9], str: %s", str.c_str());
+    return false;
+}
+
+bool IsStringToIntSuccess(const std::string &str, int &val)
+{
+    char *endPtr = nullptr;
+    errno = 0;
+    long num = 0;
+    num = std::strtol(str.c_str(), &endPtr, 10); // 10 : decimal scale
+    if (endPtr == str.c_str() || *endPtr != '\0' || errno != 0 || num > INT_MAX || num < INT_MIN) {
+        HLOGE("get int failed, str: %s", str.c_str());
+        return false;
+    }
+    val = static_cast<int>(num);
+    return true;
+}
+
 bool ReadIntFromProcFile(const std::string &path, int &value)
 {
     std::string s = ReadFileToString(path);
     CHECK_TRUE(s.empty(), false, 0, "");
+    if (!IscontainDigits(s)) {
+        return false;
+    }
     value = std::stoi(s);
     return true;
 }
