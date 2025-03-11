@@ -1278,11 +1278,10 @@ void VirtualRuntime::UpdateServiceSpaceMaps()
     if (recordCallBack_) {
         if (isRoot_) {
             for (const auto &map : kthread.GetMaps()) {
-                auto record =
-                std::make_unique<PerfRecordMmap>(true, SYSMGR_PID, SYSMGR_PID,
-                                                map->begin, map->end - map->begin,
-                                                0, SYSMGR_FILE_NAME);
-                recordCallBack_(*record);
+                PerfRecordMmap record {true, SYSMGR_PID, SYSMGR_PID,
+                                       map->begin, map->end - map->begin,
+                                       0, SYSMGR_FILE_NAME};
+                recordCallBack_(record);
             }
         }
     }
