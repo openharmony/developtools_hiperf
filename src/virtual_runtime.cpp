@@ -1278,9 +1278,9 @@ void VirtualRuntime::UpdateServiceSpaceMaps()
     if (recordCallBack_) {
         if (isRoot_) {
             for (const auto &map : kthread.GetMaps()) {
-                PerfRecordMmap record {true, SYSMGR_PID, SYSMGR_PID,
-                                       map->begin, map->end - map->begin,
-                                       0, SYSMGR_FILE_NAME};
+                PerfRecordMmap record(true, SYSMGR_PID, SYSMGR_PID,
+                                      map->begin, map->end - map->begin,
+                                      0, SYSMGR_FILE_NAME);
                 recordCallBack_(record);
             }
         }
