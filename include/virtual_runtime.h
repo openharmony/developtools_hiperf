@@ -231,7 +231,6 @@ private:
     bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
     void ProcessKernelCallChain(PerfRecordSample &sample);
     void AdjustCallChain(PerfRecordSample &sample);
-
 };
 } // namespace HiPerf
 } // namespace Developtools
