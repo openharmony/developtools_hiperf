@@ -590,11 +590,9 @@ void VirtualRuntime::AdjustCallChain(PerfRecordSample &sample)
         return;
     }
     if (recordCallBack_ != nullptr) {
-        if (sample.data_.ip >= 0x5) {
-            sample.data_.ip -= 0x4;
-        }
         for (u64 i = 0; i < sample.data_.nr; i++) {
             if (sample.data_.ips[i] >= PERF_CONTEXT_MAX) {
+                i++;
                 continue;
             }
             if (i>=1 && sample.data_.ips[i] >= 0x5) {
