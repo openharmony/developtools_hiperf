@@ -612,7 +612,6 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     const auto startTime = steady_clock::now();
 #endif
     HLOGV("unwind record (time:%llu)", recordSample.data_.time);
-    ProcessKernelCallChain(recordSample);
     // if we have userstack ?
     if (recordSample.data_.stack_size > 0) {
         pid_t serverPid = recordSample.GetUstackServerPid();
@@ -674,6 +673,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
             UpdateThread(pid, pid);
         }
     }
+    ProcessKernelCallChain(recordSample);
     // unwind
     if (disableUnwind_) {
         return;
@@ -1276,12 +1276,14 @@ void VirtualRuntime::UpdateServiceSpaceMaps()
     VirtualThread &kthread = GetThread(SYSMGR_PID, SYSMGR_PID);
     kthread.ParseServiceMap(SYSMGR_FILE_NAME);
     if (recordCallBack_) {
-        for (const auto &map : kthread.GetMaps()) {
-            auto record =
-            std::make_unique<PerfRecordMmap>(true, SYSMGR_PID, SYSMGR_PID,
-                                             map->begin, map->end - map->begin,
-                                             0, SYSMGR_FILE_NAME);
-            recordCallBack_(*record);
+        if (isRoot_) {
+            for (const auto &map : kthread.GetMaps()) {
+                auto record =
+                std::make_unique<PerfRecordMmap>(true, SYSMGR_PID, SYSMGR_PID,
+                                                map->begin, map->end - map->begin,
+                                                0, SYSMGR_FILE_NAME);
+                recordCallBack_(*record);
+            }
         }
     }
 }
