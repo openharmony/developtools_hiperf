@@ -586,18 +586,16 @@ void VirtualRuntime::NeedDropKernelCallChain(PerfRecordSample &sample)
 void VirtualRuntime::AdjustCallChain(PerfRecordSample &sample)
 {
 #if defined(is_ohos) && is_ohos
-    if (!isHM_) {
+    if (!isHM_ || recordCallBack_ == nullptr) {
         return;
     }
-    if (recordCallBack_ != nullptr) {
-        for (u64 i = 0; i < sample.data_.nr; i++) {
-            if (sample.data_.ips[i] >= PERF_CONTEXT_MAX) {
-                i++;
-                continue;
-            }
-            if (i>=1 && sample.data_.ips[i] >= 0x5) {
-                sample.data_.ips[i] -= 0x4;
-            }
+    for (u64 i = 0; i < sample.data_.nr; i++) {
+        if (sample.data_.ips[i] >= PERF_CONTEXT_MAX) {
+            i++;
+            continue;
+        }
+        if (i >= 1 && sample.data_.ips[i] >= 0x5) {
+            sample.data_.ips[i] -= 0x4;
         }
     }
 #endif
