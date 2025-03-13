@@ -589,13 +589,15 @@ void VirtualRuntime::AdjustCallChain(PerfRecordSample &sample)
     if (!isHM_ || recordCallBack_ == nullptr) {
         return;
     }
+    constexpr uint64_t minValue = 0x5;
+    constexpr uint64_t offset = 0x4;
     for (u64 i = 0; i < sample.data_.nr; i++) {
         if (sample.data_.ips[i] >= PERF_CONTEXT_MAX) {
             i++;
             continue;
         }
-        if (i >= 1 && sample.data_.ips[i] >= 0x5) {
-            sample.data_.ips[i] -= 0x4;
+        if (i >= 1 && sample.data_.ips[i] >= minValue) {
+            sample.data_.ips[i] -= offset;
         }
     }
 #endif
