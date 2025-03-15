@@ -109,6 +109,10 @@ ohos_unittest("hiperf_unittest") {
 
   public_deps = []
   external_deps = [
+    "abseil-cpp:absl_container",
+    "abseil-cpp:absl_cord",
+    "abseil-cpp:absl_log",
+    "abseil-cpp:absl_strings",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "faultloggerd:libunwinder",
@@ -208,6 +212,10 @@ ohos_fuzztest("CommandLineFuzzTest") {
   cflags = fuzz_cflags
   deps = common_deps
   external_deps = [
+    "abseil-cpp:absl_container",
+    "abseil-cpp:absl_cord",
+    "abseil-cpp:absl_log",
+    "abseil-cpp:absl_strings",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "faultloggerd:libunwinder",
@@ -246,6 +254,10 @@ ohos_fuzztest("ClientApiFuzzTest") {
   cflags = fuzz_cflags
   deps = common_deps
   external_deps = [
+    "abseil-cpp:absl_container",
+    "abseil-cpp:absl_cord",
+    "abseil-cpp:absl_log",
+    "abseil-cpp:absl_strings",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
@@ -263,6 +275,10 @@ ohos_fuzztest("SpeDecoderFuzzTest") {
   cflags = fuzz_cflags
   deps = common_deps
   external_deps = [
+    "abseil-cpp:absl_container",
+    "abseil-cpp:absl_cord",
+    "abseil-cpp:absl_log",
+    "abseil-cpp:absl_strings",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
@@ -281,6 +297,10 @@ ohos_fuzztest("PerfFileFuzzTest") {
   cflags = fuzz_cflags
   deps = common_deps
   external_deps = [
+    "abseil-cpp:absl_container",
+    "abseil-cpp:absl_cord",
+    "abseil-cpp:absl_log",
+    "abseil-cpp:absl_strings",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "faultloggerd:libunwinder",
@@ -299,6 +319,10 @@ ohos_fuzztest("PerfFileFormatFuzzTest") {
   cflags = fuzz_cflags
   deps = common_deps
   external_deps = [
+    "abseil-cpp:absl_container",
+    "abseil-cpp:absl_cord",
+    "abseil-cpp:absl_log",
+    "abseil-cpp:absl_strings",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "faultloggerd:libunwinder",

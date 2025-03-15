@@ -423,6 +423,10 @@ ohos_executable("hiperf") {
   }
 
   external_deps = [
+    "abseil-cpp:absl_container",
+    "abseil-cpp:absl_cord",
+    "abseil-cpp:absl_log",
+    "abseil-cpp:absl_strings",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "faultloggerd:libunwinder",
