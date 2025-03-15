@@ -27,7 +27,7 @@ hiperf 是 OpenHarmony 为开发人员提供的用于调试的命令行工具，
 │   └── js			# JS demo 程序,示范了如何调用API
 ├── include			# 工程的头文件
 │   └── nonlinux	# 交叉编译的头文件(非linux平台)
-├── interfaces		# 接口忘记
+├── interfaces		# 接口
 │   ├── innerkits	# C++ API 接口
 │   └── kits		# JS API 接口
 ├── proto			# report 命令导出到proto的数据结构定义
