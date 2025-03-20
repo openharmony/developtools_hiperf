@@ -697,14 +697,13 @@ bool SubCommandRecord::ParseDataLimitOption(const std::string &str)
         return false;
     }
 
-    std::string num = str.substr(0, str.size() >= 1 ? str.size() - 1 : 0);
-    int64_t size = 0;
-    try {
-        size = std::stoul(num);
-    } catch (...) {
-        return false;
-    }
-    if (size <= 0) {
+    std::string numStr = str.substr(0, str.size() >= 1 ? str.size() - 1 : 0);
+    unsigned long size = 0;
+    char *endPtr = nullptr;
+    errno = 0;
+    size = std::strtoul(numStr.c_str(), &endPtr, 10); // 10 : decimal scale
+    if (endPtr == numStr.c_str() || *endPtr != '\0' || errno != 0 || size == 0) {
+        HLOGE("num string convert to size failed, numStr: %s", numStr.c_str());
         return false;
     }
 
@@ -728,13 +727,17 @@ bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &call
             printf("Invalid -s value %s.\n", VectorToString(callStackType).c_str());
             return false;
         } else if (callStackType.size() == MAX_DWARF_CALL_CHAIN) {
-            try {
-                callStackDwarfSize_ = std::stoul(callStackType.at(1));
-            } catch (...) {
+            char *endPtr = nullptr;
+            errno = 0;
+            unsigned long num = 0;
+            num = std::strtoul(callStackType.at(1).c_str(), &endPtr, 10); // 10 : decimal scale
+            if (endPtr == callStackType.at(1).c_str() || *endPtr != '\0' || errno > 0 || num > UINT_MAX) {
                 printf("Invalid -s value, dwarf stack size, '%s' is illegal.\n",
                        callStackType.at(1).c_str());
                 return false;
             }
+            callStackDwarfSize_ = static_cast<uint32_t>(num);
+
             if (callStackDwarfSize_ < MIN_SAMPLE_STACK_SIZE) {
                 printf("Invalid -s value, dwarf stack size, '%s' is too small.\n",
                        callStackType.at(1).c_str());
@@ -1656,7 +1659,7 @@ uint32_t SubCommandRecord::GetCountFromFile(const std::string &fileName)
         std::vector<std::string> vSubstr = StringSplit(subStr, "-");
         static const size_t BEGIN_END = 2;
         if (vSubstr.size() == BEGIN_END) {
-            ret += (std::stoi(vSubstr[1]) - std::stoi(vSubstr[0]));
+            ret += static_cast<uint32_t>((std::stoi(vSubstr[1]) - std::stoi(vSubstr[0])));
         }
     }
     return ret;
@@ -1697,6 +1700,7 @@ bool SubCommandRecord::AddCpuFeature()
     try {
         uint32_t cpuPresent = GetCountFromFile("/sys/devices/system/cpu/present");
         uint32_t cpuOnline = GetCountFromFile("/sys/devices/system/cpu/online");
+        HLOGD("cpuPresent: %d, cpuOnline: %d", static_cast<int>(cpuPresent), static_cast<int>(cpuOnline));
         fileWriter_->AddNrCpusFeature(FEATURE::NRCPUS, cpuPresent - cpuOnline, cpuOnline);
     } catch (...) {
         HLOGD("get NRCPUS failed");
