@@ -1466,7 +1466,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
 
     if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         HLOGE("Fail to create record file %s", outputFilename_.c_str());
-        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to create record file %s", outputFilename_.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to create record file %{public}s", outputFilename_.c_str());
         return HiperfError::CREATE_OUTPUT_FILE_FAIL;
     }
 
@@ -1499,7 +1499,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     if (!backtrack_) {
         if (!FinishWriteRecordFile()) {
             HLOGE("Fail to finish record file %s", outputFilename_.c_str());
-            HIPERF_HILOGE(MODULE_DEFAULT, "Fail to finish record file %s", outputFilename_.c_str());
+            HIPERF_HILOGE(MODULE_DEFAULT, "Fail to finish record file %{public}s", outputFilename_.c_str());
             return HiperfError::FINISH_WRITE_RECORD_FILE_FAIL;
         } else if (!PostProcessRecordFile()) {
             HLOGE("Fail to post process record file");
