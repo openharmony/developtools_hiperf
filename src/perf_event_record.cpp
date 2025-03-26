@@ -227,8 +227,8 @@ bool PerfRecordAuxtrace::GetBinary1(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     size_t copySize = header_.size - GetHeaderSize();
-    if (memcpy_s(p, sizeof(data_), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
-        HLOGE("memcpy_s return failed");
+    if (memcpy_s(p, buf.size() - GetHeaderSize(), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s return failed in GetBinary1");
         return false;
     }
     return true;
@@ -244,13 +244,13 @@ bool PerfRecordAuxtrace::GetBinary(std::vector<uint8_t> &buf) const
     uint8_t *p = buf.data() + GetHeaderSize();
 
     size_t copySize = header_.size - GetHeaderSize();
-    if (memcpy_s(p, sizeof(data_), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
-        HLOGE("memcpy_s return failed");
+    if (memcpy_s(p, buf.size() - GetHeaderSize(), reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s return failed in GetBinary with data_");
         return false;
     }
     p += header_.size - GetHeaderSize();
-    if (memcpy_s(p, data_.size, static_cast<uint8_t *>(rawData_), data_.size) != 0) {
-        HLOGE("memcpy_s return failed");
+    if (memcpy_s(p, buf.size() - header_.size, static_cast<uint8_t *>(rawData_), data_.size) != 0) {
+        HLOGE("memcpy_s return failed in GetBinary with rawData_");
         return false;
     }
     return true;
