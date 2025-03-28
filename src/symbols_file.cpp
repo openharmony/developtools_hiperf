@@ -1076,15 +1076,6 @@ public:
     ~UnknowFileSymbols() override {}
 };
 
-class CJFileSymbols : public ElfFileSymbols {
-public:
-    explicit CJFileSymbols(const std::string &symbolFilePath) : ElfFileSymbols(symbolFilePath)
-    {
-        symbolFileType_ = SYMBOL_CJ_FILE;
-    }
-    ~CJFileSymbols() override {}
-};
-
 SymbolsFile::~SymbolsFile() {}
 
 std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symbolType,
@@ -1106,22 +1097,9 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
             return std::make_unique<JSFileSymbols>(symbolFilePath);
         case SYMBOL_HAP_FILE:
             return std::make_unique<HapFileSymbols>(symbolFilePath, pid);
-        case SYMBOL_CJ_FILE:
-            return std::make_unique<CJFileSymbols>(symbolFilePath);
         default:
             return std::make_unique<SymbolsFile>(SYMBOL_UNKNOW_FILE, symbolFilePath);
     }
-}
-
-static bool IsCJFile(const std::string& filepath)
-{
-    RegularElfFactory elfFactory(filepath);
-    std::shared_ptr<DfxElf> elfFile_ = elfFactory.Create();
-    ShdrInfo shinfo;
-    if (elfFile_->GetSectionInfo(shinfo, ".cjmetadata")) {
-        return true;
-    }
-    return false;
 }
 
 std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &symbolFilePath, pid_t pid)
@@ -1137,8 +1115,6 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &s
         return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE, symbolFilePath);
     } else if (IsArkJsFile(symbolFilePath)) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_HAP_FILE, symbolFilePath, pid);
-    } else if (IsCJFile(symbolFilePath)) {
-        return SymbolsFile::CreateSymbolsFile(SYMBOL_CJ_FILE, symbolFilePath, pid);
     } else {
         // default is elf, this may be problematic in the future.
         return SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, symbolFilePath);

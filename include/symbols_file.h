@@ -80,7 +80,6 @@ enum SymbolsFileType {
     SYMBOL_JAVA_FILE,
     SYMBOL_JS_FILE,
     SYMBOL_HAP_FILE,
-    SYMBOL_CJ_FILE,
     SYMBOL_UNKNOW_FILE,
 };
 
