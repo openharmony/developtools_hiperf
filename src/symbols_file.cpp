@@ -38,7 +38,6 @@
 #include "dfx_extractor_utils.h"
 #include "dfx_symbols.h"
 #include "dwarf_encoding.h"
-#include "elf_factory.h"
 #include "hiperf_hilog.h"
 #include "unwinder_config.h"
 #include "utilities.h"
@@ -231,7 +230,7 @@ protected:
             return false;
         }
         if (elfFile_ == nullptr) {
-            if (StringEndsWith(elfPath, ".hap") && StringStartsWith(elfPath, "/proc")) {
+            if (StringEndsWith(elfPath, ".hap")) {
                 if (map == nullptr) {
                     HLOGW("map should not be nullptr.");
                     return false;
@@ -240,13 +239,10 @@ protected:
                     HLOGW("map is not exec, no need parse elf.");
                     return false;
                 }
-                CompressHapElfFactory elfFactory(elfPath, map->prevMap);
-                elfFile_ = elfFactory.Create();
-                map->offset -= map->prevMap->offset;
+                elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
                 HLOGD("try create elf from hap");
             } else {
-                RegularElfFactory elfFactory(elfPath);
-                elfFile_ = elfFactory.Create();
+                elfFile_ = std::make_shared<DfxElf>(elfPath);
             }
         }
 
@@ -302,7 +298,7 @@ private:
                         uint64_t &sectionFileOffset) const override
     {
         struct ShdrInfo shdrInfo;
-        if (elfFile_ != nullptr && elfFile_->GetSectionInfo(shdrInfo, name)) {
+        if (elfFile_->GetSectionInfo(shdrInfo, name)) {
             sectionVaddr = shdrInfo.addr;
             sectionSize = shdrInfo.size;
             sectionFileOffset = shdrInfo.offset;
@@ -427,18 +423,15 @@ private:
         const auto startTime = steady_clock::now();
 #endif
         if (elfFile_ == nullptr) {
-            if (StringEndsWith(elfPath, ".hap") && StringStartsWith(elfPath, "/proc") && map != nullptr) {
+            if (StringEndsWith(elfPath, ".hap") && map != nullptr) {
                 if (!map->IsMapExec()) {
                     HLOGW("map is not exec, no need parse elf.");
                     return false;
                 }
-                CompressHapElfFactory elfFactory(elfPath, map->prevMap);
-                elfFile_ = elfFactory.Create();
-                map->offset -= map->prevMap->offset;
+                elfFile_ = DfxElf::CreateFromHap(elfPath, map->prevMap, map->offset);
                 map->elf = elfFile_;
             } else {
-                RegularElfFactory elfFactory(elfPath);
-                elfFile_ = elfFactory.Create();
+                elfFile_ = std::make_shared<DfxElf>(elfPath);
             }
         }
         CHECK_TRUE(elfFile_ == nullptr, false, 1, "Failed to create elf file for %s.", elfPath.c_str());
