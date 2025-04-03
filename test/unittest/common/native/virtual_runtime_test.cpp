@@ -329,6 +329,7 @@ HWTEST_F(VirtualRuntimeTest, UpdateFromPerfData, TestSize.Level1)
     symbolFileStruct.symbolStructs_.emplace_back(testUserVaddr, 1u, "first_user_func");
     symbolFileStruct.symbolStructs_.emplace_back(testUserVaddr + 1u, 1u, "second_user_func");
 
+    ASSERT_EQ(runtime_->SetSymbolsPaths({"/data/local/tmp"}), true);
     runtime_->UpdateFromPerfData(symbolFileStructs);
     ASSERT_EQ(runtime_->GetSymbolsFiles().size(), 1u);
     ASSERT_STREQ(runtime_->GetSymbolsFiles().front()->filePath_.c_str(), "a");
