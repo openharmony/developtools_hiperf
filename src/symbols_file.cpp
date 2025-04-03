@@ -421,6 +421,21 @@ private:
         DfxSymbols::AddSymbolsByPlt(symbolsTable, elf, filePath);
     }
 
+    void GetTextExecVaddr()
+    {
+#if defined(is_ohos) && is_ohos
+        textExecVaddr_ = elfFile_->GetStartVaddr();
+        textExecVaddrFileOffset_ = elfFile_->GetStartOffset();
+#else
+        if (textExecVaddr_ == maxVaddr) {
+            textExecVaddr_ = elfFile_->GetStartVaddr();
+            textExecVaddrFileOffset_ = elfFile_->GetStartOffset();
+        }
+#endif
+        HLOGD("textExecVaddr_ 0x%016" PRIx64 " file offset 0x%016" PRIx64 "", textExecVaddr_,
+              textExecVaddrFileOffset_);
+    }
+
     bool LoadElfSymbols(std::shared_ptr<DfxMap> map, std::string elfPath)
     {
 #ifdef HIPERF_DEBUG_TIME
@@ -447,11 +462,7 @@ private:
             HLOGD("parser elf file failed.");
             return false;
         }
-
-        textExecVaddr_ = elfFile_->GetStartVaddr();
-        textExecVaddrFileOffset_ = elfFile_->GetStartOffset();
-        HLOGD("textExecVaddr_ 0x%016" PRIx64 " file offset 0x%016" PRIx64 "", textExecVaddr_,
-              textExecVaddrFileOffset_);
+        GetTextExecVaddr();
 
         // we prepare two table here
         // only one we will push in to symbols_
@@ -988,6 +999,10 @@ public:
 
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
+        if (map == nullptr) {
+            HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
+            return false;
+        }
         HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         if (debugInfoLoaded_) {
             return true;
@@ -1004,6 +1019,10 @@ public:
 
     bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
+        if (map == nullptr) {
+            HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
+            return false;
+        }
         HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
         CHECK_TRUE(symbolsLoaded_ || !onRecording_, true, 0, "");
         symbolsLoaded_ = true;
