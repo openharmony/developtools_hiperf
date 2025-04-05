@@ -892,6 +892,26 @@ bool IsNumeric(const std::string& str)
     }
     return true;
 }
+
+bool IsFileExists(const std::string& fileName)
+{
+    return OHOS::FileExists(fileName);
+}
+
+bool CreateDirectory(const std::string& path, mode_t mode)
+{
+    std::string::size_type pos = 0;
+    do {
+        pos = path.find('/', pos + 1);
+        std::string subPath = (pos == std::string::npos) ? path : path.substr(0, pos);
+        if (access(subPath.c_str(), F_OK) != 0) {
+            if (mkdir(subPath.c_str(), mode) != 0) {
+                return false;
+            }
+        }
+    } while (pos != std::string::npos);
+    return access(path.c_str(), F_OK) == 0;
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

@@ -51,8 +51,8 @@ const std::string CONTROL_CMD_PAUSE = "pause";
 const std::string CONTROL_CMD_RESUME = "resume";
 const std::string CONTROL_CMD_OUTPUT = "output";
 const std::string CONTROL_CMD_STOP = "stop";
-const std::string CONTROL_FIFO_FILE_C2S = "/data/local/tmp/.hiperf_record_control_c2s";
-const std::string CONTROL_FIFO_FILE_S2C = "/data/local/tmp/.hiperf_record_control_s2c";
+const std::string CONTROL_FIFO_FILE_C2S = "/data/local/tmp/.hiperf/.hiperf_record_control_c2s";
+const std::string CONTROL_FIFO_FILE_S2C = "/data/local/tmp/.hiperf/.hiperf_record_control_s2c";
 
 const std::string PERF_CPU_TIME_MAX_PERCENT = "/proc/sys/kernel/perf_cpu_time_max_percent";
 const std::string PERF_EVENT_MAX_SAMPLE_RATE = "/proc/sys/kernel/perf_event_max_sample_rate";
@@ -1320,6 +1320,11 @@ bool SubCommandRecord::CreateFifoServer()
 {
     char errInfo[ERRINFOLEN] = { 0 };
     const mode_t fifoMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    std::string tempPath("/data/local/tmp/.hiperf/");
+    if (!IsFileExists(tempPath)) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s not exist.", tempPath.c_str());
+        CreateDirectory(tempPath, HIPERF_FILE_PERM_770);
+    }
     if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 ||
         mkfifo(CONTROL_FIFO_FILE_C2S.c_str(), fifoMode) != 0) {
         if (errno == EEXIST) {
@@ -1542,7 +1547,7 @@ void SubCommandRecord::CloseClientThread()
 
 void SubCommandRecord::RemoveVdsoTmpFile()
 {
-    std::vector<std::string> fileName = {"/data/local/tmp/[shmm]", "/data/local/tmp/[vdso]"};
+    std::vector<std::string> fileName = {"/data/local/tmp/.hiperf/[shmm]", "/data/local/tmp/.hiperf/[vdso]"};
     for (auto name : fileName) {
         if (access(name.c_str(), F_OK) == 0) {
             if (remove(name.c_str()) != 0) {

@@ -1275,7 +1275,11 @@ void VirtualRuntime::LoadVdso()
             std::string memory(map->end - map->begin, '\0');
             std::copy(reinterpret_cast<char *>((map->begin)), reinterpret_cast<char *>((map->end)),
                       &memory[0]);
-            std::string tempPath("/data/local/tmp/");
+            std::string tempPath("/data/local/tmp/.hiperf/");
+            if (!IsFileExists(tempPath)) {
+                HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s not exist.", tempPath.c_str());
+                CreateDirectory(tempPath, HIPERF_FILE_PERM_770);
+            }
             std::string tempFileName = tempPath + map->name;
             if (!WriteStringToFile(tempFileName, memory)) {
                 printf("vdso temp file create fail at %s\n", tempFileName.c_str());

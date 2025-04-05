@@ -101,7 +101,7 @@ const std::set<int> ALLOW_UIDS = {1201};
 const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
 static FILE *g_outputDump = nullptr;
 const uint64_t waitAppRunCheckTimeOut = 20;
-
+constexpr mode_t HIPERF_FILE_PERM_770 = S_IRWXU | S_IRWXG;
 struct ThreadInfos {
     pid_t tid;
     pid_t pid;
@@ -335,6 +335,8 @@ bool PowerOfTwo(uint64_t n);
 bool IsNumeric(const std::string& str);
 bool IscontainDigits(const std::string& str);
 bool IsStringToIntSuccess(const std::string &str, int &num);
+bool IsFileExists(const std::string& fileName);
+bool CreateDirectory(const std::string& path, mode_t mode);
 
 const std::string HMKERNEL = "HongMeng";
 
