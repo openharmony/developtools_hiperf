@@ -2167,6 +2167,15 @@ HWTEST_F(SubCommandRecordTest, CheckDevhostMapOffset, TestSize.Level1)
         EXPECT_EQ(checkRet, true);
     }
 }
+
+HWTEST_F(SubCommandRecordTest, CheckGetCountFromFile, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    uint32_t cpuPresent = cmd.GetCountFromFile("/sys/devices/system/cpu/present");
+    ASSERT_GT(cpuPresent, 1);
+    uint32_t cpuOnline = cmd.GetCountFromFile("/sys/devices/system/cpu/online");
+    ASSERT_GT(cpuOnline, 1);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

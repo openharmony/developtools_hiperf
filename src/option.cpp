@@ -84,39 +84,37 @@ bool GetValueFromString(const std::string &optionValue, const std::string &optio
 
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, int &value)
 {
-    try {
-        value = std::stoi(optionValue);
-        HLOGD("get int result:'%s':'%d'", optionName.c_str(), value);
-        return true;
-    } catch (...) {
-        // what can we do here ?
+    if (!IsStringToIntSuccess(optionValue, value)) {
+        return false;
     }
-    return false;
+    HLOGD("get int result:'%s':'%d'", optionName.c_str(), value);
+    return true;
 }
 
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, float &value)
 {
-    try {
-        value = std::stof(optionValue);
-        HLOGD("get float result:'%s':'%f'", optionName.c_str(), value);
-        return true;
-    } catch (...) {
-        // what can we do here ?
+    char *endPtr = nullptr;
+    errno = 0;
+    value = std::strtof(optionValue.c_str(), &endPtr);
+    if (endPtr == optionValue.c_str() || *endPtr != '\0' || errno != 0) {
+        HLOGE("get float failed, optionValue: %s", optionValue.c_str());
+        return false;
     }
-    return false;
+    HLOGD("get float result:'%s':'%f'", optionName.c_str(), value);
+    return true;
 }
 
 bool GetValueFromString(const std::string& optionValue, const std::string& optionName, uint64_t& value)
 {
-    try {
-        value = std::stoull(optionValue);
-        HLOGD("get uint64_t result:'%s':'%" PRIu64 "'", optionName.c_str(), value);
-        return true;
-    } catch (...) {
-        HLOGE("get uint64_t failed: %s", optionValue.c_str());
-        value = 0;
+    char *endPtr = nullptr;
+    errno = 0;
+    value = std::strtoull(optionValue.c_str(), &endPtr, 10); // 10 : decimal scale
+    if (endPtr == optionValue.c_str() || *endPtr != '\0' || errno != 0) {
+        HLOGE("get uint64_t failed, optionValue: %s", optionValue.c_str());
+        return false;
     }
-    return false;
+    HLOGD("get uint64_t result:'%s':'%" PRIu64 "'", optionName.c_str(), value);
+    return true;
 }
 
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::string &value)
@@ -129,17 +127,16 @@ bool GetValueFromString(const std::string &optionValue, const std::string &optio
 {
     std::vector<std::string> stringValues = StringSplit(optionValue, ",");
     HLOGD("split int result:'%s':'%s'", optionName.c_str(), VectorToString(stringValues).c_str());
-    try {
-        while (!stringValues.empty()) {
-            values.push_back(std::stoi(stringValues.front()));
-            stringValues.erase(stringValues.begin()); // remove for next process
+    while (!stringValues.empty()) {
+        int dest = 0;
+        if (!IsStringToIntSuccess(stringValues.front(), dest)) {
+            return false;
+        } else {
+            values.push_back(dest);
         }
-        return values.size() > 0; // convert successed ?
-    } catch (...) {
-        // what can we do here ?
-        HLOGD("stoi failed with %s", stringValues.front().c_str());
+        stringValues.erase(stringValues.begin()); // remove for next process
     }
-    return false;
+    return values.size() > 0;
 }
 
 bool GetValueFromString(const std::string &optionValue, const std::string &optionName, std::vector<std::string> &values)
