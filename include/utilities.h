@@ -333,6 +333,8 @@ bool IsAllowProfilingUid();
 bool IsHiviewCall();
 bool PowerOfTwo(uint64_t n);
 bool IsNumeric(const std::string& str);
+bool IscontainDigits(const std::string& str);
+bool IsStringToIntSuccess(const std::string &str, int &num);
 
 const std::string HMKERNEL = "HongMeng";
 
