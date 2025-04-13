@@ -873,7 +873,7 @@ HWTEST_F(UtilitiesTest, CreateDirectory, TestSize.Level1)
 {
     std::string file = "/data/local/tmp/hiperf_test";
     EXPECT_EQ(CreateDirectory(file, HIPERF_FILE_PERM_770), true);
-    remove(file.c_str());
+    rmdir(file.c_str());
 }
 } // namespace HiPerf
 } // namespace Developtools
