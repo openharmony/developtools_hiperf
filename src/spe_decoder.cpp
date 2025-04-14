@@ -180,7 +180,10 @@ static int SpeDoGetPacket(const unsigned char *buf, size_t len,
     unsigned int hdr;
     unsigned char extHdr = 0;
 
-    memset_s(packet, sizeof(struct SpePkt), 0, sizeof(struct SpePkt));
+    if (memset_s(packet, sizeof(struct SpePkt), 0, sizeof(struct SpePkt)) != EOK) {
+        HLOGE("memset_s failed in SpeDoGetPacket");
+        return -1;
+    }
 
     if (!len) {
         return PERF_SPE_NEED_MORE_BYTES;
@@ -669,7 +672,10 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
     u64 payload;
     u64 ip;
     CHECK_TRUE(decoder == nullptr, -1, 1, "Invalid pointer!");
-    memset_s(&decoder->record, sizeof(decoder->record), 0, sizeof(decoder->record));
+    if (memset_s(&decoder->record, sizeof(decoder->record), 0, sizeof(decoder->record)) != EOK) {
+        HLOGE("memset_s failed in SpeReadRecord.");
+        return -1;
+    }
     decoder->record.context_id = (u64)-1;
 
     while (true) {
@@ -803,9 +809,13 @@ struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
 
     decoder = reinterpret_cast<SpeDecoder *>(malloc(sizeof(struct SpeDecoder)));
     if (!decoder) {
-        return NULL;
+        return nullptr;
     }
-    memset_s(decoder, sizeof(struct SpeDecoder), 0, sizeof(struct SpeDecoder));
+    if (memset_s(decoder, sizeof(struct SpeDecoder), 0, sizeof(struct SpeDecoder)) != EOK) {
+        HLOGE("memset_s failed in SpeDecoderDataNew.");
+        free(decoder);
+        return nullptr;
+    }
 
     decoder->buf = speBuf;
     decoder->len = speLen;
