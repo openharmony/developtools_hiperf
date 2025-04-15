@@ -108,7 +108,7 @@ void DebugLoggerTest::LogLevelTest(DebugLevel testlevel, bool useStdout)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(DebugLoggerTest, Log, TestSize.Level1)
+HWTEST_F(DebugLoggerTest, Log, TestSize.Level0)
 {
     DebugLogger::GetInstance()->SetMixLogOutput(true);
     StdoutRecord stdoutRecord;
@@ -173,7 +173,7 @@ HWTEST_F(DebugLoggerTest, SetLogLevel, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(DebugLoggerTest, GetInstance, TestSize.Level1)
+HWTEST_F(DebugLoggerTest, GetInstance, TestSize.Level2)
 {
     EXPECT_NE(DebugLogger::GetInstance(), nullptr);
 }
@@ -213,7 +213,7 @@ HWTEST_F(DebugLoggerTest, SetLogPath, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(DebugLoggerTest, SetLogTags, TestSize.Level1)
+HWTEST_F(DebugLoggerTest, SetLogTags, TestSize.Level2)
 {
     const std::string errorLogTag = "errtag";
     const std::string errorLogTags = "errtag,errtag,errtag";
@@ -255,7 +255,7 @@ HWTEST_F(DebugLoggerTest, SetLogTags, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(DebugLoggerTest, Disable, TestSize.Level1)
+HWTEST_F(DebugLoggerTest, Disable, TestSize.Level2)
 {
     HLOGD("log disabled");
     DebugLogger::GetInstance()->Disable(true);

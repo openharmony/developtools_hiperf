@@ -170,7 +170,7 @@ HWTEST_F(SubCommandReportTest, TestParseOption, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestDumpOptions, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestDumpOptions, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -208,7 +208,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -231,7 +231,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip_fail, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_gzip, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -276,7 +276,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i1, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_i2, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_i2, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -299,7 +299,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_i2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_diff, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_diff, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -325,7 +325,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_diff, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_Diff_Same, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_Diff_Same, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -351,7 +351,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_Diff_Same, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -401,7 +401,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort1, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort2, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort2, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -426,7 +426,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort3, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort3, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -451,7 +451,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort3, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort4, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort4, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -476,7 +476,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_sort4, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_symbol, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_symbol, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -526,7 +526,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit1, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -551,7 +551,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit1, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit2, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit2, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -576,7 +576,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit3, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit3, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -601,7 +601,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit3, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit4, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_limit4, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -651,7 +651,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_callstack, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_comms, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_comms, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -676,7 +676,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_comms, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -701,7 +701,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids1, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -726,7 +726,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids1, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids2, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids2, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -751,7 +751,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids3, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_pids3, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -801,7 +801,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids1, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -826,7 +826,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids1, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids2, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids2, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -851,7 +851,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids3, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids3, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -876,7 +876,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_tids3, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -901,7 +901,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos1, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -926,7 +926,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos1, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos2, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos2, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -950,7 +950,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_dsos2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -975,7 +975,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs1, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -999,7 +999,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_funcs1, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_json, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_json, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -1023,7 +1023,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_json, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_json1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_json1, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -1071,7 +1071,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_proto, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_proto1, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_proto1, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -1108,7 +1108,7 @@ HWTEST_F(SubCommandReportTest, TestLoadPerfData, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOutputReport, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOutputReport, TestSize.Level2)
 {
     EXPECT_EQ(Command::DispatchCommand("report -i " + RESOURCE_PATH + "report_test.data -o " +
                                        RESOURCE_PATH + "perfnew2.data"),
@@ -1254,7 +1254,7 @@ HWTEST_F(SubCommandReportTest, TestFpUnCompress, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, TestOnSubCommand_from_funcs_fail, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, TestOnSubCommand_from_funcs_fail, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -1296,7 +1296,7 @@ HWTEST_F(SubCommandReportTest, TestOnSubCommand_offcpu, TestSize.Level1)
  * @tc.desc: Test GetInstance
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandReportTest, GetInstance, TestSize.Level1)
+HWTEST_F(SubCommandReportTest, GetInstance, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();

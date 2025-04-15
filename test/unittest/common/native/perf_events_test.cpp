@@ -175,7 +175,7 @@ HWTEST_F(PerfEventsTest, GetSupportEvents, TestSize.Level1)
     std::string stringOut = stdoutRecord.Stop();
 }
 
-HWTEST_F(PerfEventsTest, GetTypeName, TestSize.Level1)
+HWTEST_F(PerfEventsTest, GetTypeName, TestSize.Level2)
 {
     ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
     StdoutRecord stdoutRecord;
@@ -247,7 +247,7 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     std::string stringOut = stdoutRecord.Stop();
 }
 
-HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level1)
+HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level0)
 {
     ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
     StdoutRecord stdoutRecord;
@@ -283,7 +283,7 @@ HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level1)
     std::string stringOut = stdoutRecord.Stop();
 }
 
-HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level1)
+HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level0)
 {
     ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
     StdoutRecord stdoutRecord;
@@ -328,7 +328,7 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level1)
     std::string stringOut = stdoutRecord.Stop();
 }
 
-HWTEST_F(PerfEventsTest, CreateUpdateTimeThread2, TestSize.Level1)
+HWTEST_F(PerfEventsTest, CreateUpdateTimeThread2, TestSize.Level0)
 {
     ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
     StdoutRecord stdoutRecord;
@@ -359,7 +359,7 @@ HWTEST_F(PerfEventsTest, CreateUpdateTimeThread2, TestSize.Level1)
     this_thread::sleep_for(1s);
 }
 
-HWTEST_F(PerfEventsTest, IsOutputTracking, TestSize.Level1)
+HWTEST_F(PerfEventsTest, IsOutputTracking, TestSize.Level2)
 {
     ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
     StdoutRecord stdoutRecord;
@@ -382,7 +382,7 @@ HWTEST_F(PerfEventsTest, SetBackTrack, TestSize.Level1)
     EXPECT_EQ(event.backtrack_, true);
 }
 
-HWTEST_F(PerfEventsTest, CalcBufferSizeLittleMemory, TestSize.Level1)
+HWTEST_F(PerfEventsTest, CalcBufferSizeLittleMemory, TestSize.Level2)
 {
     ScopeDebugLevel tempLogLevel(LEVEL_DEBUG);
     StdoutRecord stdoutRecord;
@@ -467,7 +467,7 @@ HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack1, TestSize.Level1)
     EXPECT_EQ(event.IsSkipRecordForBacktrack(sample), true);
 }
 
-HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack2, TestSize.Level1)
+HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack2, TestSize.Level2)
 {
     static constexpr size_t END_TIME = 2000u;
     static constexpr size_t SAMPLE_TIME = 1234u;
@@ -485,7 +485,7 @@ HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack2, TestSize.Level1)
     EXPECT_EQ(event.IsSkipRecordForBacktrack(sample), false);
 }
 
-HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack3, TestSize.Level1)
+HWTEST_F(PerfEventsTest, IsSkipRecordForBacktrack3, TestSize.Level2)
 {
     static constexpr size_t END_TIME = 1000u;
     static constexpr size_t SAMPLE_TIME = 1234u;
@@ -546,7 +546,7 @@ HWTEST_F(PerfEventsTest, SetConfig, TestSize.Level1)
     EXPECT_EQ(event.config2_, config2);
 }
 
-HWTEST_F(PerfEventsTest, SetConfig1, TestSize.Level1)
+HWTEST_F(PerfEventsTest, SetConfig1, TestSize.Level2)
 {
     constexpr uint64_t config = 0x700010003;
     PerfEvents event;

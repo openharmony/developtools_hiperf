@@ -62,7 +62,7 @@ void HiPerfSubcommandTest::TearDown()
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(HiPerfSubcommandTest, TestRegisterSubCommand, TestSize.Level1)
+HWTEST_F(HiPerfSubcommandTest, TestRegisterSubCommand, TestSize.Level0)
 {
     EXPECT_EQ(SubCommand::RegisterSubCommand("", std::make_unique<SubCommandTest>(TEST_CMD_1)),
               false);
@@ -155,7 +155,7 @@ HWTEST_F(HiPerfSubcommandTest, TestOnSubCommandOptionsDump, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(HiPerfSubcommandTest, TestOnPreSubCommand, TestSize.Level1)
+HWTEST_F(HiPerfSubcommandTest, TestOnPreSubCommand, TestSize.Level3)
 {
     std::vector<std::string> args;
     SubcommandObj subcomm;
@@ -170,7 +170,7 @@ HWTEST_F(HiPerfSubcommandTest, TestOnPreSubCommand, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(HiPerfSubcommandTest, TestClearSubCommands, TestSize.Level1)
+HWTEST_F(HiPerfSubcommandTest, TestClearSubCommands, TestSize.Level2)
 {
     SubCommand::ClearSubCommands();
     EXPECT_EQ(SubCommand::GetSubCommands().size(), 0u);

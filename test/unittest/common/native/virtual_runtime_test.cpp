@@ -270,7 +270,7 @@ void VirtualRuntimeTest::PrepareUserSymbol()
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualRuntimeTest, GetSymbol, TestSize.Level1)
+HWTEST_F(VirtualRuntimeTest, GetSymbol, TestSize.Level0)
 {
     DfxSymbol symbol;
     PrepareKernelSymbol();
@@ -342,7 +342,7 @@ HWTEST_F(VirtualRuntimeTest, UpdateFromPerfData, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
+HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level0)
 {
     // symbol
     auto &symbolsFile = runtime_->symbolsFiles_.emplace_back(
@@ -383,7 +383,7 @@ HWTEST_F(VirtualRuntimeTest, UnwindFromRecord, TestSize.Level1)
  * @tc.desc: Test update maps and symbols
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualRuntimeTest, Update, TestSize.Level1)
+HWTEST_F(VirtualRuntimeTest, Update, TestSize.Level2)
 {
     EXPECT_EQ(runtime_->IsKernelThread(0), false);
     runtime_->UpdateServiceSpaceMaps();
@@ -397,7 +397,7 @@ HWTEST_F(VirtualRuntimeTest, Update, TestSize.Level1)
  * @tc.desc: Test Clear Symbol Cache
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualRuntimeTest, ClearSymbolCache, TestSize.Level1)
+HWTEST_F(VirtualRuntimeTest, ClearSymbolCache, TestSize.Level2)
 {
     VirtualRuntime runtime;
     std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles = {};

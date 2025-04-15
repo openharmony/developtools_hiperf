@@ -231,7 +231,7 @@ void SubCommandStatTest::CheckGroupCoverage(const std::string &stringOut,
  * @tc.desc: -a
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_a, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_a, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -257,7 +257,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a, TestSize.Level1)
  * @tc.desc: -a
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_a1, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_a1, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -336,7 +336,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a3, TestSize.Level1)
  * @tc.desc: -a
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_a4, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_a4, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -361,7 +361,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_a4, TestSize.Level1)
  * @tc.desc: -c
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -421,7 +421,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c, TestSize.Level1)
  * @tc.desc: -c
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_c1, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_c1, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -533,7 +533,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c3, TestSize.Level1)
  * @tc.desc: -c
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_c4, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_c4, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -569,7 +569,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c4, TestSize.Level1)
  * @tc.desc: -c
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_c5, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_c5, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -605,7 +605,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_c5, TestSize.Level1)
  * @tc.desc: -d
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -647,7 +647,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d, TestSize.Level1)
  * @tc.desc: -p
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -681,7 +681,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p, TestSize.Level1)
  * @tc.desc: -p
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_p1, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p1, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -715,7 +715,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p1, TestSize.Level1)
  * @tc.desc: -p
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -749,7 +749,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p2, TestSize.Level1)
  * @tc.desc: --chkms
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -783,7 +783,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_ch, TestSize.Level1)
  * @tc.desc: aa
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_aa, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_aa, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -817,7 +817,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_aa, TestSize.Level1)
  * @tc.desc: -d
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_d1, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d1, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -842,7 +842,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d1, TestSize.Level1)
  * @tc.desc: -d
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_d2, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d2, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -877,7 +877,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d2, TestSize.Level1)
  * @tc.desc: -d
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_d3, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d3, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -912,7 +912,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d3, TestSize.Level1)
  * @tc.desc: -d
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -955,7 +955,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d4, TestSize.Level1)
  * @tc.desc: -d
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_d5, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d5, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -993,7 +993,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_d5, TestSize.Level1)
  * @tc.desc: -d
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_d6, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_d6, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1077,7 +1077,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i, TestSize.Level1)
  * @tc.desc: -i
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1121,7 +1121,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i1, TestSize.Level1)
  * @tc.desc: -i
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_i2, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_i2, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1156,7 +1156,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i2, TestSize.Level1)
  * @tc.desc: -i
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_i3, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_i3, TestSize.Level3)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1191,7 +1191,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i3, TestSize.Level1)
  * @tc.desc: -i
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1235,7 +1235,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_i4, TestSize.Level1)
  * @tc.desc: -e261
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_e, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_e, TestSize.Level0)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1317,7 +1317,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e1, TestSize.Level1)
  * @tc.desc: -e261
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1358,7 +1358,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e2, TestSize.Level1)
  * @tc.desc: -e261
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1399,7 +1399,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e3, TestSize.Level1)
  * @tc.desc: -e261
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_e4, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_e4, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1433,7 +1433,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_e4, TestSize.Level1)
  * @tc.desc: -g
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_g, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1527,7 +1527,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g1, TestSize.Level1)
  * @tc.desc: -g
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1573,7 +1573,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g2, TestSize.Level1)
  * @tc.desc: -g
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_g3, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_g3, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1609,7 +1609,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_g3, TestSize.Level1)
  * @tc.desc: -g u:k
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_g_uk, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1756,7 +1756,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t1, TestSize.Level1)
  * @tc.desc: -p -t
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t2, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t2, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -1788,7 +1788,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t2, TestSize.Level1)
  * @tc.desc: -p -t
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t3, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t3, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -1820,7 +1820,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t3, TestSize.Level1)
  * @tc.desc: -p -t
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1867,7 +1867,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_p_t4, TestSize.Level1)
  * @tc.desc: -p -t
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1913,7 +1913,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose, TestSize.Level1)
  * @tc.desc: -p -t
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_verbose1, TestSize.Level2)
 {
     int tid1 = 0;
     std::thread t1(SubCommandStatTest::TestCodeThread, std::ref(tid1));
@@ -1986,7 +1986,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_cmd, TestSize.Level1)
  * @tc.desc: --no-inherit
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_ni, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_ni, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     const std::string configName {"hw-cpu-cycles"};
@@ -2049,7 +2049,7 @@ HWTEST_F(SubCommandStatTest, TestParseOption, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestDumpOptions, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestDumpOptions, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -2127,7 +2127,7 @@ HWTEST_F(SubCommandStatTest, TestReport, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level2)
 {
     SubCommandStat cmdStat;
     std::vector<std::string> eventNames = {
@@ -2173,7 +2173,7 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level1)
  * @tc.desc: Test handle other config
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, HandleOtherConfig, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, HandleOtherConfig, TestSize.Level2)
 {
     PerfEvents::Summary summary(1, 1, 1, 1, 1);
     double comment = 0;
@@ -2203,7 +2203,7 @@ HWTEST_F(SubCommandStatTest, CheckOptionPidAndApp, TestSize.Level1)
  * @tc.desc: --restart
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_restart_fail, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_restart_fail, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -2224,7 +2224,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_restart_fail, TestSize.Level1)
  * @tc.desc: --app
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandStatTest, TestOnSubCommand_app_running, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_app_running, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();

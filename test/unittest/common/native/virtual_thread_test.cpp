@@ -148,7 +148,7 @@ int VirtualThreadTest::PhdrCallBack(struct dl_phdr_info *info, size_t size, void
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualThreadTest, ParseMap, TestSize.Level1)
+HWTEST_F(VirtualThreadTest, ParseMap, TestSize.Level2)
 {
     std::vector<std::unique_ptr<SymbolsFile>> files;
     VirtualThread thread(getpid(), files);
@@ -271,7 +271,7 @@ HWTEST_F(VirtualThreadTest, FindMapByAddr, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualThreadTest, FindMapByFileInfo, TestSize.Level1)
+HWTEST_F(VirtualThreadTest, FindMapByFileInfo, TestSize.Level0)
 {
     std::vector<std::unique_ptr<SymbolsFile>> files;
     VirtualThread thread(getpid(), files);
@@ -312,7 +312,7 @@ HWTEST_F(VirtualThreadTest, FindMapByFileInfo, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualThreadTest, FindSymbolsFileByMap, TestSize.Level1)
+HWTEST_F(VirtualThreadTest, FindSymbolsFileByMap, TestSize.Level0)
 {
     std::vector<std::unique_ptr<SymbolsFile>> files;
     SymbolFileStruct symbolFileStruct;
@@ -352,7 +352,7 @@ HWTEST_F(VirtualThreadTest, FindSymbolsFileByMap, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(VirtualThreadTest, ReadRoMemory, TestSize.Level1)
+HWTEST_F(VirtualThreadTest, ReadRoMemory, TestSize.Level2)
 {
     std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles;
     VirtualThread thread(getpid(), symbolsFiles);

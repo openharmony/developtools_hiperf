@@ -121,7 +121,7 @@ void SymbolsFileTest::PrintSymbols(const std::vector<DfxSymbol> &symbols) const
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, setSymbolsFilePath, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, setSymbolsFilePath, TestSize.Level2)
 {
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
     EXPECT_EQ(symbolsFile->setSymbolsFilePath(PATH_DATA_TEMP), true);
@@ -163,7 +163,7 @@ HWTEST_F(SymbolsFileTest, setSymbolsFilePathVectorSuccess, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, setSymbolsFilePathVectorFailed, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, setSymbolsFilePathVectorFailed, TestSize.Level3)
 {
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
     std::vector<std::string> symbolsSearchPaths;
@@ -228,7 +228,7 @@ bool TestLoadSymbols(SymbolsFileType symbolsFileType, const std::string &path)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, SymbolsFileDefaultVirtual, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, SymbolsFileDefaultVirtual, TestSize.Level2)
 {
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
     uint64_t value = 0;
@@ -244,7 +244,7 @@ HWTEST_F(SymbolsFileTest, SymbolsFileDefaultVirtual, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level0)
 {
     if (access("/sys/kernel/notes", F_OK) == 0) {
         // read from kernel runtime
@@ -334,7 +334,7 @@ HWTEST_F(SymbolsFileTest, LoadElfSymbols, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr, TestSize.Level0)
 {
     if (access("/sys/kernel/notes", F_OK) == 0) {
         auto symbols = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
@@ -422,7 +422,7 @@ HWTEST_F(SymbolsFileTest, GetSymbolWithVaddr2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, GetSymbolWithVaddrFullMatch, TestSize.Level2)
 {
     auto elfSymbols = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
     ASSERT_EQ(elfSymbols->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA), true);
@@ -619,7 +619,7 @@ HWTEST_F(SymbolsFileTest, FindSymbolFile, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, GetBuildId, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, GetBuildId, TestSize.Level2)
 {
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
     // empty elf
@@ -779,7 +779,7 @@ HWTEST_F(SymbolsFileTest, GetHDRSectionInfo, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, GetHDRSectionInfoStripped, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, GetHDRSectionInfoStripped, TestSize.Level2)
 {
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(
         SYMBOL_ELF_FILE, PATH_RESOURCE_TEST_DATA + TEST_FILE_ELF_STRIPPED_NOEFHDR);
@@ -883,7 +883,7 @@ HWTEST_F(SymbolsFileTest, LoadSymbolsFromSaved, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SymbolsFileTest, exportSymbolToFileFormatMatched, TestSize.Level1)
+HWTEST_F(SymbolsFileTest, exportSymbolToFileFormatMatched, TestSize.Level2)
 {
     for (int type = 0; type < SYMBOL_UNKNOW_FILE; type++) {
         auto symbolsFile = SymbolsFile::CreateSymbolsFile();

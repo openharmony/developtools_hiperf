@@ -99,7 +99,7 @@ std::unique_ptr<ReportJsonFile> ReportJsonFileTest::PrepairReportJson(
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, OutputJsonKey, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, OutputJsonKey, TestSize.Level2)
 {
     StdoutRecord output;
 
@@ -191,7 +191,7 @@ HWTEST_F(ReportJsonFileTest, OutputJsonPair, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, OutputJsonVectorList, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, OutputJsonVectorList, TestSize.Level2)
 {
     StdoutRecord output;
 
@@ -209,7 +209,7 @@ HWTEST_F(ReportJsonFileTest, OutputJsonVectorList, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, OutputJsonMapList, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, OutputJsonMapList, TestSize.Level2)
 {
     StdoutRecord output;
     std::map<int, int> map = {
@@ -238,7 +238,7 @@ HWTEST_F(ReportJsonFileTest, OutputJsonMapList, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, OutputJsonMap, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, OutputJsonMap, TestSize.Level0)
 {
     StdoutRecord output;
     std::map<int, int> map = {
@@ -286,7 +286,7 @@ HWTEST_F(ReportJsonFileTest, GetOrCreateMapItem, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, ReportFuncItem, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, ReportFuncItem, TestSize.Level2)
 {
     StdoutRecord output;
     ReportFuncItem func(1);
@@ -350,7 +350,7 @@ HWTEST_F(ReportJsonFileTest, ReportCallNodeItem, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, UpdateChildrenEventCount, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, UpdateChildrenEventCount, TestSize.Level2)
 {
     StdoutRecord output;
     /*
@@ -451,7 +451,7 @@ HWTEST_F(ReportJsonFileTest, ReportProcessItem, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, ReportConfigItem, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, ReportConfigItem, TestSize.Level2)
 {
     StdoutRecord output;
     ReportConfigItem config(1, "configname");
@@ -496,7 +496,7 @@ HWTEST_F(ReportJsonFileTest, UpdateReportSample, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, UpdateReportCallStack, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, UpdateReportCallStack, TestSize.Level0)
 {
     StdoutRecord output;
     VirtualRuntime virtualRuntime;
@@ -534,7 +534,7 @@ HWTEST_F(ReportJsonFileTest, UpdateReportCallStack, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, UpdateCallNodeEventCount, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, UpdateCallNodeEventCount, TestSize.Level2)
 {
     StdoutRecord output;
     VirtualRuntime virtualRuntime;
@@ -566,7 +566,7 @@ HWTEST_F(ReportJsonFileTest, UpdateCallNodeEventCount, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, ProcessSymbolsFiles, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, ProcessSymbolsFiles, TestSize.Level0)
 {
     VirtualRuntime virtualRuntime;
     std::unique_ptr<ReportJsonFile> json =
@@ -626,7 +626,7 @@ HWTEST_F(ReportJsonFileTest, GetFunctionID, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, GetLibID, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, GetLibID, TestSize.Level2)
 {
     StdoutRecord output;
     VirtualRuntime virtualRuntime;
@@ -651,7 +651,7 @@ HWTEST_F(ReportJsonFileTest, GetLibID, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, GetConfigIndex, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, GetConfigIndex, TestSize.Level2)
 {
     StdoutRecord output;
     VirtualRuntime virtualRuntime;
@@ -697,7 +697,7 @@ HWTEST_F(ReportJsonFileTest, GetConfigName, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportJsonFileTest, GetConfig, TestSize.Level1)
+HWTEST_F(ReportJsonFileTest, GetConfig, TestSize.Level2)
 {
     StdoutRecord output;
     VirtualRuntime virtualRuntime;

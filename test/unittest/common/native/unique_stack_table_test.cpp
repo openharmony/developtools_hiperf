@@ -58,7 +58,7 @@ void UniqueStackTableTest::TearDown()
  * @tc.desc: Test stack compress normal function
  * @tc.type: FUNC
  */
-HWTEST_F(UniqueStackTableTest, Test_Normal, TestSize.Level1)
+HWTEST_F(UniqueStackTableTest, Test_Normal, TestSize.Level0)
 {
     u64 baseips[] = {0x6bcc,
                     0x35A8,
@@ -103,7 +103,7 @@ HWTEST_F(UniqueStackTableTest, Test_Resize, TestSize.Level1)
     EXPECT_EQ(table->Resize(), false);
 }
 
-HWTEST_F(UniqueStackTableTest, Test_Oversize, TestSize.Level1)
+HWTEST_F(UniqueStackTableTest, Test_Oversize, TestSize.Level2)
 {
     uint32_t oversize = 128 * 1024 * 1024;
     std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(1, oversize);

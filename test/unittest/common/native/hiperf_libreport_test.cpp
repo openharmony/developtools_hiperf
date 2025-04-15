@@ -232,13 +232,13 @@ void HiperfLibReportTest::SetUp() {}
 
 void HiperfLibReportTest::TearDown() {}
 
-HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackNumber, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackNumber, TestSize.Level0)
 {
     const char *result = EchoLoopBack("123");
     EXPECT_EQ(result, "123");
 }
 
-HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackString, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackString, TestSize.Level0)
 {
     const char *result = EchoLoopBack("test");
     EXPECT_EQ(result, "test");
@@ -249,13 +249,13 @@ HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackStringNumber, TestSize.Level1)
     const char *result = EchoLoopBack("test123");
     EXPECT_EQ(result, "test123");
 }
-HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackEmpty, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackEmpty, TestSize.Level2)
 {
     const char *result = EchoLoopBack("");
     EXPECT_EQ(result, "");
 }
 
-HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackNull, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_EchoLoopBackNull, TestSize.Level2)
 {
     const char *result = EchoLoopBack(nullptr);
     EXPECT_EQ(result, nullptr);
@@ -268,7 +268,7 @@ HWTEST_F(HiperfLibReportTest, Test_SetDebug_Enable, TestSize.Level1)
     EXPECT_EQ(DebugLogger::logDisabled_, false);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_SetDebug_Disable, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_SetDebug_Disable, TestSize.Level2)
 {
     EXPECT_EQ(SetDebug(false), 0);
     EXPECT_EQ(DebugLogger::logDisabled_, true);
@@ -290,7 +290,7 @@ HWTEST_F(HiperfLibReportTest, Test_Report_Success, TestSize.Level1)
     DefaultReportContentCheck(content);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_Report_Source_Null, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_Report_Source_Null, TestSize.Level2)
 {
     unlink(REPORT_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
@@ -298,7 +298,7 @@ HWTEST_F(HiperfLibReportTest, Test_Report_Source_Null, TestSize.Level1)
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_Report_Target_Null, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_Report_Target_Null, TestSize.Level3)
 {
     unlink(REPORT_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
@@ -306,7 +306,7 @@ HWTEST_F(HiperfLibReportTest, Test_Report_Target_Null, TestSize.Level1)
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_Report_Both_Null, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_Report_Both_Null, TestSize.Level2)
 {
     unlink(REPORT_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
@@ -314,7 +314,7 @@ HWTEST_F(HiperfLibReportTest, Test_Report_Both_Null, TestSize.Level1)
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_Report_Parameter_Illegal, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_Report_Parameter_Illegal, TestSize.Level3)
 {
     unlink(REPORT_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
@@ -323,7 +323,7 @@ HWTEST_F(HiperfLibReportTest, Test_Report_Parameter_Illegal, TestSize.Level1)
     EXPECT_NE(access(ILLEGAL_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_Report_Parameter_Empty, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_Report_Parameter_Empty, TestSize.Level2)
 {
     unlink(REPORT_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_OUTPUT_PATH, F_OK), 0);
@@ -332,14 +332,14 @@ HWTEST_F(HiperfLibReportTest, Test_Report_Parameter_Empty, TestSize.Level1)
     EXPECT_NE(access(ILLEGAL_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_Dump_IllegalPath, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_Dump_IllegalPath, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     EXPECT_NE(::Dump(ILLEGAL_PATH), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportJson_Success, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportJson_Success, TestSize.Level0)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
@@ -351,7 +351,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportJson_Success, TestSize.Level1)
     DefaultJsonContentCheck(content);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportJson_ErrorFormat, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportJson_ErrorFormat, TestSize.Level3)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
@@ -366,7 +366,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportJson_ErrorFormat, TestSize.Level1)
     }
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportJson_IllegalPath, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportJson_IllegalPath, TestSize.Level3)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
@@ -394,28 +394,28 @@ HWTEST_F(HiperfLibReportTest, Test_ReportJson_Empty, TestSize.Level1)
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_Success, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_Success, TestSize.Level0)
 {
     const char *result = ReportGetSymbolFiles(PERF_DATA_INPUT_PATH);
     ASSERT_NE(result, nullptr);
     DefaultSymbolsBuildIdContentCheck(result);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_ErrorFormat, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_ErrorFormat, TestSize.Level3)
 {
     const char *result = ReportGetSymbolFiles(PERF_DATA_ERROR_FORMAT_INPUT_PATH);
     ASSERT_NE(result, nullptr);
     EXPECT_EQ(result[0], '\0');
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_IllegalPath, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_IllegalPath, TestSize.Level3)
 {
     const char *result = ReportGetSymbolFiles(ILLEGAL_PATH);
     ASSERT_NE(result, nullptr);
     EXPECT_EQ(result[0], '\0');
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_Nullptr, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportGetSymbolFiles_Nullptr, TestSize.Level2)
 {
     const char *result = ReportGetSymbolFiles(nullptr);
     ASSERT_NE(result, nullptr);
@@ -450,14 +450,14 @@ HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_Empty, TestSize.Level1)
     EXPECT_STREQ(result, "");
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_Nullptr, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_Nullptr, TestSize.Level2)
 {
     const char *result = ReportGetBuildId(TEST_ELF_BROKEN);
     ASSERT_NE(result, nullptr);
     EXPECT_STREQ(result, "");
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level3)
 {
     const char *result = ReportGetBuildId(ILLEGAL_PATH);
     ASSERT_NE(result, nullptr);
@@ -478,7 +478,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
     UnwindJsonContentCheck(content, true);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_NoSymbols_Failed, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_NoSymbols_Failed, TestSize.Level3)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
@@ -492,7 +492,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_NoSymbols_Failed, TestSize.L
     UnwindJsonContentCheck(content, false);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_ErrorFormat, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_ErrorFormat, TestSize.Level2)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
@@ -509,7 +509,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_ErrorFormat, TestSize.Level1
     }
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_IllegalPath, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_IllegalPath, TestSize.Level3)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
@@ -519,7 +519,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_IllegalPath, TestSize.Level1
     EXPECT_NE(access(ILLEGAL_PATH, F_OK), 0);
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Nullptr, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Nullptr, TestSize.Level2)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);

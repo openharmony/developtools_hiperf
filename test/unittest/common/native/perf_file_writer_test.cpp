@@ -66,7 +66,7 @@ void PerfFileWriterTest::TestEventDescInit(std::vector<AttrWithId> &eventDesc)
     }
 }
 
-HWTEST_F(PerfFileWriterTest, TestFileWriter_Normal, TestSize.Level1)
+HWTEST_F(PerfFileWriterTest, TestFileWriter_Normal, TestSize.Level0)
 {
     std::string filename = "./TestFileWriter_Normal";
     PerfFileWriter fileWriter;
@@ -137,7 +137,7 @@ HWTEST_F(PerfFileWriterTest, TestFileWriter_Compress, TestSize.Level1)
     ASSERT_TRUE((access(filename.c_str(), F_OK) != 0));
 }
 
-HWTEST_F(PerfFileWriterTest, TestFileWriter_AuxTraceInfo, TestSize.Level1)
+HWTEST_F(PerfFileWriterTest, TestFileWriter_AuxTraceInfo, TestSize.Level2)
 {
     std::string filename = "./TestFileWriter_AuxTraceInfo";
     PerfFileWriter fileWriter;

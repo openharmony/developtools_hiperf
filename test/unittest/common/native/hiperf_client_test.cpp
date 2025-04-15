@@ -56,7 +56,7 @@ void HiperfClientTest::TearDown()
  * @tc.desc: record
  * @tc.type: FUNC
  */
-HWTEST_F(HiperfClientTest, NoPara, TestSize.Level1)
+HWTEST_F(HiperfClientTest, NoPara, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -97,7 +97,7 @@ HWTEST_F(HiperfClientTest, OutDir, TestSize.Level1)
     stdoutRecord.Stop();
 }
 
-HWTEST_F(HiperfClientTest, DebugMuchMode, TestSize.Level1)
+HWTEST_F(HiperfClientTest, DebugMuchMode, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -138,7 +138,7 @@ HWTEST_F(HiperfClientTest, EnableHilog, TestSize.Level1)
     stdoutRecord.Stop();
 }
 
-HWTEST_F(HiperfClientTest, Prepare, TestSize.Level1)
+HWTEST_F(HiperfClientTest, Prepare, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -202,7 +202,7 @@ void HiperfClientTest::TestCaseOption(const HiperfClient::RecordOption &opt)
     stdoutRecord.Stop();
 }
 
-HWTEST_F(HiperfClientTest, SetTargetSystemWide, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetTargetSystemWide, TestSize.Level0)
 {
     HiperfClient::RecordOption opt;
     opt.SetTargetSystemWide(true);
@@ -210,7 +210,7 @@ HWTEST_F(HiperfClientTest, SetTargetSystemWide, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetCompressData, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetCompressData, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -230,7 +230,7 @@ HWTEST_F(HiperfClientTest, SetSelectCpus, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetTimeStopSec, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetTimeStopSec, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -242,7 +242,7 @@ HWTEST_F(HiperfClientTest, SetTimeStopSec, TestSize.Level1)
     ASSERT_TRUE(myHiperf.Start(opt));
 }
 
-HWTEST_F(HiperfClientTest, SetFrequency, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetFrequency, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -273,7 +273,7 @@ HWTEST_F(HiperfClientTest, SetSelectEvents, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetSelectGroups, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetSelectGroups, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -283,7 +283,7 @@ HWTEST_F(HiperfClientTest, SetSelectGroups, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetNoInherit, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetNoInherit, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -293,7 +293,7 @@ HWTEST_F(HiperfClientTest, SetNoInherit, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetSelectPids, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetSelectPids, TestSize.Level0)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -302,7 +302,7 @@ HWTEST_F(HiperfClientTest, SetSelectPids, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigs, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigs, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -323,7 +323,7 @@ HWTEST_F(HiperfClientTest, SetSelectTids, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetExcludePerf, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetExcludePerf, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     opt.SetTargetSystemWide(true);
@@ -372,7 +372,7 @@ HWTEST_F(HiperfClientTest, SetDelayUnwind, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetDisableUnwind, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetDisableUnwind, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -392,7 +392,7 @@ HWTEST_F(HiperfClientTest, SetDisableCallstackMerge, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetOutputFilename, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetOutputFilename, TestSize.Level0)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -412,7 +412,7 @@ HWTEST_F(HiperfClientTest, SetSymbolDir, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -422,7 +422,7 @@ HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level0)
 {
     HiperfClient::RecordOption opt;
     std::string testProcesses = "com.ohos.sceneboard";
@@ -434,7 +434,7 @@ HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetClockId, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetClockId, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -464,7 +464,7 @@ HWTEST_F(HiperfClientTest, SetReport, TestSize.Level1)
     TestCaseOption(opt);
 }
 
-HWTEST_F(HiperfClientTest, SetVecBranchSampleTypes, TestSize.Level1)
+HWTEST_F(HiperfClientTest, SetVecBranchSampleTypes, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};

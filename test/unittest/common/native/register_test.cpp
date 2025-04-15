@@ -43,7 +43,7 @@ void RegisterTest::TearDown() {}
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(RegisterTest, GetSupportedRegMask, TestSize.Level1)
+HWTEST_F(RegisterTest, GetSupportedRegMask, TestSize.Level0)
 {
     EXPECT_NE(GetSupportedRegMask(ArchType::ARCH_X86), GetSupportedRegMask(ArchType::ARCH_X86_64));
     EXPECT_NE(GetSupportedRegMask(ArchType::ARCH_ARM), GetSupportedRegMask(ArchType::ARCH_ARM64));
@@ -121,7 +121,7 @@ HWTEST_F(RegisterTest, RegisterGetValue, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(RegisterTest, RegisterGetSPValue, TestSize.Level1)
+HWTEST_F(RegisterTest, RegisterGetSPValue, TestSize.Level2)
 {
     uint64_t value = 0;
     uint64_t value2 = 0;
@@ -140,7 +140,7 @@ HWTEST_F(RegisterTest, RegisterGetSPValue, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(RegisterTest, RegisterGetIPValue, TestSize.Level1)
+HWTEST_F(RegisterTest, RegisterGetIPValue, TestSize.Level2)
 {
     uint64_t value = 0;
     uint64_t value2 = 0;
@@ -171,7 +171,7 @@ HWTEST_F(RegisterTest, RegisterGetName, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(RegisterTest, GetArchName, TestSize.Level1)
+HWTEST_F(RegisterTest, GetArchName, TestSize.Level2)
 {
     RegisterGetSP(ArchType::ARCH_ARM);
     EXPECT_STREQ(GetArchName(ArchType::ARCH_ARM).c_str(), "ARM");
