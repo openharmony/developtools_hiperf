@@ -55,7 +55,7 @@ void PerfFileFormatTest::TearDown() {}
  * @tc.desc: push several records of all type into the buffer
  * @tc.type: FUNC
  */
-HWTEST_F(PerfFileFormatTest, GetFeatureName, TestSize.Level1)
+HWTEST_F(PerfFileFormatTest, GetFeatureName, TestSize.Level0)
 {
     const char *unknownFeature = "unknown_feature";
 
@@ -122,7 +122,7 @@ void PerfFileFormatTest::CompareVecSymFile(const std::vector<SymbolFileStruct> &
     }
 }
 
-HWTEST_F(PerfFileFormatTest, PerfFileSectionSymbolsFiles, TestSize.Level1)
+HWTEST_F(PerfFileFormatTest, PerfFileSectionSymbolsFiles, TestSize.Level0)
 {
     std::vector<SymbolFileStruct> testVecSymFile;
     char buff[BIGK] = {0};
@@ -248,7 +248,7 @@ HWTEST_F(PerfFileFormatTest, PerfFileSectionEventDesc, TestSize.Level1)
     ASSERT_EQ(withBuff.featureId_, FEATURE::EVENT_DESC);
 }
 
-HWTEST_F(PerfFileFormatTest, PerfFileSectionEventDesc2, TestSize.Level1)
+HWTEST_F(PerfFileFormatTest, PerfFileSectionEventDesc2, TestSize.Level2)
 {
     pid_t pid = fork();
     ASSERT_NE(pid, -1);

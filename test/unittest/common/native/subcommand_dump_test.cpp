@@ -120,22 +120,22 @@ HWTEST_F(SubCommandDumpTest, DumpInputFilename1, TestSize.Level1)
     TestDumpCommand("/data/test/resource/testdata/perf.data ", false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpInputFilename2, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpInputFilename2, TestSize.Level2)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data ");
 }
 
-HWTEST_F(SubCommandDumpTest, DumpInputFilenamErr, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpInputFilenamErr, TestSize.Level3)
 {
     TestDumpCommand("-i whatfile ", false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpHeaderAttrs, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpHeaderAttrs, TestSize.Level0)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data --head ");
 }
 
-HWTEST_F(SubCommandDumpTest, DumpData, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpData, TestSize.Level2)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data -d ");
 }
@@ -145,22 +145,22 @@ HWTEST_F(SubCommandDumpTest, DumpFeatures, TestSize.Level1)
     TestDumpCommand("-i /data/test/resource/testdata/perf.data -f ");
 }
 
-HWTEST_F(SubCommandDumpTest, DumpSympath, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpSympath, TestSize.Level2)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data --sympath ./ ");
 }
 
-HWTEST_F(SubCommandDumpTest, DumpSympathErr, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpSympathErr, TestSize.Level2)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data --sympath where ", false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpExportUserdata0, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpExportUserdata0, TestSize.Level2)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data --export 0");
 }
 
-HWTEST_F(SubCommandDumpTest, DumpExportUserdata1, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpExportUserdata1, TestSize.Level2)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data --export 1");
 }
@@ -170,33 +170,33 @@ HWTEST_F(SubCommandDumpTest, DumpElffile, TestSize.Level1)
     TestDumpCommand("--elf /data/test/resource/testdata/elf_test ");
 }
 
-HWTEST_F(SubCommandDumpTest, DumpElffileErr, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpElffileErr, TestSize.Level3)
 {
     TestDumpCommand("--elf whatfile ", false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpInputElfConflict, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpInputElfConflict, TestSize.Level3)
 {
     TestDumpCommand("perf.data --elf elffile ", false);
 }
 
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
-HWTEST_F(SubCommandDumpTest, DumpProtofile, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpProtofile, TestSize.Level0)
 {
     TestDumpCommand("--proto /data/test/resource/testdata/proto_test ");
 }
 
-HWTEST_F(SubCommandDumpTest, DumpProtofileErr, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpProtofileErr, TestSize.Level3)
 {
     TestDumpCommand("--proto whatfile ", false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpInputProtoConflict, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpInputProtoConflict, TestSize.Level2)
 {
     TestDumpCommand("perf.data --proto ptotofile ", false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpElfProtoConflict, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpElfProtoConflict, TestSize.Level3)
 {
     TestDumpCommand("--elf elffile --proto ptotofile ", false);
 }
@@ -213,7 +213,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackTable, TestSize.Level1)
     EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackid, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackid, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -224,7 +224,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackid, TestSize.Level1)
     EXPECT_EQ(stringOut.find("stackid") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableNums, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableNums, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -235,7 +235,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableNums, TestSize.Level1)
     EXPECT_EQ(stringOut.find("TableNums") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfNumNodes, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfNumNodes, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -246,7 +246,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfNumNodes, TestSize.Level1)
     EXPECT_EQ(stringOut.find("numNodes") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackTableContent, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackTableContent, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -257,7 +257,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfStackTableContent, TestSize.Level1
     EXPECT_EQ(stringOut.find("hiperf_stack_table content") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableid, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableid, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -268,7 +268,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableid, TestSize.Level1)
     EXPECT_EQ(stringOut.find("tableid") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableSize, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableSize, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -279,7 +279,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfTableSize, TestSize.Level1)
     EXPECT_EQ(stringOut.find("tableSize") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelUpperBoundary, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelUpperBoundary, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -290,7 +290,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelUpperBoundary, TestSize.Leve
     EXPECT_EQ(stringOut.find(kernelUpperBoundary) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelLowerBoundary, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelLowerBoundary, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -301,7 +301,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelLowerBoundary, TestSize.Leve
     EXPECT_EQ(stringOut.find(kernelLowerBoundary) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelIp, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelIp, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -312,7 +312,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfKernelIp, TestSize.Level1)
     EXPECT_EQ(stringOut.find(kernelIp) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfUerIpFixZero, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfUerIpFixZero, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -334,7 +334,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressDwarfUserIp, TestSize.Level1)
     EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressDwarfCallchain, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressDwarfCallchain, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -367,7 +367,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpStackTable, TestSize.Level1)
     EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpStackid, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpStackid, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -378,7 +378,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpStackid, TestSize.Level1)
     EXPECT_EQ(stringOut.find("stackid") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpTableNums, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpTableNums, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -389,7 +389,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpTableNums, TestSize.Level1)
     EXPECT_EQ(stringOut.find("TableNums") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpNumNodes, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpNumNodes, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -400,7 +400,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpNumNodes, TestSize.Level1)
     EXPECT_EQ(stringOut.find("numNodes") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpStackTableContent, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpStackTableContent, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -411,7 +411,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpStackTableContent, TestSize.Level1)
     EXPECT_EQ(stringOut.find("hiperf_stack_table content") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpTableid, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpTableid, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -422,7 +422,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpTableid, TestSize.Level1)
     EXPECT_EQ(stringOut.find("tableid") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpTableSize, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpTableSize, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -433,7 +433,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpTableSize, TestSize.Level1)
     EXPECT_EQ(stringOut.find("tableSize") != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelUpperBoundary, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelUpperBoundary, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -444,7 +444,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelUpperBoundary, TestSize.Level1)
     EXPECT_EQ(stringOut.find(kernelUpperBoundary) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelLowerBoundary, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelLowerBoundary, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -455,7 +455,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelLowerBoundary, TestSize.Level1)
     EXPECT_EQ(stringOut.find(kernelLowerBoundary) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelIp, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelIp, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -466,7 +466,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpKernelIp, TestSize.Level1)
     EXPECT_EQ(stringOut.find(kernelIp) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpUerIpFixZero, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpUerIpFixZero, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -477,7 +477,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpUerIpFixZero, TestSize.Level1)
     EXPECT_EQ(stringOut.find(userIpFixZero) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpUserIp, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpUserIp, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -488,7 +488,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpUserIp, TestSize.Level1)
     EXPECT_EQ(stringOut.find(userIp) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpCallchain, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpCallchain, TestSize.Level3)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -499,7 +499,7 @@ HWTEST_F(SubCommandDumpTest, DumpCompressFpCallchain, TestSize.Level1)
     EXPECT_EQ(stringOut.find(callchain) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpCompressFpSymbol, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpCompressFpSymbol, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -521,7 +521,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackTable, TestSize.Level1)
     EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackid, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackid, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -532,7 +532,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackid, TestSize.Level1)
     EXPECT_EQ(stringOut.find("stackid") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableNums, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableNums, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -543,7 +543,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableNums, TestSize.Level1)
     EXPECT_EQ(stringOut.find("TableNums") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfNumNodes, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfNumNodes, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -554,7 +554,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfNumNodes, TestSize.Level1)
     EXPECT_EQ(stringOut.find("numNodes") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackTableContent, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackTableContent, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -565,7 +565,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfStackTableContent, TestSize.Leve
     EXPECT_EQ(stringOut.find("hiperf_stack_table content") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableid, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableid, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -576,7 +576,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableid, TestSize.Level1)
     EXPECT_EQ(stringOut.find("tableid") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableSize, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfTableSize, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -664,7 +664,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressDwarfSymbol, TestSize.Level1)
     EXPECT_EQ(stringOut.find(symbol) != std::string::npos, true);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackTable, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackTable, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -675,7 +675,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackTable, TestSize.Level1)
     EXPECT_EQ(stringOut.find("hiperf_stack_table") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackid, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackid, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
@@ -686,7 +686,7 @@ HWTEST_F(SubCommandDumpTest, DumpUncompressFpStackid, TestSize.Level1)
     EXPECT_EQ(stringOut.find("stackid") != std::string::npos, false);
 }
 
-HWTEST_F(SubCommandDumpTest, DumpUncompressFpTableNums, TestSize.Level1)
+HWTEST_F(SubCommandDumpTest, DumpUncompressFpTableNums, TestSize.Level2)
 {
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();

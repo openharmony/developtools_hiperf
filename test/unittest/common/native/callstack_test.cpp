@@ -48,7 +48,7 @@ void CallStackTest::TearDown() {}
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackEmpty, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackEmpty, TestSize.Level2)
 {
     /*
                 3    2    1
@@ -76,7 +76,7 @@ HWTEST_F(CallStackTest, ExpendCallStackEmpty, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackC, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackC, TestSize.Level0)
 {
     /*
                 3    2    1
@@ -137,7 +137,7 @@ HWTEST_F(CallStackTest, ExpendCallStackBC, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackABC, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackABC, TestSize.Level0)
 {
     /*
                 3    2    1
@@ -200,7 +200,7 @@ HWTEST_F(CallStackTest, ExpendCallStackAB, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackA, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackA, TestSize.Level2)
 {
     /*
                 3    2    1
@@ -230,7 +230,7 @@ HWTEST_F(CallStackTest, ExpendCallStackA, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackB, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackB, TestSize.Level2)
 {
     /*
                 3    2    1
@@ -264,7 +264,7 @@ HWTEST_F(CallStackTest, ExpendCallStackB, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackB2, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackB2, TestSize.Level2)
 {
     /*
                 3    2    1
@@ -298,7 +298,7 @@ HWTEST_F(CallStackTest, ExpendCallStackB2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackB0, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackB0, TestSize.Level0)
 {
     /*
                 3    2    1
@@ -363,7 +363,7 @@ HWTEST_F(CallStackTest, ExpendCallStackBC2, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackABCDE, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackABCDE, TestSize.Level0)
 {
     /*
         0. A -> B -> C -> E -> F
@@ -412,7 +412,7 @@ HWTEST_F(CallStackTest, ExpendCallStackABCDE, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackFailure, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackFailure, TestSize.Level3)
 {
     /*
         0. A -> B -> C -> E -> F
@@ -443,7 +443,7 @@ HWTEST_F(CallStackTest, ExpendCallStackFailure, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackTwoChance, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackTwoChance, TestSize.Level0)
 {
     /*
         0. A -> B -> C -> E -> F
@@ -498,7 +498,7 @@ HWTEST_F(CallStackTest, ExpendCallStackFullCache, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackSmall, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackSmall, TestSize.Level2)
 {
     CallStack callStack;
     std::vector<DfxFrame> stack0 = {};
@@ -515,7 +515,7 @@ HWTEST_F(CallStackTest, ExpendCallStackSmall, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ExpendCallStackLimit, TestSize.Level1)
+HWTEST_F(CallStackTest, ExpendCallStackLimit, TestSize.Level2)
 {
     /*
                 3    2    1    0
@@ -644,7 +644,7 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CallStackTest, ClearCache, TestSize.Level1)
+HWTEST_F(CallStackTest, ClearCache, TestSize.Level2)
 {
     uint n = 0;
     CallStack callStack;

@@ -146,7 +146,7 @@ HWTEST_F(DwarfTest, GetEnd, TestSize.Level1)
     }
 }
 
-HWTEST_F(DwarfTest, GetData, TestSize.Level1)
+HWTEST_F(DwarfTest, GetData, TestSize.Level0)
 {
     for (std::size_t i = 0; i < ehas.size(); ++i) {
         for (std::size_t j = 0; j < num; ++j) {
@@ -165,7 +165,7 @@ HWTEST_F(DwarfTest, GetData, TestSize.Level1)
     }
 }
 
-HWTEST_F(DwarfTest, GetSize, TestSize.Level1)
+HWTEST_F(DwarfTest, GetSize, TestSize.Level2)
 {
     for (std::size_t i = 0; i < ehas.size(); ++i) {
         for (std::size_t j = 0; j < num; ++j) {
@@ -190,7 +190,7 @@ HWTEST_F(DwarfTest, ToString, TestSize.Level1)
     }
 }
 
-HWTEST_F(DwarfTest, IsOmit, TestSize.Level1)
+HWTEST_F(DwarfTest, IsOmit, TestSize.Level2)
 {
     for (std::size_t i = 0; i < ehas.size(); ++i) {
         for (std::size_t j = 0; j < num; ++j) {

@@ -240,7 +240,7 @@ void CpuUsageTest::TestCpuUsage(const std::string &option, unsigned int expect, 
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_SYSTEM, TestSize.Level0)
 {
     TestCpuUsage("-a -f 100 -s fp -d 10", F100_FP_CPU_LIMIT_SYSTEM, false);
 }
@@ -260,7 +260,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_SYSTEM, TestSize.Level2)
 {
     TestCpuUsage("-a -f 1000 -s fp -d 10", F1000_FP_CPU_LIMIT_SYSTEM, false);
 }
@@ -270,7 +270,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_SYSTEM, TestSize.Level2)
 {
     TestCpuUsage("-a -f 2000 -s fp -d 10", F2000_FP_CPU_LIMIT_SYSTEM, false);
 }
@@ -280,7 +280,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_SYSTEM, TestSize.Level0)
 {
     TestCpuUsage("-a -f 4000 -s fp -d 10", F4000_FP_CPU_LIMIT_SYSTEM, false);
 }
@@ -290,7 +290,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_SYSTEM, TestSize.Level3)
 {
     TestCpuUsage("-a -f 8000 -s fp -d 10", F8000_FP_CPU_LIMIT_SYSTEM, false);
 }
@@ -300,7 +300,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_SYSTEM, TestSize.Level0)
 {
     TestCpuUsage("-a -f 100 -s dwarf -d 10", F100_DWARF_CPU_LIMIT_SYSTEM, false);
 }
@@ -320,7 +320,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_SYSTEM, TestSize.Level2)
 {
     TestCpuUsage("-a -f 1000 -s dwarf -d 10", F1000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
@@ -330,7 +330,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_SYSTEM, TestSize.Level2)
 {
     TestCpuUsage("-a -f 2000 -s dwarf -d 10", F2000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
@@ -340,7 +340,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_SYSTEM, TestSize.Level0)
 {
     TestCpuUsage("-a -f 4000 -s dwarf -d 10", F4000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
@@ -350,7 +350,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record system wide cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_SYSTEM, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_SYSTEM, TestSize.Level3)
 {
     TestCpuUsage("-a -f 8000 -s dwarf -d 10", F8000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
@@ -360,7 +360,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_SYSTEM, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_PROCESS, TestSize.Level0)
 {
     TestCpuUsage("-f 100 -s fp -d 10", F100_FP_CPU_LIMIT_PROCESS, true);
 }
@@ -380,7 +380,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_PROCESS, TestSize.Level2)
 {
     TestCpuUsage("-f 1000 -s fp -d 10", F1000_FP_CPU_LIMIT_PROCESS, true);
 }
@@ -390,7 +390,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_PROCESS, TestSize.Level2)
 {
     TestCpuUsage("-f 2000 -s fp -d 10", F2000_FP_CPU_LIMIT_PROCESS, true);
 }
@@ -400,7 +400,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_PROCESS, TestSize.Level0)
 {
     TestCpuUsage("-f 4000 -s fp -d 10", F4000_FP_CPU_LIMIT_PROCESS, true);
 }
@@ -410,7 +410,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_PROCESS, TestSize.Level3)
 {
     TestCpuUsage("-f 8000 -s fp -d 10", F8000_FP_CPU_LIMIT_PROCESS, true);
 }
@@ -420,7 +420,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_PROCESS, TestSize.Level0)
 {
     TestCpuUsage("-f 100 -s dwarf -d 10", F100_DWARF_CPU_LIMIT_PROCESS, true);
 }
@@ -440,7 +440,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_PROCESS, TestSize.Level2)
 {
     TestCpuUsage("-f 1000 -s dwarf -d 10", F1000_DWARF_CPU_LIMIT_PROCESS, true);
 }
@@ -450,7 +450,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_PROCESS, TestSize.Level2)
 {
     TestCpuUsage("-f 2000 -s dwarf -d 10", F2000_DWARF_CPU_LIMIT_PROCESS, true);
 }
@@ -460,7 +460,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_PROCESS, TestSize.Level0)
 {
     TestCpuUsage("-f 4000 -s dwarf -d 10", F4000_DWARF_CPU_LIMIT_PROCESS, true);
 }
@@ -470,7 +470,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_PROCESS, TestSize.Level1)
  * @tc.desc: test hiperf record one process cpu usage within required limit
  * @tc.type: FUNC
  */
-HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_PROCESS, TestSize.Level1)
+HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_PROCESS, TestSize.Level3)
 {
     TestCpuUsage("-f 8000 -s dwarf -d 10", F8000_DWARF_CPU_LIMIT_PROCESS, true);
 }

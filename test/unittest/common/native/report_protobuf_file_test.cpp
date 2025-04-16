@@ -72,7 +72,7 @@ void ReportProtobufFileTest::TearDown() {}
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportProtobufFileTest, Create, TestSize.Level1)
+HWTEST_F(ReportProtobufFileTest, Create, TestSize.Level2)
 {
     std::string fileName = "perf.proto";
     ASSERT_EQ(protobufOutputFileWriter_->Create(fileName), true);
@@ -103,7 +103,7 @@ HWTEST_F(ReportProtobufFileTest, Close, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportProtobufFileTest, ProcessRecord, TestSize.Level1)
+HWTEST_F(ReportProtobufFileTest, ProcessRecord, TestSize.Level0)
 {
     std::string fileName = "perf.proto";
     class ReportProtobufFileWriterMock : public ReportProtobufFileWriter {
@@ -144,7 +144,7 @@ HWTEST_F(ReportProtobufFileTest, ProcessRecordPerfRecordLost, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportProtobufFileTest, ProcessRecordPerfRecordComm, TestSize.Level1)
+HWTEST_F(ReportProtobufFileTest, ProcessRecordPerfRecordComm, TestSize.Level2)
 {
     int expectRecord = 0;
     std::string fileName = "perf.proto";
@@ -208,7 +208,7 @@ HWTEST_F(ReportProtobufFileTest, BeforeClose, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportProtobufFileTest, ProcessSymbolsFiles, TestSize.Level1)
+HWTEST_F(ReportProtobufFileTest, ProcessSymbolsFiles, TestSize.Level0)
 {
     unsigned int expectRecord = 0;
     std::string fileName = "perf.proto";
@@ -247,7 +247,7 @@ HWTEST_F(ReportProtobufFileTest, ProcessSymbolsFiles, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportProtobufFileTest, ProcessReportInfo, TestSize.Level1)
+HWTEST_F(ReportProtobufFileTest, ProcessReportInfo, TestSize.Level2)
 {
     int expectRecord = 0;
     std::string fileName = "perf.proto";

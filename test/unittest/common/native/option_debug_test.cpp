@@ -134,7 +134,7 @@ HWTEST_F(OptionDebugTest, verbose, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, much, TestSize.Level1)
+HWTEST_F(OptionDebugTest, much, TestSize.Level0)
 {
     LogLevelTest({"--much", TEST_CMD_NOTHING}, LEVEL_MUCH);
 }
@@ -144,7 +144,7 @@ HWTEST_F(OptionDebugTest, much, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, undebug, TestSize.Level1)
+HWTEST_F(OptionDebugTest, undebug, TestSize.Level2)
 {
     LogLevelTest({"--debug"}, LEVEL_DEBUG, false);
 }
@@ -154,7 +154,7 @@ HWTEST_F(OptionDebugTest, undebug, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, unverbose, TestSize.Level1)
+HWTEST_F(OptionDebugTest, unverbose, TestSize.Level2)
 {
     LogLevelTest({"--verbose"}, LEVEL_VERBOSE, false);
 }
@@ -164,7 +164,7 @@ HWTEST_F(OptionDebugTest, unverbose, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, unmuch, TestSize.Level1)
+HWTEST_F(OptionDebugTest, unmuch, TestSize.Level2)
 {
     LogLevelTest({"--much"}, LEVEL_MUCH, false);
 }
@@ -194,7 +194,7 @@ HWTEST_F(OptionDebugTest, mixlog, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, logpath, TestSize.Level1)
+HWTEST_F(OptionDebugTest, logpath, TestSize.Level2)
 {
     EXPECT_EQ(Command::DispatchCommands({"--logpath", "./log.temp.txt", TEST_CMD_NOTHING}), true);
     EXPECT_EQ(Command::DispatchCommands({"--logpath", DEFAULT_LOG_PATH, TEST_CMD_NOTHING}), true);
@@ -205,7 +205,7 @@ HWTEST_F(OptionDebugTest, logpath, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, unlogpath, TestSize.Level1)
+HWTEST_F(OptionDebugTest, unlogpath, TestSize.Level3)
 {
     EXPECT_EQ(Command::DispatchCommands({"--logpath"}), false);
 }
@@ -226,7 +226,7 @@ HWTEST_F(OptionDebugTest, logtag, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, unlogtag, TestSize.Level1)
+HWTEST_F(OptionDebugTest, unlogtag, TestSize.Level3)
 {
     LogLevelTest({"--logtag"}, LEVEL_MUCH, false);
 }
@@ -236,7 +236,7 @@ HWTEST_F(OptionDebugTest, unlogtag, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, logDisabled, TestSize.Level1)
+HWTEST_F(OptionDebugTest, logDisabled, TestSize.Level2)
 {
     // no log will save in log file.
     LogLevelTest({"--nodebug", TEST_CMD_NOTHING}, LEVEL_FATAL);
@@ -248,7 +248,7 @@ HWTEST_F(OptionDebugTest, logDisabled, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionDebugTest, unlogDisabled, TestSize.Level1)
+HWTEST_F(OptionDebugTest, unlogDisabled, TestSize.Level2)
 {
     // no log will save in log file.
     LogLevelTest({"--nodebug"}, LEVEL_FATAL, false);

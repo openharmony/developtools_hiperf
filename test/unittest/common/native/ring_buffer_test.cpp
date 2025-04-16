@@ -112,7 +112,7 @@ HWTEST_F(RingBufferTest, Basic, TestSize.Level1)
     ASSERT_TRUE(rb.GetFreeSize() == cap) << "the buffer should be empty now";
 }
 
-HWTEST_F(RingBufferTest, Wrap, TestSize.Level1)
+HWTEST_F(RingBufferTest, Wrap, TestSize.Level0)
 {
     RingBuffer rb {cap};
     const __u16 maxWriteSize = 65535;

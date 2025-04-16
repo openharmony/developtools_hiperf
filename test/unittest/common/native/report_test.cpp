@@ -109,7 +109,7 @@ void GetStringTest(const ReportItem &item, ReportKeyGetFunction &getFunction,
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, ReportItemCallFrameSame, TestSize.Level1)
+HWTEST_F(ReportTest, ReportItemCallFrameSame, TestSize.Level0)
 {
     ReportItemCallFrame a("a", 0x0, "aa", 0, 0);
     ReportItemCallFrame aDuplicated("a", 0x0, "aa", 0, 0);
@@ -134,7 +134,7 @@ HWTEST_F(ReportTest, ReportItemCallFrameSame, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, CompareSortingEventCount, TestSize.Level1)
+HWTEST_F(ReportTest, CompareSortingEventCount, TestSize.Level2)
 {
     ReportItemCallFrame a("a", 0x0, "aa", 0, 0);
     ReportItemCallFrame a2("a", 0x0, "aa", 2, 0);
@@ -211,7 +211,7 @@ HWTEST_F(ReportTest, ReportItemSame, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, ReportItemCompareSortingEventCount, TestSize.Level1)
+HWTEST_F(ReportTest, ReportItemCompareSortingEventCount, TestSize.Level2)
 {
     ReportItem a123(1, 2, "comm", "dso", "func", 0x123, 123);
     ReportItem a1234(1, 2, "comm", "dso", "func", 0x1234, 1234);
@@ -231,7 +231,7 @@ HWTEST_F(ReportTest, ReportItemCompareSortingEventCount, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, CompareEventCount, TestSize.Level1)
+HWTEST_F(ReportTest, CompareEventCount, TestSize.Level2)
 {
     ReportItem low(1, 4, "comm", "dso", "func", 0x123, 123);
     ReportItem mid(2, 5, "comm", "dso", "func", 0x1234, 1234);
@@ -256,7 +256,7 @@ HWTEST_F(ReportTest, GetEventCount, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, ComparePid, TestSize.Level1)
+HWTEST_F(ReportTest, ComparePid, TestSize.Level2)
 {
     ReportItem low(1, 4, "comm", "dso", "func", 0x123, 123);
     ReportItem mid(2, 5, "comm", "dso", "func", 0x1234, 1234);
@@ -304,7 +304,7 @@ HWTEST_F(ReportTest, GetTid, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, CompareComm, TestSize.Level1)
+HWTEST_F(ReportTest, CompareComm, TestSize.Level2)
 {
     ReportItem low(1, 4, "comm", "dso", "func", 0x123, 123);
     ReportItem mid(2, 5, "domm", "dso", "func", 0x1234, 1234);
@@ -341,7 +341,7 @@ HWTEST_F(ReportTest, CompareFunc, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, GetFunc, TestSize.Level1)
+HWTEST_F(ReportTest, GetFunc, TestSize.Level2)
 {
     ReportItem a(123, 4, "comm", "dso", "func", 0x123, 123);
     GetStringTest(a, ReportItem::GetFunc, a.func_, a.func_.length());
@@ -391,7 +391,7 @@ HWTEST_F(ReportTest, CompareFromDso, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, GetFromDso, TestSize.Level1)
+HWTEST_F(ReportTest, GetFromDso, TestSize.Level2)
 {
     ReportItem a(123, 4, "comm", "dso", "func", 0x123, 123);
     a.fromDso_ = "fromDso";
@@ -431,7 +431,7 @@ HWTEST_F(ReportTest, GetFromFunc, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, UpdateValueMaxLen, TestSize.Level1)
+HWTEST_F(ReportTest, UpdateValueMaxLen, TestSize.Level2)
 {
     ReportKey key = {
         "pid", ReportItem::ComparePid, ReportItem::GetPid, "%*d", std::vector<std::string>(),
@@ -465,7 +465,7 @@ HWTEST_F(ReportTest, UpdateValueMaxLen, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, GetValue, TestSize.Level1)
+HWTEST_F(ReportTest, GetValue, TestSize.Level0)
 {
     ReportKey key = {
         "pid", ReportItem::ComparePid, ReportItem::GetPid, "%*d", std::vector<std::string>(),
@@ -548,7 +548,7 @@ HWTEST_F(ReportTest, MultiLevelSame, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, MultiLevelSorting, TestSize.Level1)
+HWTEST_F(ReportTest, MultiLevelSorting, TestSize.Level2)
 {
     class ReportMock : public Report {
     public:
@@ -583,7 +583,7 @@ HWTEST_F(ReportTest, MultiLevelSorting, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, MultiLevelSameAndUpdateCount, TestSize.Level1)
+HWTEST_F(ReportTest, MultiLevelSameAndUpdateCount, TestSize.Level2)
 {
     class ReportMock : public Report {
     public:
@@ -722,7 +722,7 @@ HWTEST_F(ReportTest, MultiLevelCompare, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(ReportTest, AddReportItem, TestSize.Level1)
+HWTEST_F(ReportTest, AddReportItem, TestSize.Level0)
 {
     PerfRecordSample sample(false, 0, 0, 1);
     sample.callFrames_.emplace_back(0x1, 0x1234, "dummy", "frame1");

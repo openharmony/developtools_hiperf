@@ -59,7 +59,7 @@ static int CompareByteStream(const uint8_t *a, const uint8_t *b, size_t size)
  * @tc.type: FUNC
  */
 const std::string RECORDNAME_MMAP = "mmap";
-HWTEST_F(PerfEventRecordTest, Mmap, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Mmap, TestSize.Level0)
 {
     PerfRecordMmapData data {1, 2, 3, 4, 5, "testdatammap"};
     PerfRecordMmap recordIn {true,     data.pid,   data.tid,     data.addr,
@@ -95,7 +95,7 @@ HWTEST_F(PerfEventRecordTest, Mmap, TestSize.Level1)
 }
 
 const std::string RECORDNAME_MMAP2 = "mmap2";
-HWTEST_F(PerfEventRecordTest, Mmap2, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Mmap2, TestSize.Level2)
 {
     PerfRecordMmap2Data data {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, "testdatammap2"};
     PerfRecordMmap2 recordIn {true,     data.pid, data.tid, data.addr, data.len,   data.pgoff,
@@ -136,7 +136,7 @@ HWTEST_F(PerfEventRecordTest, Mmap2, TestSize.Level1)
 }
 
 const std::string RECORDNAME_COMM = "comm";
-HWTEST_F(PerfEventRecordTest, Comm, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Comm, TestSize.Level0)
 {
     PerfRecordCommData data {1, 2, "testdatcomm"};
     PerfRecordComm recordIn {true, data.pid, data.tid, data.comm};
@@ -167,7 +167,7 @@ HWTEST_F(PerfEventRecordTest, Comm, TestSize.Level1)
 }
 
 const std::string RECORDNAME_LOST = "lost";
-HWTEST_F(PerfEventRecordTest, Lost, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Lost, TestSize.Level2)
 {
     struct TestRecordLostst {
         perf_event_header h;
@@ -191,7 +191,7 @@ HWTEST_F(PerfEventRecordTest, Lost, TestSize.Level1)
 }
 
 const std::string RECORDNAME_EXIT = "exit";
-HWTEST_F(PerfEventRecordTest, Exit, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Exit, TestSize.Level2)
 {
     struct TestRecordExitst {
         perf_event_header h;
@@ -214,7 +214,7 @@ HWTEST_F(PerfEventRecordTest, Exit, TestSize.Level1)
 }
 
 const std::string RECORDNAME_THROTTLE = "throttle";
-HWTEST_F(PerfEventRecordTest, Throttle, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Throttle, TestSize.Level2)
 {
     struct TestRecordThrottlest {
         perf_event_header h;
@@ -238,7 +238,7 @@ HWTEST_F(PerfEventRecordTest, Throttle, TestSize.Level1)
 }
 
 const std::string RECORDNAME_UNTHROTTLE = "unthrottle";
-HWTEST_F(PerfEventRecordTest, Unthrottle, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Unthrottle, TestSize.Level2)
 {
     struct TestRecordUNThrottlest {
         perf_event_header h;
@@ -438,7 +438,7 @@ HWTEST_F(PerfEventRecordTest, Sample, TestSize.Level1)
     ASSERT_TRUE(CompareRecordSample(data, buff));
 }
 
-HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack1, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack1, TestSize.Level2)
 {
     perf_event_attr attr {};
     attr.sample_type = UINT64_MAX;
@@ -472,7 +472,7 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack1, TestSize.Level1)
     // result is 1 - 9
 }
 
-HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack2, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack2, TestSize.Level2)
 {
     perf_event_attr attr {};
     attr.sample_type = UINT64_MAX;
@@ -499,7 +499,7 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack2, TestSize.Level1)
     // result is 1 - 9
 }
 
-HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack3, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack3, TestSize.Level2)
 {
     perf_event_attr attr {};
     attr.sample_type = UINT64_MAX;
@@ -529,7 +529,7 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack3, TestSize.Level1)
     // result is 0 - 3 , PERF_CONTEXT_USER , 4 - 9
 }
 
-HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack4, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack4, TestSize.Level3)
 {
     perf_event_attr attr {};
     attr.sample_type = UINT64_MAX;
@@ -579,7 +579,7 @@ HWTEST_F(PerfEventRecordTest, Read, TestSize.Level1)
 }
 
 const std::string RECORDNAME_AUX = "aux";
-HWTEST_F(PerfEventRecordTest, Aux, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Aux, TestSize.Level2)
 {
     struct PerfRecordAuxst {
         perf_event_header h;
@@ -602,7 +602,7 @@ HWTEST_F(PerfEventRecordTest, Aux, TestSize.Level1)
 }
 
 const std::string RECORDNAME_ITRACE_START = "itraceStart";
-HWTEST_F(PerfEventRecordTest, ItraceStart, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, ItraceStart, TestSize.Level2)
 {
     struct PerfRecordItraceStartst {
         perf_event_header h;
@@ -626,7 +626,7 @@ HWTEST_F(PerfEventRecordTest, ItraceStart, TestSize.Level1)
 }
 
 const std::string RECORDNAME_LOST_SAMPLES = "lostSamples";
-HWTEST_F(PerfEventRecordTest, LostSamples, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, LostSamples, TestSize.Level2)
 {
     struct PerfRecordLostSamplesst {
         perf_event_header h;
@@ -650,7 +650,7 @@ HWTEST_F(PerfEventRecordTest, LostSamples, TestSize.Level1)
 }
 
 const std::string RECORDNAME_SWITCH = "switch";
-HWTEST_F(PerfEventRecordTest, Switch, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, Switch, TestSize.Level2)
 {
     struct PerfRecordSwitchst {
         perf_event_header h;
@@ -674,7 +674,7 @@ HWTEST_F(PerfEventRecordTest, Switch, TestSize.Level1)
 }
 
 const std::string RECORDNAME_SWITCH_CPU_WIDE = "switchCpuWide";
-HWTEST_F(PerfEventRecordTest, SwitchCpuWide, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, SwitchCpuWide, TestSize.Level2)
 {
     struct PerfRecordSwitchCpuWidest {
         perf_event_header h;
@@ -725,7 +725,7 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord, TestSize.Level1)
     ASSERT_EQ(perfEventRecord.GetName() != nullptr, true);
 }
 
-HWTEST_F(PerfEventRecordTest, GetPerfEventRecord2, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord2, TestSize.Level2)
 {
     struct PerfRecordSwitchCpuWidest {
         perf_event_header h;
@@ -746,7 +746,7 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord2, TestSize.Level1)
     ASSERT_TRUE(&perfEventRecord1 == &perfEventRecord2);
 }
 
-HWTEST_F(PerfEventRecordTest, GetPerfEventRecord3, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord3, TestSize.Level2)
 {
     struct PerfRecordSwitchCpuWidest {
         perf_event_header h;
@@ -767,7 +767,7 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord3, TestSize.Level1)
     ASSERT_TRUE(perfEventRecord2.GetName() == nullptr);
 }
 
-HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level2)
 {
     static constexpr size_t sizeOffset = 20;
     std::vector<PerfRecordType> types = {
@@ -804,7 +804,7 @@ HWTEST_F(PerfEventRecordTest, GetPerfEventRecord4, TestSize.Level1)
     free(data);
 }
 
-HWTEST_F(PerfEventRecordTest, GetPerfEventRecordMmap2, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, GetPerfEventRecordMmap2, TestSize.Level2)
 {
     struct PerfRecordMmap2est {
         perf_event_header h;
@@ -928,7 +928,7 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordComm, TestSize.Level1)
     free(p);
 }
 
-HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level2)
 {
     perf_event_header header;
     const char* rawData = "rawData";
@@ -954,7 +954,7 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace, TestSize.Level1)
     free(p);
 }
 
-HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace2, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace2, TestSize.Level2)
 {
     PerfRecordAuxtrace* record = new PerfRecordAuxtrace();
     record->Init(nullptr, {});
@@ -974,7 +974,7 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace2, TestSize.Level1)
     EXPECT_EQ(record->rawData_, nullptr);
 }
 
-HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace3, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace3, TestSize.Level2)
 {
     PerfRecordAuxtrace* record = new PerfRecordAuxtrace();
     record->Init(nullptr, {});
@@ -1074,7 +1074,7 @@ HWTEST_F(PerfEventRecordTest, AuxTraceInfo, TestSize.Level1)
     ASSERT_EQ(record.data_.priv[1], cpuMmap);
 }
 
-HWTEST_F(PerfEventRecordTest, TimeConv, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, TimeConv, TestSize.Level2)
 {
     constexpr uint64_t timeShift = 21;
     constexpr uint64_t timeDefalult = 1;
@@ -1159,7 +1159,7 @@ HWTEST_F(PerfEventRecordTest, AuxtraceInit, TestSize.Level1)
     free(p);
 }
 
-HWTEST_F(PerfEventRecordTest, GetBinary1, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, GetBinary1, TestSize.Level2)
 {
     const char* rawData = "rawData";
     size_t len = strlen(rawData) + 1;
@@ -1209,7 +1209,7 @@ HWTEST_F(PerfEventRecordTest, GetBinary1, TestSize.Level1)
     free(p);
 }
 
-HWTEST_F(PerfEventRecordTest, AuxtraceInitErr, TestSize.Level1)
+HWTEST_F(PerfEventRecordTest, AuxtraceInitErr, TestSize.Level3)
 {
     perf_event_header header;
     header.size = sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header) - 1;

@@ -90,7 +90,7 @@ HWTEST_F(SpeDecoderTest, TestGetSpeEventNameByType, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level1)
+HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
     std::string testProcesses = "com.ohos.sceneboard";
@@ -212,7 +212,7 @@ HWTEST_F(SpeDecoderTest, TestSpeDecoder, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SpeDecoderTest, TestSpeDumpRawData1, TestSize.Level1)
+HWTEST_F(SpeDecoderTest, TestSpeDumpRawData1, TestSize.Level2)
 {
     const size_t dataDize = 1624;
     u8 rawData[dataDize] = {0xb0, 0x9c, 0x87, 0xc1, 0x0a, 0x80, 0xff, 0xff,

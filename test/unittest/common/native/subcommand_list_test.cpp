@@ -45,7 +45,7 @@ void SubCommandListTest::TearDown() {}
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandListTest, TestOnSubCommandHW, TestSize.Level1)
+HWTEST_F(SubCommandListTest, TestOnSubCommandHW, TestSize.Level0)
 {
     std::vector<std::string> args;
     StdoutRecord stdoutRecord;
@@ -77,7 +77,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandSW, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandListTest, TestOnSubCommandTP, TestSize.Level1)
+HWTEST_F(SubCommandListTest, TestOnSubCommandTP, TestSize.Level2)
 {
     std::vector<std::string> args;
     StdoutRecord stdoutRecord;
@@ -125,7 +125,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandRAW, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandListTest, TestOnSubCommandERROR, TestSize.Level1)
+HWTEST_F(SubCommandListTest, TestOnSubCommandERROR, TestSize.Level3)
 {
     std::vector<std::string> args;
     StdoutRecord stdoutRecord;
@@ -141,7 +141,7 @@ HWTEST_F(SubCommandListTest, TestOnSubCommandERROR, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandListTest, TestOnSubCommandEmpty, TestSize.Level1)
+HWTEST_F(SubCommandListTest, TestOnSubCommandEmpty, TestSize.Level2)
 {
     std::vector<std::string> args;
     StdoutRecord stdoutRecord;

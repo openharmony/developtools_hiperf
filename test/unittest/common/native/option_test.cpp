@@ -111,7 +111,7 @@ HWTEST_F(OptionTest, GetMainOptions, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, GetOptionBool, TestSize.Level1)
+HWTEST_F(OptionTest, GetOptionBool, TestSize.Level0)
 {
     bool boolVal;
     std::vector<std::string> args;
@@ -216,7 +216,7 @@ HWTEST_F(OptionTest, GetOptionInt, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, GetOptionInt2, TestSize.Level1)
+HWTEST_F(OptionTest, GetOptionInt2, TestSize.Level2)
 {
     int intValue;
     std::vector<std::string> args;
@@ -301,7 +301,7 @@ HWTEST_F(OptionTest, GetOptionString, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, GetOptionString2, TestSize.Level1)
+HWTEST_F(OptionTest, GetOptionString2, TestSize.Level2)
 {
     std::string stringValue;
     std::vector<std::string> args;
@@ -358,7 +358,7 @@ HWTEST_F(OptionTest, GetOptionStrings, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, GetOptionStringss, TestSize.Level1)
+HWTEST_F(OptionTest, GetOptionStringss, TestSize.Level2)
 {
     std::vector<std::vector<std::string>> stringValuess;
     const std::vector<std::string> constArgs = {
@@ -429,7 +429,7 @@ HWTEST_F(OptionTest, GetOptionInts, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringBool, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringBool, TestSize.Level2)
 {
     bool boolValue;
     EXPECT_EQ(Option::GetValueFromString(OPTION_NAME, OPTION_NAME, boolValue), true);
@@ -441,7 +441,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringBool, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInt01, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInt01, TestSize.Level0)
 {
     int intValue;
     EXPECT_EQ(Option::GetValueFromString(OPTION_STRING_VALUE, OPTION_NAME, intValue), true);
@@ -464,7 +464,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringInt02, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInt03, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInt03, TestSize.Level2)
 {
     int intValue;
     EXPECT_EQ(Option::GetValueFromString("1a11", OPTION_NAME, intValue), false);  // "1a11" can not trans to int
@@ -475,7 +475,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringInt03, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInt04, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInt04, TestSize.Level2)
 {
     int intValue;
     EXPECT_EQ(Option::GetValueFromString("-1", OPTION_NAME, intValue), true);  // "-1" can trans to int -1
@@ -487,7 +487,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringInt04, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInt05, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInt05, TestSize.Level2)
 {
     int intValue;
     EXPECT_EQ(Option::GetValueFromString("2147483648", OPTION_NAME, intValue), false);  // "2147483648": INT_MAX + 1
@@ -511,7 +511,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringFloat01, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringFloat02, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringFloat02, TestSize.Level2)
 {
     float floatValue;
     EXPECT_EQ(Option::GetValueFromString("a13", OPTION_NAME, floatValue), false);  // "a.13" can not trans to float
@@ -522,7 +522,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringFloat02, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringFloat03, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringFloat03, TestSize.Level2)
 {
     float floatValue;
     float result = 0.1;  // 0.1: test value
@@ -535,7 +535,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringFloat03, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringFloat04, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringFloat04, TestSize.Level3)
 {
     float floatValue;
     double doubleMax = DBL_MAX;
@@ -559,7 +559,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringString, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInts01, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInts01, TestSize.Level0)
 {
     std::vector<int> values;
     EXPECT_EQ(Option::GetValueFromString(OPTION_STRING_THREE_VALUES, OPTION_NAME, values), true);
@@ -571,7 +571,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringInts01, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringInts02, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringInts02, TestSize.Level3)
 {
     std::vector<int> values;
     EXPECT_EQ(Option::GetValueFromString(OPTION_STRING_THREE_ILLEGAL_VALUES, OPTION_NAME, values), false);
@@ -595,7 +595,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringStrings, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetOptionTrackedCommand, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetOptionTrackedCommand, TestSize.Level0)
 {
     std::vector<std::string> args;
     args = {OPTION_NAME, OPTION_STRING_THREE_VALUES, OPTION_ERROR_NAME};
@@ -610,7 +610,7 @@ HWTEST_F(OptionTest, TestGetOptionTrackedCommand, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T01, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T01, TestSize.Level2)
 {
     static constexpr uint64_t EXPECT = 1234;
     uint64_t value = 0;
@@ -623,7 +623,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T01, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T02, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T02, TestSize.Level3)
 {
     uint64_t value;
     EXPECT_EQ(Option::GetValueFromString("1a00", OPTION_NAME, value), false); // "1a00" can not trans to uint64_t
@@ -634,7 +634,7 @@ HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T02, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T03, TestSize.Level1)
+HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T03, TestSize.Level3)
 {
     uint64_t value = 0;
     // 18446744073709551616: UINT64_T_MAX +1

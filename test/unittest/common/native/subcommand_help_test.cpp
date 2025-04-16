@@ -68,7 +68,7 @@ void SubCommandHelpTest::TearDown() {}
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandHelpTest, TestOnSubCommand, TestSize.Level1)
+HWTEST_F(SubCommandHelpTest, TestOnSubCommand, TestSize.Level0)
 {
     std::vector<std::string> args;
 

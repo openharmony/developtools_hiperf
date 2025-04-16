@@ -49,7 +49,7 @@ HWTEST_F(PerfFileReaderTest, Test_Instance_success, TestSize.Level1)
     EXPECT_EQ(ret == nullptr, true);
 }
 
-HWTEST_F(PerfFileReaderTest, Test_Instance_fail, TestSize.Level1)
+HWTEST_F(PerfFileReaderTest, Test_Instance_fail, TestSize.Level3)
 {
     const std::string filename = "xxx";
     FILE *fp = nullptr;
@@ -58,7 +58,7 @@ HWTEST_F(PerfFileReaderTest, Test_Instance_fail, TestSize.Level1)
     EXPECT_EQ(ret == nullptr, true);
 }
 
-HWTEST_F(PerfFileReaderTest, Test_ReadFetureSection_success, TestSize.Level1)
+HWTEST_F(PerfFileReaderTest, Test_ReadFetureSection_success, TestSize.Level0)
 {
     const std::string filename = "perf.data";
     FILE *fp = stdout;
@@ -76,7 +76,7 @@ HWTEST_F(PerfFileReaderTest, Test_ReadFetureSection, TestSize.Level1)
     EXPECT_EQ(ret, true);
 }
 
-HWTEST_F(PerfFileReaderTest, Test_GetFetures, TestSize.Level1)
+HWTEST_F(PerfFileReaderTest, Test_GetFetures, TestSize.Level2)
 {
     const std::string filename = "perf.data";
     FILE *fp = stdout;
@@ -103,7 +103,7 @@ HWTEST_F(PerfFileReaderTest, Test_GetFetureString, TestSize.Level1)
     EXPECT_NE(hiperfFileReader.GetFeatureString(feture), result);
 }
 
-HWTEST_F(PerfFileReaderTest, ReadIdsForAttr1, TestSize.Level1)
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr1, TestSize.Level2)
 {
     perf_file_attr attr;
     attr.ids.size = 2000000000;
@@ -112,7 +112,7 @@ HWTEST_F(PerfFileReaderTest, ReadIdsForAttr1, TestSize.Level1)
     EXPECT_FALSE(reader.ReadIdsForAttr(attr, &v));
 }
 
-HWTEST_F(PerfFileReaderTest, ReadIdsForAttr2, TestSize.Level1)
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr2, TestSize.Level0)
 {
     perf_file_attr attr;
     attr.ids.size = 1;
@@ -139,7 +139,7 @@ HWTEST_F(PerfFileReaderTest, ReadIdsForAttr3, TestSize.Level1)
     EXPECT_TRUE(v.size() * sizeof(uint64_t) >= attr.ids.size);
 }
 
-HWTEST_F(PerfFileReaderTest, Test_OverAttrSize, TestSize.Level1)
+HWTEST_F(PerfFileReaderTest, Test_OverAttrSize, TestSize.Level2)
 {
     const uint64_t overSize = 100 * sizeof(perf_file_attr);
     std::string fileName = "/proc/" + std::to_string(getpid()) + "/cmdline";

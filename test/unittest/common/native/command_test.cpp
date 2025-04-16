@@ -71,7 +71,7 @@ void CommandTest::TearDown()
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(CommandTest, TestCommandDistribution, TestSize.Level1)
+HWTEST_F(CommandTest, TestCommandDistribution, TestSize.Level0)
 {
     std::string args;
 

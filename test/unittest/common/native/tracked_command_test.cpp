@@ -42,7 +42,7 @@ void TrackedCommandTest::SetUp() {}
 
 void TrackedCommandTest::TearDown() {}
 
-HWTEST_F(TrackedCommandTest, CommandExisted, TestSize.Level1)
+HWTEST_F(TrackedCommandTest, CommandExisted, TestSize.Level0)
 {
     std::unique_ptr<TrackedCommand> trackedCMD = TrackedCommand::CreateInstance(cmd_);
     ASSERT_NE(trackedCMD, nullptr);
