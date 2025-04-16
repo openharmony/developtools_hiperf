@@ -853,6 +853,28 @@ HWTEST_F(UtilitiesTest, IsArkJsFile, TestSize.Level1)
     EXPECT_EQ(IsArkJsFile("test.hqf"), true);
     EXPECT_EQ(IsArkJsFile("test.so"), false);
 }
+
+/**
+ * @tc.name: IsFileExists
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsFileExists, TestSize.Level1)
+{
+    EXPECT_EQ(IsFileExists("/data/local/tmp"), true);
+}
+
+/**
+ * @tc.name: CreateDirectory
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CreateDirectory, TestSize.Level1)
+{
+    std::string file = "/data/local/tmp/hiperf_test";
+    EXPECT_EQ(CreateDirectory(file, HIPERF_FILE_PERM_770), true);
+    rmdir(file.c_str());
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
