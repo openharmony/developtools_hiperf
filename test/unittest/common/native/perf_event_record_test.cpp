@@ -1177,17 +1177,11 @@ HWTEST_F(PerfEventRecordTest, GetBinary1, TestSize.Level1)
     data.tid = 1;
     uint8_t* p = static_cast<uint8_t*>(malloc(header.size + len));
     EXPECT_EQ(memset_s(p, header.size + len, 0, header.size + len), 0);
-    if (memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<const uint8_t *>(&header),
-                 sizeof(perf_event_header)) != 0) {
-        printf("memcpy_s perf_event_header return failed");
-    }
-    if (memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordAuxtraceData),
-                 reinterpret_cast<const uint8_t *>(&data), sizeof(PerfRecordAuxtraceData)) != 0) {
-        printf("memcpy_s data return failed");
-    }
-    if (memcpy_s(p + header.size, len, reinterpret_cast<const uint8_t *>(rawData), len) != 0) {
-        printf("memcpy_s rawData return failed");
-    }
+    EXPECT_EQ(memcpy_s(p, sizeof(perf_event_header), reinterpret_cast<const uint8_t *>(&header),
+                 sizeof(perf_event_header)), 0);
+    EXPECT_EQ(memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordAuxtraceData),
+                 reinterpret_cast<const uint8_t *>(&data), sizeof(PerfRecordAuxtraceData)), 0);
+    EXPECT_EQ(memcpy_s(p + header.size, len, reinterpret_cast<const uint8_t *>(rawData), len), 0);
     PerfRecordAuxtrace record;
     PerfRecordAuxtrace recordCopy;
     record.Init(p);
