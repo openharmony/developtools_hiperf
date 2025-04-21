@@ -273,9 +273,13 @@ bool DebugLogger::OpenLog(const std::string &tempLogPath, const std::string &fla
         return true;
     }
 }
-
+#if !is_mingw
 __attribute__((weak)) DebugLevel DebugLogger::debugLevel_ = LEVEL_DEBUG;
 __attribute__((weak)) bool DebugLogger::logDisabled_ = true;
+#else
+DebugLevel DebugLogger::debugLevel_ = LEVEL_DEBUG;
+bool DebugLogger::logDisabled_ = true;
+#endif
 std::unique_ptr<DebugLogger> DebugLogger::logInstance_;
 
 DebugLogger *DebugLogger::GetInstance()

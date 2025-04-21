@@ -14,8 +14,9 @@
  */
 #ifndef SPE_DECODER_H
 #define SPE_DECODER_H
-
+#if !IS_WASM && !is_mingw && !is_mac
 #include <linux/const.h>
+#endif
 #include <stddef.h>
 #include <stdint.h>
 
