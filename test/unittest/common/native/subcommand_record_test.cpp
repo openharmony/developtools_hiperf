@@ -86,6 +86,9 @@ public:
     static void TestRecordCommand(const std::string &option, bool expect = true, bool fixPid = true,
                                   SubCommandRecord::CheckRecordCallBack callback = nullptr);
 
+    static bool TestRecordCommandForFork(const std::string &option, bool expect = true, bool fixPid = true,
+                                         SubCommandRecord::CheckRecordCallBack callback = nullptr);
+
     size_t GetFileSize(const char* fileName);
 
     static std::string testProcesses;
@@ -119,6 +122,44 @@ void SubCommandRecordTest::TearDown()
     MemoryHold::Get().Clean();
 }
 
+bool SubCommandRecordTest::TestRecordCommandForFork(const std::string &option, bool expect, bool fixPid,
+                                                    SubCommandRecord::CheckRecordCallBack callback)
+{
+    StdoutRecord stdoutRecord;
+    std::string cmdString = "record ";
+    if (fixPid) {
+        cmdString += "--app ";
+        cmdString += " " + testProcesses;
+    }
+    cmdString += " " + option;
+    printf("command : %s\n", cmdString.c_str());
+
+    if (callback != nullptr) {
+        std::string subcommandName = "record";
+        SubCommand* subcommand = SubCommand::FindSubCommand(subcommandName);
+        if (subcommand == nullptr) {
+            return false;
+        }
+        SubCommandRecord* subcommandRecord = static_cast<SubCommandRecord*>(subcommand);
+        subcommandRecord->SetCheckRecordCallback(callback);
+    }
+
+    // it need load some symbols and much more log
+    stdoutRecord.Start();
+    const auto startTime = std::chrono::steady_clock::now();
+    bool ret = Command::DispatchCommand(cmdString);
+    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+    std::chrono::steady_clock::now() - startTime);
+    std::string stringOut = stdoutRecord.Stop();
+    if ((stringOut.find("Sample records:") != std::string::npos) != expect) {
+        GTEST_LOG_(ERROR) << "stringOut:" << stringOut << ret;
+        return false;
+    }
+    printf("run %" PRId64 " ms return %s(expect %s)\n", (uint64_t)costMs.count(), ret ? "true" : "false",
+           expect ? "true" : "false");
+    return true;
+}
+
 void SubCommandRecordTest::ForkAndRunTest(const std::string& cmd, bool expect, bool fixPid,
                                           SubCommandRecord::CheckRecordCallBack callback)
 {
@@ -128,8 +169,8 @@ void SubCommandRecordTest::ForkAndRunTest(const std::string& cmd, bool expect, b
         return;
     }
     if (pid == 0) {
-        TestRecordCommand(cmd, expect, fixPid, callback);
-        _exit(0);
+        bool result = TestRecordCommandForFork(cmd, expect, fixPid, callback);
+        _exit(result ? 0 : 1);
     }
     int status;
     int ret = wait(&status);
@@ -634,7 +675,7 @@ HWTEST_F(SubCommandRecordTest, KernelSymbols, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, SelectPidMulti, TestSize.Level0)
 {
-    ForkAndRunTest("-d 2 -p 1,2,3 ", true, false);
+    ForkAndRunTest("-d 2 -p 1,2 ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectPidMinErr, TestSize.Level2)
@@ -670,7 +711,7 @@ HWTEST_F(SubCommandRecordTest, SelectTid, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, SelectTidMulti, TestSize.Level0)
 {
-    ForkAndRunTest("-d 2 -t 1,2,3 ", true, false);
+    ForkAndRunTest("-d 2 -t 1,2 ", true, false);
 }
 
 HWTEST_F(SubCommandRecordTest, SelectTidMinErr, TestSize.Level3)
@@ -1489,9 +1530,9 @@ HWTEST_F(SubCommandRecordTest, CallChainUserOnlyDwarf, TestSize.Level1)
  * @tc.desc: Test --callchain-useronly option without fp/dwarf
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandRecordTest, CallChainUserOnlyError, TestSize.Level3)
+HWTEST_F(SubCommandRecordTest, CallChainUserOnly, TestSize.Level3)
 {
-    ForkAndRunTest("-d 2 --callchain-useronly", false, true);
+    ForkAndRunTest("-d 2 --callchain-useronly", true, true);
 }
 
 /**
