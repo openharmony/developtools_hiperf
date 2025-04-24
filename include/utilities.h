@@ -41,6 +41,11 @@
 #include <sys/syscall.h>
 #endif
 #include <linux/types.h>
+
+#ifdef CONFIG_HAS_CCM
+#include "cJSON.h"
+#endif
+
 #include "debug_logger.h"
 #include "noncopyable.h"
 
@@ -399,6 +404,12 @@ inline bool CheckOutOfRange(const T& value, const T& min, const T& max)
     }                                               \
 } while (0)
 
+#ifdef CONFIG_HAS_CCM
+cJSON* GetProductCfgRoot(const char* cfgPath);
+cJSON* ParseJson(const std::string &filePath);
+bool GetJsonNum(cJSON* tag, const char* key, size_t &value);
+bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value);
+#endif
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
