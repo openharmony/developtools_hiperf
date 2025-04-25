@@ -280,6 +280,12 @@ private:
     void OutputRecordFile();
     bool PostOutputRecordFile(bool output);
 
+#ifdef CONFIG_HAS_CCM
+    static constexpr char PRODUCT_CONFIG_PATH[] = "etc/hiperf/hiperf_cfg.json";
+    static constexpr char CFG_MAP_PAGES[] = "MmapPages";
+    void GetMmapPagesCfg();
+#endif
+
     bool GetOptions(std::vector<std::string> &args);
     bool CheckArgsRange();
     bool CheckExcludeArgs();

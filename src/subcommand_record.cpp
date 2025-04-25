@@ -550,8 +550,27 @@ bool SubCommandRecord::CheckOptions()
     return true;
 }
 
+#ifdef CONFIG_HAS_CCM
+void SubCommandRecord::GetMmapPagesCfg()
+{
+    size_t tmpPages = 0;
+    if (GetCfgValue(PRODUCT_CONFIG_PATH, CFG_MAP_PAGES, tmpPages)) {
+        int tmpValue = static_cast<int>(tmpPages);
+        if (CheckOutOfRange<int>(tmpValue, MIN_PERF_MMAP_PAGE, MAX_PERF_MMAP_PAGE) || !PowerOfTwo(tmpValue)) {
+            HIPERF_HILOGE(MODULE_DEFAULT, "GetCfgValue %s faile, %d out of range", CFG_MAP_PAGES, tmpValue);
+        } else {
+            mmapPages_ = tmpValue;
+            HIPERF_HILOGI(MODULE_DEFAULT, "GetCfgValue %s : %d", CFG_MAP_PAGES, mmapPages_);
+        }
+    }
+}
+#endif
+
 bool SubCommandRecord::ParseOption(std::vector<std::string> &args)
 {
+#ifdef CONFIG_HAS_CCM
+    GetMmapPagesCfg();
+#endif
     if (!GetOptions(args)) {
         return false;
     }
