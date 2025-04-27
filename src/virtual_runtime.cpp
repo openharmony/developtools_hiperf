@@ -1267,7 +1267,7 @@ void VirtualRuntime::ImportUniqueStackNodes(const std::vector<UniStackTableInfo>
 */
 void VirtualRuntime::LoadVdso()
 {
-#if !is_mingw
+#if defined(is_ohos) && is_ohos
     VirtualThread myThread(getpid(), symbolsFiles_);
     myThread.ParseMap();
     for (const auto &map : myThread.GetMaps()) {
@@ -1276,9 +1276,10 @@ void VirtualRuntime::LoadVdso()
             std::copy(reinterpret_cast<char *>((map->begin)), reinterpret_cast<char *>((map->end)),
                       &memory[0]);
             std::string tempPath("/data/log/hiperflog/");
-            if (!IsFileExists(tempPath)) {
+            if (!IsDirectoryExists(tempPath)) {
                 HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s not exist.", tempPath.c_str());
-                CreateDirectory(tempPath, HIPERF_FILE_PERM_770);
+                CHECK_TRUE(!CreateDirectory(tempPath, HIPERF_FILE_PERM_770), NO_RETVAL,
+                           LOG_TYPE_WITH_HILOG, "Create hiperflog path failed");
             }
             std::string tempFileName = tempPath + map->name;
             if (!WriteStringToFile(tempFileName, memory)) {

@@ -893,13 +893,18 @@ bool IsNumeric(const std::string& str)
     return true;
 }
 
-bool IsFileExists(const std::string& fileName)
+bool IsDirectoryExists(const std::string& fileName)
 {
-    return OHOS::FileExists(fileName);
+    struct stat fileInfo;
+    if (stat(fileName.c_str(), &fileInfo) == 0) {
+        return S_ISDIR(fileInfo.st_mode);
+    }
+    return false;
 }
 
 bool CreateDirectory(const std::string& path, mode_t mode)
 {
+#if defined(is_ohos) && is_ohos
     std::string::size_type pos = 0;
     do {
         pos = path.find('/', pos + 1);
@@ -911,6 +916,20 @@ bool CreateDirectory(const std::string& path, mode_t mode)
         }
     } while (pos != std::string::npos);
     return access(path.c_str(), F_OK) == 0;
+#else
+    return false;
+#endif
+}
+
+bool IsValidOutPath(const std::string& path)
+{
+    std::vector<std::string> blacklist = {"/data/log/hiperflog/", "data/log/hiperflog/"};
+    for (auto name : blacklist) {
+        if (StringStartsWith(path, name)) {
+            return false;
+        }
+    }
+    return true;
 }
 } // namespace HiPerf
 } // namespace Developtools

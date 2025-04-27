@@ -855,13 +855,13 @@ HWTEST_F(UtilitiesTest, IsArkJsFile, TestSize.Level2)
 }
 
 /**
- * @tc.name: IsFileExists
+ * @tc.name: IsDirectoryExists
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, IsFileExists, TestSize.Level1)
+HWTEST_F(UtilitiesTest, IsDirectoryExists, TestSize.Level1)
 {
-    EXPECT_EQ(IsFileExists("/data/local/tmp"), true);
+    EXPECT_EQ(IsDirectoryExists("/data/local/tmp"), true);
 }
 
 /**
@@ -874,6 +874,28 @@ HWTEST_F(UtilitiesTest, CreateDirectory, TestSize.Level1)
     std::string file = "/data/local/tmp/hiperf_test";
     EXPECT_EQ(CreateDirectory(file, HIPERF_FILE_PERM_770), true);
     rmdir(file.c_str());
+}
+
+/**
+ * @tc.name: IsValidOutPath
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsValidOutPath, TestSize.Level1)
+{
+    std::string file = "/data/local/tmp/perf.data";
+    EXPECT_EQ(IsValidOutPath(file), true);
+}
+
+/**
+ * @tc.name: IsValidOutPathErr
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsValidOutPathErr, TestSize.Level1)
+{
+    std::string file = "/data/log/hiperflog/perf.data";
+    EXPECT_EQ(IsValidOutPath(file), false);
 }
 } // namespace HiPerf
 } // namespace Developtools
