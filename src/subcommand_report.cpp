@@ -170,7 +170,10 @@ bool SubCommandReport::VerifyOption()
             diffMode_ = true;
         }
     }
-
+    if (!IsValidOutPath(reportFile_)) {
+        printf("Invalid output file path, permission denied\n");
+        return false;
+    }
     // default report file name
     if (reportFile_.empty()) {
         if (protobufFormat_) {

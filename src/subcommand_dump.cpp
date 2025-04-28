@@ -61,6 +61,25 @@ bool SubCommandDump::CheckInputFile()
     return false;
 }
 
+bool SubCommandDump::CheckOutputFile()
+{
+    if (!IsValidOutPath(outputFilename_)) {
+        printf("Invalid output file path, permission denied\n");
+        return false;
+    }
+    return true;
+}
+
+bool SubCommandDump::CheckOptions()
+{
+    if (!CheckInputFile()) {
+        return false;
+    }
+    if (!CheckOutputFile()) {
+        return false;
+    }
+    return true;
+}
 bool SubCommandDump::ParseOption(std::vector<std::string> &args)
 {
     if (!Option::GetOptionValue(args, "--head", dumpHeader_)) {
@@ -108,7 +127,7 @@ bool SubCommandDump::ParseOption(std::vector<std::string> &args)
         return false;
     }
 
-    return CheckInputFile();
+    return CheckOptions();
 }
 
 bool SubCommandDump::PrepareDumpOutput()

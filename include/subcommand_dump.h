@@ -118,6 +118,8 @@ private:
     void PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct);
     void PrintFeatureEventdesc(int indent, const PerfFileSectionEventDesc &sectionEventdesc);
     void DumpSpeReport();
+    bool CheckOptions();
+    bool CheckOutputFile();
     VirtualRuntime vr_;
 
     void SetHM();

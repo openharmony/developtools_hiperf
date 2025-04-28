@@ -484,6 +484,10 @@ bool SubCommandRecord::CheckArgsRange()
         printf("Invalid --clockid value %s\n", clockId_.c_str());
         return false;
     }
+    if (!IsValidOutPath(outputFilename_)) {
+        printf("Invalid output file path, permission denied\n");
+        return false;
+    }
     return true;
 }
 
@@ -1321,9 +1325,11 @@ bool SubCommandRecord::CreateFifoServer()
     char errInfo[ERRINFOLEN] = { 0 };
     const mode_t fifoMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     std::string tempPath("/data/log/hiperflog/");
-    if (!IsFileExists(tempPath)) {
+    if (!IsDirectoryExists(tempPath)) {
         HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s not exist.", tempPath.c_str());
-        CreateDirectory(tempPath, HIPERF_FILE_PERM_770);
+        if (!CreateDirectory(tempPath, HIPERF_FILE_PERM_770)) {
+            HIPERF_HILOGI(MODULE_DEFAULT, "create %{public}s failed.", tempPath.c_str());
+        }
     }
     if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 ||
         mkfifo(CONTROL_FIFO_FILE_C2S.c_str(), fifoMode) != 0) {

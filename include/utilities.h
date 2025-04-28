@@ -335,8 +335,9 @@ bool PowerOfTwo(uint64_t n);
 bool IsNumeric(const std::string& str);
 bool IscontainDigits(const std::string& str);
 bool IsStringToIntSuccess(const std::string &str, int &num);
-bool IsFileExists(const std::string& fileName);
+bool IsDirectoryExists(const std::string& fileName);
 bool CreateDirectory(const std::string& path, mode_t mode);
+bool IsValidOutPath(const std::string& path);
 
 const std::string HMKERNEL = "HongMeng";
 
