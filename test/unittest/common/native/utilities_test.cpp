@@ -892,7 +892,7 @@ HWTEST_F(UtilitiesTest, IsValidOutPath, TestSize.Level1)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, IsValidOutPathErr, TestSize.Level1)
+HWTEST_F(UtilitiesTest, IsValidOutPathErr, TestSize.Level2)
 {
     std::string file = "/data/log/hiperflog/perf.data";
     EXPECT_EQ(IsValidOutPath(file), false);
