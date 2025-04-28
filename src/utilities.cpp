@@ -923,8 +923,8 @@ bool CreateDirectory(const std::string& path, mode_t mode)
 
 bool IsValidOutPath(const std::string& path)
 {
-    std::vector<std::string> blacklist = {"/data/log/hiperflog/", "data/log/hiperflog/"};
-    for (auto name : blacklist) {
+    std::vector<std::string> fineName = {"/data/log/hiperflog/", "data/log/hiperflog/"};
+    for (auto name : fineName) {
         if (StringStartsWith(path, name)) {
             return false;
         }
