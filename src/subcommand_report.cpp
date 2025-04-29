@@ -635,7 +635,7 @@ void SubCommandReport::SetHM()
     if (isHM_) {
         pid_t devhost = -1;
         std::string str = recordFileReader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
-        if (str != EMPTY_STRING) {
+        if (str != EMPTY_STRING && IsNumeric(str)) {
             devhost = std::stoll(str);
         }
         GetReport().virtualRuntime_.SetDevhostPid(devhost);

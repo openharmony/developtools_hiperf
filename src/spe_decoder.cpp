@@ -809,9 +809,13 @@ struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
 
     decoder = reinterpret_cast<SpeDecoder *>(malloc(sizeof(struct SpeDecoder)));
     if (!decoder) {
-        return NULL;
+        return nullptr;
     }
-    memset_s(decoder, sizeof(struct SpeDecoder), 0, sizeof(struct SpeDecoder));
+    if (memset_s(decoder, sizeof(struct SpeDecoder), 0, sizeof(struct SpeDecoder)) != EOK) {
+        HLOGE("memset_s failed in SpeDecoderDataNew.");
+        free(decoder);
+        return nullptr;
+    }
 
     decoder->buf = speBuf;
     decoder->len = speLen;
