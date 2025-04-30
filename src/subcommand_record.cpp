@@ -190,10 +190,16 @@ bool SubCommandRecord::GetSpeOptions()
             if (expressions.size() == itemNum && (IsNumeric(expressions[1]) || IsHexDigits(expressions[1]))) {
                 std::string name = expressions[0];
                 uint64_t num = 0;
+                char *endPtr = nullptr;
+                errno = 0;
                 if (IsNumeric(expressions[1])) {
-                    num = std::stoull(expressions[1]);
+                    num = std::strtoull(expressions[1].c_str(), &endPtr, 10); // 10 : decimal scale
                 } else {
-                    num = std::stoull(expressions[1], nullptr, NUMBER_FORMAT_HEX_BASE);
+                    num = std::strtoull(expressions[1].c_str(), &endPtr, NUMBER_FORMAT_HEX_BASE);
+                }
+                if (endPtr == expressions[1].c_str() || *endPtr != '\0' || errno != 0) {
+                    HLOGE("string to uint64_t failed, expressions[1]: %s", expressions[1].c_str());
+                    continue;
                 }
                 if (speOptMap_.find(name) != speOptMap_.end()) {
                     speOptMap_[name] = num;
