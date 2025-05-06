@@ -215,8 +215,8 @@ void SubCommandStatTest::CheckGroupCoverage(const std::string &stringOut,
     auto lines = StringSplit(stringOut, "\n");
     for (auto line : lines) {
         auto tokens = StringSplit(line.c_str(), " ");
-        if (find(groupCounterNames.begin(), groupCounterNames.end(), tokens[1]) !=
-            groupCounterNames.end()) {
+        if (tokens.size() > 1 &&
+            find(groupCounterNames.begin(), groupCounterNames.end(), tokens[1]) != groupCounterNames.end()) {
             if (groupCoverage.empty()) {
                 groupCoverage = tokens.back();
             } else {

@@ -257,32 +257,31 @@ HWTEST_F(SymbolsFileTest, LoadKernelSymbols, TestSize.Level0)
 
         std::string modulesMap = ReadFileToString("/proc/modules");
         int lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
-        if (lines < 0) {
-            return;
-        }
-        std::set<std::string> modulesCount;
-        for (auto &symbol : symbols) {
-            if (symbol.module_.length()) {
-                modulesCount.emplace(symbol.module_);
+        if (lines >= 0) {
+            std::set<std::string> modulesCount;
+            for (auto &symbol : symbols) {
+                if (symbol.module_.length()) {
+                    modulesCount.emplace(symbol.module_);
+                }
             }
-        }
 
-        // add [kernel.kallsyms]
-        if (modulesCount.size() != lines + 1u) {
-            printf("warn: modulesCount != lines + 1\n");
-        }
-        if (HasFailure()) {
-            for (auto &module : modulesCount) {
-                printf("%s\n", module.c_str());
+            // add [kernel.kallsyms]
+            if (modulesCount.size() != lines + 1u) {
+                printf("warn: modulesCount != lines + 1\n");
             }
-        }
+            if (HasFailure()) {
+                for (auto &module : modulesCount) {
+                    printf("%s\n", module.c_str());
+                }
+            }
 
-        // try vmlinux
-        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX), true);
-        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED), true);
-        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_NOBUILDID), true);
-        // will be load from runtime, still return true
-        EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
+            // try vmlinux
+            EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX), true);
+            EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED), true);
+            EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_NOBUILDID), true);
+            // will be load from runtime, still return true
+            EXPECT_EQ(TestLoadSymbols(SYMBOL_KERNEL_FILE, TEST_FILE_VMLINUX_STRIPPED_BROKEN), true);
+        }
     } else {
         printf("cannot access /sys/kernel/notes\n");
     }

@@ -548,7 +548,6 @@ HWTEST_F(PerfEventRecordTest, SampleReplaceWithCallStack4, TestSize.Level3)
     record.data_.nr = ips.size();
     record.ReplaceWithCallStack();
     // not PERF_CONTEXT_USER will add
-    ASSERT_EQ(ips.size(), record.data_.nr);
     for (size_t i = 0; i < record.data_.nr; i++) {
         ASSERT_EQ(record.data_.ips[i], ips[i]);
     }

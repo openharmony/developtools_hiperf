@@ -607,10 +607,7 @@ HWTEST_F(CallStackTest, ExpendCallStackABABAB, TestSize.Level1)
  */
 HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
 {
-#if is_linux
-    return;
-#endif
-
+#if !is_linux
     std::vector<u64> regs;
     std::vector<u8> data;
     LoadFromFile(PATH_RESOURCE_TEST_DWARF_DATA + TEST_DWARF_USER_REGS_0, regs);
@@ -637,6 +634,7 @@ HWTEST_F(CallStackTest, UnwindCallStack, TestSize.Level1)
         ASSERT_TRUE(ret);
         ASSERT_LE(TEST_DWARF_FRAMES.size(), callFrames.size());
     }
+#endif
 }
 
 /**
