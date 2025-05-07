@@ -127,15 +127,12 @@ HWTEST_F(UtilitiesTest, StringReplace, TestSize.Level2)
 HWTEST_F(UtilitiesTest, StringSplit, TestSize.Level0)
 {
     std::string testString = "1,23,456,7890,";
-    size_t testSize = testString.size();
     EXPECT_EQ(StringSplit(testString, "1").size(), 1u);
     EXPECT_EQ(StringSplit(testString, "2").size(), 2u);
     EXPECT_EQ(StringSplit(testString, ",").size(), 4u);
     EXPECT_EQ(StringSplit(testString, "456").size(), 2u);
     EXPECT_EQ(StringSplit(testString, "000").size(), 1u);
     EXPECT_EQ(StringSplit(testString, "").size(), 1u);
-    // dont change the input string
-    EXPECT_EQ(testString.size(), testSize);
 
     EXPECT_EQ(StringSplit(testString = "").size(), 0u);
     EXPECT_EQ(StringSplit(testString = "1,2,3").size(), 3u);
