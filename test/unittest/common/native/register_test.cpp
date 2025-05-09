@@ -131,6 +131,8 @@ HWTEST_F(RegisterTest, RegisterGetSPValue, TestSize.Level2)
 
     EXPECT_EQ(RegisterGetValue(value, registers, sp, sizeof(registers)),
               RegisterGetSPValue(value2, BUILD_ARCH_TYPE, registers, sizeof(registers)));
+
+    EXPECT_EQ(value, value2);
 }
 
 /**
@@ -148,6 +150,8 @@ HWTEST_F(RegisterTest, RegisterGetIPValue, TestSize.Level2)
 
     EXPECT_EQ(RegisterGetValue(value, registers, ip, sizeof(registers)),
               RegisterGetIPValue(value2, BUILD_ARCH_TYPE, registers, sizeof(registers)));
+
+    EXPECT_EQ(value, value2);
 }
 
 /**
