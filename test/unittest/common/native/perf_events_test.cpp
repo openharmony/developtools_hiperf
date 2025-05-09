@@ -421,18 +421,22 @@ HWTEST_F(PerfEventsTest, CalcBufferSizeLargeMemory, TestSize.Level1)
 
     if (!LittleMemory()) {
         PerfEvents event;
+        size_t maxBufferSize = PerfEvents::MAX_BUFFER_SIZE_LARGE;
+        size_t minBufferSize = PerfEvents::MIN_BUFFER_SIZE;
+        event.GetBufferSizeCfg(maxBufferSize, minBufferSize);
+
         event.backtrack_ = false;
         event.systemTarget_ = true;
-        EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MAX_BUFFER_SIZE_LARGE);
+        EXPECT_EQ(event.CalcBufferSize(), maxBufferSize);
 
         event.backtrack_ = true;
         event.cpuMmap_.clear();
-        EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MIN_BUFFER_SIZE);
+        EXPECT_EQ(event.CalcBufferSize(), minBufferSize);
 
         event.cpuMmap_[0] = {};
         event.mmapPages_ = TEN_THOUSAND;
         event.pageSize_ = TEN_THOUSAND;
-        EXPECT_EQ(event.CalcBufferSize(), PerfEvents::MAX_BUFFER_SIZE_LARGE);
+        EXPECT_EQ(event.CalcBufferSize(), maxBufferSize);
 
         while (event.cpuMmap_.size() < SEVENTEEN) {
             event.cpuMmap_[event.cpuMmap_.size()] = {};
@@ -440,7 +444,9 @@ HWTEST_F(PerfEventsTest, CalcBufferSizeLargeMemory, TestSize.Level1)
         event.mmapPages_ = PAGE_SIZE;
         event.pageSize_ = PAGE_SIZE;
         static constexpr size_t EXPECT_SIZE = SEVENTEEN * PAGE_SIZE * PAGE_SIZE * 4;
-        EXPECT_EQ(event.CalcBufferSize(), EXPECT_SIZE);
+        if (!CheckOutOfRange(EXPECT_SIZE, minBufferSize, maxBufferSize)) {
+            EXPECT_EQ(event.CalcBufferSize(), EXPECT_SIZE);
+        }
     }
 }
 

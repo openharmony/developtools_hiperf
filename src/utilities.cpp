@@ -24,6 +24,9 @@
 #include <io.h>
 #endif
 
+#ifdef CONFIG_HAS_CCM
+#include "config_policy_utils.h"
+#endif
 #include "hiperf_hilog.h"
 #include "ipc_utilities.h"
 
@@ -931,6 +934,60 @@ bool IsValidOutPath(const std::string& path)
     }
     return true;
 }
+
+#ifdef CONFIG_HAS_CCM
+cJSON* GetProductCfgRoot(const char* cfgPath)
+{
+    char buf[PATH_MAX] = {0};
+    char* configFilePath = GetOneCfgFile(cfgPath, buf, PATH_MAX);
+    if (configFilePath == nullptr || (configFilePath[0] == '\0') || (strlen(configFilePath) > PATH_MAX)) {
+        HLOGD("get configFilePath from cfgPath %s failed", cfgPath);
+        return nullptr;
+    }
+    HLOGD("get configFilePath %s from cfgPath %s", configFilePath, cfgPath);
+    return ParseJson(configFilePath);
+}
+
+cJSON* ParseJson(const std::string &filePath)
+{
+    std::ifstream inFile(filePath, std::ios::in);
+    if (!inFile.is_open()) {
+        HLOGE("open file %s failed", filePath.c_str());
+        return nullptr;
+    }
+    std::string fileContent((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+    cJSON* root = cJSON_Parse(fileContent.c_str());
+    inFile.close();
+    return root;
+}
+
+bool GetJsonNum(cJSON* tag, const char* key, size_t &value)
+{
+    cJSON* subNode = cJSON_GetObjectItem(tag, key);
+    if (subNode != nullptr && cJSON_IsNumber(subNode)) {
+        value = static_cast<size_t>(subNode->valuedouble);
+        return true;
+    }
+    HLOGE("GetJsonNum key %s failed", key);
+    return false;
+}
+
+bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value)
+{
+    bool ret = false;
+    cJSON* root = GetProductCfgRoot(cfgPath);
+    if (root == nullptr) {
+        HLOGD("GetProductCfgRoot file %s failed", cfgPath);
+        return ret;
+    }
+    if (GetJsonNum(root, cfgKey, value)) {
+        ret = true;
+        HLOGD("GetCfgValue %s: %zu", cfgKey, value);
+    }
+    cJSON_Delete(root);
+    return ret;
+}
+#endif
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
