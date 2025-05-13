@@ -950,7 +950,8 @@ cJSON* GetProductCfgRoot(const char* cfgPath)
 
 cJSON* ParseJson(const std::string &filePath)
 {
-    std::ifstream inFile(filePath, std::ios::in);
+    std::string resolvedPath = CanonicalizeSpecPath(filePath.c_str());
+    std::ifstream inFile(resolvedPath, std::ios::in);
     if (!inFile.is_open()) {
         HLOGE("open file %s failed", filePath.c_str());
         return nullptr;
