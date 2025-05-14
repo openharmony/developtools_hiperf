@@ -574,6 +574,13 @@ private:
     bool HaveTargetsExit(const std::chrono::steady_clock::time_point &startTime);
     void ExitReadRecordBufThread();
 
+#ifdef CONFIG_HAS_CCM
+    static constexpr char PRODUCT_CONFIG_PATH[] = "etc/hiperf/hiperf_cfg.json";
+    static constexpr char CFG_MAX_BUFFER_SIZE[] = "MaxBufferSize";
+    static constexpr char CFG_MIN_BUFFER_SIZE[] = "MinBufferSize";
+    void GetBufferSizeCfg(size_t &maxBufferSize, size_t &minBufferSize);
+#endif
+
     enum EventSpaceType {
         UNKNOW = 0,
         USER = 1,

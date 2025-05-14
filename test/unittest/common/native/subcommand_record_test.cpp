@@ -2217,6 +2217,18 @@ HWTEST_F(SubCommandRecordTest, CheckGetCountFromFile, TestSize.Level1)
     uint32_t cpuOnline = cmd.GetCountFromFile("/sys/devices/system/cpu/online");
     ASSERT_GT(cpuOnline, 1);
 }
+
+HWTEST_F(SubCommandRecordTest, CheckProductCfg, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    cJSON* root = GetProductCfgRoot(cmd.PRODUCT_CONFIG_PATH);
+    if (root) {
+        size_t mmapPages = 0;
+        EXPECT_EQ(GetCfgValue(cmd.PRODUCT_CONFIG_PATH, cmd.CFG_MAP_PAGES, mmapPages), true);
+        cmd.GetMmapPagesCfg();
+        cJSON_Delete(root);
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

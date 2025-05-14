@@ -1333,7 +1333,7 @@ bool PerfEvents::CreateMmap(const FdItem &item, const perf_event_attr &attr)
 
         cpuMmap_[item.cpu] = mmapItem;
         pollFds_.emplace_back(pollfd {mmapItem.fd, POLLIN, 0});
-        HLOGD("CreateMmap success cpu %d fd %d", item.cpu, mmapItem.fd);
+        HLOGD("CreateMmap success cpu %d fd %d mmapPages_ %u", item.cpu, mmapItem.fd, mmapPages_);
     } else {
         const MmapFd &mmapItem = it->second;
         int rc = ioctl(item.fd.Get(), PERF_EVENT_IOC_SET_OUTPUT, mmapItem.fd);
@@ -1368,6 +1368,32 @@ std::vector<AttrWithId> PerfEvents::GetAttrWithId() const
     return result;
 }
 
+#ifdef CONFIG_HAS_CCM
+void PerfEvents::GetBufferSizeCfg(size_t &maxBufferSize, size_t &minBufferSize)
+{
+    size_t tmpMaxBufferSize = 0;
+    size_t tmpMinBufferSize = 0;
+    if (GetCfgValue(PRODUCT_CONFIG_PATH, CFG_MAX_BUFFER_SIZE, tmpMaxBufferSize)) {
+        if (!CheckOutOfRange(tmpMaxBufferSize, BUFFER_LOW_LEVEL, MAX_BUFFER_SIZE_LARGE)) {
+            maxBufferSize = tmpMaxBufferSize;
+            HIPERF_HILOGI(MODULE_DEFAULT, "GetCfgValue %{public}s: %{public}zu", CFG_MAX_BUFFER_SIZE, maxBufferSize);
+        } else {
+            HIPERF_HILOGE(MODULE_DEFAULT, "GetCfgValue %{public}s failed, %{public}zu out of range",
+                          CFG_MAX_BUFFER_SIZE, tmpMaxBufferSize);
+        }
+    }
+    if (GetCfgValue(PRODUCT_CONFIG_PATH, CFG_MIN_BUFFER_SIZE, tmpMinBufferSize)) {
+        if (!CheckOutOfRange(tmpMinBufferSize, BUFFER_LOW_LEVEL, MAX_BUFFER_SIZE_LARGE)) {
+            minBufferSize = tmpMinBufferSize;
+            HIPERF_HILOGI(MODULE_DEFAULT, "GetCfgValue %{public}s: %{public}zu", CFG_MIN_BUFFER_SIZE, minBufferSize);
+        } else {
+            HIPERF_HILOGE(MODULE_DEFAULT, "GetCfgValue %{public}s failed, %{public}zu out of range",
+                          CFG_MIN_BUFFER_SIZE, tmpMinBufferSize);
+        }
+    }
+}
+#endif
+
 size_t PerfEvents::CalcBufferSize()
 {
     size_t maxBufferSize;
@@ -1376,14 +1402,18 @@ size_t PerfEvents::CalcBufferSize()
     } else {
         maxBufferSize = MAX_BUFFER_SIZE_LARGE;
     }
+    size_t minBufferSize = MIN_BUFFER_SIZE;
+#ifdef CONFIG_HAS_CCM
+    GetBufferSizeCfg(maxBufferSize, minBufferSize);
+#endif
 
     size_t bufferSize = maxBufferSize;
     if (backtrack_ || !systemTarget_) {
         // suppose ring buffer is 4 times as much as mmap
         static constexpr int TIMES = 4;
         bufferSize = cpuMmap_.size() * mmapPages_ * pageSize_ * TIMES;
-        if (bufferSize < MIN_BUFFER_SIZE) {
-            bufferSize = MIN_BUFFER_SIZE;
+        if (bufferSize < minBufferSize) {
+            bufferSize = minBufferSize;
         } else if (bufferSize > maxBufferSize) {
             bufferSize = maxBufferSize;
         }

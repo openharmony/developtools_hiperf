@@ -203,7 +203,9 @@ ohos_source_set("hiperf_platform_common") {
 
   if (is_ohos) {
     external_deps = [
+      "cJSON:cjson",
       "c_utils:utils",
+      "config_policy:configpolicy_util",
       "faultloggerd:libunwinder",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
@@ -211,6 +213,7 @@ ohos_source_set("hiperf_platform_common") {
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
+    defines += [ "CONFIG_HAS_CCM" ]
     if (bundle_framework_enable) {
       external_deps += [
         "bundle_framework:appexecfwk_base",
@@ -252,10 +255,12 @@ ohos_source_set("hiperf_platform_linux") {
 
   if (is_ohos) {
     external_deps = [
+      "cJSON:cjson",
       "faultloggerd:libunwinder",
       "hilog:libhilog",
       "init:libbegetutil",
     ]
+    defines = [ "CONFIG_HAS_CCM" ]
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
