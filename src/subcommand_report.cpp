@@ -618,6 +618,7 @@ HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
 #endif
 
     printf("report done\n");
+    AgeHiperflogFiles();
     return HiperfError::NO_ERR;
 }
 

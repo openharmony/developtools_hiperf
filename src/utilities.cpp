@@ -27,6 +27,7 @@
 #ifdef CONFIG_HAS_CCM
 #include "config_policy_utils.h"
 #endif
+#include "directory_ex.h"
 #include "hiperf_hilog.h"
 #include "ipc_utilities.h"
 
@@ -896,45 +897,6 @@ bool IsNumeric(const std::string& str)
     return true;
 }
 
-bool IsDirectoryExists(const std::string& fileName)
-{
-    struct stat fileInfo;
-    if (stat(fileName.c_str(), &fileInfo) == 0) {
-        return S_ISDIR(fileInfo.st_mode);
-    }
-    return false;
-}
-
-bool CreateDirectory(const std::string& path, mode_t mode)
-{
-#if defined(is_ohos) && is_ohos
-    std::string::size_type pos = 0;
-    do {
-        pos = path.find('/', pos + 1);
-        std::string subPath = (pos == std::string::npos) ? path : path.substr(0, pos);
-        if (access(subPath.c_str(), F_OK) != 0) {
-            if (mkdir(subPath.c_str(), mode) != 0) {
-                return false;
-            }
-        }
-    } while (pos != std::string::npos);
-    return access(path.c_str(), F_OK) == 0;
-#else
-    return false;
-#endif
-}
-
-bool IsValidOutPath(const std::string& path)
-{
-    std::vector<std::string> fineName = {"/data/log/hiperflog/", "data/log/hiperflog/"};
-    for (auto name : fineName) {
-        if (StringStartsWith(path, name)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 #ifdef CONFIG_HAS_CCM
 cJSON* GetProductCfgRoot(const char* cfgPath)
 {
@@ -989,6 +951,67 @@ bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value)
     return ret;
 }
 #endif
+
+bool IsDirectoryExists(const std::string& fileName)
+{
+    struct stat fileInfo;
+    if (stat(fileName.c_str(), &fileInfo) == 0) {
+        return S_ISDIR(fileInfo.st_mode);
+    }
+    return false;
+}
+
+bool CreateDirectory(const std::string& path, mode_t mode)
+{
+#if defined(is_ohos) && is_ohos
+    std::string::size_type pos = 0;
+    do {
+        pos = path.find('/', pos + 1);
+        std::string subPath = (pos == std::string::npos) ? path : path.substr(0, pos);
+        if (access(subPath.c_str(), F_OK) != 0) {
+            if (mkdir(subPath.c_str(), mode) != 0) {
+                return false;
+            }
+        }
+    } while (pos != std::string::npos);
+    return access(path.c_str(), F_OK) == 0;
+#else
+    return false;
+#endif
+}
+
+bool IsValidOutPath(const std::string& path)
+{
+    std::vector<std::string> fileName = {"/data/log/hiperflog/", "data/log/hiperflog/"};
+    for (auto name : fileName) {
+        if (StringStartsWith(path, name)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void AgeHiperflogFiles()
+{
+#if defined(is_ohos) && is_ohos
+    std::vector<std::string> allFiles;
+    OHOS::GetDirFiles("/data/log/hiperflog/", allFiles);
+    std::set<std::string> fileNames = {"/data/log/hiperflog/[shmm]", "/data/log/hiperflog/[vdso]",
+                                       "/data/log/hiperflog/.hiperf_record_control_c2s",
+                                       "/data/log/hiperflog/.hiperf_record_control_s2c"};
+    for (std::string file : allFiles) {
+        if (fileNames.count(file)) {
+            HLOGD("the file is %s,not need to delete", file.c_str());
+            continue;
+        }
+        if (!OHOS::RemoveFile(file)) {
+            HIPERF_HILOGI(MODULE_DEFAULT, "remove hiperflog file : %{public}s failed", file.c_str());
+            continue;
+        }
+        HIPERF_HILOGI(MODULE_DEFAULT, "remove hiperflog file : %{public}s", file.c_str());
+    }
+#endif
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
