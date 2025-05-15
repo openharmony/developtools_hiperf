@@ -998,7 +998,9 @@ void AgeHiperflogFiles()
     OHOS::GetDirFiles("/data/log/hiperflog/", allFiles);
     std::set<std::string> fileNames = {"/data/log/hiperflog/[shmm]", "/data/log/hiperflog/[vdso]",
                                        "/data/log/hiperflog/.hiperf_record_control_c2s",
-                                       "/data/log/hiperflog/.hiperf_record_control_s2c"};
+                                       "/data/log/hiperflog/.hiperf_record_control_s2c",
+                                       "/data/log/hiperflog/.hiperf_stat_control_c2s",
+                                       "/data/log/hiperflog/.hiperf_stat_control_s2c"};
     for (std::string file : allFiles) {
         if (fileNames.count(file)) {
             HLOGD("the file is %s,not need to delete", file.c_str());
