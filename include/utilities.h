@@ -343,6 +343,7 @@ bool IsStringToIntSuccess(const std::string &str, int &num);
 bool IsDirectoryExists(const std::string& fileName);
 bool CreateDirectory(const std::string& path, mode_t mode);
 bool IsValidOutPath(const std::string& path);
+void AgeHiperflogFiles();
 
 const std::string HMKERNEL = "HongMeng";
 

@@ -207,7 +207,7 @@ HiperfError SubCommandDump::OnSubCommand(std::vector<std::string>& args)
     if (dumpFeatures_ || dumpAll_) {
         DumpFeaturePortion(indent_);
     }
-
+    AgeHiperflogFiles();
     return HiperfError::NO_ERR;
 }
 

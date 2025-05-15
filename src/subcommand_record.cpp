@@ -1555,6 +1555,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     OnlineReportData();
     CloseClientThread();
     RemoveVdsoTmpFile();
+    AgeHiperflogFiles();
     HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord finish");
     return HiperfError::NO_ERR;
 }
