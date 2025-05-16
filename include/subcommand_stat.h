@@ -82,12 +82,20 @@ public:
         "         Show more detailed reports.\n"
         "   --dumpoptions\n"
         "         Dump command options.\n"
+        "   --control <command>\n"
+        "         Control counting by <command>, the <command> can be:\n"
+        "           prepare: set arguments and prepare counting\n"
+        "           start: start counting\n"
+        "           stop: stop counting\n"
+        "   -o <output_file_name>\n"
+        "         Set output file name, default is /data/local/tmp/perf_stat.txt.\n"
+        "         Only restrain using with --control prepare.\n"
                      // clang-format on
                      ),
           targetSystemWide_(false)
     {
     }
-
+    ~SubCommandStat();
     HiperfError OnSubCommand(std::vector<std::string>& args) override;
     bool ParseOption(std::vector<std::string> &args) override;
     bool ParseSpecialOption(std::vector<std::string> &args);
@@ -109,6 +117,7 @@ private:
     bool restart_ {false};
     bool noCreateNew_ {false};
     std::string appPackage_ = {};
+    std::string outputFilename_ = "";
     int checkAppMs_ = DEFAULT_CHECK_APP_MS;
     std::vector<pid_t> selectPids_;
     std::vector<pid_t> selectTids_;
@@ -120,6 +129,7 @@ private:
     bool helpOption_ {false};
     bool CheckOptionPidAndApp(std::vector<pid_t> pids);
     bool CheckOptionPid(std::vector<pid_t> pids);
+    bool CheckOutPutFile();
     static bool FindEventCount(
         const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
         const std::string &configName, const __u64 group_id, __u64 &eventcount, double &scale);
@@ -133,14 +143,16 @@ private:
     static std::string GetCommentConfigName(
         const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName);
 
-    static void Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
-    static void PrintPerHead();
+    static void Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
+    static void PrintPerHead(FILE* filePtr);
     static void GetPerKey(std::string &perKey, const PerfEvents::Summary &summary);
     static void MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr);
-    static void ReportNormal(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
-    static void ReportDetailInfos(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
+    static void ReportNormal(const std::map<std::string,
+                             std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
+    static void ReportDetailInfos(const std::map<std::string,
+                                  std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
     static void PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,
-                              std::string &configName);
+                              std::string &configName, FILE* filePtr);
     static void InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
                            const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance);
     static bool FindPerCoreEventCount(PerfEvents::Summary &summary, __u64 &eventCount, double &scale);
@@ -160,6 +172,44 @@ private:
     bool CheckSelectCpuPidOption();
     void SetReportFlags(bool cpuFlag, bool threadFlag);
     void SetPerfEvent();
+    HiperfError CheckStatOption();
+
+    // for client
+    int clientPipeInput_ = -1;
+    int clientPipeOutput_ = -1;
+    int nullFd_ = -1;
+    FILE* filePtr_ = nullptr;
+    std::thread clientCommandHanle_;
+    bool clientRunning_ = true;
+    struct ControlCommandHandler {
+        std::function<bool()> preProcess = []() -> bool {
+            return false;
+        };
+        std::function<void(bool)> postProcess = [](bool) {};
+    };
+    std::unordered_map<std::string, ControlCommandHandler> controlCommandHandlerMap_ = {};
+    inline void CreateClientThread();
+    void ClientCommandHandle();
+    void InitControlCommandHandlerMap();
+    void DispatchControlCommand(const std::string& command);
+    bool ClientCommandResponse(bool response);
+    bool ClientCommandResponse(const std::string& str);
+    bool IsSamplingRunning();
+
+    // for cmdline client
+    bool allowIpc_ = true;
+    std::string controlCmd_ = {};
+    bool isFifoServer_ = false;
+    bool isFifoClient_ = false;
+    bool ProcessControl();
+    void ProcessStopCommand(bool ret);
+    bool CreateFifoServer();
+    bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
+    bool WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut);
+    void WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply);
+    void CloseClientThread();
+    std::string HandleAppInfo();
+    bool ParseControlCmd(const std::string cmd);
 };
 
 bool RegisterSubCommandStat(void);

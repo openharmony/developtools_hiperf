@@ -48,7 +48,9 @@ namespace OHOS::Developtools::HiPerf {
     GEN_ITEM(OPEN_DATA_FILE_FAIL),              /* 26 */ \
     GEN_ITEM(SET_SYMBOLS_PATH_FAIL),            /* 27 */ \
     GEN_ITEM(OPTION_NOT_SUPPORT),               /* 28 */ \
-    GEN_ITEM(SUBCOMMAND_OPTIONS_ERROR)          /* 29 */
+    GEN_ITEM(SUBCOMMAND_OPTIONS_ERROR),         /* 29 */ \
+    GEN_ITEM(CHECK_OUT_PUT_ERROR),              /* 30 */ \
+    GEN_ITEM(WRONG_CONTROL_CMD)                 /* 31 */
 
 #define FOR_ERROR_ENUM(x) x
 

@@ -894,6 +894,48 @@ HWTEST_F(UtilitiesTest, IsValidOutPathErr, TestSize.Level2)
     std::string file = "/data/log/hiperflog/perf.data";
     EXPECT_FALSE(IsValidOutPath(file));
 }
+
+/**
+ * @tc.name: StringToIntTest
+ * @tc.desc: Test StringToUint64 function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(UtilitiesTest, StringToIntTest, TestSize.Level2)
+{
+    std::string traceParamsStr = "1234567890";
+    uint64_t paramsUint64 = 0;
+    EXPECT_TRUE(StringToUint64(traceParamsStr, paramsUint64));
+    EXPECT_EQ(paramsUint64, 1234567890); // 1234567890: test value
+    traceParamsStr = "18446744073709551615";
+    EXPECT_TRUE(StringToUint64(traceParamsStr, paramsUint64));
+    EXPECT_EQ(paramsUint64, ULLONG_MAX);
+}
+
+/**
+ * @tc.name: StringToUint64ErrorTest
+ * @tc.desc: Test StringToUint64 function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(UtilitiesTest, StringToUint64ErrorTest, TestSize.Level2)
+{
+    std::string traceParamsStr = "-1234567890";
+    uint64_t paramsUint64 = 0;
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+    traceParamsStr = "a123";
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+    traceParamsStr = "";
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+    traceParamsStr = "12a3";
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+    traceParamsStr = "abc";
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+    traceParamsStr = ".1";
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+    traceParamsStr = "1.1";
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+    traceParamsStr = "18446744073709551616";
+    EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

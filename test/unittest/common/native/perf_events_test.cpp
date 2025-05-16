@@ -47,7 +47,7 @@ public:
     static void SetAllConfig(PerfEvents &event);
     static bool RecordCount(PerfEventRecord& record);
     static void StatCount(
-        const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents);
+        const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
 
     static constexpr int TEST_CODE_MEM_FILE_SIZE = 1024;
     static constexpr auto TEST_CODE_SLEEP_BEFORE_RUN = 500ms;
@@ -82,7 +82,7 @@ bool PerfEventsTest::RecordCount(PerfEventRecord& record)
 }
 
 void PerfEventsTest::StatCount(
-    const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents)
+    const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr)
 {
     gStatCount++;
 }
@@ -290,6 +290,7 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level0)
     stdoutRecord.Start();
 
     PerfEvents event;
+    FILE* filePtr = nullptr;
     // prepare
     gStatCount = 0;
     std::vector<pid_t> selectCpus_;
@@ -306,6 +307,7 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level0)
     event.AddDefaultEvent(PERF_TYPE_SOFTWARE);
     event.AddDefaultEvent(PERF_TYPE_TRACEPOINT);
     event.SetStatCallBack(StatCount);
+    event.SetStatReportFd(filePtr);
     ASSERT_EQ(event.PrepareTracking(), true);
     std::thread runThread(RunTrack, std::ref(event));
     std::vector<std::thread> testThreads;
