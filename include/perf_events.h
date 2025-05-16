@@ -449,11 +449,12 @@ public:
         std::vector<Summary> summaries;
     };
     using StatCallBack =
-        std::function<void(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &)>;
+        std::function<void(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &, FILE*)>;
     using RecordCallBack = std::function<bool(PerfEventRecord&)>;
 
     void SetStatCallBack(StatCallBack reportCallBack);
     void SetRecordCallBack(RecordCallBack recordCallBack);
+    void SetStatReportFd(FILE* reportPtr);
     void GetLostSamples(size_t &lostSamples, size_t &lostNonSamples)
     {
         lostSamples = lostSamples_;
@@ -654,6 +655,7 @@ private:
     unsigned int mmapPages_ = 0;
     int clockId_ = -1;
     uint64_t branchSampleType_ = 0;
+    FILE* reportPtr_ = nullptr;
 
     SampleStackType sampleStackType_ = SampleStackType::NONE;
     uint32_t dwarfSampleStackSize_ = MAX_SAMPLE_STACK_SIZE;

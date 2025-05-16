@@ -18,10 +18,14 @@
 #include <cinttypes>
 #include <condition_variable>
 #include <cstdlib>
+#include <fstream>
 #include <mutex>
 #include <regex>
 #include <sstream>
 #include <thread>
+#include <string>
+#include <unistd.h>
+#include <vector>
 
 #include <gtest/gtest.h>
 #include <hilog/log.h>
@@ -34,6 +38,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+const int CMD_OUTPUT_BUF = 1024;
 static std::atomic<bool> g_wait = false;
 class SubCommandStatTest : public testing::Test {
 public:
@@ -52,6 +57,9 @@ public:
     int CounterValue(const std::string &stringOut, const std::string &configName) const;
     void CheckGroupCoverage(const std::string &stringOut,
                             const std::string &groupCounterName) const;
+    bool RunCmd(const string& cmdstr) const;
+    bool CheckTraceCommandOutput(const std::string& cmd,
+                                 const std::vector<std::string>& keywords) const;
 
     const std::vector<std::string> defaultConfigNames_ = {
         "hw-branch-misses",
@@ -224,6 +232,53 @@ void SubCommandStatTest::CheckGroupCoverage(const std::string &stringOut,
             }
         }
     }
+}
+
+bool SubCommandStatTest::RunCmd(const string& cmdstr) const
+{
+    if (cmdstr.empty()) {
+        return false;
+    }
+    FILE *fp = popen(cmdstr.c_str(), "r");
+    if (fp == nullptr) {
+        return false;
+    }
+    char res[CMD_OUTPUT_BUF] = { '\0' };
+    while (fgets(res, sizeof(res), fp) != nullptr) {
+        std::cout << res;
+    }
+    pclose(fp);
+    return true;
+}
+
+bool SubCommandStatTest::CheckTraceCommandOutput(const std::string& cmd,
+                                                 const std::vector<std::string>& keywords) const
+{
+    if (cmd.empty()) {
+        return false;
+    }
+    FILE* fp = popen(cmd.c_str(), "r");
+    if (fp == nullptr) {
+        return false;
+    }
+
+    char buffer[CMD_OUTPUT_BUF];
+    int checkIdx = 0;
+    while (fgets(buffer, sizeof(buffer), fp) != nullptr) {
+        while (checkIdx < keywords.size() && strstr(buffer, keywords[checkIdx].c_str()) != nullptr) {
+            GTEST_LOG_(INFO) << "match keyword :" << keywords[checkIdx];
+            checkIdx++;
+            if (checkIdx == keywords.size()) {
+                break;
+            }
+        }
+    }
+
+    pclose(fp);
+    if (checkIdx < keywords.size()) {
+        GTEST_LOG_(ERROR) << "Failed to match keyword : " << keywords[checkIdx];
+    }
+    return checkIdx == keywords.size();
 }
 
 /**
@@ -2112,11 +2167,12 @@ HWTEST_F(SubCommandStatTest, TestReport, TestSize.Level1)
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     SubCommandStat cmdStat;
+    FILE* filePtr = nullptr;
     std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> countEvents;
     std::unique_ptr<PerfEvents::CountEvent> testEvent(std::make_unique<PerfEvents::CountEvent>());
     std::string test = "test";
     countEvents[test] = std::move(testEvent);
-    cmdStat.Report(countEvents);
+    cmdStat.Report(countEvents, filePtr);
     std::string stringOut = stdoutRecord.Stop();
     EXPECT_TRUE(stringOut.find("test") != std::string::npos);
     EXPECT_TRUE(stringOut.find("count  name") != std::string::npos);
@@ -2136,6 +2192,7 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level2)
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
     std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> countEvents;
+    FILE* filePtr = nullptr;
     for (int i = 0; i < 8; i++) {
         auto countEvent = std::make_unique<PerfEvents::CountEvent>(PerfEvents::CountEvent {});
         std::string configName = eventNames[i];
@@ -2159,7 +2216,7 @@ HWTEST_F(SubCommandStatTest, TestReport_Piling, TestSize.Level2)
         countEventTmp->id = 0;
         countEventTmp->usedCpus = countEventTmp->eventCount / 1e9;
     }
-    cmdStat.Report(countEvents);
+    cmdStat.Report(countEvents, filePtr);
     std::string stringOut = stdoutRecord.Stop();
     printf("output: %s\n", stringOut.c_str());
     EXPECT_EQ(FindExpectStr(stringOut, "G/sec"), true);
@@ -2332,6 +2389,49 @@ HWTEST_F(SubCommandStatTest, GetInstance, TestSize.Level1)
     stdoutRecord.Start();
 
     EXPECT_EQ(SubCommandStat::GetInstance().Name(), "stat");
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control01
+ * @tc.desc: prepare, start, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_control01, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a",
+        {"create control hiperf counting success", "stat result will saved in /data/local/tmp/perf_stat.txt"}), true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
+        {"start counting success"}), true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
+        {"stop counting success"}), true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control02
+ * @tc.desc: prepare, prepare
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_control02, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf stat --control prepare -a"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a",
+        {"another counting service is running"}), true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control03
+ * @tc.desc: start, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_control03, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
+        {"start counting failed"}), true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
+        {"stop counting failed"}), true);
 }
 } // namespace HiPerf
 } // namespace Developtools

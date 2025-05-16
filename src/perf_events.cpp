@@ -195,6 +195,10 @@ PerfEvents::~PerfEvents()
     }
 
     ExitReadRecordBufThread();
+    if (reportPtr_ != nullptr) {
+        fclose(reportPtr_);
+        reportPtr_ = nullptr;
+    }
 }
 
 bool PerfEvents::IsEventSupport(perf_type_id type, __u64 config)
@@ -738,6 +742,7 @@ bool PerfEvents::StopTracking(void)
 {
     if (g_trackRunning) {
         printf("some one called StopTracking\n");
+        HLOGI("some one called StopTracking");
         HIPERF_HILOGI(MODULE_DEFAULT, "some one called StopTracking");
         g_trackRunning = false;
         if (trackedCommand_) {
@@ -1014,6 +1019,12 @@ void PerfEvents::SetStatCallBack(StatCallBack reportCallBack)
 {
     reportCallBack_ = reportCallBack;
 }
+
+void PerfEvents::SetStatReportFd(FILE* reportPtr)
+{
+    reportPtr_ = reportPtr;
+}
+
 void PerfEvents::SetRecordCallBack(RecordCallBack recordCallBack)
 {
     recordCallBack_ = recordCallBack;
@@ -1272,7 +1283,7 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
         }
     }
 
-    reportCallBack_(countEvents_);
+    reportCallBack_(countEvents_, reportPtr_);
 
     return true;
 }
@@ -1868,8 +1879,13 @@ void PerfEvents::StatLoop()
                 usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
                 durationInSec = usedTimeMsTick.count();
                 auto lefTimeMsTick = duration_cast<milliseconds>(endTime - thisTime);
-                printf("\nReport at %" PRId64 " ms (%" PRId64 " ms left):\n",
-                       (uint64_t)usedTimeMsTick.count(), (uint64_t)lefTimeMsTick.count());
+                if (reportPtr_ == nullptr) {
+                    printf("\nReport at %" PRId64 " ms (%" PRId64 " ms left):\n",
+                           (uint64_t)usedTimeMsTick.count(), (uint64_t)lefTimeMsTick.count());
+                } else {
+                    fprintf(reportPtr_, "\nReport at %" PRId64 " ms (%" PRId64 " ms left):\n",
+                            (uint64_t)usedTimeMsTick.count(), (uint64_t)lefTimeMsTick.count());
+                }
                 // end of comments
                 nextReportTime += timeReport_;
                 StatReport(durationInSec);
@@ -1883,7 +1899,11 @@ void PerfEvents::StatLoop()
         if (thisTime >= endTime) {
             usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
             durationInSec = usedTimeMsTick.count();
-            printf("Timeout exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
+            if (reportPtr_ == nullptr) {
+                printf("Timeout exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
+            } else {
+                fprintf(reportPtr_, "Timeout exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
+            }
             if (trackedCommand_) {
                 trackedCommand_->Stop();
             }
