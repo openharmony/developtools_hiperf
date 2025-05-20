@@ -105,7 +105,7 @@ VirtualThread &VirtualRuntime::UpdateThread(pid_t pid, pid_t tid, const std::str
     const auto startTime = steady_clock::now();
 #endif
     VirtualThread &thread = GetThread(pid, tid, name);
-    if (!name.empty() && thread.name_.empty()) {
+    if (!name.empty() && (thread.name_.empty() || !StringEndsWith(thread.name_, name))) {
         thread.name_ = name;
     }
 #ifdef HIPERF_DEBUG_TIME
@@ -252,7 +252,7 @@ void VirtualRuntime::UpdateKernelModulesSpaceMaps()
         if (lineSize > 4096) { // 4096: line length
             continue;
         }
-        char *module = new char[lineSize];
+        char *module = new char[lineSize + 1];
         /*
         name       size  load     map
         hi_mipi_rx 53248 0 - Live 0xbf109000 (O)

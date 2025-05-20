@@ -369,6 +369,19 @@ bool IsStringToIntSuccess(const std::string &str, int &val)
     return true;
 }
 
+bool StringToUint64(const std::string &str, uint64_t &val)
+{
+    char *endPtr = nullptr;
+    errno = 0;
+    uint64_t num = std::strtoull(str.c_str(), &endPtr, 10); // 10 : decimal scale
+    if (endPtr == str.c_str() || *endPtr != '\0' || errno != 0 || num > ULLONG_MAX || str.c_str()[0] == '-') {
+        HIPERF_HILOGE(MODULE_DEFAULT, "get uint64 failed, str: %{public}s", str.c_str());
+        return false;
+    }
+    val = num;
+    return true;
+}
+
 bool ReadIntFromProcFile(const std::string &path, int &value)
 {
     std::string s = ReadFileToString(path);
@@ -376,7 +389,12 @@ bool ReadIntFromProcFile(const std::string &path, int &value)
     if (!IscontainDigits(s)) {
         return false;
     }
-    value = std::stoi(s);
+    if (s.size() >= 2 && StringEndsWith(s, "\n")) { // 2: string size
+        s.resize(s.size() - 1);
+    }
+    if (!IsStringToIntSuccess(s, value)) {
+        return false;
+    }
     return true;
 }
 
@@ -542,7 +560,11 @@ std::vector<pid_t> GetSubthreadIDs(const pid_t pid)
     std::vector<pid_t> res {};
     for (auto tidStr : tids) {
         if (!tidStr.empty()) {
-            pid_t tid = static_cast<pid_t>(std::stoul(tidStr, nullptr));
+            uint64_t dest = 0;
+            if (!StringToUint64(tidStr, dest)) {
+                continue;
+            }
+            pid_t tid = static_cast<pid_t>(dest);
             if (tid == pid) {
                 continue;
             }
@@ -561,7 +583,11 @@ std::vector<pid_t> GetSubthreadIDs(const pid_t pid, std::map<pid_t, ThreadInfos>
     std::vector<pid_t> res{};
     for (auto tidStr : tids) {
         ThreadInfos info;
-        pid_t tid = static_cast<pid_t>(std::stoul(tidStr, nullptr));
+        uint64_t dest = 0;
+        if (!StringToUint64(tidStr, dest)) {
+            continue;
+        }
+        pid_t tid = static_cast<pid_t>(dest);
         info.tid = tid;
         info.pid = pid;
         thread_map[tid] = info;
@@ -673,7 +699,7 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
     return res;
 }
 
-bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
+bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
 {
     if (!appPackage.empty()) {
         pid_t appPid = GetAppPackagePid(appPackage, -1, checkAppMs, waitAppRunCheckTimeOut);

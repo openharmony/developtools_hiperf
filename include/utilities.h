@@ -340,6 +340,7 @@ bool PowerOfTwo(uint64_t n);
 bool IsNumeric(const std::string& str);
 bool IscontainDigits(const std::string& str);
 bool IsStringToIntSuccess(const std::string &str, int &num);
+bool StringToUint64(const std::string &str, uint64_t &val);
 bool IsDirectoryExists(const std::string& fileName);
 bool CreateDirectory(const std::string& path, mode_t mode);
 bool IsValidOutPath(const std::string& path);
@@ -385,7 +386,7 @@ void CollectPidsByAppname(std::set<pid_t> &pids, const Container& appPackage)
     }
 }
 
-bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
+bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err);
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
 bool IsSupportNonDebuggableApp();

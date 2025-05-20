@@ -293,7 +293,11 @@ void VirtualThread::ParseServiceMap(const std::string &filename)
         if (mapTokens.size() == MMAP_LINE_MAX_TOKEN &&
             mapTokens[MMAP_LINE_TOKEN_INDEX_NAME] == name_) {
             HLOGM("map line: %s", line.c_str());
+            constexpr int mmapAddrRangeToken = 2;
             std::vector<std::string> addrRanges = StringSplit(mapTokens[0], "-");
+            if (addrRanges.size() < mmapAddrRangeToken) {
+                continue;
+            }
             begin = std::stoull(addrRanges[0], nullptr, NUMBER_FORMAT_HEX_BASE);
             end = std::stoull(addrRanges[1], nullptr, NUMBER_FORMAT_HEX_BASE);
             break;

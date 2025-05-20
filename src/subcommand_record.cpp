@@ -1696,8 +1696,18 @@ uint32_t SubCommandRecord::GetCountFromFile(const std::string &fileName)
         ret++;
         std::vector<std::string> vSubstr = StringSplit(subStr, "-");
         static const size_t BEGIN_END = 2;
-        if (vSubstr.size() == BEGIN_END) {
-            ret += static_cast<uint32_t>((std::stoi(vSubstr[1]) - std::stoi(vSubstr[0])));
+        if (vSubstr.size() != BEGIN_END) {
+            continue;
+        }
+        int num1 = 0;
+        int num2 = 0;
+        if (vSubstr[1].size() >= 2 && StringEndsWith(vSubstr[1], "\n")) { // 2: string size
+            vSubstr[1].resize(vSubstr[1].size() - 1);
+        }
+        bool ret1 = IsStringToIntSuccess(vSubstr[1], num1);
+        bool ret2 = IsStringToIntSuccess(vSubstr[0], num2);
+        if (ret1 && ret2) {
+            ret += static_cast<uint32_t>(num1 - num2);
         }
     }
     return ret;
@@ -1767,7 +1777,11 @@ void SubCommandRecord::AddMemTotalFeature()
         }
 
         if ((it + 1) != subStrs.end()) {
-            uint64_t memTotal = std::stoul(*(it + 1));
+            uint64_t memTotal = 0;
+            if (!StringToUint64(*(it + 1), memTotal)) {
+                HIPERF_HILOGE(MODULE_DEFAULT, "get uint64_t failed, paramValue: %{pubilc}s", (*(it + 1)).c_str());
+                continue;
+            }
             fileWriter_->AddU64Feature(FEATURE::TOTAL_MEM, memTotal);
         }
         break;
