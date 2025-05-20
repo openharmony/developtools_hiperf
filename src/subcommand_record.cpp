@@ -1701,7 +1701,7 @@ uint32_t SubCommandRecord::GetCountFromFile(const std::string &fileName)
         }
         int num1 = 0;
         int num2 = 0;
-        if (vSubstr[1].size() >= 2 && StringEndsWith(vSubstr[1], "\n")) {
+        if (vSubstr[1].size() >= 2 && StringEndsWith(vSubstr[1], "\n")) { // 2: string size
             vSubstr[1].resize(vSubstr[1].size() - 1);
         }
         bool ret1 = IsStringToIntSuccess(vSubstr[1], num1);

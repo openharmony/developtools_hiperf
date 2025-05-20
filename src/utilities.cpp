@@ -389,7 +389,7 @@ bool ReadIntFromProcFile(const std::string &path, int &value)
     if (!IscontainDigits(s)) {
         return false;
     }
-    if (s.size() >= 2 && StringEndsWith(s, "\n")) {
+    if (s.size() >= 2 && StringEndsWith(s, "\n")) { // 2: string size
         s.resize(s.size() - 1);
     }
     if (!IsStringToIntSuccess(s, value)) {
