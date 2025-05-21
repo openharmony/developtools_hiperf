@@ -50,7 +50,8 @@ namespace OHOS::Developtools::HiPerf {
     GEN_ITEM(OPTION_NOT_SUPPORT),               /* 28 */ \
     GEN_ITEM(SUBCOMMAND_OPTIONS_ERROR),         /* 29 */ \
     GEN_ITEM(CHECK_OUT_PUT_ERROR),              /* 30 */ \
-    GEN_ITEM(WRONG_CONTROL_CMD)                 /* 31 */
+    GEN_ITEM(WRONG_CONTROL_CMD),                /* 31 */ \
+    GEN_ITEM(CHECK_DEBUG_APP_FAIL)              /* 32 */
 
 #define FOR_ERROR_ENUM(x) x
 

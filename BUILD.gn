@@ -160,6 +160,7 @@ sources_platform_linux = [
   "./src/subcommand_record.cpp",
   "./src/subcommand_list.cpp",
   "./src/spe_decoder.cpp",
+  "./src/perf_pipe.cpp",
 ]
 
 common_deps = [
