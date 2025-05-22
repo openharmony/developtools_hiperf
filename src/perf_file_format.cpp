@@ -399,7 +399,7 @@ PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t
     : PerfFileSection(id)
 {
     Init(buf, size);
-    CHECK_TRUE(Read(nrCpusAvailable_) && !Read(nrCpusOnline_), NO_RETVAL, 0, "");
+    CHECK_TRUE(Read(nrCpusAvailable_) && Read(nrCpusOnline_), NO_RETVAL, 0, "");
 }
 
 PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailable,
