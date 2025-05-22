@@ -62,8 +62,8 @@ bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, ADDR_TYPE vad
 bool CallStack::GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, size_t regNum) const
 {
     if (regNum > 0) {
-        CHECK_TRUE(!RegisterGetSPValue(sp, arch_, regs, regNum), false, 1, "unable get sp");
-        CHECK_TRUE(!RegisterGetIPValue(ip, arch_, regs, regNum), false, 1, "unable get ip");
+        CHECK_TRUE(RegisterGetSPValue(sp, arch_, regs, regNum), false, 1, "unable get sp");
+        CHECK_TRUE(RegisterGetIPValue(ip, arch_, regs, regNum), false, 1, "unable get ip");
         if (ip != 0) {
             return true;
         }
@@ -283,7 +283,7 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
     static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
     regs->SetRegsData(reinterpret_cast<uintptr_t*>(regs_), regsNum_);
 #endif
-    CHECK_TRUE(unwinder == nullptr, false, 0, "");
+    CHECK_TRUE(unwinder != nullptr, false, 0, "");
     unwinder->SetRegs(regs);
     unwinder->Unwind(&unwindInfo);
     callStack = unwinder->GetFrames();
@@ -316,7 +316,7 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
                                uintptr_t pc, UnwindTableInfo& outTableInfo)
 {
     HLOGM("try search debug info at %s", symbolsFile->filePath_.c_str());
-    CHECK_TRUE(unwindInfoPtr == nullptr, -1, 0, "");
+    CHECK_TRUE(unwindInfoPtr != nullptr, -1, 0, "");
     auto &tableInfoMap = unwindInfoPtr->callStack.unwindTableInfoMap_;
     // all the thread in same process have same mmap and symbols
     if (tableInfoMap.find(unwindInfoPtr->thread.pid_) == tableInfoMap.end()) {
@@ -331,7 +331,7 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
             return -1;
         }
         if (elf->FindUnwindTableInfo(pc, map, uti) == 0) {
-            CHECK_TRUE(uti.format == -1, -1, 1, "parse unwind table failed.");
+            CHECK_TRUE(uti.format != -1, -1, 1, "parse unwind table failed.");
             unwTabMap[symbolsFile->filePath_] = uti;
             outTableInfo = unwTabMap[symbolsFile->filePath_];
             DumpTableInfo(uti);
@@ -350,7 +350,7 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
 int CallStack::FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void *arg)
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
-    CHECK_TRUE(unwindInfoPtr == nullptr, -1, 0, "");
+    CHECK_TRUE(unwindInfoPtr != nullptr, -1, 0, "");
     int64_t mapIndex = unwindInfoPtr->thread.FindMapIndexByAddr(pc);
     if (mapIndex >= 0) {
         auto map = unwindInfoPtr->thread.GetMaps()[mapIndex];
@@ -378,7 +378,7 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
     *val = 0;
 
     /* Check overflow. */
-    CHECK_TRUE(unwindInfoPtr == nullptr || (addr + sizeof(uintptr_t) < addr), -1, 1,
+    CHECK_TRUE(unwindInfoPtr != nullptr && (addr + sizeof(uintptr_t) >= addr), -1, 1,
                "unwindInfoPtr is null or address overflow at 0x%" UNW_WORD_PFLAG " increase 0x%zu",
                addr, sizeof(uintptr_t));
 

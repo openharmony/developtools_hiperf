@@ -397,7 +397,7 @@ bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, ui
     float num = 100.0;
     HLOGV("frame %f indent %d at %s", heat, indent, funcName.data());
 
-    CHECK_TRUE(heat < option_.callStackHeatLimit_, false, 0, ""); // don't print this three anymore
+    CHECK_TRUE(heat >= option_.callStackHeatLimit_, false, 0, ""); // don't print this three anymore
 
     if (abs(heat - num) < ALMOST_ZERO) {
         fprintf(output_, "%*s", indent, "   ");
@@ -450,7 +450,7 @@ void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFram
     */
     // this is the first call frame
     // this tree will skipped.
-    CHECK_TRUE(!OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount),
+    CHECK_TRUE(OutputStdCallFrame(indent, callFrame.func_, callFrame.eventCount_, totalEventCount),
                NO_RETVAL, 0, "");
 
     // print it self

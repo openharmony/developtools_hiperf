@@ -364,7 +364,7 @@ void SubCommandReport::LoadEventDesc()
 {
     const PerfFileSection *featureSection =
         recordFileReader_->GetFeatureSection(FEATURE::EVENT_DESC);
-    CHECK_TRUE(featureSection == nullptr, NO_RETVAL, 1, "featureSection invalid");
+    CHECK_TRUE(featureSection != nullptr, NO_RETVAL, 1, "featureSection invalid");
     const PerfFileSectionEventDesc &sectionEventdesc =
         *static_cast<const PerfFileSectionEventDesc *>(featureSection);
     HLOGV("Event descriptions: %zu", sectionEventdesc.eventDesces_.size());
@@ -469,7 +469,7 @@ bool SubCommandReport::LoadPerfData()
         return false;
     }
 
-    CHECK_TRUE(!recordFileReader_->ReadFeatureSection(), false, LOG_TYPE_PRINTF, "record format error.\n");
+    CHECK_TRUE(recordFileReader_->ReadFeatureSection(), false, LOG_TYPE_PRINTF, "record format error.\n");
     if (jsonFormat_) {
         reportJsonFile_ =
             std::make_unique<ReportJsonFile>(recordFileReader_, GetReport().virtualRuntime_);
@@ -606,12 +606,12 @@ HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
         // we are in diff mode
         index_ = SECOND;
         // load again with second file
-        CHECK_TRUE(!LoadPerfData(), HiperfError::LOAD_SECOND_PERF_DATA_FAIL, 0, "");
+        CHECK_TRUE(LoadPerfData(), HiperfError::LOAD_SECOND_PERF_DATA_FAIL, 0, "");
         // back to first
         index_ = FIRST;
     }
     printf("prepare report\n");
-    CHECK_TRUE(!OutputReport(), HiperfError::OUTPUT_REPORT_FAIL, 1, "OutputReport failed");
+    CHECK_TRUE(OutputReport(), HiperfError::OUTPUT_REPORT_FAIL, 1, "OutputReport failed");
 #ifdef HIPERF_DEBUG_TIME
     printf("SymbolicRecordTimes: %0.3f ms\n",
            GetReport(FIRST).virtualRuntime_.symbolicRecordTimes_.count() / MS_DURATION);

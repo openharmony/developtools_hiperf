@@ -175,7 +175,7 @@ bool StdoutRecord::Start()
 
     // we save the stdout
     stdoutFile_ = OHOS::UniqueFd(dup(STDOUT_FILENO));
-    CHECK_TRUE(stdoutFile_ == -1, false, 1, "std dup failed");
+    CHECK_TRUE(stdoutFile_ != -1, false, 1, "std dup failed");
 
     // setup temp file as stdout
     if (dup2(fileno(recordFile_), STDOUT_FILENO) != -1) {
@@ -235,7 +235,7 @@ bool IsHexDigits(const std::string &str)
     if (prefix.compare(0, prefix.size(), effectStr.substr(0, prefix.size())) == 0) {
         effectStr = effectStr.substr(prefix.size(), effectStr.size() - prefix.size());
     }
-    CHECK_TRUE(effectStr.empty(), false, 0, "");
+    CHECK_TRUE(!effectStr.empty(), false, 0, "");
     std::size_t start {0};
     for (; start < effectStr.size(); ++start) {
         if (effectStr[start] == '0') {
@@ -385,7 +385,7 @@ bool StringToUint64(const std::string &str, uint64_t &val)
 bool ReadIntFromProcFile(const std::string &path, int &value)
 {
     std::string s = ReadFileToString(path);
-    CHECK_TRUE(s.empty(), false, 0, "");
+    CHECK_TRUE(!s.empty(), false, 0, "");
     if (!IscontainDigits(s)) {
         return false;
     }
@@ -499,9 +499,9 @@ std::vector<std::string> GetEntriesInDir(const std::string &basePath)
 {
     std::vector<std::string> result;
     std::string resolvedPath = CanonicalizeSpecPath(basePath.c_str());
-    CHECK_TRUE(resolvedPath.empty(), result, 0, "");
+    CHECK_TRUE(!resolvedPath.empty(), result, 0, "");
     DIR *dir = opendir(resolvedPath.c_str());
-    CHECK_TRUE(dir == nullptr, result, 0, "");
+    CHECK_TRUE(dir != nullptr, result, 0, "");
     dirent *entry;
     while ((entry = readdir(dir)) != nullptr) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
@@ -616,7 +616,7 @@ bool StringEndsWith(const std::string &string, const std::string &with)
 
 bool HexDump(const void *buf, size_t size, size_t maxSize)
 {
-    CHECK_TRUE(buf == nullptr, false, 0, "");
+    CHECK_TRUE(buf != nullptr, false, 0, "");
     const unsigned char *byteBuf = static_cast<const unsigned char *>(buf);
     const size_t dumpByteEachLine = 8;
     size_t outputBytes = 0;
@@ -663,7 +663,7 @@ bool IsRestarted(const std::string &appPackage)
         std::set_intersection(oldPids.begin(), oldPids.end(),
             newPids.begin(), newPids.end(), std::back_insert_iterator(intersection));
         // app names are same, no intersection, means app restarted
-        CHECK_TRUE(intersection.empty(), true, 0, "");
+        CHECK_TRUE(!intersection.empty(), true, 0, "");
         intersection.clear();
         newPids.clear();
         std::this_thread::sleep_for(milliseconds(CHECK_FREQUENCY));
@@ -731,7 +731,7 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
 
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
 {
-    CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
+    CHECK_TRUE(!pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
     for (auto pid : pids) {
         if (pid <= 0) {
             err = "Invalid -p value '" + std::to_string(pid) + "', the pid should be larger than 0";
@@ -800,7 +800,7 @@ bool LittleMemory()
     while (getline(file, line)) {
         if (line.find("MemTotal:") != std::string::npos) {
             int memSize = stoi(line.substr(line.find(":") + 1));
-            CHECK_TRUE(memSize < (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE), true, 0, "");
+            CHECK_TRUE(memSize >= (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE), true, 0, "");
         }
     }
     return false;
@@ -814,7 +814,7 @@ bool IsBeta()
         return true;
     }
     // default release when usertype param is invalid
-    CHECK_TRUE(userTypeRsp.empty(), true, 1, "GetUserType is empty [%s]", userTypeRsp.c_str());
+    CHECK_TRUE(!userTypeRsp.empty(), true, 1, "GetUserType is empty [%s]", userTypeRsp.c_str());
     return false;
 }
 
@@ -823,7 +823,7 @@ bool IsAllowProfilingUid()
 #if (defined(is_linux) && is_linux) || (defined(is_ohos) && is_ohos)
     static unsigned int curUid = getuid();
     HLOGD("curUid is %d\n", curUid);
-    CHECK_TRUE(ALLOW_UIDS.find(curUid) != ALLOW_UIDS.end(), true, 0, "");
+    CHECK_TRUE(ALLOW_UIDS.find(curUid) == ALLOW_UIDS.end(), true, 0, "");
     return false;
 #else
     return false;

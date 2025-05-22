@@ -91,7 +91,7 @@ void RingBuffer::EndWrite()
 
 uint8_t *RingBuffer::GetReadData()
 {
-    CHECK_TRUE(buf_ == nullptr || buf_.get() == nullptr, nullptr, 0, "");
+    CHECK_TRUE(buf_ != nullptr && buf_.get() != nullptr, nullptr, 0, "");
     size_t writeHead = head_.load(std::memory_order_acquire);
     size_t readHead = tail_.load(std::memory_order_relaxed);
     if (writeHead == readHead) {
@@ -107,14 +107,14 @@ uint8_t *RingBuffer::GetReadData()
     if (writePos <= readPos) {
         // |<---data2--->writePos---readPos<---data1--->|
         if (buf_.get()[readPos] == MARGIN_BYTE) {
-            CHECK_TRUE(writePos == 0, nullptr, 0, "");
+            CHECK_TRUE(writePos != 0, nullptr, 0, "");
             readSize_ = (size_ - readPos);
             readPos = 0;
         }
     }
     // else |---readPos<---data--->writePos---|
     perf_event_header *header = reinterpret_cast<perf_event_header *>(buf_.get() + readPos);
-    CHECK_TRUE(header == nullptr, nullptr, 0, "");
+    CHECK_TRUE(header != nullptr, nullptr, 0, "");
 
     if (header->type == PERF_RECORD_AUXTRACE) {
         struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>(header + 1);

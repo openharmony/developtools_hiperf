@@ -91,24 +91,24 @@ bool IsApplicationEncryped(const int pid)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     g_haveIpc.store(true);
-    CHECK_TRUE(pid <= 0, true, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
+    CHECK_TRUE(pid > 0, true, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
     std::string bundleName = GetProcessName(pid);
-    CHECK_TRUE(bundleName.empty(), true, 1, "bundleName is empty,pid is %d", pid);
+    CHECK_TRUE(!bundleName.empty(), true, 1, "bundleName is empty,pid is %d", pid);
     auto pos = bundleName.find(":");
     if (pos != std::string::npos) {
         bundleName = bundleName.substr(0, pos);
     }
     sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_TRUE(sam == nullptr, true, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
+    CHECK_TRUE(sam != nullptr, true, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
     sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    CHECK_TRUE(remoteObject == nullptr, true, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
+    CHECK_TRUE(remoteObject != nullptr, true, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
     sptr<AppExecFwk::BundleMgrProxy> proxy = iface_cast<AppExecFwk::BundleMgrProxy>(remoteObject);
-    CHECK_TRUE(proxy == nullptr, true, LOG_TYPE_PRINTF, "iface_cast failed!\n");
+    CHECK_TRUE(proxy != nullptr, true, LOG_TYPE_PRINTF, "iface_cast failed!\n");
 
     AppExecFwk::ApplicationInfo appInfo;
     bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO,
                                          AppExecFwk::Constants::ANY_USERID, appInfo);
-    CHECK_TRUE(!ret, true, 1, "%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
+    CHECK_TRUE(ret, true, 1, "%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
     bool isEncrypted = (appInfo.applicationReservedFlag &
                         static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
     HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);

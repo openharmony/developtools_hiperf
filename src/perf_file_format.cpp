@@ -102,11 +102,11 @@ bool PerfFileSection::Write(const char *buf, size_t size)
 
 bool PerfFileSection::Write(const char *buf, size_t size, size_t max)
 {
-    CHECK_TRUE(offset_ + size > maxSize_, false, 1,
+    CHECK_TRUE(offset_ + size <= maxSize_, false, 1,
                "write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
-    CHECK_TRUE(offset_ + max > maxSize_, false, 1,
+    CHECK_TRUE(offset_ + max <= maxSize_, false, 1,
                "write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
-    CHECK_TRUE(wBuffer_ == nullptr, false, 0, "");
+    CHECK_TRUE(wBuffer_ != nullptr, false, 0, "");
     std::copy(buf, buf + size, wBuffer_ + offset_);
     if (size >= max) {
         offset_ += size;
@@ -132,10 +132,10 @@ bool PerfFileSection::Read(uint64_t &value)
 bool PerfFileSection::Read(std::string &value)
 {
     uint32_t size = 0;
-    CHECK_TRUE(!Read(size), false, 0, "");
+    CHECK_TRUE(Read(size), false, 0, "");
     // if size large than buf size or 0 size ?
     // don't assert for fuzz test
-    CHECK_TRUE(size == 0 || size > maxSize_, false, 0, "");
+    CHECK_TRUE(size != 0 && size <= maxSize_, false, 0, "");
     char *buf = new(std::nothrow) char[size];
     if (buf == nullptr) {
         HLOGE("buf is nullptr.");
@@ -191,7 +191,7 @@ PerfFileSectionString::PerfFileSectionString(FEATURE id, const char *buf, size_t
     : PerfFileSection(id)
 {
     Init(buf, size);
-    CHECK_TRUE(!Read(stdString_), NO_RETVAL, 0, ""); // or throw ...
+    CHECK_TRUE(Read(stdString_), NO_RETVAL, 0, ""); // or throw ...
 }
 
 PerfFileSectionString::PerfFileSectionString(FEATURE id, const std::string &charString)
@@ -202,7 +202,7 @@ PerfFileSectionString::PerfFileSectionString(FEATURE id, const std::string &char
 
 bool PerfFileSectionString::GetBinary(char *buf, size_t size)
 {
-    CHECK_TRUE(size < GetSize(), false, 0, "");
+    CHECK_TRUE(size >= GetSize(), false, 0, "");
 
     Init(buf, size);
     Write(stdString_);
@@ -303,7 +303,7 @@ bool PerfFileSectionSymbolsFiles::GetBinary(char *buf, size_t size)
     HLOG_ASSERT(size >= GetSize());
 
     Init(buf, size);
-    CHECK_TRUE(!Write((uint32_t)symbolFileStructs_.size()), false, 1,
+    CHECK_TRUE(Write((uint32_t)symbolFileStructs_.size()), false, 1,
                "PerfFileSectionSymbolsFiles write failed with %zu.", symbolFileStructs_.size());
     for (auto &symbolFileStruct : symbolFileStructs_) {
         Write(symbolFileStruct.filePath_);
@@ -385,7 +385,7 @@ bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
 
 size_t PerfFileSectionUniStackTable::GetSize()
 {
-    CHECK_TRUE(processStackTable_ == nullptr, 0, 1, "processStackTable_ is nullptr");
+    CHECK_TRUE(processStackTable_ != nullptr, 0, 1, "processStackTable_ is nullptr");
     size_t size = 0;
     // section header info size
     size += sizeof(uint32_t); // how many tables/process
@@ -399,7 +399,7 @@ PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t
     : PerfFileSection(id)
 {
     Init(buf, size);
-    CHECK_TRUE(!Read(nrCpusAvailable_) || !Read(nrCpusOnline_), NO_RETVAL, 0, "");
+    CHECK_TRUE(Read(nrCpusAvailable_) && !Read(nrCpusOnline_), NO_RETVAL, 0, "");
 }
 
 PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailable,
@@ -410,7 +410,7 @@ PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailabl
 
 bool PerfFileSectionNrCpus::GetBinary(char *buf, size_t size)
 {
-    CHECK_TRUE(size < GetSize(), false, 0, "");
+    CHECK_TRUE(size >= GetSize(), false, 0, "");
 
     Init(buf, size);
     Write(nrCpusAvailable_);
@@ -433,7 +433,7 @@ PerfFileSectionU64::PerfFileSectionU64(FEATURE id, const char *buf, size_t size)
     : PerfFileSection(id)
 {
     Init(buf, size);
-    CHECK_TRUE(!Read(value_), NO_RETVAL, 0, "");
+    CHECK_TRUE(Read(value_), NO_RETVAL, 0, "");
 }
 
 PerfFileSectionU64::PerfFileSectionU64(FEATURE id, uint64_t v) : PerfFileSection(id)
@@ -443,7 +443,7 @@ PerfFileSectionU64::PerfFileSectionU64(FEATURE id, uint64_t v) : PerfFileSection
 
 bool PerfFileSectionU64::GetBinary(char *buf, size_t size)
 {
-    CHECK_TRUE(size < GetSize(), false, 0, "");
+    CHECK_TRUE(size >= GetSize(), false, 0, "");
 
     Init(buf, size);
     Write(value_);
@@ -473,9 +473,9 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
     constexpr uint32_t maxIds = 600;
     Init(buf, size);
     uint32_t nr = 0;
-    CHECK_TRUE(!Read(nr), NO_RETVAL, 0, "");
+    CHECK_TRUE(Read(nr), NO_RETVAL, 0, "");
     uint32_t attrSize = 0;
-    CHECK_TRUE(!Read(attrSize), NO_RETVAL, 0, "");
+    CHECK_TRUE(Read(attrSize), NO_RETVAL, 0, "");
     if (attrSize != sizeof(perf_event_attr)) { // only for log or debug
         HLOGW("perf_event_attr version is different, attrSize %d vs %zu", attrSize,
               sizeof(perf_event_attr));
@@ -504,10 +504,10 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
         } else if (nrIds > maxIds) {
             HLOGW("nrIds is too large ! %u", nrIds);
         }
-        CHECK_TRUE(!Read(eventDesc.name), NO_RETVAL, 0, "");
+        CHECK_TRUE(Read(eventDesc.name), NO_RETVAL, 0, "");
         HIPERF_ASSERT(nrIds <= MAX_VECTOR_RESIZE_COUNT, "nrIds exceeds 100000\n");
         eventDesc.ids.resize(nrIds, 0);
-        CHECK_TRUE(!Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds), NO_RETVAL, 0, "");
+        CHECK_TRUE(Read(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * nrIds), NO_RETVAL, 0, "");
         eventDesces_.emplace_back(std::move(eventDesc));
     }
     HLOGV("read complete. %zu events", eventDesces_.size());
@@ -515,17 +515,17 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
 
 bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
 {
-    CHECK_TRUE(size < GetSize(), false, 0, "");
+    CHECK_TRUE(size >= GetSize(), false, 0, "");
     Init(buf, size);
 
-    CHECK_TRUE(!Write(static_cast<uint32_t>(eventDesces_.size())), false, 0, "");
-    CHECK_TRUE(!Write(static_cast<uint32_t>(sizeof(perf_event_attr))), false, 0, "");
+    CHECK_TRUE(Write(static_cast<uint32_t>(eventDesces_.size())), false, 0, "");
+    CHECK_TRUE(Write(static_cast<uint32_t>(sizeof(perf_event_attr))), false, 0, "");
     for (auto &eventDesc : eventDesces_) {
-        CHECK_TRUE(!Write(reinterpret_cast<char*>(&(eventDesc.attr)), sizeof(perf_event_attr)), false, 0, "");
-        CHECK_TRUE(!Write(static_cast<uint32_t>(eventDesc.ids.size())), false, 0, "");
-        CHECK_TRUE(!Write(eventDesc.name), false, 0, "");
+        CHECK_TRUE(Write(reinterpret_cast<char*>(&(eventDesc.attr)), sizeof(perf_event_attr)), false, 0, "");
+        CHECK_TRUE(Write(static_cast<uint32_t>(eventDesc.ids.size())), false, 0, "");
+        CHECK_TRUE(Write(eventDesc.name), false, 0, "");
         // clang-format off
-        CHECK_TRUE(!Write(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * eventDesc.ids.size()),
+        CHECK_TRUE(Write(reinterpret_cast<char*>(eventDesc.ids.data()), sizeof(uint64_t) * eventDesc.ids.size()),
                    false, 0, ""); // clang-format on
     }
     return true;
