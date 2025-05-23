@@ -36,6 +36,8 @@ void ReportJsonFile::AddNewFunction(int libId, std::string name)
     if (it == functionMap_.end()) {
         it = functionMap_.try_emplace(libId).first;
     }
+    name = StringReplace(name, "\\", "\\\\");
+    name = StringReplace(name, "\"", "");
     it->second.insert_or_assign(name, ReportFuncMapItem(libId, name, functionId_++));
 }
 
@@ -312,7 +314,8 @@ void ReportJsonFile::OutputJsonRuntimeInfo()
     const auto &symbolsFiles = virtualRuntime_.GetSymbolsFiles();
     jsonStringVector jsonFilePaths;
     for (const auto &symbolsFile : symbolsFiles) {
-        jsonFilePaths.emplace_back(symbolsFile->filePath_);
+        std::string filePath = StringReplace(symbolsFile->filePath_, "\"", "");
+        jsonFilePaths.emplace_back(filePath);
     }
 
     OutputJsonVectorList(output_, "symbolsFileList", jsonFilePaths);

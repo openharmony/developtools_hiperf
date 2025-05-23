@@ -37,15 +37,9 @@ const uint16_t THOUSANDS_SEPARATOR = 3;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-const std::string CONTROL_CMD_PREPARE = "prepare";
-const std::string CONTROL_CMD_START = "start";
-const std::string CONTROL_CMD_STOP = "stop";
-const std::string CONTROL_FIFO_FILE_C2S = "/data/log/hiperflog/.hiperf_stat_control_c2s";
-const std::string CONTROL_FIFO_FILE_S2C = "/data/log/hiperflog/.hiperf_stat_control_s2c";
 const std::string DEFAULT_STAT_FILE = "/data/local/tmp/perf_stat.txt";
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT = 2000ms;
-const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT_CHECK = 1000ms;
 static std::map<pid_t, ThreadInfos> thread_map_;
 static bool g_reportCpuFlag = false;
 static bool g_reportThreadFlag = false;
@@ -218,8 +212,8 @@ void SubCommandStat::PrintPerHead(FILE* filePtr)
             printf(" %24s  %-30s | %-30s %10s %10s %10s | %-32s | %s\n", "count", "event_name", "thread_name",
                    "pid", "tid", "coreid", "comment", "coverage");
         } else {
-            fprintf(filePtr, " %24s  %-30s | %-30s %10s %10s %10s | %-32s | %s\n", "count", "event_name", "thread_name",
-                        "pid", "tid", "coreid", "comment", "coverage");
+            fprintf(filePtr, " %24s  %-30s | %-30s %10s %10s %10s | %-32s | %s\n",
+                "count", "event_name", "thread_name", "pid", "tid", "coreid", "comment", "coverage");
         }
         return;
     }
@@ -227,7 +221,8 @@ void SubCommandStat::PrintPerHead(FILE* filePtr)
         if (filePtr == nullptr) {
             printf(" %24s  %-30s | %10s | %-32s | %s\n", "count", "event_name", "coreid", "comment", "coverage");
         } else {
-            fprintf(filePtr, " %24s  %-30s | %10s | %-32s | %s\n", "count", "event_name", "coreid", "comment", "coverage");
+            fprintf(filePtr, " %24s  %-30s | %10s | %-32s | %s\n",
+                "count", "event_name", "coreid", "comment", "coverage");
         }
         return;
     }
@@ -235,8 +230,8 @@ void SubCommandStat::PrintPerHead(FILE* filePtr)
         printf(" %24s  %-30s | %-30s %10s %10s | %-32s | %s\n", "count", "event_name", "thread_name", "pid", "tid",
                "comment", "coverage");
     } else {
-        fprintf(filePtr, " %24s  %-30s | %-30s %10s %10s | %-32s | %s\n", "count", "event_name", "thread_name", "pid",
-                    "tid", "comment", "coverage");
+        fprintf(filePtr, " %24s  %-30s | %-30s %10s %10s | %-32s | %s\n", "count", "event_name", "thread_name",
+            "pid", "tid", "comment", "coverage");
     }
     return;
 }
@@ -266,8 +261,8 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
                    commentStr.c_str(), reportSum->scaleSum * ratio);
         } else {
             fprintf(filePtr, " %24s  %-30s | %-30s %10d %10d %10d | %-32s | (%.0lf%%)\n", strEventCount.c_str(),
-                        configName.c_str(), reportSum->threadName.c_str(), reportSum->pid, reportSum->tid,
-                        reportSum->cpu, commentStr.c_str(), reportSum->scaleSum * ratio);
+                configName.c_str(), reportSum->threadName.c_str(), reportSum->pid, reportSum->tid,
+                reportSum->cpu, commentStr.c_str(), reportSum->scaleSum * ratio);
         }
     } else if (g_reportCpuFlag) {
         if (filePtr == nullptr) {
@@ -275,7 +270,7 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
                    reportSum->cpu, commentStr.c_str(), reportSum->scaleSum * ratio);
         } else {
             fprintf(filePtr, " %24s  %-30s | %10d | %-32s | (%.0lf%%)\n", strEventCount.c_str(), configName.c_str(),
-                   reportSum->cpu, commentStr.c_str(), reportSum->scaleSum * ratio);
+                reportSum->cpu, commentStr.c_str(), reportSum->scaleSum * ratio);
         }
     } else {
         if (filePtr == nullptr) {
@@ -284,8 +279,8 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
                    reportSum->scaleSum * ratio);
         } else {
             fprintf(filePtr, " %24s  %-30s | %-30s %10d %10d | %-32s | (%.0lf%%)\n", strEventCount.c_str(),
-                        configName.c_str(), reportSum->threadName.c_str(), reportSum->pid, reportSum->tid,
-                        commentStr.c_str(), reportSum->scaleSum * ratio);
+                configName.c_str(), reportSum->threadName.c_str(), reportSum->pid, reportSum->tid,
+                commentStr.c_str(), reportSum->scaleSum * ratio);
         }
     }
     fflush(stdout);
@@ -387,7 +382,7 @@ void SubCommandStat::ReportNormal(
                    comment.c_str(), scale * ratio);
         } else {
             fprintf(filePtr, " %24s  %-30s | %-32s | (%.0lf%%)\n", strEventCount.c_str(), configName.c_str(),
-                        comment.c_str(), scale * ratio);
+                comment.c_str(), scale * ratio);
         }
         fflush(stdout);
     }
@@ -706,65 +701,12 @@ void SubCommandStat::SetPerfEvent()
     perfEvents_.SetStatReportFd(filePtr_);
 }
 
-std::string SubCommandStat::HandleAppInfo()
-{
-    std::string err = "";
-    if (!appPackage_.empty()) {
-        if (!IsExistDebugByApp(appPackage_, err)) {
-            return err;
-        }
-    } else {
-        if (!IsExistDebugByPid(inputPidTidArgs_, err)) {
-            return err;
-        }
-    }
-    return err;
-}
-
-void SubCommandStat::ProcessStopCommand(bool ret)
-{
-    if (ret) {
-        // wait counting process exit really
-        static constexpr uint64_t waitCheckSleepMs = 200;
-        std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
-        while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TIMEOUT_CHECK)) {
-            std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
-        }
-        HLOGI("wait reply check end.");
-    }
-
-    if (remove(CONTROL_FIFO_FILE_C2S.c_str()) != 0) {
-        HLOGE("remove fifo file %s failed", CONTROL_FIFO_FILE_C2S.c_str());
-    }
-    if (remove(CONTROL_FIFO_FILE_S2C.c_str()) != 0) {
-        HLOGE("remove fifo file %s failed", CONTROL_FIFO_FILE_S2C.c_str());
-    }
-}
-
 bool SubCommandStat::CreateFifoServer()
 {
     char errInfo[ERRINFOLEN] = { 0 };
-    const mode_t fifoMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    std::string tempPath("/data/log/hiperflog/");
-    if (!IsDirectoryExists(tempPath)) {
-        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s not exist.", tempPath.c_str());
-        if (!CreateDirectory(tempPath, HIPERF_FILE_PERM_770)) {
-            HIPERF_HILOGI(MODULE_DEFAULT, "create %{public}s failed.", tempPath.c_str());
-        }
-    }
-    if (mkfifo(CONTROL_FIFO_FILE_S2C.c_str(), fifoMode) != 0 ||
-        mkfifo(CONTROL_FIFO_FILE_C2S.c_str(), fifoMode) != 0) {
-        if (errno == EEXIST) {
-            printf("another counting service is running.\n");
-        } else {
-            remove(CONTROL_FIFO_FILE_S2C.c_str());
-            remove(CONTROL_FIFO_FILE_C2S.c_str());
-        }
-        strerror_r(errno, errInfo, ERRINFOLEN);
-        HLOGE("create fifo file failed. %d:%s", errno, errInfo);
+    if (!perfPipe_.CreateFifoFile()) {
         return false;
     }
-
     CheckIpcBeforeFork();
     pid_t pid = fork();
     allowIpc_ = true;
@@ -777,31 +719,31 @@ bool SubCommandStat::CreateFifoServer()
         close(STDIN_FILENO);
         close(STDERR_FILENO);
         isFifoServer_ = true;
-        clientPipeOutput_ = open(CONTROL_FIFO_FILE_S2C.c_str(), O_WRONLY);
+        clientPipeOutput_ = open(fifoFileS2C_.c_str(), O_WRONLY);
         if (clientPipeOutput_ == -1) {
             strerror_r(errno, errInfo, ERRINFOLEN);
-            HLOGE("open fifo file(%s) failed. %d:%s", CONTROL_FIFO_FILE_S2C.c_str(), errno, errInfo);
+            HLOGE("open fifo file(%s) failed. %d:%s", fifoFileS2C_.c_str(), errno, errInfo);
             HIPERF_HILOGE(MODULE_DEFAULT, "open fifo file(%{public}s) failed. %d:%s",
-                CONTROL_FIFO_FILE_S2C.c_str(), errno, errInfo);
+                fifoFileS2C_.c_str(), errno, errInfo);
             return false;
         }
         nullFd_ = open("/dev/null", O_WRONLY);
         (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
-        std::string err = HandleAppInfo();
+         std::string err = OHOS::Developtools::HiPerf::HandleAppInfo(appPackage_, inputPidTidArgs_);
         if (!err.empty()) {
             ClientCommandResponse(err);
             return false;
         }
     } else {            // parent process
         isFifoClient_ = true;
-        int fd = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
+        int fd = open(fifoFileS2C_.c_str(), O_RDONLY | O_NONBLOCK);
         std::string reply = "";
         if (fd != -1) {
-            WaitFifoReply(fd, CONTROL_WAITREPY_TIMEOUT, reply);
+            perfPipe_.WaitFifoReply(fd, CONTROL_WAITREPY_TIMEOUT, reply);
         }
         if (fd == -1 || reply != HiperfClient::ReplyOK) {
             if (reply != HiperfClient::ReplyOK) {
-                printf("%s\n", reply.c_str());
+                printf("%s", reply.c_str());
                 HLOGE("reply is %s", reply.c_str());
                 HIPERF_HILOGE(MODULE_DEFAULT, "reply is %{public}s", reply.c_str());
             }
@@ -817,8 +759,8 @@ bool SubCommandStat::CreateFifoServer()
                 HLOGE("Failed to wait for pid: %d", pid);
                 HIPERF_HILOGE(MODULE_DEFAULT, "Failed to wait for pid: %{public}d", pid);
             }
-            remove(CONTROL_FIFO_FILE_C2S.c_str());
-            remove(CONTROL_FIFO_FILE_S2C.c_str());
+            remove(fifoFileC2S_.c_str());
+            remove(fifoFileS2C_.c_str());
             strerror_r(errno, errInfo, ERRINFOLEN);
             printf("create control hiperf counting failed.\n");
             HLOGI("errno is %d:%s", errno, errInfo);
@@ -830,76 +772,6 @@ bool SubCommandStat::CreateFifoServer()
         printf("stat result will saved in %s.\n", outputFilename_ .c_str());
     }
     return true;
-}
-
-bool SubCommandStat::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut)
-{
-    // need open for read first, because server maybe send reply before client wait to read
-    int fdRead = open(CONTROL_FIFO_FILE_S2C.c_str(), O_RDONLY | O_NONBLOCK);
-    if (fdRead == -1) {
-        HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_S2C.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "can not open fifo file: %{public}s.", CONTROL_FIFO_FILE_S2C.c_str());
-        return false;
-    }
-    int fdWrite = open(CONTROL_FIFO_FILE_C2S.c_str(), O_WRONLY | O_NONBLOCK);
-    if (fdWrite == -1) {
-        HLOGE("can not open fifo file(%s)", CONTROL_FIFO_FILE_C2S.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "can not open fifo file: %{public}s.", CONTROL_FIFO_FILE_C2S.c_str());
-        close(fdRead);
-        return false;
-    }
-    size_t size = write(fdWrite, cmd.c_str(), cmd.size());
-    if (size != cmd.size()) {
-        HLOGE("failed to write fifo file(%s) command(%s)", CONTROL_FIFO_FILE_C2S.c_str(),
-              cmd.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "failed to write fifo file: %{public}s.", CONTROL_FIFO_FILE_C2S.c_str());
-        close(fdWrite);
-        close(fdRead);
-        return false;
-    }
-    close(fdWrite);
-
-    bool ret = WaitFifoReply(fdRead, timeOut);
-    close(fdRead);
-    return ret;
-}
-
-bool SubCommandStat::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut)
-{
-    std::string reply;
-    WaitFifoReply(fd, timeOut, reply);
-    return reply == HiperfClient::ReplyOK;
-}
-
-void SubCommandStat::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply)
-{
-    struct pollfd pollFd {
-        fd, POLLIN, 0
-    };
-    int polled = poll(&pollFd, 1, timeOut.count());
-    reply.clear();
-    if (polled > 0) {
-        bool exitLoop = false;
-        while (!exitLoop) {
-            char c;
-            ssize_t result = TEMP_FAILURE_RETRY(read(fd, &c, 1));
-            if (result <= 0) {
-                HLOGD("read from fifo file(%s) failed", CONTROL_FIFO_FILE_S2C.c_str());
-                HIPERF_HILOGD(MODULE_DEFAULT, "read from fifo file(%{public}s) failed.", CONTROL_FIFO_FILE_S2C.c_str());
-                exitLoop = true;
-            }
-            reply.push_back(c);
-            if (c == '\n') {
-                exitLoop = true;
-            }
-        }
-    } else if (polled == 0) {
-        HLOGD("wait fifo file(%s) timeout", CONTROL_FIFO_FILE_S2C.c_str());
-        HIPERF_HILOGD(MODULE_DEFAULT, "wait fifo file(%{public}s) timeout.", CONTROL_FIFO_FILE_S2C.c_str());
-    } else {
-        HLOGD("wait fifo file(%s) failed", CONTROL_FIFO_FILE_S2C.c_str());
-        HIPERF_HILOGD(MODULE_DEFAULT, "wait fifo file(%{public}s) failed.", CONTROL_FIFO_FILE_S2C.c_str());
-    }
 }
 
 bool SubCommandStat::ClientCommandResponse(bool response)
@@ -954,7 +826,7 @@ inline void SubCommandStat::CreateClientThread()
 {
     // make a thread wait the other command
     if (clientPipeOutput_ != -1) {
-        clientCommandHanle_ = std::thread(&SubCommandStat::ClientCommandHandle, this);
+        clientCommandHandle_ = std::thread(&SubCommandStat::ClientCommandHandle, this);
     }
 }
 
@@ -973,7 +845,7 @@ void SubCommandStat::ClientCommandHandle()
                 // after read(), block is disabled, the poll will be waked neven if no data
                 close(clientPipeInput_);
             }
-            clientPipeInput_ = open(CONTROL_FIFO_FILE_C2S.c_str(), O_RDONLY | O_NONBLOCK);
+            clientPipeInput_ = open(fifoFileC2S_.c_str(), O_RDONLY | O_NONBLOCK);
         }
         struct pollfd pollFd {
             clientPipeInput_, POLLIN, 0
@@ -1024,31 +896,14 @@ bool SubCommandStat::ProcessControl()
         return true;
     }
     HIPERF_HILOGI(MODULE_DEFAULT, "control cmd : %{public}s", controlCmd_.c_str());
+    perfPipe_.SetFifoFileName(CommandType::STAT, controlCmd_, fifoFileC2S_, fifoFileS2C_);
     if (controlCmd_ == CONTROL_CMD_PREPARE) {
         CHECK_TRUE(!CreateFifoServer(), false, 0, "");
         return true;
     }
 
     isFifoClient_ = true;
-    bool ret = false;
-    if (controlCmd_ == CONTROL_CMD_START) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStart, CONTROL_WAITREPY_TIMEOUT);
-    } else if (controlCmd_ == CONTROL_CMD_STOP) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TIMEOUT);
-        if (!ret) {
-            ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TIMEOUT);
-        }
-        ProcessStopCommand(ret);
-    }
-
-    if (ret) {
-        printf("%s counting success.\n", controlCmd_.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s counting success.", controlCmd_.c_str());
-    } else {
-        printf("%s counting failed.\n", controlCmd_.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s counting failed.", controlCmd_.c_str());
-    }
-    return ret;
+    return perfPipe_.ProcessControlCmd();
 }
 
 HiperfError SubCommandStat::CheckStatOption()
@@ -1140,23 +995,23 @@ HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
 
 void SubCommandStat::CloseClientThread()
 {
-    if (clientCommandHanle_.joinable()) {
+    if (clientCommandHandle_.joinable()) {
         clientRunning_ = false;
         HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
             close(nullFd_);
         }
-        clientCommandHanle_.join();
+        clientCommandHandle_.join();
         close(clientPipeInput_);
         close(clientPipeOutput_);
         if (isFifoServer_) {
-            remove(CONTROL_FIFO_FILE_C2S.c_str());
-            remove(CONTROL_FIFO_FILE_S2C.c_str());
+            remove(fifoFileC2S_.c_str());
+            remove(fifoFileS2C_.c_str());
         }
     }
 }
 
-bool SubCommandStat::ParseControlCmd(const std::string cmd)
+bool SubCommandStat::ParseControlCmd(const std::string& cmd)
 {
     if (cmd.empty() || cmd == CONTROL_CMD_PREPARE || cmd == CONTROL_CMD_START || cmd == CONTROL_CMD_STOP) {
         return true;

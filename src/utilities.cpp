@@ -699,7 +699,7 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
     return res;
 }
 
-bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
+bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
 {
     if (!appPackage.empty()) {
         pid_t appPid = GetAppPackagePid(appPackage, -1, checkAppMs, waitAppRunCheckTimeOut);
@@ -722,8 +722,8 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
     }
     if (!IsSupportNonDebuggableApp() && !bundleNameTmp.empty() && !IsDebugableApp(bundleNameTmp)) {
         HLOGE("--app option only support debug application.");
-        err = "--app option only support debug application";
-        printf("%s\n", err.c_str());
+        err = "--app option only support debug application\n";
+        printf("%s", err.c_str());
         return false;
     }
     return true;
@@ -734,8 +734,8 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
     CHECK_TRUE(pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
     for (auto pid : pids) {
         if (pid <= 0) {
-            err = "Invalid -p value '" + std::to_string(pid) + "', the pid should be larger than 0";
-            printf("%s\n", err.c_str());
+            err = "Invalid -p value '" + std::to_string(pid) + "', the pid should be larger than 0\n";
+            printf("%s", err.c_str());
             return false;
         }
         std::string bundleName = GetProcessName(pid);
@@ -745,12 +745,27 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
         }
         if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
             HLOGE("-p option only support debug application for %s", bundleName.c_str());
-            err = "-p option only support debug application";
-            printf("%s\n", err.c_str());
+            err = "-p option only support debug application\n";
+            printf("%s", err.c_str());
             return false;
         }
     }
     return true;
+}
+
+std::string HandleAppInfo(const std::string& appPackage, const std::vector<pid_t> &inputPidTidArgs)
+{
+    std::string err = "";
+    if (!appPackage.empty()) {
+        if (!IsExistDebugByApp(appPackage, err)) {
+            return err;
+        }
+    } else {
+        if (!IsExistDebugByPid(inputPidTidArgs, err)) {
+            return err;
+        }
+    }
+    return err;
 }
 
 bool IsSupportNonDebuggableApp()

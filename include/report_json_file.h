@@ -117,7 +117,9 @@ void OutputJsonVectorList(FILE *output, const std::string &key, const std::vecto
     if (fprintf(output, "\"%s\":[", key.c_str()) != -1) {
         auto it = value.begin();
         while (it != value.end()) {
-            OutputJsonValue(output, *it, it == value.begin());
+            std::string symbolFile = *it;
+            symbolFile = StringReplace(symbolFile, "\"", "");
+            OutputJsonValue(output, symbolFile, it == value.begin());
             it++;
         }
         if (fprintf(output, "]") < 0) {
@@ -193,7 +195,8 @@ struct ReportFuncMapItem {
             return;
         }
         OutputJsonPair(output, "file", libId_, true);
-        OutputJsonPair(output, "symbol", funcName_);
+        std::string funcName = StringReplace(funcName_, "\"", "");
+        OutputJsonPair(output, "symbol", funcName);
         if (fprintf(output, "}") < 0) {
             return;
         }
