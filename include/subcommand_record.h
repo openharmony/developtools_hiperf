@@ -33,6 +33,7 @@
 #include "perf_event_record.h"
 #include "perf_events.h"
 #include "perf_file_writer.h"
+#include "perf_pipe.h"
 #include "subcommand.h"
 #include "virtual_runtime.h"
 
@@ -224,6 +225,7 @@ public:
 
 private:
     PerfEvents perfEvents_;
+    PerfPipe perfPipe_;
 
     bool targetSystemWide_ = false;
     bool compressData_ = false;
@@ -251,6 +253,8 @@ private:
     int checkAppMs_ = DEFAULT_CHECK_APP_MS;
     std::string clockId_ = {};
     std::string strLimit_ = {};
+    std::string fifoFileC2S_;
+    std::string fifoFileS2C_;
     std::vector<pid_t> selectCpus_ = {};
     std::vector<pid_t> selectPids_ = {};
     std::vector<pid_t> selectTids_ = {};
@@ -307,9 +311,13 @@ private:
     // for client
     int clientPipeInput_ = -1;
     int clientPipeOutput_ = -1;
+    int readFd_ = -1;
+    int writeFd_ = -1;
     int nullFd_ = -1;
-    std::thread clientCommandHanle_;
+    std::thread clientCommandHandle_;
+    std::thread replyCommandHandle_;
     bool clientRunning_ = true;
+    bool isHiperfClient_ = false;
     struct ControlCommandHandler {
         std::function<bool()> preProcess = []() -> bool {
             return false;
@@ -318,11 +326,15 @@ private:
     };
     std::unordered_map<std::string, ControlCommandHandler> controlCommandHandlerMap_ = {};
     inline void CreateClientThread();
+    inline void CreateReplyThread();
     void ClientCommandHandle();
+    void ReplyCommandHandle();
     void InitControlCommandHandlerMap();
     void DispatchControlCommand(const std::string& command);
     bool ClientCommandResponse(bool response);
     bool ClientCommandResponse(const std::string& str);
+    bool ChildResponseToMain(bool response);
+    bool ChildResponseToMain(const std::string& str);
     bool IsSamplingRunning();
 
     // for cmdline client
@@ -333,14 +345,10 @@ private:
     bool dedupStack_ = false;
     std::map<pid_t, std::vector<pid_t>> mapPids_;
     bool ProcessControl();
-    void ProcessStopCommand(bool ret);
-    void ProcessOutputCommand(bool ret);
     bool CreateFifoServer();
-    bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
-    bool WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut);
-    void WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply);
+    bool MainRecvFromChild(int fd, std::string& reply);
     void CloseClientThread();
-    std::string HandleAppInfo();
+    void CloseReplyThread();
 
     bool PreparePerfEvent();
     bool PrepareSysKernel();
@@ -397,8 +405,15 @@ private:
     bool CheckReportOption();
     bool CheckBacktrackOption();
     bool CheckSpeOption();
+    bool IsAppRestarted();
+    bool CheckAppRestart();
+    pid_t GetPidFromAppPackage(const pid_t oldPid, const uint64_t waitAppTimeOut);
+    bool IsAppRunning();
+    bool IsPidAndTidExist();
+    void MsgPrintAndTrans(bool isTrans, const std::string& msg);
     void WriteCommEventBeforeSampling();
     void RemoveVdsoTmpFile();
+    void RemoveFifoFile();
 
     VirtualRuntime virtualRuntime_;
 #if USE_COLLECT_SYMBOLIC

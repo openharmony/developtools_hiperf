@@ -17,6 +17,7 @@
 
 #include "option.h"
 #include "perf_events.h"
+#include "perf_pipe.h"
 #include "subcommand.h"
 
 namespace OHOS {
@@ -27,6 +28,7 @@ public:
     static constexpr int DEFAULT_CHECK_APP_MS = 10;
     static constexpr int MIN_CHECK_APP_MS = 1;
     static constexpr int MAX_CHECK_APP_MS = 200;
+    ~SubCommandStat();
     SubCommandStat()
         : SubCommand("stat", "Collect performance counter information",
                      // clang-format off
@@ -95,7 +97,6 @@ public:
           targetSystemWide_(false)
     {
     }
-    ~SubCommandStat();
     HiperfError OnSubCommand(std::vector<std::string>& args) override;
     bool ParseOption(std::vector<std::string> &args) override;
     bool ParseSpecialOption(std::vector<std::string> &args);
@@ -108,6 +109,7 @@ public:
 
 private:
     PerfEvents perfEvents_;
+    PerfPipe perfPipe_;
     bool targetSystemWide_ {false};
     std::vector<int> selectCpus_ = {};
     float timeStopSec_ = PerfEvents::DEFAULT_TIMEOUT;
@@ -118,6 +120,8 @@ private:
     bool noCreateNew_ {false};
     std::string appPackage_ = {};
     std::string outputFilename_ = "";
+    std::string fifoFileC2S_;
+    std::string fifoFileS2C_;
     int checkAppMs_ = DEFAULT_CHECK_APP_MS;
     std::vector<pid_t> selectPids_;
     std::vector<pid_t> selectTids_;
@@ -143,7 +147,8 @@ private:
     static std::string GetCommentConfigName(
         const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName);
 
-    static void Report(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
+    static void Report(const std::map<std::string,
+                       std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
     static void PrintPerHead(FILE* filePtr);
     static void GetPerKey(std::string &perKey, const PerfEvents::Summary &summary);
     static void MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr);
@@ -179,7 +184,7 @@ private:
     int clientPipeOutput_ = -1;
     int nullFd_ = -1;
     FILE* filePtr_ = nullptr;
-    std::thread clientCommandHanle_;
+    std::thread clientCommandHandle_;
     bool clientRunning_ = true;
     struct ControlCommandHandler {
         std::function<bool()> preProcess = []() -> bool {
@@ -202,14 +207,9 @@ private:
     bool isFifoServer_ = false;
     bool isFifoClient_ = false;
     bool ProcessControl();
-    void ProcessStopCommand(bool ret);
     bool CreateFifoServer();
-    bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
-    bool WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut);
-    void WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply);
     void CloseClientThread();
-    std::string HandleAppInfo();
-    bool ParseControlCmd(const std::string cmd);
+    bool ParseControlCmd(const std::string& cmd);
 };
 
 bool RegisterSubCommandStat(void);
