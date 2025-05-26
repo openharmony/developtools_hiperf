@@ -22,6 +22,8 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+const int CMD_OUTPUT_BUF = 1024;
+
 bool CheckTestApp(const std::string& appName)
 {
     FILE *fp = nullptr;
@@ -61,6 +63,52 @@ bool GetMemMapOffset(pid_t devhostPid, uint64_t &mapOffset,
         }
     }
     return false;
+}
+
+bool RunCmd(const std::string& cmdstr)
+{
+    if (cmdstr.empty()) {
+        return false;
+    }
+    FILE *fp = popen(cmdstr.c_str(), "r");
+    if (fp == nullptr) {
+        return false;
+    }
+    char res[CMD_OUTPUT_BUF] = { '\0' };
+    while (fgets(res, sizeof(res), fp) != nullptr) {
+        std::cout << res;
+    }
+    pclose(fp);
+    return true;
+}
+
+bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::string>& keywords)
+{
+    if (cmd.empty()) {
+        return false;
+    }
+    FILE* fp = popen(cmd.c_str(), "r");
+    if (fp == nullptr) {
+        return false;
+    }
+
+    char buffer[CMD_OUTPUT_BUF];
+    int checkIdx = 0;
+    while (fgets(buffer, sizeof(buffer), fp) != nullptr) {
+        while (checkIdx < keywords.size() && strstr(buffer, keywords[checkIdx].c_str()) != nullptr) {
+            GTEST_LOG_(INFO) << "match keyword :" << keywords[checkIdx];
+            checkIdx++;
+            if (checkIdx == keywords.size()) {
+                break;
+            }
+        }
+    }
+
+    pclose(fp);
+    if (checkIdx < keywords.size()) {
+        GTEST_LOG_(ERROR) << "Failed to match keyword : " << keywords[checkIdx];
+    }
+    return checkIdx == keywords.size();
 }
 } // namespace HiPerf
 } // namespace Developtools

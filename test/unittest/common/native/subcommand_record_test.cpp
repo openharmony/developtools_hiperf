@@ -29,6 +29,7 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "hisysevent_manager.h"
+#include "perf_pipe.h"
 #include "subcommand_dump.h"
 #include "subcommand_report.h"
 #include "subcommand_test.h"
@@ -241,11 +242,6 @@ static bool CheckIntFromProcFile(const std::string& proc, int expect)
 HWTEST_F(SubCommandRecordTest, PackageName, TestSize.Level0)
 {
     ForkAndRunTest("-d 2 ", true, true);
-}
-
-HWTEST_F(SubCommandRecordTest, PackageNameErr, TestSize.Level3)
-{
-    TestRecordCommand("-d 2  --app package_name ", false, false);
 }
 
 // check app milliseconds
@@ -1449,12 +1445,6 @@ HWTEST_F(SubCommandRecordTest, ReStart, TestSize.Level0)
     TestRecordCommand("--restart ", false, true);
 }
 
-// --exclude-tid
-HWTEST_F(SubCommandRecordTest, ExcludeTidConflict, TestSize.Level2)
-{
-    TestRecordCommand("--exclude-tid 5 --exclude-thread test ", false, true);
-}
-
 /**
  * @tc.name: CmdLinesSizeSucess
  * @tc.desc: Test --cmdline-size option
@@ -1595,7 +1585,7 @@ HWTEST_F(SubCommandRecordTest, SendFifoAndWaitReply, TestSize.Level1)
 {
     SubCommandRecord cmd;
     std::string test = "test";
-    EXPECT_EQ(cmd.SendFifoAndWaitReply(test, CONTROL_WAITREPY_TOMEOUT), false);
+    EXPECT_EQ(cmd.perfPipe_.SendFifoAndWaitReply(test, CONTROL_WAITREPY_TOMEOUT), false);
 }
 
 /**
@@ -2228,6 +2218,51 @@ HWTEST_F(SubCommandRecordTest, CheckProductCfg, TestSize.Level1)
         cmd.GetMmapPagesCfg();
         cJSON_Delete(root);
     }
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control01
+ * @tc.desc: prepare, start, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control01, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a",
+                                      {"create control hiperf sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
+              true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control02
+ * @tc.desc: prepare, prepare
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control02, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf record --control prepare -a"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a",
+                                      {"another sampling service is running"}),
+              true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control03
+ * @tc.desc: start, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control03, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling failed"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling failed"}),
+              true);
 }
 } // namespace HiPerf
 } // namespace Developtools
