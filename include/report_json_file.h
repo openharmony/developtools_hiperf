@@ -117,9 +117,7 @@ void OutputJsonVectorList(FILE *output, const std::string &key, const std::vecto
     if (fprintf(output, "\"%s\":[", key.c_str()) != -1) {
         auto it = value.begin();
         while (it != value.end()) {
-            std::string symbolFile = *it;
-            symbolFile = StringReplace(symbolFile, "\"", "");
-            OutputJsonValue(output, symbolFile, it == value.begin());
+            OutputJsonValue(output, *it, it == value.begin());
             it++;
         }
         if (fprintf(output, "]") < 0) {
