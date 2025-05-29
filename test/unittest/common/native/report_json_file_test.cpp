@@ -14,6 +14,7 @@
  */
 
 #include "report_json_file_test.h"
+#include "utilities.h"
 
 #include <bitset>
 #include <memory>
@@ -713,6 +714,44 @@ HWTEST_F(ReportJsonFileTest, GetConfig, TestSize.Level2)
     EXPECT_EQ(json->GetConfig(4).index_, 1);
     EXPECT_EQ(json->GetConfig(5).index_, 1);
     EXPECT_EQ(json->GetConfig(6).index_, 0);
+}
+
+/**
+ * @tc.name: ParseJson01
+ * @tc.desc: Test ParseJson function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(ReportJsonFileTest, ParseJson01, TestSize.Level2)
+{
+    std::string testStr1 = "{\"test\":\"";
+    std::string testStr2 = "/data/local/tmp/\"test\"/test.so";
+    std::string testStr3 = "\"}";
+    std::string testStr = testStr1 + testStr2 + testStr3;
+    cJSON* root = cJSON_Parse(testStr.c_str());
+    EXPECT_FALSE(root != nullptr);
+    testStr2 = StringReplace(testStr2, "\"", "");
+    testStr = testStr1 + testStr2 + testStr3;
+    root = cJSON_Parse(testStr.c_str());
+    EXPECT_TRUE(root != nullptr);
+}
+
+/**
+ * @tc.name: ParseJson02
+ * @tc.desc: Test ParseJson function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(ReportJsonFileTest, ParseJson02, TestSize.Level2)
+{
+    std::string testStr1 = "{\"test\":\"";
+    std::string testStr2 = "/data/local/tmp/\\test/test.so";
+    std::string testStr3 = "\"}";
+    std::string testStr = testStr1 + testStr2 + testStr3;
+    cJSON* root = cJSON_Parse(testStr.c_str());
+    EXPECT_TRUE(root != nullptr);
+    testStr2 = StringReplace(testStr2, "\\", "\\\\");
+    testStr = testStr1 + testStr2 + testStr3;
+    root = cJSON_Parse(testStr.c_str());
+    EXPECT_TRUE(root != nullptr);
 }
 } // namespace HiPerf
 } // namespace Developtools

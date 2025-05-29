@@ -1937,7 +1937,7 @@ void SubCommandRecord::AddMemTotalFeature()
         if ((it + 1) != subStrs.end()) {
             uint64_t memTotal = 0;
             if (!StringToUint64(*(it + 1), memTotal)) {
-                HIPERF_HILOGE(MODULE_DEFAULT, "get uint64_t failed, paramValue: %{pubilc}s", (*(it + 1)).c_str());
+                HIPERF_HILOGE(MODULE_DEFAULT, "get uint64_t failed, paramValue: %{public}s", (*(it + 1)).c_str());
                 continue;
             }
             fileWriter_->AddU64Feature(FEATURE::TOTAL_MEM, memTotal);

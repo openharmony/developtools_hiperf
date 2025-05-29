@@ -193,7 +193,8 @@ struct ReportFuncMapItem {
             return;
         }
         OutputJsonPair(output, "file", libId_, true);
-        OutputJsonPair(output, "symbol", funcName_);
+        std::string funcName = StringReplace(funcName_, "\"", "");
+        OutputJsonPair(output, "symbol", funcName);
         if (fprintf(output, "}") < 0) {
             return;
         }
