@@ -405,7 +405,7 @@ void SubCommandDump::ExportUserStack(const PerfRecordSample &recordSample)
                          recordSample.data_.tid, exportSampleIndex_);
         std::string resolvedPath = CanonicalizeSpecPath(userRegs.c_str());
         FILE *userRegsFp = fopen(resolvedPath.c_str(), "wb");
-        CHECK_TRUE(userRegsFp == nullptr, NO_RETVAL, 1, "open userRegs failed");
+        CHECK_TRUE(userRegsFp != nullptr, NO_RETVAL, 1, "open userRegs failed");
         std::unique_ptr<FILE, decltype(&fclose)> fpUserRegs(userRegsFp, fclose);
         fwrite(recordSample.data_.user_regs, sizeof(u64), recordSample.data_.reg_nr,
                fpUserRegs.get());
@@ -415,7 +415,7 @@ void SubCommandDump::ExportUserStack(const PerfRecordSample &recordSample)
                          recordSample.data_.tid, exportSampleIndex_);
         std::string resolvePath = CanonicalizeSpecPath(userData.c_str());
         FILE *UserDataFp = fopen(resolvePath.c_str(), "wb");
-        CHECK_TRUE(UserDataFp == nullptr, NO_RETVAL, 1, "open UserData failed");
+        CHECK_TRUE(UserDataFp != nullptr, NO_RETVAL, 1, "open UserData failed");
         std::unique_ptr<FILE, decltype(&fclose)> fpUserData(UserDataFp, fclose);
         fwrite(recordSample.data_.stack_data, sizeof(u8), recordSample.data_.dyn_size,
                fpUserData.get());
@@ -437,7 +437,7 @@ void SubCommandDump::ExportUserData(PerfEventRecord& record)
         std::string resolvedPath = CanonicalizeSpecPath(userData.c_str());
         std::unique_ptr<FILE, decltype(&fclose)> fpUserData(fopen(resolvedPath.c_str(), "wb"), fclose);
         static std::vector<u8> buf(RECORD_SIZE_LIMIT);
-        CHECK_TRUE(!recordSample->GetBinary(buf), NO_RETVAL, 1, "export user sample data failed");
+        CHECK_TRUE(recordSample->GetBinary(buf), NO_RETVAL, 1, "export user sample data failed");
         fwrite(buf.data(), sizeof(u8), recordSample->GetSize(), fpUserData.get());
 
         HLOGD("export user data index %d time %llu", exportSampleIndex_, recordSample->data_.time);
@@ -461,7 +461,7 @@ void SubCommandDump::DumpDataPortion(int indent)
 {
     int recordCount = 0;
     auto recordcCallback = [&](PerfEventRecord& record) {
-        CHECK_TRUE(record.GetName() == nullptr, false, 0, ""); // return false in callback can stop the read process
+        CHECK_TRUE(record.GetName() != nullptr, false, 0, ""); // return false in callback can stop the read process
 
         // for UT
         if (exportSampleIndex_ > 0) {

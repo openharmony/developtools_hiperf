@@ -289,7 +289,7 @@ void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> 
 void SubCommandStat::InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
                                 const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance)
 {
-    CHECK_TRUE(newPerMap == nullptr, NO_RETVAL, 0, "");
+    CHECK_TRUE(newPerMap != nullptr, NO_RETVAL, 0, "");
     newPerMap->cpu = summary.cpu;
     if (g_reportCpuFlag && !g_reportThreadFlag) {
         return;
@@ -418,7 +418,7 @@ std::string SubCommandStat::GetCommentConfigName(
     const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName)
 {
     std::string commentConfigName = "";
-    CHECK_TRUE(countEvent == nullptr || eventName.length() == 0, commentConfigName, 1, "countEvent is nullptr");
+    CHECK_TRUE(countEvent != nullptr && eventName.length() != 0, commentConfigName, 1, "countEvent is nullptr");
     if (countEvent->userOnly) {
         commentConfigName = eventName + ":u";
     } else if (countEvent->kernelOnly) {
@@ -431,7 +431,7 @@ std::string SubCommandStat::GetCommentConfigName(
 
 void SubCommandStat::MakeComments(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, std::string &commentStr)
 {
-    CHECK_TRUE(reportSum == nullptr || reportSum->commentSum == 0, NO_RETVAL, 0, "");
+    CHECK_TRUE(reportSum != nullptr && reportSum->commentSum != 0, NO_RETVAL, 0, "");
     if (reportSum->configName == "sw-task-clock") {
         commentStr = StringPrintf("%lf cpus used", reportSum->commentSum);
         return;
@@ -648,7 +648,7 @@ bool SubCommandStat::FindRunningTime(
 bool SubCommandStat::FindPercoreRunningTime(PerfEvents::Summary &summary, double &running_time_int_sec,
                                             double &main_scale)
 {
-    CHECK_TRUE(summary.eventCount == 0, false, 0, "");
+    CHECK_TRUE(summary.eventCount != 0, false, 0, "");
     running_time_int_sec = summary.eventCount / 1e9;
     if (summary.timeRunning < summary.timeEnabled && summary.timeRunning != 0) {
         main_scale = static_cast<double>(summary.timeEnabled) / summary.timeRunning;
@@ -833,7 +833,7 @@ inline void SubCommandStat::CreateClientThread()
 void SubCommandStat::ClientCommandHandle()
 {
     using namespace HiperfClient;
-    CHECK_TRUE(!IsSamplingRunning(), NO_RETVAL, 0, "");
+    CHECK_TRUE(IsSamplingRunning(), NO_RETVAL, 0, "");
     // tell the caller if Exist
     ClientCommandResponse(true);
     InitControlCommandHandlerMap();
@@ -898,7 +898,7 @@ bool SubCommandStat::ProcessControl()
     HIPERF_HILOGI(MODULE_DEFAULT, "control cmd : %{public}s", controlCmd_.c_str());
     perfPipe_.SetFifoFileName(CommandType::STAT, controlCmd_, fifoFileC2S_, fifoFileS2C_);
     if (controlCmd_ == CONTROL_CMD_PREPARE) {
-        CHECK_TRUE(!CreateFifoServer(), false, 0, "");
+        CHECK_TRUE(CreateFifoServer(), false, 0, "");
         return true;
     }
 
@@ -955,7 +955,7 @@ HiperfError SubCommandStat::CheckStatOption()
 
 HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
 {
-    CHECK_TRUE(HelpOption(), HiperfError::NO_ERR, 0, "");
+    CHECK_TRUE(!HelpOption(), HiperfError::NO_ERR, 0, "");
     if (!CheckOutPutFile()) {
         return HiperfError::CHECK_OUT_PUT_ERROR;
     }

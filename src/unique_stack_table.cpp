@@ -42,7 +42,7 @@ bool UniqueStackTable::Init()
 
 bool UniqueStackTable::Resize()
 {
-    CHECK_TRUE(tableBuf_ == nullptr, 0, 1, "Hashtable not exist, fatal error!");
+    CHECK_TRUE(tableBuf_ != nullptr, 0, 1, "Hashtable not exist, fatal error!");
     uint32_t oldNumNodes = totalNodes_;
 
     HLOGI("Before resize, totalNodes_: %u, availableNodes_: %u, availableIndex_: %u  hashStep_: %" PRIu64 "",
@@ -131,9 +131,9 @@ uint64_t UniqueStackTable::PutIpsInTable(StackId *stackId, u64 *ips, u64 nr)
             continue;
         }
         prev = PutIpInSlot(pc, prev);
-        CHECK_TRUE(prev == 0, 0, 0, "");
+        CHECK_TRUE(prev != 0, 0, 0, "");
     }
-    CHECK_TRUE(stackId == nullptr, 0, 0, "");
+    CHECK_TRUE(stackId != nullptr, 0, 0, "");
     stackId->section.id = prev;
     stackId->section.nr = nr;
     return prev;
@@ -141,7 +141,7 @@ uint64_t UniqueStackTable::PutIpsInTable(StackId *stackId, u64 *ips, u64 nr)
 
 size_t UniqueStackTable::GetWriteSize()
 {
-    CHECK_TRUE(tableBuf_ == nullptr, 0, 1, "Hashtable not exist, fatal error!");
+    CHECK_TRUE(tableBuf_ != nullptr, 0, 1, "Hashtable not exist, fatal error!");
     size_t size = 0;
     size += sizeof(pid_);
     size += sizeof(tableSize_);
@@ -156,14 +156,14 @@ Node* UniqueStackTable::GetFrame(uint64_t stackId)
 {
     Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     // should not occur
-    CHECK_TRUE(stackId >= totalNodes_, nullptr, 1, "Failed to find frame by index: %" PRIu64 "", stackId);
+    CHECK_TRUE(stackId < totalNodes_, nullptr, 1, "Failed to find frame by index: %" PRIu64 "", stackId);
 
     return reinterpret_cast<Node *>(&tableHead[stackId]);
 }
 
 bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
 {
-    CHECK_TRUE(tableBuf_ == nullptr, false, 1, "Hashtable not exist, failed to find frame!");
+    CHECK_TRUE(tableBuf_ != nullptr, false, 1, "Hashtable not exist, failed to find frame!");
     uint64_t nr = stackId.section.nr;
     uint64_t tailIdx = stackId.section.id;
 
@@ -182,7 +182,7 @@ bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
 
 bool UniqueStackTable::ImportNode(uint32_t index, const Node& node)
 {
-    CHECK_TRUE(index >= tableSize_, false, 0, "");
+    CHECK_TRUE(index < tableSize_, false, 0, "");
     Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     tableHead[index].value = node.value;
     return true;

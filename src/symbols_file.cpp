@@ -210,7 +210,7 @@ public:
 
     const std::unordered_map<uint64_t, ElfLoadInfo> GetPtLoads() override
     {
-        CHECK_TRUE(elfFile_ == nullptr, info_, 0, "");
+        CHECK_TRUE(elfFile_ != nullptr, info_, 0, "");
         return elfFile_->GetPtLoads();
     }
 
@@ -250,9 +250,9 @@ protected:
             }
         }
 
-        CHECK_TRUE(elfFile_ == nullptr, false, 1, "Failed to create elf file for %s.", elfPath.c_str());
+        CHECK_TRUE(elfFile_ != nullptr, false, 1, "Failed to create elf file for %s.", elfPath.c_str());
 
-        CHECK_TRUE(!elfFile_->IsValid(), false, 1, "parser elf file failed.");
+        CHECK_TRUE(elfFile_->IsValid(), false, 1, "parser elf file failed.");
 
         HLOGD("loaded elf %s", elfPath.c_str());
         // update path for so in hap
@@ -279,7 +279,7 @@ protected:
         ShdrInfo shinfo;
         if (elfFile_->GetSectionInfo(shinfo, ".eh_frame_hdr")) {
             auto mmapPtr = elfFile_->GetMmapPtr();
-            CHECK_TRUE(mmapPtr == nullptr, false, 1, "mmapPtr should not be nullptr.");
+            CHECK_TRUE(mmapPtr != nullptr, false, 1, "mmapPtr should not be nullptr.");
             LoadEhFrameHDR(mmapPtr + shinfo.offset, shinfo.size, shinfo.offset);
         }
 #endif
@@ -318,7 +318,7 @@ private:
     bool GetHDRSectionInfo(uint64_t &ehFrameHdrElfOffset, uint64_t &fdeTableElfOffset,
                            uint64_t &fdeTableSize) override
     {
-        CHECK_TRUE(elfFile_ == nullptr, false, 1, "elfFile_ is nullptr");
+        CHECK_TRUE(elfFile_ != nullptr, false, 1, "elfFile_ is nullptr");
         ShdrInfo shinfo;
         if (!elfFile_->GetSectionInfo(shinfo, ".eh_frame_hdr")) {
             return false;
@@ -359,7 +359,7 @@ private:
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
         const eh_frame_hdr *ehFrameHdr = reinterpret_cast<const eh_frame_hdr *>(buffer);
-        CHECK_TRUE(ehFrameHdr == nullptr, false, 0, "");
+        CHECK_TRUE(ehFrameHdr != nullptr, false, 0, "");
         const uint8_t *dataPtr = ehFrameHdr->encode_data;
         DwarfEncoding dwEhFramePtr(ehFrameHdr->eh_frame_ptr_enc, dataPtr);
         DwarfEncoding dwFdeCount(ehFrameHdr->fde_count_enc, dataPtr);
@@ -379,7 +379,7 @@ private:
         HLOGD("  table_item_size:     %zd", dwTable.GetSize() + dwTableValue.GetSize());
         HLOGD("  table_offset_in_hdr: %zu", dwTable.GetData() - buffer);
 
-        CHECK_TRUE(version != 1, false, 1, "eh_frame_hdr version is invalid");
+        CHECK_TRUE(version == 1, false, 1, "eh_frame_hdr version is invalid");
         EhFrameHDRValid_ = true;
         ehFrameHDRElfOffset_ = shdrOffset;
         ehFrameHDRFdeCount_ = dwFdeCount.GetAppliedValue();
@@ -456,7 +456,7 @@ private:
                 elfFile_ = elfFactory.Create();
             }
         }
-        CHECK_TRUE(elfFile_ == nullptr, false, 1, "Failed to create elf file for %s.", elfPath.c_str());
+        CHECK_TRUE(elfFile_ != nullptr, false, 1, "Failed to create elf file for %s.", elfPath.c_str());
         HLOGD("loaded elf %s", elfPath.c_str());
         if (!elfFile_->IsValid()) {
             HLOGD("parser elf file failed.");
@@ -547,7 +547,7 @@ public:
         const auto eachFileStartTime = steady_clock::now();
 #endif
         std::string kallsym;
-        CHECK_TRUE(!ReadFileToString(kallsymsPath, kallsym, KSYM_DEFAULT_SIZE) || kallsym.empty(), false, 1,
+        CHECK_TRUE(ReadFileToString(kallsymsPath, kallsym, KSYM_DEFAULT_SIZE) && !kallsym.empty(), false, 1,
                    "%s load failed.", kallsymsPath.c_str());
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
         // any way we finish the line scan
@@ -659,7 +659,7 @@ public:
         }
 
         // getline end
-        CHECK_TRUE(!ParseKallsymsLine("/proc/kallsyms"), false, 0, "");
+        CHECK_TRUE(ParseKallsymsLine("/proc/kallsyms"), false, 0, "");
 
         if (hasChangeKptr) {
             if (!WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict)) {
@@ -752,7 +752,7 @@ public:
             procPath = "/proc/devhost/root/kallsyms";
         }
         HLOGD("try read kernel thread symbol file %s in %s", filePath_.c_str(), procPath.c_str());
-        CHECK_TRUE(access(procPath.c_str(), R_OK) != 0, false, LOG_TYPE_PRINTF,
+        CHECK_TRUE(access(procPath.c_str(), R_OK) == 0, false, LOG_TYPE_PRINTF,
                    "kernel thread symbol file %s cannot be opened\n", filePath_.c_str());
         bool hasChangeKptr = false;
         std::string oldKptrRestrict = ReadFileToString(KPTR_RESTRICT);
@@ -765,7 +765,7 @@ public:
         }
 
         // getline end
-        CHECK_TRUE(!ParseKallsymsLine(procPath), false, 0, "");
+        CHECK_TRUE(ParseKallsymsLine(procPath), false, 0, "");
 
         if (hasChangeKptr) {
             if (!WriteStringToFile(KPTR_RESTRICT, oldKptrRestrict)) {
@@ -952,13 +952,13 @@ public:
             }
         }
 
-        CHECK_TRUE(StringEndsWith(filePath_, ".hap") && map_->IsMapExec(), false, 1,
+        CHECK_TRUE(!StringEndsWith(filePath_, ".hap") || !map_->IsMapExec(), false, 1,
                    "map is exec not abc file , the symbol file is:%s", map_->name.c_str());
 
         if (StringEndsWith(filePath_, ".hap") || StringEndsWith(filePath_, ".hsp") ||
             StringEndsWith(filePath_, ".hqf")) {
             dfxExtractor_ = std::make_unique<DfxExtractor>(filePath_);
-            CHECK_TRUE(!dfxExtractor_->GetHapAbcInfo(loadOffSet_, abcDataPtr_, abcDataSize_), false, 1,
+            CHECK_TRUE(dfxExtractor_->GetHapAbcInfo(loadOffSet_, abcDataPtr_, abcDataSize_), false, 1,
                        "failed to call GetHapAbcInfo, the symbol file is:%s", filePath_.c_str());
             HLOGD("loadOffSet %u", (uint32_t)loadOffSet_);
             if (abcDataPtr_ != nullptr) {
@@ -1007,7 +1007,7 @@ public:
         if (debugInfoLoaded_) {
             return true;
         }
-        CHECK_TRUE(!onRecording_, true, 0, "");
+        CHECK_TRUE(onRecording_, true, 0, "");
 
         if (!IsHapAbc() && map_->IsMapExec()) {
             ElfFileSymbols::LoadDebugInfo(map, "");
@@ -1024,7 +1024,7 @@ public:
             return false;
         }
         HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
-        CHECK_TRUE(symbolsLoaded_ || !onRecording_, true, 0, "");
+        CHECK_TRUE(!symbolsLoaded_ && onRecording_, true, 0, "");
         symbolsLoaded_ = true;
         if (!IsHapAbc() && map_->IsMapExec()) {
             ElfFileSymbols::LoadSymbols(map, "");
