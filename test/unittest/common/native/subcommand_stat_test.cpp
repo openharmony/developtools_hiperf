@@ -2383,6 +2383,37 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control03, TestSize.Level1)
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
         {"stop counting failed"}), true);
 }
+
+/**
+ * @tc.name: TestOnSubCommand_control04
+ * @tc.desc: --control without prepare, start, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_control04, TestSize.Level1)
+{
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control pause",
+        {"command should be: prepare, start, stop"}), true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName01
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, OutPutFileName01, TestSize.Level1)
+{
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat -d 10 -a -o /data/local/tmp/stat.txt",
+        {"-o option must use with --control prepare option"}), true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName02
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, OutPutFileName02, TestSize.Level1)
+{
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a -o /data/log/hiperflog/stat.txt",
+        {"Invalid output file path, permission denied"}), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

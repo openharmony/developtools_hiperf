@@ -2264,6 +2264,27 @@ HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control03, TestSize.Level1)
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling failed"}),
               true);
 }
+
+/**
+ * @tc.name: TestOnSubCommand_WrongStopSeconds
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, WrongStopSeconds, TestSize.Level2)
+{
+    std::string opt = "-d 123abc ";
+    opt += " ";
+    TestRecordCommand(opt, false);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, OutPutFileName, TestSize.Level2)
+{
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -a -o /data/log/hiperflog/perf.data",
+        {"Invalid output file path, permission denied"}), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
