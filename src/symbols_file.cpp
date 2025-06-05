@@ -1134,6 +1134,13 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
 
 static bool IsCJFile(const std::string& filepath)
 {
+    if (!StringEndsWith(filepath, ".so")) {
+        return false;
+    }
+    if (!StringStartsWith(filepath, "/data/storage") &&
+        !StringStartsWith(filepath, "/system/lib64/platformsdk/cjsdk")) {
+        return false;
+    }
     RegularElfFactory elfFactory(filepath);
     std::shared_ptr<DfxElf> elfFile_ = elfFactory.Create();
     ShdrInfo shinfo;
