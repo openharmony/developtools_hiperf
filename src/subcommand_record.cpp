@@ -788,7 +788,7 @@ pid_t SubCommandRecord::GetPidFromAppPackage(const pid_t oldPid, const uint64_t 
             }
             std::string fileName {basePath + subDir + cmdline};
             if (IsSameCommand(ReadFileToString(fileName), appPackage_)) {
-                res = std::stoul(subDir, nullptr);
+                res = static_cast<pid_t>(std::stoul(subDir, nullptr));
                 HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage_.c_str(), res);
                 return res;
             }
@@ -1203,8 +1203,8 @@ bool SubCommandRecord::ClientCommandResponse(const std::string& str)
             return false;
         }
     }
-    size_t size = write(clientPipeOutput_, str.c_str(), str.size());
-    if (size != str.size()) {
+    ssize_t size = write(clientPipeOutput_, str.c_str(), str.size());
+    if (size != static_cast<ssize_t>(str.size())) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGD("Server:%s -> %d : %zd %d:%s", str.c_str(), clientPipeOutput_, size, errno, errInfo);
@@ -1223,8 +1223,8 @@ bool SubCommandRecord::ChildResponseToMain(bool response)
 bool SubCommandRecord::ChildResponseToMain(const std::string& str)
 {
     int tempFd = isHiperfClient_ ? clientPipeOutput_ : writeFd_;
-    size_t size = write(tempFd, str.c_str(), str.size());
-    if (size != str.size()) {
+    ssize_t size = write(tempFd, str.c_str(), str.size());
+    if (size != static_cast<ssize_t>(str.size())) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("write pipe failed. str:%s, size:%zd, errno:%d:%s", str.c_str(), size, errno, errInfo);

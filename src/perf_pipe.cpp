@@ -110,8 +110,8 @@ bool PerfPipe::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::m
         close(fdRead);
         return false;
     }
-    size_t size = write(fdWrite, cmd.c_str(), cmd.size());
-    if (size != cmd.size()) {
+    ssize_t size = write(fdWrite, cmd.c_str(), cmd.size());
+    if (size != static_cast<ssize_t>(cmd.size())) {
         HLOGE("failed to write fifo file(%s) command(%s)", fifoFileC2S_.c_str(), cmd.c_str());
         HIPERF_HILOGE(MODULE_DEFAULT, "failed to write fifo file(%{public}s) command(%{public}s).",
                       fifoFileC2S_.c_str(), cmd.c_str());
