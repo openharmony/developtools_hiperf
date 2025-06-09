@@ -329,7 +329,9 @@ void VirtualThread::ParseDevhostMap(pid_t devhost)
             if (addrRanges.size() != mmapAddrRangeToken) {
                 continue;
             }
-            uint64_t begin, end, offset;
+            uint64_t begin = 0;
+            uint64_t end = 0;
+            uint64_t offset = 0;
             // 2fe40000 / 311e1000
             try {
                 begin = std::stoull(addrRanges[0], nullptr, NUMBER_FORMAT_HEX_BASE);
