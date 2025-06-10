@@ -781,8 +781,8 @@ bool SubCommandStat::ClientCommandResponse(bool response)
 
 bool SubCommandStat::ClientCommandResponse(const std::string& str)
 {
-    size_t size = write(clientPipeOutput_, str.c_str(), str.size());
-    if (size != str.size()) {
+    ssize_t size = write(clientPipeOutput_, str.c_str(), str.size());
+    if (size != static_cast<ssize_t>(str.size())) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGD("Server:%s -> %d : %zd %d:%s", str.c_str(), clientPipeOutput_, size, errno, errInfo);
