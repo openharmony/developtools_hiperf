@@ -1012,7 +1012,7 @@ bool SubCommandRecord::TraceOffCpu()
 
 void SubCommandRecord::SetSavedCmdlinesSize()
 {
-    if (ReadIntFromProcFile(SAVED_CMDLINES_SIZE, oldCmdlinesSize_)) {
+    if (!ReadIntFromProcFile(SAVED_CMDLINES_SIZE, oldCmdlinesSize_)) {
         printf("Failed to read from %s.\n", SAVED_CMDLINES_SIZE.c_str());
     }
     if (!WriteIntToProcFile(SAVED_CMDLINES_SIZE, cmdlinesSize_)) {
