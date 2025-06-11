@@ -393,6 +393,7 @@ bool IsSupportNonDebuggableApp();
 const std::string GetUserType();
 bool GetDeveloperMode();
 bool IsArkJsFile(const std::string& filepath);
+bool IsV8File(const std::string& filepath);
 std::string GetProcessName(int pid);
 std::string HandleAppInfo(const std::string& appPackage, const std::vector<pid_t> &inputPidTidArgs);
 bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);

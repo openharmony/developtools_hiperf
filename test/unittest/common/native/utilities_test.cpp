@@ -936,6 +936,25 @@ HWTEST_F(UtilitiesTest, StringToUint64ErrorTest, TestSize.Level2)
     traceParamsStr = "18446744073709551616";
     EXPECT_FALSE(StringToUint64(traceParamsStr, paramsUint64));
 }
+
+/**
+ * @tc.name: IsV8File
+ * @tc.desc: Test IsV8File function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(UtilitiesTest, IsV8File, TestSize.Level2)
+{
+    std::string filepath = "[anon:JSVM_JIT]";
+    EXPECT_TRUE(IsV8File(filepath));
+    filepath = "[anon:ARKWEB_JIT]";
+    EXPECT_TRUE(IsV8File(filepath));
+    filepath = "[anon:v8]";
+    EXPECT_TRUE(IsV8File(filepath));
+    filepath = "[anon:test]";
+    EXPECT_FALSE(IsV8File(filepath));
+    filepath = "/system/lib64/libv8_shared.so";
+    EXPECT_FALSE(IsV8File(filepath));
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

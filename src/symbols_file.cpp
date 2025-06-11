@@ -36,6 +36,7 @@
 
 #include "dfx_ark.h"
 #include "dfx_extractor_utils.h"
+#include "dfx_jsvm.h"
 #include "dfx_symbols.h"
 #include "dwarf_encoding.h"
 #include "elf_factory.h"
@@ -1081,6 +1082,126 @@ public:
     }
 };
 
+class V8FileSymbols : public ElfFileSymbols {
+private:
+    bool v8Extracted_ = false;
+    [[maybe_unused]] uintptr_t jsvmExtractorptr_ = 0;
+
+    pid_t pid_ = 0;
+
+public:
+    explicit V8FileSymbols(const std::string &symbolFilePath, pid_t pid)
+        : ElfFileSymbols(symbolFilePath, SYMBOL_V8_FILE)
+    {
+        pid_ = pid;
+    }
+
+    ~V8FileSymbols() override
+    {
+#if defined(is_ohos) && is_ohos
+        if (jsvmExtractorptr_ != 0) {
+            DfxJsvm::Instance().JsvmDestroyJsSymbolExtractor(jsvmExtractorptr_);
+            jsvmExtractorptr_ = 0;
+        }
+#endif
+    }
+
+    bool IsV8() override
+    {
+#if defined(is_ohos) && is_ohos
+        if (!needParseJsFunc_) {
+            return true;
+        }
+        if (jsvmExtractorptr_ == 0 && StringStartsWith(filePath_, "[anon:JSVM_JIT")) {
+            auto ret = DfxJsvm::Instance().JsvmCreateJsSymbolExtractor(&jsvmExtractorptr_, pid_);
+            if (ret < 0) {
+                jsvmExtractorptr_ = 0;
+                HLOGE("failed to call JsvmCreateJsSymbolExtractor, the symbol file is:%s", filePath_.c_str());
+            } else {
+                v8Extracted_ = true;
+            }
+        }
+        return jsvmExtractorptr_ != 0;
+#endif
+        return true;
+    }
+
+    void SetBoolValue(bool value) override
+    {
+        v8Extracted_ = value;
+    }
+
+    bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
+    {
+        if (map == nullptr) {
+            HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
+            return false;
+        }
+        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        if (debugInfoLoaded_) {
+            return true;
+        }
+        CHECK_TRUE(onRecording_, true, 0, "");
+
+        debugInfoLoaded_ = true;
+        debugInfoLoadResult_ = true;
+        return true;
+    }
+
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
+    {
+        if (map == nullptr) {
+            HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
+            return false;
+        }
+        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        CHECK_TRUE(!symbolsLoaded_ && onRecording_, true, 0, "");
+        symbolsLoaded_ = true;
+        return true;
+    }
+
+    DfxSymbol GetSymbolWithPcAndMap(uint64_t ip, std::shared_ptr<DfxMap> map) override
+    {
+        // get cache
+        auto iter = symbolsMap_.find(ip);
+        if (iter != symbolsMap_.end()) {
+            return iter->second;
+        }
+        if (map == nullptr) {
+            return DfxSymbol(ip, "");
+        }
+        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+
+#if defined(is_ohos) && is_ohos
+        if (IsV8() && needParseJsFunc_) {
+            JsvmFunction jsvmFunc;
+            std::string module = map->name;
+            HLOGD("map->name module:%s", module.c_str());
+            auto ret = DfxJsvm::Instance().ParseJsvmFrameInfo(static_cast<uintptr_t>(ip), jsvmExtractorptr_, &jsvmFunc);
+            if (ret == -1) {
+                HLOGD("failed to call ParseJsvmFrameInfo, the symbol file is : %s", map->name.c_str());
+                return DfxSymbol(ip, "");
+            }
+            this->symbolsMap_.insert(std::make_pair(ip,
+                DfxSymbol(ip, 0, jsvmFunc.functionName, "", map->name)));
+
+            DfxSymbol &foundSymbol = symbolsMap_[ip];
+            if (!foundSymbol.matched_) {
+                foundSymbol.matched_ = true;
+                foundSymbol.symbolFileIndex_ = id_;
+                matchedSymbols_.push_back(&(symbolsMap_[ip]));
+            }
+
+            HLOGD("ip : 0x%" PRIx64 " the symbol file is : %s, function is %s demangle_ : %s", ip,
+                  symbolsMap_[ip].module_.data(), jsvmFunc.functionName, matchedSymbols_.back()->demangle_.data());
+            return symbolsMap_[ip];
+        }
+#endif
+        DfxSymbol symbol(ip, "");
+        return symbol;
+    }
+};
+
 class UnknowFileSymbols : public SymbolsFile {
 public:
     explicit UnknowFileSymbols(const std::string &symbolFilePath)
@@ -1125,6 +1246,8 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
             return std::make_unique<JSFileSymbols>(symbolFilePath);
         case SYMBOL_HAP_FILE:
             return std::make_unique<HapFileSymbols>(symbolFilePath, pid);
+        case SYMBOL_V8_FILE:
+            return std::make_unique<V8FileSymbols>(symbolFilePath, pid);
         case SYMBOL_CJ_FILE:
             return std::make_unique<CJFileSymbols>(symbolFilePath);
         default:
@@ -1163,6 +1286,8 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &s
         return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE, symbolFilePath);
     } else if (IsArkJsFile(symbolFilePath)) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_HAP_FILE, symbolFilePath, pid);
+    } else if (IsV8File(symbolFilePath)) {
+        return SymbolsFile::CreateSymbolsFile(SYMBOL_V8_FILE, symbolFilePath, pid);
     } else if (IsCJFile(symbolFilePath)) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_CJ_FILE, symbolFilePath, pid);
     } else {
@@ -1332,8 +1457,10 @@ bool SymbolsFile::setSymbolsFilePath(const std::vector<std::string> &symbolsSear
 std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
     const SymbolFileStruct &symbolFileStruct)
 {
-    bool isHapSymbolFile = static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_HAP_FILE;
+    bool isHapSymbolFile = (static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_HAP_FILE);
     HLOGD("isHapSymbolFile : %d", isHapSymbolFile);
+    bool isV8SymbolFile = (static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_V8_FILE);
+    HLOGD("isV8SymbolFile : %d", isV8SymbolFile);
     auto symbolsFile = CreateSymbolsFile(symbolFileStruct.filePath_);
 
     // default create elf file. but hap file need special operation.
@@ -1347,7 +1474,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
                                            symbolStruct.symbolName_, symbolFileStruct.filePath_);
     }
     symbolsFile->AdjustSymbols(); // reorder
-    if (isHapSymbolFile) {
+    if (isHapSymbolFile || isV8SymbolFile) {
         for (const auto& symbol : symbolsFile->symbols_) {
             symbolsFile->symbolsMap_.emplace(symbol.funcVaddr_, symbol);
         }

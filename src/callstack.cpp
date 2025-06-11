@@ -284,6 +284,7 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
     regs->SetRegsData(reinterpret_cast<uintptr_t*>(regs_), regsNum_);
 #endif
     CHECK_TRUE(unwinder != nullptr, false, 0, "");
+    unwinder->EnableJsvmstack(true);
     unwinder->SetRegs(regs);
     unwinder->Unwind(&unwindInfo);
     callStack = unwinder->GetFrames();

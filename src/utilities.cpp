@@ -908,6 +908,13 @@ bool IsArkJsFile(const std::string& filepath)
             StringEndsWith(filepath, ".hqf"));
 }
 
+bool IsV8File(const std::string& filepath)
+{
+    return (StringStartsWith(filepath, "[anon:JSVM_JIT") ||
+            StringStartsWith(filepath, "[anon:ARKWEB_JIT") ||
+            StringStartsWith(filepath, "[anon:v8"));
+}
+
 bool IsHiviewCall()
 {
 #if defined(is_ohos) && is_ohos
