@@ -1173,6 +1173,8 @@ bool PerfEvents::CreateFdEvents(void)
                                 printf("pid %d does not exist.\n", pids_[ipid]);
                             }
                             HLOGE("pid %d does not exist.\n", pids_[ipid]);
+                            HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFdEvents] pid %{public}d does not exist.",
+                                pids_[ipid]);
                             continue;
                         } else {
                             // clang-format off
@@ -1332,6 +1334,8 @@ bool PerfEvents::CreateMmap(const FdItem &item, const perf_event_attr &attr)
             strerror_r(errno, errInfo, ERRINFOLEN);
             perror("errno:%d, errstr:%s", errno, errInfo);
             perror("Fail to call mmap \n");
+            HIPERF_HILOGE(MODULE_DEFAULT, "[CreateMmap] Fail to call mmap. errno:%{public}d, errstr:%{public}s",
+                errno, errInfo);
             return false;
         }
         MmapFd mmapItem;

@@ -734,16 +734,28 @@ void SubCommandRecord::MsgPrintAndTrans(bool isTrans, const std::string& msg)
 
 bool SubCommandRecord::IsAppRestarted()
 {
-    std::string info = "please restart " + appPackage_ + " for profiling within 30 seconds\n";
-    MsgPrintAndTrans(true, info);
     std::set<pid_t> oldPids {};
     std::set<pid_t> newPids {};
     std::vector<pid_t> intersection;
     const auto startTime = steady_clock::now();
     const auto endTime = startTime + std::chrono::seconds(CHECK_TIMEOUT);
+    HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect oldpids begin");
     CollectPidsByAppname(oldPids, appPackage_);
+    for (auto it = oldPids.begin(); it != oldPids.end(); it++) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "[IsAppRestarted] get oldpids %{public}d for %{public}s",
+            *it, appPackage_.c_str());
+    }
+    HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect oldpids finish");
+    std::string info = "please restart " + appPackage_ + " for profiling within 30 seconds\n";
+    MsgPrintAndTrans(true, info);
     do {
+        HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect newPids begin");
         CollectPidsByAppname(newPids, appPackage_);
+        for (auto it = oldPids.begin(); it != newPids.end(); it++) {
+            HIPERF_HILOGI(MODULE_DEFAULT, "[IsAppRestarted] get newPids %{public}d for %{public}s",
+                *it, appPackage_.c_str());
+        }
+        HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect newPids finish");
         std::set_intersection(oldPids.begin(), oldPids.end(),
             newPids.begin(), newPids.end(), std::back_insert_iterator(intersection));
         // app names are same, no intersection, means app restarted
@@ -789,13 +801,14 @@ pid_t SubCommandRecord::GetPidFromAppPackage(const pid_t oldPid, const uint64_t 
             std::string fileName {basePath + subDir + cmdline};
             if (IsSameCommand(ReadFileToString(fileName), appPackage_)) {
                 res = static_cast<pid_t>(std::stoul(subDir, nullptr));
-                HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage_.c_str(), res);
+                HLOGD("[GetAppPackagePid]: get appPid for %s is %d", appPackage_.c_str(), res);
+                HIPERF_HILOGD(MODULE_DEFAULT, "[GetAppPackagePid] get appPid %{public}d for app %{public}s",
+                    res, appPackage_.c_str());
                 return res;
             }
         }
         std::this_thread::sleep_for(milliseconds(checkAppMs_));
     } while (steady_clock::now() < endTime && !g_callStop.load());
-
     return res;
 }
 
@@ -809,6 +822,8 @@ bool SubCommandRecord::IsAppRunning()
             return false;
         }
         HLOGD("[CheckAppIsRunning] get appPid %d for app %s", appPid, appPackage_.c_str());
+        HIPERF_HILOGD(MODULE_DEFAULT, "[CheckAppIsRunning] get appPid %{public}d for app %{public}s",
+            appPid, appPackage_.c_str());
         selectPids_.push_back(appPid);
     }
     return true;
@@ -1063,6 +1078,8 @@ bool SubCommandRecord::PreparePerfEvent()
     if (!perfEvents_.SetBranchSampleType(branchSampleType_)) {
         printf("branch sample %s is not supported\n", VectorToString(vecBranchFilters_).c_str());
         HLOGE("Fail to SetBranchSampleType %" PRIx64 "", branchSampleType_);
+        HIPERF_HILOGE(MODULE_DEFAULT, "[PreparePerfEvent] Fail to SetBranchSampleType %{public}" PRIx64 "",
+            branchSampleType_);
         return false;
     }
     if (!clockId_.empty()) {
@@ -1425,6 +1442,7 @@ void SubCommandRecord::ClientCommandHandle()
             ssize_t result = TEMP_FAILURE_RETRY(read(clientPipeInput_, &c, 1));
             if (result <= 0) {
                 HLOGD("server :read from pipe file failed");
+                HIPERF_HILOGD(MODULE_DEFAULT, "[ClientCommandHandle] server :read from pipe file failed");
                 break;
             }
             command.push_back(c);
@@ -1433,10 +1451,10 @@ void SubCommandRecord::ClientCommandHandle()
             }
         }
         HLOGD("server:new command %s", command.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "server:new command : %{public}s", command.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "[ClientCommandHandle] server:new command : %{public}s", command.c_str());
         if (command.find("STOP") != std::string::npos) {
             HLOGD("receive sop command, set g_callStop to true");
-            HIPERF_HILOGI(MODULE_DEFAULT, "receive sop command, set g_callStop to true");
+            HIPERF_HILOGI(MODULE_DEFAULT, "[ClientCommandHandle] Handlereceive sop command, set g_callStop to true");
             g_callStop.store(true);
         }
         DispatchControlCommand(command);
@@ -1512,6 +1530,7 @@ bool SubCommandRecord::CreateFifoServer()
     if (pid == -1) {
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("fork failed. %d:%s", errno, errInfo);
+        HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFifoServer] fork failed. %{public}d:%{public}s", errno, errInfo);
         close(pipeFd[PIPE_READ]);
         close(pipeFd[PIPE_WRITE]);
         return false;
@@ -1577,7 +1596,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     } else if (isFifoClient_) {
         return HiperfError::NO_ERR;
     }
-
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] ProcessControl finish");
     if (controlCmd_ == CONTROL_CMD_PREPARE) {
         CreateClientThread();
         if (!appPackage_.empty() && restart_) {
@@ -1586,10 +1605,12 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
                 CloseClientThread();
                 return HiperfError::CHECK_RESTART_OPTION_FAIL;
             }
+            HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] App restart success");
         }
     }
     
     if (!CheckTargetPids()) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] CheckTargetPids failed");
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(false);
             CloseClientThread();
@@ -1600,6 +1621,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
             return HiperfError::CHECK_OPTION_PID_FAIL;
         }
     }
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CheckTargetPids success");
     std::string err = OHOS::Developtools::HiPerf::HandleAppInfo(appPackage_, inputPidTidArgs_);
     if (!err.empty()) {
         ChildResponseToMain(err);
@@ -1607,6 +1629,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         CloseClientThread();
         return HiperfError::CHECK_DEBUG_APP_FAIL;
     }
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] HandleAppInfo finish");
     // prepare PerfEvents
     if (!PrepareSysKernel()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
@@ -1615,7 +1638,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         }
         return HiperfError::PREPARE_SYS_KERNEL_FAIL;
     }
-
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] PrepareSysKernel finish");
     if (!PreparePerfEvent()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(false);
@@ -1623,18 +1646,18 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         }
         return HiperfError::PREPARE_PERF_EVENT_FAIL;
     }
-
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] PreparePerfEvent finish");
     // prepar some attr before CreateInitRecordFile
     if (!perfEvents_.PrepareTracking()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(false);
             CloseClientThread();
         }
-        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to prepare tracking");
+        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to prepare tracking");
         HLOGE("Fail to prepare tracking");
         return HiperfError::PREPARE_TACKING_FAIL;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents prepared");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord perfEvents prepared");
 
     if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
@@ -1642,33 +1665,36 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
             CloseClientThread();
         }
         HLOGE("Fail to create record file %s", outputFilename_.c_str());
-        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to create record file %{public}s", outputFilename_.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to create record file %{public}s",
+            outputFilename_.c_str());
         return HiperfError::CREATE_OUTPUT_FILE_FAIL;
     }
-
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CreateInitRecordFile finished");
     if (!PrepareVirtualRuntime()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(false);
             CloseClientThread();
         }
         HLOGE("Fail to prepare virtualRuntime");
-        HIPERF_HILOGE(MODULE_DEFAULT, "Fail to prepare virtualRuntime");
+        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to prepare virtualRuntime");
         return HiperfError::PREPARE_VIRTUAL_RUNTIME_FAIL;
     }
 
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord virtualRuntime prepared");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord virtualRuntime prepared");
 
     if (controlCmd_ == CONTROL_CMD_PREPARE || isHiperfClient_) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CreateReplyThread start");
         CreateReplyThread();
     }
 
     if (isHiperfClient_) {
+        HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] isHiperfClient_ CreateClientThread start");
         CreateClientThread();
     }
     //write comm event
     WriteCommEventBeforeSampling();
     SetExcludeHiperf();
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord StartTracking");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord StartTracking");
     // if mmap record size has been larger than limit, dont start sampling.
     if (!isDataSizeLimitStop_) {
         if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
@@ -1678,7 +1704,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
                       HiperfError::START_TRACKING_FAIL);
         }
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord perfEvents tracking finish");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord perfEvents tracking finish");
 
     if (isSpe_) {
         HLOGD("stop write spe record");
@@ -1698,7 +1724,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         RecordCompleted();
     }
 
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord final report");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord final report");
     // finial report
     RecoverSavedCmdlinesSize();
     OnlineReportData();
@@ -1706,7 +1732,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     CloseClientThread();
     RemoveVdsoTmpFile();
     AgeHiperflogFiles();
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord finish");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord finish");
     return HiperfError::NO_ERR;
 }
 
