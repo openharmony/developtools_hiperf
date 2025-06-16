@@ -50,6 +50,8 @@ void PerfPipe::SetFifoFileName(const CommandType& commandType, std::string& cont
     fifoFileS2C = fifoFileS2C_;
     controlCmd_ = controlCmd;
     HLOGD("C2S:%s, S2C:%s", fifoFileC2S.c_str(), fifoFileS2C.c_str());
+    HIPERF_HILOGD(MODULE_DEFAULT, "[SetFifoFileName] C2S:%{public}s, S2C:%{public}s",
+        fifoFileC2S_.c_str(), fifoFileS2C.c_str());
 }
 
 void PerfPipe::RemoveFifoFile()
@@ -97,16 +99,21 @@ bool PerfPipe::CreateFifoFile()
 bool PerfPipe::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut)
 {
     // need open for read first, because server maybe send reply before client wait to read
+    char errInfo[ERRINFOLEN] = { 0 };
     int fdRead = open(fifoFileS2C_.c_str(), O_RDONLY | O_NONBLOCK);
     if (fdRead == -1) {
         HLOGE("can not open fifo file(%s)", fifoFileS2C_.c_str());
-        HIPERF_HILOGE(MODULE_DEFAULT, "can not open fifo file: %{public}s.", fifoFileS2C_.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT,
+            "[SendFifoAndWaitReply] can not open fifo file: %{public}s, errno:(%{public}d:%{public}s)",
+            fifoFileS2C_.c_str(), errno, errInfo);
         return false;
     }
     int fdWrite = open(fifoFileC2S_.c_str(), O_WRONLY | O_NONBLOCK);
     if (fdWrite == -1) {
         HLOGE("can not open fifo file(%s)", fifoFileC2S_.c_str());
-        HIPERF_HILOGE(MODULE_DEFAULT, "can not open fifo file: %{public}s.", fifoFileC2S_.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT,
+            "[SendFifoAndWaitReply] can not open fifo file: %{public}s, errno:(%{public}d:%{public}s)",
+            fifoFileC2S_.c_str(), errno, errInfo);
         close(fdRead);
         return false;
     }
@@ -114,7 +121,7 @@ bool PerfPipe::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::m
     if (size != static_cast<ssize_t>(cmd.size())) {
         HLOGE("failed to write fifo file(%s) command(%s)", fifoFileC2S_.c_str(), cmd.c_str());
         HIPERF_HILOGE(MODULE_DEFAULT, "failed to write fifo file(%{public}s) command(%{public}s).",
-                      fifoFileC2S_.c_str(), cmd.c_str());
+            fifoFileC2S_.c_str(), cmd.c_str());
         close(fdWrite);
         close(fdRead);
         return false;
@@ -130,6 +137,7 @@ bool PerfPipe::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut)
 {
     std::string reply;
     WaitFifoReply(fd, timeOut, reply);
+    HIPERF_HILOGI(MODULE_DEFAULT, "[WaitFifoReply] WaitFifoReply reply:(%{public}s)", reply.c_str());
     return reply == HiperfClient::ReplyOK;
 }
 
@@ -146,8 +154,9 @@ void PerfPipe::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, s
             char c;
             ssize_t result = TEMP_FAILURE_RETRY(read(fd, &c, 1));
             if (result <= 0) {
-                HLOGE("read from fifo file(%s) failed", fifoFileS2C_.c_str());
-                HIPERF_HILOGE(MODULE_DEFAULT, "read from fifo file(%{public}s) failed", fifoFileS2C_.c_str());
+                HLOGE("[WaitFifoReply] read from fifo file(%s) failed", fifoFileS2C_.c_str());
+                HIPERF_HILOGE(MODULE_DEFAULT, "[WaitFifoReply] read from fifo file(%{public}s) failed",
+                    fifoFileS2C_.c_str());
                 exitLoop = true;
             }
             reply.push_back(c);
@@ -156,11 +165,11 @@ void PerfPipe::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, s
             }
         }
     } else if (polled == 0) {
-        HLOGD("wait fifo file(%s) timeout", fifoFileS2C_.c_str());
-        HIPERF_HILOGD(MODULE_DEFAULT, "wait fifo file(%{public}s) timeout", fifoFileS2C_.c_str());
+        HLOGD("[WaitFifoReply] wait fifo file(%s) timeout", fifoFileS2C_.c_str());
+        HIPERF_HILOGD(MODULE_DEFAULT, "[WaitFifoReply] wait fifo file(%{public}s) timeout", fifoFileS2C_.c_str());
     } else {
-        HLOGD("wait fifo file(%s) failed", fifoFileS2C_.c_str());
-        HIPERF_HILOGD(MODULE_DEFAULT, "wait fifo file(%{public}s) failed", fifoFileS2C_.c_str());
+        HLOGD("[WaitFifoReply] wait fifo file(%s) failed", fifoFileS2C_.c_str());
+        HIPERF_HILOGD(MODULE_DEFAULT, "[WaitFifoReply] wait fifo file(%{public}s) failed", fifoFileS2C_.c_str());
     }
 }
 
@@ -224,10 +233,12 @@ bool PerfPipe::ProcessControlCmd()
     }
     if (ret) {
         printf("%s %s success.\n", controlCmd_.c_str(), perfCmd_.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s %{public}s success.", controlCmd_.c_str(), perfCmd_.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "[ProcessControlCmd] %{public}s %{public}s success.",
+            controlCmd_.c_str(), perfCmd_.c_str());
     } else {
         printf("%s %s failed.\n", controlCmd_.c_str(), perfCmd_.c_str());
-        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s %{public}s failed.", controlCmd_.c_str(), perfCmd_.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "[ProcessControlCmd] %{public}s %{public}s failed.",
+            controlCmd_.c_str(), perfCmd_.c_str());
     }
     return ret;
 }
