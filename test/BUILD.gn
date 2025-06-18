@@ -18,6 +18,7 @@ module_output_path = "hiperf/hiperf"
 
 sources_base = [
   "unittest/common/native/hiperf_client_test.cpp",
+  "unittest/common/native/hiperf_local_test.cpp",
   "unittest/common/native/command_test.cpp",
   "unittest/common/native/cpu_usage_test.cpp",
   "unittest/common/native/perf_events_test.cpp",
@@ -67,7 +68,7 @@ sources_interface = [
 common_deps = [
   "${hiperf_path}/:hiperf_platform_common",
   "${hiperf_path}/:hiperf_platform_linux",
-  "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static",
+  "${hiperf_path}/interfaces/innerkits/native/hiperf_client:hiperf_client_static",
 ]
 
 if (!ohos_indep_compiler_enable) {
@@ -98,7 +99,7 @@ ohos_unittest("hiperf_unittest") {
   configs = [ ":hiperf_test_config" ]
   module_out_path = module_output_path
   resource_config_file = "unittest/resource/ohos_test.xml"
-  deps = [ "${hiperf_path}/interfaces/innerkits/native:hiperf_client_static" ]
+  deps = [ "${hiperf_path}/interfaces/innerkits/native/hiperf_client:hiperf_client_static" ]
   use_exceptions = true
 
   public_configs = [ "${hiperf_path}/:hiperf_inner_config" ]
@@ -119,9 +120,12 @@ ohos_unittest("hiperf_unittest") {
     "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
+    "faultloggerd:libstack_printer",
+    "faultloggerd:libunwinder",
     "faultloggerd:libunwinder",
     "googletest:gmock",
     "hilog:libhilog",
+    "hiperf:hiperf_local",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
     "ipc:ipc_single",
@@ -149,6 +153,7 @@ ohos_unittest("hiperf_unittest") {
     "./../src/perf_file_format.cpp",
     "./../src/perf_file_reader.cpp",
     "./../src/perf_file_writer.cpp",
+    "./../src/perf_pipe.cpp",
     "./../src/register.cpp",
     "./../src/report.cpp",
     "./../src/report_json_file.cpp",
@@ -167,7 +172,6 @@ ohos_unittest("hiperf_unittest") {
     "./../src/utilities.cpp",
     "./../src/virtual_runtime.cpp",
     "./../src/virtual_thread.cpp",
-    "./../src/perf_pipe.cpp",
   ]
 
   if (is_ohos) {

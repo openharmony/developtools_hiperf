@@ -44,12 +44,22 @@
       ],
       "inner_kits": [
           {
-            "name": "//developtools/hiperf/interfaces/innerkits/native:hiperf_client",
+            "name": "//developtools/hiperf/interfaces/innerkits/native/hiperf_client:hiperf_client",
             "header": {
               "header_files": [
                 "hiperf_client.h"
               ],
-              "header_base": "//developtools/hiperf/interfaces/innerkits/native/include"
+              "header_base": "//developtools/hiperf/interfaces/innerkits/native/hiperf_client/include"
+            }
+          },
+          {
+            "name": "//developtools/hiperf/interfaces/innerkits/native/hiperf_local:hiperf_local",
+            "header": {
+              "header_files": [
+                "lperf.h",
+                "lperf_c.h"
+              ],
+              "header_base": "//developtools/hiperf/interfaces/innerkits/native/hiperf_local/include"
             }
           }
         ],

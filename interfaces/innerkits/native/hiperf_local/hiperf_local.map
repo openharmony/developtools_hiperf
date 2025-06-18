@@ -1,0 +1,18 @@
+{
+  global:
+    extern "C++" {
+        "OHOS::Developtools::HiPerf::HiPerfLocal::Lperf::GetInstance()";
+        "OHOS::Developtools::HiPerf::HiPerfLocal::Lperf::StartProcessStackSampling(std::__h::vector<int, std::__h::allocator<int>>, int, int, bool)";
+        "OHOS::Developtools::HiPerf::HiPerfLocal::Lperf::CollectSampleStackByTid(int, std::__h::basic_string<char, std::__h::char_traits<char>, std::__h::allocator<char>>&)";
+        "OHOS::Developtools::HiPerf::HiPerfLocal::Lperf::CollectHeaviestStackByTid(int, std::__h::basic_string<char, std::__h::char_traits<char>, std::__h::allocator<char>>&)";
+        "OHOS::Developtools::HiPerf::HiPerfLocal::Lperf::FinishProcessStackSampling()";
+    };
+    extern "C" {
+        "LperfStartProcessStackSampling";
+        "LperfCollectSampleStackByTid";
+        "LperfCollectHeaviestStackByTid";
+        "LperfFinishProcessStackSampling";
+    };
+  local:
+    *;
+};
