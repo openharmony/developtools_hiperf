@@ -751,7 +751,7 @@ bool SubCommandRecord::IsAppRestarted()
     do {
         HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect newPids begin");
         CollectPidsByAppname(newPids, appPackage_);
-        for (auto it = oldPids.begin(); it != newPids.end(); it++) {
+        for (auto it = newPids.begin(); it != newPids.end(); it++) {
             HIPERF_HILOGI(MODULE_DEFAULT, "[IsAppRestarted] get newPids %{public}d for %{public}s",
                 *it, appPackage_.c_str());
         }
@@ -1559,7 +1559,7 @@ bool SubCommandRecord::CreateFifoServer()
                 break;
             }
             HLOGE("reply is (%s)", reply.c_str());
-            HIPERF_HILOGE(MODULE_DEFAULT, "reply is (%s)", reply.c_str());
+            HIPERF_HILOGE(MODULE_DEFAULT, "reply is (%{public}s)", reply.c_str());
             if (ret && reply.find("FAIL") == std::string::npos) {
                 printf("%s", reply.c_str());
                 if (reply.find("debug application") != std::string::npos) {

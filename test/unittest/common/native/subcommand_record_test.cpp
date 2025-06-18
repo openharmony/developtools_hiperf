@@ -2266,13 +2266,70 @@ HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control03, TestSize.Level1)
 }
 
 /**
+ * @tc.name: TestOnSubCommand_control04
+ * @tc.desc: prepare, start, resume, pause, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control04, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a",
+                                      {"create control hiperf sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
+              true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control05
+ * @tc.desc: prepare, start, output, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control05, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a --backtrack",
+                                      {"create control hiperf sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control output", {"output sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
+              true);
+}
+
+/**
+ * @tc.name: Control_Stability
+ * @tc.desc: --control prepare, start, stop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, Control_Stability, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    for (int i = 0; i < 10; i++) {  // 10: Number of loop
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a -e hw-cpu-cycles,hw-instructions",
+            {"create control hiperf sampling success"}), true);
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start",
+            {"start sampling success"}), true);
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop",
+            {"stop sampling success"}), true);
+    }
+}
+
+/**
  * @tc.name: TestOnSubCommand_WrongStopSeconds
  * @tc.type: FUNC
  */
 HWTEST_F(SubCommandRecordTest, WrongStopSeconds, TestSize.Level2)
 {
-    std::string opt = "-d 123abc ";
-    opt += " ";
+    std::string opt = "-d 123abc  ";
     TestRecordCommand(opt, false);
 }
 
