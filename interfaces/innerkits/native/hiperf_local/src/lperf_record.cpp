@@ -36,11 +36,11 @@ LperfRecord::~LperfRecord()
 int LperfRecord::StartProcessSampling(const std::vector<int>& tids, int freq, int duration, bool parseMiniDebugInfo)
 {
     CHECK_TRUE_AND_RET(!CheckOutOfRange<int>(tids.size(), MIN_SAMPLE_COUNT, MAX_SAMPLE_COUNT), -1,
-                        "invalid tids count: %d", tids.size());
+                       "invalid tids count: %d", tids.size());
     CHECK_TRUE_AND_RET(!CheckOutOfRange<int>(freq, MIN_SAMPLE_FREQUENCY, MAX_SAMPLE_FREQUENCY), -1,
-                        "invalid frequency value: %d", freq);
+                       "invalid frequency value: %d", freq);
     CHECK_TRUE_AND_RET(!CheckOutOfRange<int>(duration, MIN_STOP_SECONDS, MAX_STOP_SECONDS), -1,
-                        "invalid duration value: %d", duration);
+                       "invalid duration value: %d", duration);
     for (int tid : tids) {
         CHECK_TRUE_AND_RET(tid > 0, -1, "invalid tid: %d", tid);
     }
@@ -128,7 +128,7 @@ void LperfRecord::SymbolicRecord(LperfRecordSample& record)
     CHECK_TRUE_AND_RET(record.data_.tid > 0, NO_RETVAL, "Symbolic invalid Record, tid: %d", record.data_.tid);
     unsigned int tid = static_cast<unsigned int>(record.data_.tid);
     if (tidStackMaps_.find(tid) == tidStackMaps_.end()) {
-        tidStackMaps_[tid] = std::make_unique<StackPrinter>();
+        tidStackMaps_.emplace(tid, std::make_unique<StackPrinter>());
         tidStackMaps_[tid]->InitUniqueTable(record.data_.pid, UNIQUE_STABLE_SIZE);
     }
     std::vector<uintptr_t> ptrs;
