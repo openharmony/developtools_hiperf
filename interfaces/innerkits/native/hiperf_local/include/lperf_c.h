@@ -15,8 +15,6 @@
 #ifndef LPERF_C_H
 #define LPERF_C_H
 
-#include "lperf.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

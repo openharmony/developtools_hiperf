@@ -33,16 +33,16 @@ LperfRecord::~LperfRecord()
     FinishProcessSampling();
 }
 
-int LperfRecord::StartProcessSampling(std::vector<int> tids, int freq, int duration, bool parseMiniDebugInfo)
+int LperfRecord::StartProcessSampling(const std::vector<int>& tids, int freq, int duration, bool parseMiniDebugInfo)
 {
-    CHECK_TRUE_WITH_LOG(!CheckOutOfRange<int>(tids.size(), MIN_SAMPLE_COUNT, MAX_SAMPLE_COUNT), -1,
+    CHECK_TRUE_AND_RET(!CheckOutOfRange<int>(tids.size(), MIN_SAMPLE_COUNT, MAX_SAMPLE_COUNT), -1,
                         "invalid tids count: %d", tids.size());
-    CHECK_TRUE_WITH_LOG(!CheckOutOfRange<int>(freq, MIN_SAMPLE_FREQUENCY, MAX_SAMPLE_FREQUENCY), -1,
+    CHECK_TRUE_AND_RET(!CheckOutOfRange<int>(freq, MIN_SAMPLE_FREQUENCY, MAX_SAMPLE_FREQUENCY), -1,
                         "invalid frequency value: %d", freq);
-    CHECK_TRUE_WITH_LOG(!CheckOutOfRange<int>(duration, MIN_STOP_SECONDS, MAX_STOP_SECONDS), -1,
+    CHECK_TRUE_AND_RET(!CheckOutOfRange<int>(duration, MIN_STOP_SECONDS, MAX_STOP_SECONDS), -1,
                         "invalid duration value: %d", duration);
-    for (int tid: tids) {
-        CHECK_TRUE_WITH_LOG(tid > 0, -1, "invalid tid: %d", tid);
+    for (int tid : tids) {
+        CHECK_TRUE_AND_RET(tid > 0, -1, "invalid tid: %d", tid);
     }
 
     tids_ = tids;
@@ -50,12 +50,14 @@ int LperfRecord::StartProcessSampling(std::vector<int> tids, int freq, int durat
     timeStopSec_ = static_cast<unsigned int>(duration);
     enableDebugInfoSymbolic_ = parseMiniDebugInfo;
 
-    return OnSubCommand();
+    int ret = OnSubCommand();
+    lperfEvents_.Clear();
+    return ret;
 }
 
-int LperfRecord::CollectSampleStack(int tid, std::string &stack)
+int LperfRecord::CollectSampleStack(int tid, std::string& stack)
 {
-    CHECK_TRUE_WITH_LOG(tid > 0, -1, "invalid tid: %d", tid);
+    CHECK_TRUE_AND_RET(tid > 0, -1, "invalid tid: %d", tid);
     unsigned int uintTid = static_cast<unsigned int>(tid);
     if (tidStackMaps_.find(uintTid) != tidStackMaps_.end()) {
         if (unwinder_ == nullptr) {
@@ -66,16 +68,16 @@ int LperfRecord::CollectSampleStack(int tid, std::string &stack)
         }
         tidStackMaps_[uintTid]->SetUnwindInfo(unwinder_, maps_);
         stack = tidStackMaps_[uintTid]->GetTreeStack();
-        if (stack.size()) {
+        if (stack.size() > 0) {
             return 0;
         }
     }
     return -1;
 }
 
-int LperfRecord::CollectHeaviestStack(int tid, std::string &stack)
+int LperfRecord::CollectHeaviestStack(int tid, std::string& stack)
 {
-    CHECK_TRUE_WITH_LOG(tid > 0, -1, "invalid tid: %d", tid);
+    CHECK_TRUE_AND_RET(tid > 0, -1, "invalid tid: %d", tid);
     unsigned int uintTid = static_cast<unsigned int>(tid);
     if (tidStackMaps_.find(uintTid) != tidStackMaps_.end()) {
         if (unwinder_ == nullptr) {
@@ -86,7 +88,7 @@ int LperfRecord::CollectHeaviestStack(int tid, std::string &stack)
         }
         tidStackMaps_[uintTid]->SetUnwindInfo(unwinder_, maps_);
         stack = tidStackMaps_[uintTid]->GetHeaviestStack();
-        if (stack.size()) {
+        if (stack.size() > 0) {
             return 0;
         }
     }
@@ -95,13 +97,9 @@ int LperfRecord::CollectHeaviestStack(int tid, std::string &stack)
 
 int LperfRecord::FinishProcessSampling()
 {
-    lperfEvents_.Clear();
     UnwinderConfig::SetEnableMiniDebugInfo(defaultEnableDebugInfo_);
-    if (tidStackMaps_.size()) {
+    if (tidStackMaps_.size() > 0) {
         tidStackMaps_.clear();
-    }
-    if (tids_.size()) {
-        tids_.clear();
     }
     if (maps_ != nullptr) {
         maps_ = nullptr;
@@ -127,7 +125,7 @@ void LperfRecord::PrepareLperfEvent()
 
 void LperfRecord::SymbolicRecord(LperfRecordSample& record)
 {
-    CHECK_TRUE_WITH_LOG(record.data_.tid > 0, NO_RETVAL, "Symbolic invalid Record, tid: %d", record.data_.tid);
+    CHECK_TRUE_AND_RET(record.data_.tid > 0, NO_RETVAL, "Symbolic invalid Record, tid: %d", record.data_.tid);
     unsigned int tid = static_cast<unsigned int>(record.data_.tid);
     if (tidStackMaps_.find(tid) == tidStackMaps_.end()) {
         tidStackMaps_[tid] = std::make_unique<StackPrinter>();
@@ -145,8 +143,8 @@ void LperfRecord::SymbolicRecord(LperfRecordSample& record)
 int LperfRecord::OnSubCommand()
 {
     PrepareLperfEvent();
-    CHECK_TRUE_WITH_LOG(lperfEvents_.PrepareRecord() == 0, -1, "OnSubCommand prepareRecord failed");
-    CHECK_TRUE_WITH_LOG(lperfEvents_.StartRecord() == 0, -1, "OnSubCommand startRecord failed");
+    CHECK_TRUE_AND_RET(lperfEvents_.PrepareRecord() == 0, -1, "OnSubCommand prepareRecord failed");
+    CHECK_TRUE_AND_RET(lperfEvents_.StartRecord() == 0, -1, "OnSubCommand startRecord failed");
     return 0;
 }
 } // namespace HiPerfLocal

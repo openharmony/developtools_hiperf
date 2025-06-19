@@ -38,27 +38,27 @@ LperfEvents::~LperfEvents()
 
 int LperfEvents::PrepareRecord()
 {
-    CHECK_TRUE_WITH_LOG(PrepareFdEvents(), -1, "PrepareFdEvents failed");
-    CHECK_TRUE_WITH_LOG(AddRecordThreads(), -1, "AddRecordThreads failed");
+    CHECK_TRUE_AND_RET(PrepareFdEvents(), -1, "PrepareFdEvents failed");
+    CHECK_TRUE_AND_RET(AddRecordThreads(), -1, "AddRecordThreads failed");
     return 0;
 }
 
 int LperfEvents::StartRecord()
 {
-    CHECK_TRUE_WITH_LOG(PerfEventsEnable(true), -1, "LperfEvents EnableTracking() failed");
-    CHECK_TRUE_WITH_LOG(RecordLoop(), -1, "LperfEvents RecordLoop() failed");
-    CHECK_TRUE_WITH_LOG(PerfEventsEnable(false), -1, "LperfEvents RecordLoop() failed");
+    CHECK_TRUE_AND_RET(PerfEventsEnable(true), -1, "LperfEvents EnableTracking() failed");
+    CHECK_TRUE_AND_RET(RecordLoop(), -1, "LperfEvents RecordLoop() failed");
+    CHECK_TRUE_AND_RET(PerfEventsEnable(false), -1, "LperfEvents RecordLoop() failed");
     ReadRecordsFromMmaps();
     return 0;
 }
 
 bool LperfEvents::StopRecord()
 {
-    CHECK_TRUE_WITH_LOG(PerfEventsEnable(false), -1, "LperfEvents StopRecord failed");
+    CHECK_TRUE_AND_RET(PerfEventsEnable(false), -1, "LperfEvents StopRecord failed");
     return true;
 }
 
-void LperfEvents::SetTid(std::vector<int> tids)
+void LperfEvents::SetTid(const std::vector<int>& tids)
 {
     tids_ = tids;
 }
@@ -114,9 +114,10 @@ bool LperfEvents::PrepareFdEvents()
 bool LperfEvents::AddRecordThreads()
 {
     struct lperf_thread_input_arg threadInfo;
-    int count = (tids_.size() <= 10) ? tids_.size() : 10;
-    threadInfo.tid_count = count;
-    for (int i = 0; i < count; i++) {
+    size_t maxCount = 10;
+    size_t count = (tids_.size() <= maxCount) ? tids_.size() : maxCount;
+    threadInfo.tid_count = static_cast<unsigned int>(count);
+    for (size_t i = 0; i < count; i++) {
         threadInfo.tids[i] = tids_[i];
     }
     int err = ioctl(lperfFd_, static_cast<unsigned long>(LPERF_IOCTL_ADD_THREADS), &threadInfo);
@@ -124,7 +125,7 @@ bool LperfEvents::AddRecordThreads()
     return true;
 }
 
-bool LperfEvents::GetHeaderFromMmap(MmapFd &mmap)
+bool LperfEvents::GetHeaderFromMmap(MmapFd& mmap)
 {
     if (mmap.dataSize <= 0) {
         return false;
@@ -138,7 +139,7 @@ bool LperfEvents::GetHeaderFromMmap(MmapFd &mmap)
     return true;
 }
 
-void LperfEvents::GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size)
+void LperfEvents::GetRecordFieldFromMmap(MmapFd& mmap, void* dest, size_t pos, size_t size)
 {
     if (mmap.bufSize == 0) {
         return;
@@ -146,7 +147,7 @@ void LperfEvents::GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, s
     pos = pos % mmap.bufSize;
     size_t tailSize = mmap.bufSize - pos;
     size_t copySize = std::min(size, tailSize);
-    if (memcpy_s(dest, copySize, mmap.buf + pos, copySize) != 0) {
+    if (memcpy_s(dest, size, mmap.buf + pos, copySize) != 0) {
         HIPERF_HILOGE(MODULE_DEFAULT, "memcpy_s %p to %p failed. size %zd", mmap.buf + pos, dest, copySize);
     }
     if (copySize < size) {
@@ -157,7 +158,7 @@ void LperfEvents::GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, s
     }
 }
 
-void LperfEvents::GetRecordFromMmap(MmapFd &mmap)
+void LperfEvents::GetRecordFromMmap(MmapFd& mmap)
 {
     HIPERF_BUF_ALIGN static uint8_t buf[RECORD_SIZE_LIMIT];
     GetRecordFieldFromMmap(mmap, buf, mmap.mmapPage->data_tail, mmap.header.size);
@@ -182,9 +183,8 @@ void LperfEvents::ReadRecordsFromMmaps()
 
 bool LperfEvents::RecordLoop()
 {
-    CHECK_TRUE_WITH_LOG(pollFds_.size() > 0, false, "pollFds_ is invalid");
-    const auto startTime = steady_clock::now();
-    const auto endTime = startTime + milliseconds(timeOut_);
+    CHECK_TRUE_AND_RET(pollFds_.size() > 0, false, "pollFds_ is invalid");
+    const auto endTime = steady_clock::now() + milliseconds(timeOut_);
 
     bool loopCondition = true;
     int pollTimeout = 500;
@@ -194,7 +194,7 @@ bool LperfEvents::RecordLoop()
             break;
         }
 
-        if (poll(static_cast<struct pollfd*>(pollFds_.data()), pollFds_.size(), pollTimeout) <= 0) {
+        if (poll(static_cast<struct pollfd *>(pollFds_.data()), pollFds_.size(), pollTimeout) <= 0) {
             HIPERF_HILOGE(MODULE_DEFAULT, "poll no data");
             continue;
         }
@@ -210,11 +210,8 @@ bool LperfEvents::RecordLoop()
 void LperfEvents::Clear()
 {
     LperfRecordFactory::ClearData();
-    if (pollFds_.size()) {
+    if (pollFds_.size() > 0) {
         pollFds_.clear();
-    }
-    if (tids_.size()) {
-        tids_.clear();
     }
     if (lperfFd_ != -1) {
         close(lperfFd_);

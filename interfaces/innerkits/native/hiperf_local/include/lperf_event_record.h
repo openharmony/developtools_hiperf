@@ -53,7 +53,7 @@ public:
         return header_.type;
     }
 
-    void Init(uint8_t* data);
+    bool Init(uint8_t* data);
 
     void Clear();
 
@@ -75,33 +75,36 @@ private:
 };
 
 template<typename T>
-void PopFromBinary(bool condition, uint8_t*& p, T& v, uint64_t& size);
+bool PopFromBinary(bool condition, uint8_t*& p, T& v, uint64_t& size);
 
 template<typename T1, typename T2>
-void PopFromBinary2(bool condition, uint8_t*& p, T1& v1, T2& v2, uint64_t& size);
+bool PopFromBinary2(bool condition, uint8_t*& p, T1& v1, T2& v2, uint64_t& size);
 
-void SetPointerOffset(uint8_t*& p, uint64_t offset, uint64_t& size);
+bool SetPointerOffset(uint8_t*& p, uint64_t offset, uint64_t& size);
 
 #define NO_RETVAL /* retval */
-#ifndef CHECK_TRUE_WITH_LOG
-#define CHECK_TRUE_WITH_LOG(condition, retval, fmt, ...)                                       \
-    if (!(condition)) [[unlikely]] {                                                           \
-        std::string str = StringFormat(fmt, ##__VA_ARGS__);                                    \
-        HIPERF_HILOGE(MODULE_DEFAULT, "%{public}s", str.c_str());                              \
-        return retval;                                                                         \
-    }
+#ifndef CHECK_TRUE_AND_RET
+#define CHECK_TRUE_AND_RET(condition, retval, fmt, ...)                                            \
+    do {                                                                                           \
+        if (!(condition)) [[unlikely]] {                                                           \
+            std::string str = StringFormat(fmt, ##__VA_ARGS__);                                    \
+            HIPERF_HILOGE(MODULE_DEFAULT, "%{public}s", str.c_str());                              \
+            return retval;                                                                         \
+        }                                                                                          \
+    } while (0)
 #endif
 
 #ifndef CHECK_ERR
-#define CHECK_ERR(err, fmt, ...)                                                               \
-    if (err < 0) [[unlikely]] {                                                                \
-        std::string str = StringFormat(fmt, ##__VA_ARGS__);                                    \
-        char errInfo[ERRINFOLEN] = { 0 };                                                      \
-        strerror_r(errno, errInfo, ERRINFOLEN);                                                \
-        HIPERF_HILOGE(MODULE_DEFAULT, "%{public}s, error: %{public}d, errInfo: %{public}s",    \
-                      str.c_str(), errno, errInfo);                                            \
-        return false;                                                                          \
-    }
+#define CHECK_ERR(err, fmt, ...)                                                                   \
+    do {                                                                                           \
+        if (err < 0) [[unlikely]] {                                                                \
+            char errInfo[ERRINFOLEN] = { 0 };                                                      \
+            strerror_r(errno, errInfo, ERRINFOLEN);                                                \
+            HIPERF_HILOGE(MODULE_DEFAULT, "%{public}s, error: %{public}d, errInfo: %{public}s",    \
+                          StringFormat(fmt, ##__VA_ARGS__).c_str(), errno, errInfo);               \
+            return false;                                                                          \
+        }                                                                                          \
+    } while (0)
 #endif
 } // namespace HiPerfLocal
 } // namespace HiPerf

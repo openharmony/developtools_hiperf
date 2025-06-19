@@ -31,9 +31,9 @@ public:
     ~Lperf() = default;
 
     static Lperf& GetInstance();
-    int StartProcessStackSampling(std::vector<int> tids, int freq, int milliseconds, bool parseMiniDebugInfo);
-    int CollectSampleStackByTid(int tid, std::string &stack);
-    int CollectHeaviestStackByTid(int tid, std::string &stack);
+    int StartProcessStackSampling(const std::vector<int>& tids, int freq, int milliseconds, bool parseMiniDebugInfo);
+    int CollectSampleStackByTid(int tid, std::string& stack);
+    int CollectHeaviestStackByTid(int tid, std::string& stack);
     int FinishProcessStackSampling();
 
 private:

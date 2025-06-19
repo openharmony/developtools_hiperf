@@ -30,6 +30,15 @@ using namespace OHOS::HiviewDFX;
 
 class LperfRecord {
 public:
+    LperfRecord();
+    ~LperfRecord();
+
+    int StartProcessSampling(const std::vector<int>& tids, int freq, int duration, bool parseMiniDebugInfo);
+    int CollectSampleStack(int tid, std::string& stack);
+    int CollectHeaviestStack(int tid, std::string& stack);
+    int FinishProcessSampling();
+
+private:
     static constexpr int MIN_SAMPLE_COUNT = 1;
     static constexpr int MAX_SAMPLE_COUNT = 10;
     static constexpr int MIN_SAMPLE_FREQUENCY = 1;
@@ -38,31 +47,20 @@ public:
     static constexpr int MAX_STOP_SECONDS = 10000;
     static constexpr uint32_t UNIQUE_STABLE_SIZE = 1024 * 1024;
 
-    LperfRecord();
-    ~LperfRecord();
-
-    int StartProcessSampling(std::vector<int> tids, int freq, int duration, bool parseMiniDebugInfo);
-    int CollectSampleStack(int tid, std::string &stack);
-    int CollectHeaviestStack(int tid, std::string &stack);
-    int FinishProcessSampling();
-
-private:
-    std::map<unsigned int, std::unique_ptr<StackPrinter>> tidStackMaps_;
-
-    LperfEvents lperfEvents_;
-    unsigned int timeStopSec_ = 5;
-    unsigned int frequency_ = 0;
-
-    std::shared_ptr<Unwinder> unwinder_;
-    std::shared_ptr<DfxMaps> maps_;
-
-    std::vector<int> tids_ = {};
-    bool defaultEnableDebugInfo_ = false;
-    bool enableDebugInfoSymbolic_ = false;
-
     int OnSubCommand();
     void PrepareLperfEvent();
     void SymbolicRecord(LperfRecordSample& record);
+
+    LperfEvents lperfEvents_;
+    std::shared_ptr<Unwinder> unwinder_;
+    std::shared_ptr<DfxMaps> maps_;
+    std::map<unsigned int, std::unique_ptr<StackPrinter>> tidStackMaps_;
+
+    unsigned int timeStopSec_ = 5;
+    unsigned int frequency_ = 0;
+    std::vector<int> tids_ = {};
+    bool defaultEnableDebugInfo_ = false;
+    bool enableDebugInfoSymbolic_ = false;
 };
 
 template<typename T>

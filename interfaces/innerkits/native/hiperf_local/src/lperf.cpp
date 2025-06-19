@@ -27,7 +27,7 @@ Lperf& Lperf::GetInstance()
     return lperfInstance;
 }
 
-int Lperf::StartProcessStackSampling(std::vector<int> tids, int freq, int milliseconds, bool parseMiniDebugInfo)
+int Lperf::StartProcessStackSampling(const std::vector<int>& tids, int freq, int milliseconds, bool parseMiniDebugInfo)
 {
     bool expected = false;
     if (!isRunning_.compare_exchange_strong(expected, true)) {
@@ -40,12 +40,12 @@ int Lperf::StartProcessStackSampling(std::vector<int> tids, int freq, int millis
     return res;
 }
 
-int Lperf::CollectSampleStackByTid(int tid, std::string &stack)
+int Lperf::CollectSampleStackByTid(int tid, std::string& stack)
 {
     return lperfRecord_.CollectSampleStack(tid, stack);
 }
 
-int Lperf::CollectHeaviestStackByTid(int tid, std::string &stack)
+int Lperf::CollectHeaviestStackByTid(int tid, std::string& stack)
 {
     return lperfRecord_.CollectHeaviestStack(tid, stack);
 }

@@ -23,47 +23,41 @@
 
 using namespace OHOS::Developtools::HiPerf::HiPerfLocal;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    int LperfStartProcessStackSampling(int* tids, int tidsSize, int freq, int milliseconds, bool parseMiniDebugInfo)
-    {
-        std::vector<int> tidList(tids, tids + tidsSize);
-        return Lperf::GetInstance().StartProcessStackSampling(tidList, freq, milliseconds, parseMiniDebugInfo);
-    }
-
-    int LperfCollectSampleStackByTid(int tid, char* stackBuf, int bufSize)
-    {
-        std::string stackStr;
-        int ret = Lperf::GetInstance().CollectSampleStackByTid(tid, stackStr);
-        if (ret < 0) {
-            return ret;
-        }
-        if (strncpy_s(stackBuf, bufSize, stackStr.c_str(), stackStr.length()) != 0) {
-            HIPERF_HILOGE(MODULE_DEFAULT, "Error: strncpy_s stackStr: %{public}s failed", stackStr.c_str());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LperfCollectHeaviestStackByTid(int tid, char* stackBuf, int bufSize)
-    {
-        std::string stackStr;
-        int ret = Lperf::GetInstance().CollectHeaviestStackByTid(tid, stackStr);
-        if (ret < 0) {
-            return ret;
-        }
-        if (strncpy_s(stackBuf, bufSize, stackStr.c_str(), stackStr.length()) != 0) {
-            HIPERF_HILOGE(MODULE_DEFAULT, "Error: strncpy_s stackStr: %{public}s failed", stackStr.c_str());
-            return -1;
-        }
-        return 0;
-    }
-
-    int LperfFinishProcessStackSampling()
-    {
-        return Lperf::GetInstance().FinishProcessStackSampling();
-    }
-#ifdef __cplusplus
+int LperfStartProcessStackSampling(int* tids, int tidsSize, int freq, int milliseconds, bool parseMiniDebugInfo)
+{
+    std::vector<int> tidList(tids, tids + tidsSize);
+    return Lperf::GetInstance().StartProcessStackSampling(tidList, freq, milliseconds, parseMiniDebugInfo);
 }
-#endif
+
+int LperfCollectSampleStackByTid(int tid, char* stackBuf, int bufSize)
+{
+    std::string stackStr;
+    int ret = Lperf::GetInstance().CollectSampleStackByTid(tid, stackStr);
+    if (ret < 0) {
+        return ret;
+    }
+    if (strncpy_s(stackBuf, bufSize, stackStr.c_str(), stackStr.length()) != 0) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "Error: strncpy_s stackStr: %{public}s failed", stackStr.c_str());
+        return -1;
+    }
+    return 0;
+}
+
+int LperfCollectHeaviestStackByTid(int tid, char* stackBuf, int bufSize)
+{
+    std::string stackStr;
+    int ret = Lperf::GetInstance().CollectHeaviestStackByTid(tid, stackStr);
+    if (ret < 0) {
+        return ret;
+    }
+    if (strncpy_s(stackBuf, bufSize, stackStr.c_str(), stackStr.length()) != 0) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "Error: strncpy_s stackStr: %{public}s failed", stackStr.c_str());
+        return -1;
+    }
+    return 0;
+}
+
+int LperfFinishProcessStackSampling()
+{
+    return Lperf::GetInstance().FinishProcessStackSampling();
+}

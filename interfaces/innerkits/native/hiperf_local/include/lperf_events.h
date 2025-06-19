@@ -71,6 +71,15 @@ public:
     int StartRecord();
     bool StopRecord();
 
+    void SetTid(const std::vector<int>& tids);
+    void SetTimeOut(int timeOut);
+    void SetSampleFrequency(unsigned int frequency);
+
+    using ProcessRecordCB = std::function<void(LperfRecordSample& record)>;
+    void SetRecordCallBack(ProcessRecordCB recordCallBack);
+    void Clear();
+
+private:
     struct MmapFd {
         int fd;
         perf_event_mmap_page* mmapPage = nullptr;
@@ -81,15 +90,6 @@ public:
         perf_event_header header;
     };
 
-    void SetTid(std::vector<int> tids);
-    void SetTimeOut(int timeOut);
-    void SetSampleFrequency(unsigned int frequency);
-
-    using ProcessRecordCB = std::function<void(LperfRecordSample& record)>;
-    void SetRecordCallBack(ProcessRecordCB recordCallBack);
-    void Clear();
-
-private:
     bool PrepareFdEvents();
     bool AddRecordThreads();
     bool GetHeaderFromMmap(MmapFd& mmap);
@@ -99,16 +99,16 @@ private:
     bool PerfEventsEnable(bool enable);
     bool RecordLoop();
 
+    MmapFd lperfMmap_;
     ProcessRecordCB recordCallBack_;
 
     int lperfFd_ = -1;
-    std::vector<int> tids_;
-    unsigned int sampleFreq_ = 0;
     int timeOut_ = 0;
-    MmapFd lperfMmap_;
-    std::vector<struct pollfd> pollFds_;
-    int mmapPages_ = DEFAULT_MMAP_PAGES;
     size_t pageSize_ = 4096;
+    int mmapPages_ = DEFAULT_MMAP_PAGES;
+    unsigned int sampleFreq_ = 0;
+    std::vector<int> tids_;
+    std::vector<struct pollfd> pollFds_;
 };
 } // namespace HiPerfLocal
 } // namespace HiPerf
