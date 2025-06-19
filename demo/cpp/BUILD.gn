@@ -15,7 +15,9 @@ import("//build/ohos.gni")
 import("../../hiperf.gni")
 
 ohos_executable("hiperf_demo") {
-  deps = [ "${hiperf_path}/interfaces/innerkits/native:hiperf_client" ]
+  deps = [
+    "${hiperf_path}/interfaces/innerkits/native/hiperf_client:hiperf_client",
+  ]
   sources = [ "hiperf_demo.cpp" ]
   subsystem_name = "developtools"
   part_name = "hiperf"

@@ -277,7 +277,7 @@ ohos_source_set("hiperf_platform_linux") {
     ]
   }
   public_configs += [ ":platform_linux_config" ]
-  configs = [ "interfaces/innerkits/native:hiperf_client_config" ]
+  configs = [ "interfaces/innerkits/native/hiperf_client:hiperf_client_config" ]
 
   sources = sources_platform_linux
 }
@@ -599,7 +599,7 @@ group("hiperf_target_all") {
       }
       deps += [
         ":hiperf_target",
-        "interfaces/innerkits/native:hiperf_client",  # c++ api
+        "interfaces/innerkits/native/hiperf_client:hiperf_client",  # c++ api
       ]
       if (is_ohos) {
         deps += [ "interfaces/kits/js/napi:hiperf_client_napi" ]  # js api
