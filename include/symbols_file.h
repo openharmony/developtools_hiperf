@@ -81,6 +81,7 @@ enum SymbolsFileType {
     SYMBOL_JS_FILE,
     SYMBOL_HAP_FILE,
     SYMBOL_CJ_FILE,
+    SYMBOL_V8_FILE,
     SYMBOL_UNKNOW_FILE,
 };
 
@@ -122,6 +123,10 @@ public:
     };
     bool setSymbolsFilePath(const std::vector<std::string> &);
     virtual bool IsAbc()
+    {
+        return false;
+    }
+    virtual bool IsV8()
     {
         return false;
     }
