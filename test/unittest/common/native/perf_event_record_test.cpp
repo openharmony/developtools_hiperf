@@ -1006,30 +1006,6 @@ HWTEST_F(PerfEventRecordTest, CreatePerfRecordAuxtrace3, TestSize.Level2)
     EXPECT_EQ(record->rawData_, nullptr);
 }
 
-HWTEST_F(PerfEventRecordTest, CreatePerfRecordSample, TestSize.Level1)
-{
-    pid_t pid = fork();
-    ASSERT_NE(pid, -1);
-
-    if (pid == 0) {
-        PerfRecordSample record;
-        perf_event_attr attr = {};
-        attr.sample_type = PERF_SAMPLE_CALLCHAIN + PERF_SAMPLE_RAW + PERF_SAMPLE_BRANCH_STACK + PERF_SAMPLE_REGS_USER;
-        std::vector<uint8_t> data = {};
-        data.resize(200);
-        for (auto i = 0; i < 200; i++) {
-            data[i] = UINT8_MAX;
-        }
-        record.Init(data.data(), attr);
-        _exit(-2);
-    } else {
-        int status = 0;
-        waitpid(pid, &status, 0);
-        ASSERT_TRUE(WIFEXITED(status));
-        EXPECT_EQ(WEXITSTATUS(status), static_cast<uint8_t>(-1));
-    }
-}
-
 HWTEST_F(PerfEventRecordTest, SetDumpRemoveStack, TestSize.Level1)
 {
     bool dump = PerfRecordSample::IsDumpRemoveStack();

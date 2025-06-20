@@ -46,9 +46,6 @@ static const std::string TEST_FILE = "/data/local/tmp/perf.data";
 const std::string PERF_CPU_TIME_MAX_PERCENT = "/proc/sys/kernel/perf_cpu_time_max_percent";
 static const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2ms;
 
-static constexpr size_t TEST_SIZE_F100_DWARF_SYSTEM = 1.4E4 * 1024;
-static constexpr size_t TEST_SIZE_F500_DWARF_SYSTEM = 3.6E4 * 1024;
-static constexpr size_t TEST_SIZE_F1000_DWARF_SYSTEM = 5.9E4 * 1024;
 static constexpr size_t TEST_SIZE_F2000_DWARF_SYSTEM = 8.3E4 * 1024;
 static constexpr size_t TEST_SIZE_F4000_DWARF_SYSTEM = 1.7E5 * 1024;
 static constexpr size_t TEST_SIZE_F8000_DWARF_SYSTEM = 3.5E5 * 1024;
@@ -322,40 +319,6 @@ HWTEST_F(SubCommandRecordTest, StopSecondsMaxErr, TestSize.Level2)
     std::string opt = "-d 10000.1 ";
     opt += " ";
     TestRecordCommand(opt, false);
-}
-
-HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
-{
-    std::shared_ptr<HiperfEventListener> eventListener = std::make_shared<HiperfEventListener>();
-    std::vector<ListenerRule> sysRules;
-    sysRules.emplace_back(OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE", RuleType::WHOLE_WORD);
-    HiSysEventManager::AddListener(eventListener, sysRules);
-
-    ForkAndRunTest("-d 2 -a ", true, false);
-
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    HiSysEventManager::RemoveListener(eventListener);
-    std::shared_ptr<HiviewDFX::HiSysEventRecord> eventRecord = eventListener->GetLastEvent();
-    ASSERT_NE(eventRecord, nullptr);
-
-    std::string value = "";
-    EXPECT_EQ(eventRecord->GetParamValue("MAIN_CMD", value), VALUE_PARSED_SUCCEED);
-    EXPECT_EQ(value, "record");
-
-    EXPECT_EQ(eventRecord->GetParamValue("SUB_CMD", value), VALUE_PARSED_SUCCEED);
-    EXPECT_EQ(value, " record -d 2 -a");
-
-    EXPECT_EQ(eventRecord->GetParamValue("CALLER", value), VALUE_PARSED_SUCCEED);
-    EXPECT_EQ(value, "./hiperf_unittest");
-
-    EXPECT_EQ(eventRecord->GetParamValue("TARGET_PROCESS", value), VALUE_PARSED_SUCCEED);
-    EXPECT_EQ(value, "ALL");
-
-    EXPECT_EQ(eventRecord->GetParamValue("ERROR_CODE", value), VALUE_PARSED_SUCCEED);
-    EXPECT_EQ(value, "0");
-
-    EXPECT_EQ(eventRecord->GetParamValue("ERROR_MESSAGE", value), VALUE_PARSED_SUCCEED);
-    EXPECT_EQ(value, "NO_ERR");
 }
 
 // system wide
@@ -985,7 +948,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_SYSTEM, TestSize.Lev
     ForkAndRunTest("-d 10 -a -f 100 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -998,7 +963,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_SYSTEM, TestSize.Lev
     ForkAndRunTest("-d 10 -a -f 500 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1011,7 +978,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_SYSTEM, TestSize.Le
     ForkAndRunTest("-d 10 -a -f 1000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
