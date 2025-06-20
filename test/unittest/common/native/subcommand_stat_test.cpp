@@ -2396,6 +2396,25 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control04, TestSize.Level1)
 }
 
 /**
+ * @tc.name: Control_Stability
+ * @tc.desc: Call the command 'control' multiple time
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, Control_Stability, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
+    for (int i = 0; i < 10; i++) {  // 10: Number of loop
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a -e hw-cpu-cycles,hw-instructions",
+            {"create control hiperf counting success", "stat result will saved in /data/local/tmp/perf_stat.txt"}),
+            true);
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
+            {"start counting success"}), true);
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
+            {"stop counting success"}), true);
+    }
+}
+
+/**
  * @tc.name: TestOnSubCommand_OutPutFileName01
  * @tc.type: FUNC
  */

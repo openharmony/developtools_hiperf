@@ -203,13 +203,13 @@ private:
 
     // for cmdline client
     bool allowIpc_ = true;
-    std::string controlCmd_ = {};
     bool isFifoServer_ = false;
     bool isFifoClient_ = false;
+    std::string controlCmd_ = {};
     bool ProcessControl();
     bool CreateFifoServer();
-    void CloseClientThread();
     bool ParseControlCmd(const std::string& cmd);
+    void CloseClientThread();
 };
 
 bool RegisterSubCommandStat(void);
