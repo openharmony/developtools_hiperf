@@ -33,8 +33,7 @@ namespace HiPerfLocal {
 #define LPERF_IOCTL_ADD_THREADS 1074031620
 #define HIPERF_BUF_ALIGN alignas(64)
 
-static constexpr int DEFAULT_MMAP_PAGES = 1024;
-static constexpr int DEFAULT_WATER_MARK = 5000;
+static constexpr unsigned int DEFAULT_WATER_MARK = 5000;
 
 struct lperf_init_arg {
     unsigned int rb_size_int_kb;
@@ -104,8 +103,8 @@ private:
 
     int lperfFd_ = -1;
     int timeOut_ = 0;
-    size_t pageSize_ = 4096;
-    int mmapPages_ = DEFAULT_MMAP_PAGES;
+    unsigned int pageSize_ = 4096;
+    unsigned int mmapPages_ = 1024;
     unsigned int sampleFreq_ = 0;
     std::vector<int> tids_;
     std::vector<struct pollfd> pollFds_;
