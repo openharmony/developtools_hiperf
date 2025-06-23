@@ -759,7 +759,7 @@ bool SubCommandRecord::IsAppRestarted()
         std::set_intersection(oldPids.begin(), oldPids.end(),
             newPids.begin(), newPids.end(), std::back_insert_iterator(intersection));
         // app names are same, no intersection, means app restarted
-        CHECK_TRUE(intersection.empty(), true, 0, "");
+        CHECK_TRUE(!intersection.empty(), true, 0, "");
         intersection.clear();
         newPids.clear();
         std::this_thread::sleep_for(milliseconds(CHECK_FREQUENCY));
