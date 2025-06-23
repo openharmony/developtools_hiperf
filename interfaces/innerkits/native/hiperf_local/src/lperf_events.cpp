@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 using namespace std::chrono;
@@ -210,6 +211,14 @@ bool LperfEvents::RecordLoop()
 void LperfEvents::Clear()
 {
     LperfRecordFactory::ClearData();
+    const unsigned int size = 4096;
+    if (lperfMmap_.mmapPage != nullptr) {
+        if (munmap(lperfMmap_.mmapPage, static_cast<size_t>((mmapPages_ + 1) * size)) == 0) {
+            lperfMmap_.mmapPage = nullptr;
+        } else {
+            HIPERF_HILOGE(MODULE_DEFAULT, "munmap lperfMmap failed");
+        }
+    }
     if (pollFds_.size() > 0) {
         pollFds_.clear();
     }
