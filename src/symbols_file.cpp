@@ -71,26 +71,23 @@ bool SymbolsFile::UpdateBuildIdIfMatch(std::string buildId)
         if (buildId.empty()) {
             // both empty , no build id provided
             HLOGD("build id is empty.");
-            return true;
         } else {
             buildId_ = buildId;
             HLOGD("new buildId %s", buildId_.c_str());
-            return true;
         }
-    } else {
-        // we already have a build id
-        // so this is not the first time load symbol
-        // we need check if it match
-        HLOGV("expected buildid: %s vs %s", buildId_.c_str(), buildId.c_str());
-
-        if (buildId_ != buildId) {
-            HLOGW("id not match");
-            return false;
-        } else {
-            HLOGD("id match");
-            return true;
-        }
+        return true;
     }
+    // we already have a build id
+    // so this is not the first time load symbol
+    // we need check if it match
+    HLOGV("expected buildid: %s vs %s", buildId_.c_str(), buildId.c_str());
+
+    if (buildId_ != buildId) {
+        HLOGW("id not match");
+        return false;
+    }
+    HLOGD("id match");
+    return true;
 }
 
 std::string SymbolsFile::SearchReadableFile(const std::vector<std::string> &searchPaths,
@@ -223,9 +220,8 @@ protected:
             return true; // it must have been loaded
         } else if (debugInfoLoaded_) {
             return debugInfoLoadResult_; // return the result of loaded
-        } else {
-            debugInfoLoaded_ = true;
         }
+        debugInfoLoaded_ = true;
         std::string elfPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
         if (elfPath.empty()) {
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
@@ -309,10 +305,9 @@ private:
             sectionFileOffset = shdrInfo.offset;
             HLOGM("Get Section '%s' %" PRIx64 " - %" PRIx64 "", name.c_str(), sectionVaddr, sectionSize);
             return true;
-        } else {
-            HLOGW("Section '%s' not found", name.c_str());
-            return false;
         }
+        HLOGW("Section '%s' not found", name.c_str());
+        return false;
     }
 
 #ifndef __arm__
@@ -390,9 +385,8 @@ private:
 
         if (!dwFdeCount.IsOmit() && dwFdeCount.GetValue() > 0) {
             return true;
-        } else {
-            HLOGW("fde table not found.\n");
         }
+        HLOGW("fde table not found.\n");
         return false;
     }
 
@@ -709,17 +703,6 @@ public:
                 // load complete
                 return true;
             }
-
-            // try read
-            HLOGD("try read /sys/kernel/notes");
-            std::string notes = ReadFileToString("/sys/kernel/notes");
-            if (notes.empty()) {
-                printf("notes cannot be opened, unable get buildid\n");
-                return false;
-            } else {
-                HLOGD("kernel notes size: %zu", notes.size());
-                buildId_ = DfxElf::GetBuildId((uint64_t)notes.data(), (uint64_t)notes.size());
-            }
         } // no search path
 
         // try vmlinux
@@ -779,11 +762,10 @@ public:
                    "Please check the value of /proc/sys/kernel/kptr_restrict, it "
                    "should be 0.\n", filePath_.c_str());
             return false;
-        } else {
-            AdjustSymbols();
-            HLOGV("%zu symbols_ loadded from %s.\n", symbols_.size(), procPath.c_str());
-            return true;
         }
+        AdjustSymbols();
+        HLOGV("%zu symbols_ loadded from %s.\n", symbols_.size(), procPath.c_str());
+        return true;
     }
 
     bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override

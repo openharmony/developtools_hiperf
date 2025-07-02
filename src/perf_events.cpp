@@ -679,11 +679,9 @@ bool PerfEvents::StartTracking(bool immediately)
         return false;
     }
 
-    if (recordCallBack_) {
-        if (!PrepareRecordThread()) {
-            HLOGW("PrepareRecordThread failed.");
-            return false;
-        }
+    if (recordCallBack_ && !PrepareRecordThread()) {
+        HLOGW("PrepareRecordThread failed.");
+        return false;
     }
 
     HLOGD("step: 1. enable event");
@@ -1945,9 +1943,8 @@ const std::string PerfEvents::GetTypeName(perf_type_id type_id)
     auto it = PERF_TYPES.find(type_id);
     if (it != PERF_TYPES.end()) {
         return it->second;
-    } else {
-        return "<not found>";
     }
+    return "<not found>";
 }
 
 void PerfEvents::UpdateCurrentTime()

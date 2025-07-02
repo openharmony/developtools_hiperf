@@ -698,9 +698,8 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSample &recordSample)
     // unwind
     if (disableUnwind_) {
         return;
-    } else {
-        UnwindFromRecord(recordSample);
     }
+    UnwindFromRecord(recordSample);
 }
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
@@ -1026,7 +1025,7 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
     auto map = thread.GetMaps()[mapIndex];
     CHECK_TRUE(map != nullptr, vaddrSymbol, 0, "");
     HLOGM("found addr 0x%" PRIx64 " in kthread map 0x%" PRIx64 " - 0x%" PRIx64 " from %s",
-            ip, map->begin, map->end, map->name.c_str());
+          ip, map->begin, map->end, map->name.c_str());
     // found symbols by file name
     for (auto &symbolsFile : symbolsFiles_) {
         if (symbolsFile->filePath_ == map->name) {
@@ -1039,7 +1038,7 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
                 return vaddrSymbol;
             }
             HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
-                    vaddrSymbol.fileVaddr_, ip, map->name.c_str());
+                  vaddrSymbol.fileVaddr_, ip, map->name.c_str());
             if (!symbolsFile->SymbolsLoaded()) {
                 symbolsFile->LoadDebugInfo();
                 symbolsFile->LoadSymbols(map);
@@ -1048,15 +1047,13 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
             foundSymbols.taskVaddr_ = ip;
             if (!foundSymbols.IsValid()) {
                 HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s",
-                        ip, vaddrSymbol.fileVaddr_, map->name.c_str());
+                      ip, vaddrSymbol.fileVaddr_, map->name.c_str());
                 return vaddrSymbol;
-            } else {
-                return foundSymbols;
             }
+            return foundSymbols;
         }
     }
-    HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip,
-            map->name.c_str());
+    HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip, map->name.c_str());
     return vaddrSymbol;
 }
 
@@ -1064,47 +1061,45 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
 {
     DfxSymbol vaddrSymbol(ip, thread.name_);
     int64_t mapIndex = thread.FindMapIndexByAddr(ip);
-    if (mapIndex >= 0) {
-        auto map = thread.GetMaps()[mapIndex];
-        SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(map);
-        if (symbolsFile != nullptr) {
-            vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
-            vaddrSymbol.module_ = map->name;
-            vaddrSymbol.fileVaddr_ = symbolsFile->GetVaddrInSymbols(ip, map->begin, map->offset);
-            perf_callchain_context context = PERF_CONTEXT_USER;
-            if (GetSymbolCache(vaddrSymbol.fileVaddr_, vaddrSymbol, context)) {
-                return vaddrSymbol;
-            }
-            HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
-                  vaddrSymbol.fileVaddr_, ip, map->name.c_str());
-            if (!symbolsFile->SymbolsLoaded()) {
-                symbolsFile->LoadDebugInfo(map);
-                symbolsFile->LoadSymbols(map);
-            }
-            DfxSymbol foundSymbols;
-            if (!symbolsFile->IsAbc() && !IsV8File(map->name)) {
-                foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
-            } else {
-                HLOGD("symbolsFile:%s is ABC or V8 :%d", symbolsFile->filePath_.c_str(),
-                      symbolsFile->IsAbc() || symbolsFile->IsV8());
-                foundSymbols = symbolsFile->GetSymbolWithPcAndMap(ip, map);
-            }
-
-            if (foundSymbols.IsValid()) {
-                return foundSymbols;
-            } else {
-                HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s", ip,
-                      vaddrSymbol.fileVaddr_, map->name.c_str());
-                if (symbolsFile->IsAbc() || symbolsFile->IsV8()) {
-                    symbolsFile->symbolsMap_.insert(std::make_pair(ip, vaddrSymbol));
-                }
-                return vaddrSymbol;
-            }
-        } else {
-            HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip, map->name.c_str());
-        }
-    } else {
+    if (mapIndex < 0) {
         HLOGV("not found in any map");
+        return vaddrSymbol;
+    }
+    auto map = thread.GetMaps()[mapIndex];
+    SymbolsFile *symbolsFile = thread.FindSymbolsFileByMap(map);
+    if (symbolsFile == nullptr) {
+        HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip, map->name.c_str());
+        return vaddrSymbol;
+    }
+    vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
+    vaddrSymbol.module_ = map->name;
+    vaddrSymbol.fileVaddr_ = symbolsFile->GetVaddrInSymbols(ip, map->begin, map->offset);
+    perf_callchain_context context = PERF_CONTEXT_USER;
+    if (GetSymbolCache(vaddrSymbol.fileVaddr_, vaddrSymbol, context)) {
+        return vaddrSymbol;
+    }
+    HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
+          vaddrSymbol.fileVaddr_, ip, map->name.c_str());
+    if (!symbolsFile->SymbolsLoaded()) {
+        symbolsFile->LoadDebugInfo(map);
+        symbolsFile->LoadSymbols(map);
+    }
+    DfxSymbol foundSymbols;
+    if (!symbolsFile->IsAbc() && !IsV8File(map->name)) {
+        foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+    } else {
+        HLOGD("symbolsFile:%s is ABC or V8 :%d", symbolsFile->filePath_.c_str(),
+              symbolsFile->IsAbc() || symbolsFile->IsV8());
+        foundSymbols = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    }
+
+    if (foundSymbols.IsValid()) {
+        return foundSymbols;
+    }
+    HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s", ip,
+          vaddrSymbol.fileVaddr_, map->name.c_str());
+    if (symbolsFile->IsAbc() || symbolsFile->IsV8()) {
+        symbolsFile->symbolsMap_.insert(std::make_pair(ip, vaddrSymbol));
     }
     return vaddrSymbol;
 }

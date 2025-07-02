@@ -336,9 +336,8 @@ PerfFileSectionUniStackTable::PerfFileSectionUniStackTable(FEATURE id, const cha
     if (!Read(processTableCount)) {
         HLOGV("processTableCount read failed\n");
         return;
-    } else {
-        HLOGV("processTableCount %" PRIu32 "\n", processTableCount);
     }
+    HLOGV("processTableCount %" PRIu32 "\n", processTableCount);
     for (uint32_t i = 0; i < processTableCount; ++i) {
         UniStackTableInfo& stackTable = uniStackTableInfos_.emplace_back();
         Read(stackTable.pid);

@@ -103,9 +103,8 @@ uint64_t GetBranchSampleType(const std::string &name)
     auto it = mapBranchSampleType.find(name);
     if (it == mapBranchSampleType.end()) {
         return 0;
-    } else {
-        return it->second;
     }
+    return it->second;
 }
 
 SubCommandRecord::~SubCommandRecord()
