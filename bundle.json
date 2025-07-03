@@ -56,8 +56,7 @@
             "name": "//developtools/hiperf/interfaces/innerkits/native/hiperf_local:hiperf_local",
             "header": {
               "header_files": [
-                "lperf.h",
-                "lperf_c.h"
+                "lperf.h"
               ],
               "header_base": "//developtools/hiperf/interfaces/innerkits/native/hiperf_local/include"
             }

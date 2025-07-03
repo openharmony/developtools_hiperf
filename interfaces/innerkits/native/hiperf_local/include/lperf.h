@@ -15,9 +15,6 @@
 #ifndef LPERF_H
 #define LPERF_H
 
-#include "lperf_record.h"
-
-#include <atomic>
 #include <string>
 #include <vector>
 
@@ -27,18 +24,22 @@ namespace HiPerf {
 namespace HiPerfLocal {
 class Lperf {
 public:
-    Lperf() = default;
-    ~Lperf() = default;
-
     static Lperf& GetInstance();
     int StartProcessStackSampling(const std::vector<int>& tids, int freq, int milliseconds, bool parseMiniDebugInfo);
     int CollectSampleStackByTid(int tid, std::string& stack);
     int CollectHeaviestStackByTid(int tid, std::string& stack);
     int FinishProcessStackSampling();
 
+    Lperf(const Lperf&) = delete;
+    Lperf(Lperf&&) = delete;
+    Lperf& operator=(const Lperf&) = delete;
+    Lperf& operator=(Lperf&&) = delete;
+
 private:
-    LperfRecord lperfRecord_;
-    std::atomic<bool> isRunning_{false};
+    Lperf();
+    ~Lperf();
+    class Impl;
+    std::shared_ptr<Impl> Impl_;
 };
 } // namespace HiPerfLocal
 } // namespace HiPerf

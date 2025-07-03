@@ -19,7 +19,6 @@ config("hiperf_local_config") {
 
   include_dirs = [
     "include",
-    "${hiperf_path}/include",
   ]
 }
 
@@ -28,18 +27,11 @@ ohos_shared_library("hiperf_local") {
   public_configs = [ ":hiperf_local_config" ]
   sources = [
     "src/lperf.cpp",
-    "src/lperf_c.cpp",
-    "src/lperf_event_record.cpp",
-    "src/lperf_events.cpp",
-    "src/lperf_record.cpp",
   ]
 
   external_deps = [
-    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "faultloggerd:libstack_printer",
-    "faultloggerd:libunwinder",
-    "hilog:libhilog",
+    "faultloggerd:libdfx_dumpcatcher",
   ]
 
   version_script = "hiperf_local.map"

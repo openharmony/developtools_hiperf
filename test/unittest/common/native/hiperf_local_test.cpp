@@ -15,7 +15,9 @@
 
 #include "hiperf_local_test.h"
 
+#include <sys/utsname.h>
 #include "test_utilities.h"
+#include "utilities.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -49,10 +51,6 @@ HWTEST_F(HiperfLocalTest, RecordWithInvalidTid, TestSize.Level2)
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
     ASSERT_TRUE(sampleStack.size() == 0);
-    std::string heaviestStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectHeaviestStackByTid(getpid(), heaviestStack), -1);
-    ASSERT_TRUE(heaviestStack.size() == 0);
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
 }
@@ -64,10 +62,6 @@ HWTEST_F(HiperfLocalTest, RecordWithInvalidFreq1, TestSize.Level2)
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
     ASSERT_TRUE(sampleStack.size() == 0);
-    std::string heaviestStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectHeaviestStackByTid(getpid(), heaviestStack), -1);
-    ASSERT_TRUE(heaviestStack.size() == 0);
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
 }
@@ -79,10 +73,6 @@ HWTEST_F(HiperfLocalTest, RecordWithInvalidFreq2, TestSize.Level2)
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
     ASSERT_TRUE(sampleStack.size() == 0);
-    std::string heaviestStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectHeaviestStackByTid(getpid(), heaviestStack), -1);
-    ASSERT_TRUE(heaviestStack.size() == 0);
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
 }
@@ -94,10 +84,6 @@ HWTEST_F(HiperfLocalTest, RecordWithInvalidTime1, TestSize.Level2)
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
     ASSERT_TRUE(sampleStack.size() == 0);
-    std::string heaviestStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectHeaviestStackByTid(getpid(), heaviestStack), -1);
-    ASSERT_TRUE(heaviestStack.size() == 0);
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
 }
@@ -109,10 +95,6 @@ HWTEST_F(HiperfLocalTest, RecordWithInvalidTime2, TestSize.Level2)
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
     ASSERT_TRUE(sampleStack.size() == 0);
-    std::string heaviestStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectHeaviestStackByTid(getpid(), heaviestStack), -1);
-    ASSERT_TRUE(heaviestStack.size() == 0);
 
     EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
 }
