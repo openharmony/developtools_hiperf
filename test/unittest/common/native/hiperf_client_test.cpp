@@ -28,6 +28,7 @@ using namespace std;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+const int DEFAULT_DURATION_TIME = 10;
 class HiperfClientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -491,6 +492,157 @@ HWTEST_F(HiperfClientTest, Output, TestSize.Level1)
     EXPECT_FALSE(myHiperf.Output());
     std::this_thread::sleep_for(1s);
     EXPECT_TRUE(myHiperf.Stop());
+}
+
+/**
+ * @tc.desc: SetCallStackSamplingConfigs(int duration)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigs_WithZeroDuration, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    std::vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    opt.SetCallStackSamplingConfigs(0);
+    
+    bool hasTimeStopSec = false;
+    int actualDuration = 0;
+    for (size_t i = 0; i < opt.GetOptionVecString().size(); i++) {
+        if (opt.GetOptionVecString()[i] == "-d") {
+            hasTimeStopSec = true;
+            actualDuration = std::stoi(opt.GetOptionVecString()[i + 1]);
+            break;
+        }
+    }
+    ASSERT_TRUE(hasTimeStopSec);
+    ASSERT_EQ(actualDuration, DEFAULT_DURATION_TIME);
+}
+
+/**
+ * @tc.desc: SetOption(const std::string &name, bool enable)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOption_RemoveExistingArgument, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    const std::string targetArg = "-a";
+
+    opt.SetOption(targetArg, true);
+    auto args = opt.GetOptionVecString();
+    ASSERT_TRUE(std::find(args.begin(), args.end(), targetArg) != args.end());
+
+    opt.SetOption(targetArg, false);
+    args = opt.GetOptionVecString();
+
+    auto it = std::find(args.begin(), args.end(), targetArg);
+    ASSERT_TRUE(it == args.end());
+}
+
+/**
+ * @tc.desc: SetOption(const std::string &name, const std::vector<int> &vInt)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, RemoveExistingOptionWithEmptyVectorOfInt, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-c", std::vector<int>{1, 2, 3});
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2);
+    ASSERT_EQ(args[0], "-c");
+    ASSERT_EQ(args[1], "1,2,3");
+
+    opt.SetOption("-c", std::vector<int>{});
+
+    args = opt.GetOptionVecString();
+    auto it = std::find(args.begin(), args.end(), "-c");
+    ASSERT_EQ(it, args.end());
+}
+
+/**
+ * @tc.desc: SetOption(const std::string &name, const std::vector<int> &vInt)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, UpdateExistingOption, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-c", std::vector<int>{1, 2});
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2);
+    ASSERT_EQ(args[0], "-c");
+    ASSERT_EQ(args[1], "1,2");
+
+    opt.SetOption("-c", std::vector<int>{3, 4, 5});
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2);
+    ASSERT_EQ(args[0], "-c");
+    ASSERT_EQ(args[1], "3,4,5");
+}
+
+/**
+ * @tc.desc: SetOption(const std::string &name, const std::string &str)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, RemoveExistingOptionWithEmptyString, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-o", std::string("perf.data"));
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2);
+    ASSERT_EQ(args[0], "-o");
+    ASSERT_EQ(args[1], "perf.data");
+
+    opt.SetOption("-o", std::string(""));
+
+    args = opt.GetOptionVecString();
+    auto it = std::find(args.begin(), args.end(), "-o");
+    ASSERT_EQ(it, args.end());
+}
+
+/**
+ * @tc.desc: SetOption(const std::string &name, const std::vector<std::string> &vStr)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, RemoveExistingOptionWithEmptyVectorOfString, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-e", std::vector<std::string>{"hw-cpu-cycles", "hw-instructions"});
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2);
+    ASSERT_EQ(args[0], "-e");
+    ASSERT_EQ(args[1], "hw-cpu-cycles,hw-instructions");
+
+    opt.SetOption("-e", std::vector<std::string>{});
+
+    args = opt.GetOptionVecString();
+    auto it = std::find(args.begin(), args.end(), "-e");
+    ASSERT_EQ(it, args.end());
+}
+
+/**
+ * @tc.desc: SetOption(const std::string &name, const std::vector<std::string> &vStr)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, UpdateExistingOptionWithVector, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-e", std::vector<std::string>{"hw-cpu-cycles", "hw-instructions"});
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2);
+    ASSERT_EQ(args[0], "-e");
+    ASSERT_EQ(args[1], "hw-cpu-cycles,hw-instructions");
+
+    opt.SetOption("-e", std::vector<std::string>{"hw-cache-references", "hw-cache-misses"});
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2);
+    ASSERT_EQ(args[0], "-e");
+    ASSERT_EQ(args[1], "hw-cache-references,hw-cache-misses");
 }
 } // namespace HiPerf
 } // namespace Developtools
