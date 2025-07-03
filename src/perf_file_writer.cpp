@@ -169,38 +169,35 @@ bool PerfFileWriter::ReadRecords(ProcessRecordCB &callback)
         } else if (!Read(buf, sizeof(perf_event_header))) {
             HLOGW("read perf_event_header failed.");
             return false;
-        } else {
-            perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
-            if (header->size > RECORD_SIZE_LIMIT || header->size < sizeof(perf_event_header)) {
-                HLOGE("read record header size error %hu", header->size);
-                return false;
-            }
-            if (remainingSize >= header->size) {
-                size_t headerSize = sizeof(perf_event_header);
-                if (Read(buf + headerSize, header->size - headerSize)) {
-                    size_t speSize = 0;
-                    if (header->type == PERF_RECORD_AUXTRACE) {
-                        struct PerfRecordAuxtraceData *auxtrace = reinterpret_cast<struct PerfRecordAuxtraceData *>
-                                                                  (header + 1);
-                        speSize = auxtrace->size;
-                        if (speSize > 0) {
-                            Read(buf + header->size, auxtrace->size);
-                        }
-                    }
-                    uint8_t *data = buf;
-                    // the record is allowed from a cache memory, does not free memory after use
-                    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
-                        static_cast<perf_event_type>(header->type), data, defaultEventAttr_);
-                    // skip unknown record
-                    CHECK_TRUE(record.GetName() != nullptr, true, 0, "");
-                    remainingSize = remainingSize - header->size - speSize;
-                    // call callback to process, do not destroy the record
-                    callback(record);
-                    recordNumber++;
+        }
+        perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
+        if (header->size > RECORD_SIZE_LIMIT || header->size < sizeof(perf_event_header)) {
+            HLOGE("read record header size error %hu", header->size);
+            return false;
+        }
+        size_t headerSize = sizeof(perf_event_header);
+        if (remainingSize >= header->size && Read(buf + headerSize, header->size - headerSize)) {
+            size_t speSize = 0;
+            if (header->type == PERF_RECORD_AUXTRACE) {
+                struct PerfRecordAuxtraceData *auxtrace =
+                    reinterpret_cast<struct PerfRecordAuxtraceData *>(header + 1);
+                speSize = auxtrace->size;
+                if (speSize > 0) {
+                    Read(buf + header->size, auxtrace->size);
                 }
-            } else {
-                HLOGW("not enough header->size.");
             }
+            uint8_t *data = buf;
+            // the record is allowed from a cache memory, does not free memory after use
+            PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
+                static_cast<perf_event_type>(header->type), data, defaultEventAttr_);
+            // skip unknown record
+            CHECK_TRUE(record.GetName() != nullptr, true, 0, "");
+            remainingSize = remainingSize - header->size - speSize;
+            // call callback to process, do not destroy the record
+            callback(record);
+            recordNumber++;
+        } else {
+            HLOGW("not enough header->size.");
         }
     }
     HLOGD("read back %zu records", recordNumber);
