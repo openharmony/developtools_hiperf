@@ -14,12 +14,25 @@
  */
 
 #include "lperf.h"
-#include "hiperf_hilog.h"
+
+#include "lite_perf.h"
 
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 namespace HiPerfLocal {
+class Lperf::Impl {
+public:
+    Impl();
+    ~Impl();
+
+    int StartProcessStackSampling(const std::vector<int>& tids, int freq, int milliseconds, bool parseMiniDebugInfo);
+    int CollectSampleStackByTid(int tid, std::string& stack);
+    int FinishProcessStackSampling();
+
+private:
+    std::shared_ptr<OHOS::HiviewDFX::LitePerf> litePerf_;
+};
 
 Lperf& Lperf::GetInstance()
 {
@@ -27,32 +40,52 @@ Lperf& Lperf::GetInstance()
     return lperfInstance;
 }
 
-int Lperf::StartProcessStackSampling(const std::vector<int>& tids, int freq, int milliseconds, bool parseMiniDebugInfo)
-{
-    bool expected = false;
-    if (!isRunning_.compare_exchange_strong(expected, true)) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "Process is being sampled.");
-        return -1;
-    }
+Lperf::Lperf() : Impl_(std::make_shared<Impl>())
+{}
 
-    int res = lperfRecord_.StartProcessSampling(tids, freq, milliseconds, parseMiniDebugInfo);
-    isRunning_.store(false);
-    return res;
+Lperf::~Lperf()
+{
+    Impl_ = nullptr;
+}
+
+int Lperf::StartProcessStackSampling(const std::vector<int>& tids, int freq,
+                                     int milliseconds, bool parseMiniDebugInfo)
+{
+    return Impl_->StartProcessStackSampling(tids, freq, milliseconds, parseMiniDebugInfo);
 }
 
 int Lperf::CollectSampleStackByTid(int tid, std::string& stack)
 {
-    return lperfRecord_.CollectSampleStack(tid, stack);
-}
-
-int Lperf::CollectHeaviestStackByTid(int tid, std::string& stack)
-{
-    return lperfRecord_.CollectHeaviestStack(tid, stack);
+    return Impl_->CollectSampleStackByTid(tid, stack);
 }
 
 int Lperf::FinishProcessStackSampling()
 {
-    return lperfRecord_.FinishProcessSampling();
+    return Impl_->FinishProcessStackSampling();
+}
+
+Lperf::Impl::Impl() : litePerf_(std::make_shared<OHOS::HiviewDFX::LitePerf>())
+{}
+
+Lperf::Impl::~Impl()
+{
+    litePerf_ = nullptr;
+}
+
+int Lperf::Impl::StartProcessStackSampling(const std::vector<int>& tids, int freq,
+                                           int milliseconds, bool parseMiniDebugInfo)
+{
+    return litePerf_->StartProcessStackSampling(tids, freq, milliseconds, parseMiniDebugInfo);
+}
+
+int Lperf::Impl::CollectSampleStackByTid(int tid, std::string& stack)
+{
+    return litePerf_->CollectSampleStackByTid(tid, stack);
+}
+
+int Lperf::Impl::FinishProcessStackSampling()
+{
+    return litePerf_->FinishProcessStackSampling();
 }
 } // namespace HiPerfLocal
 } // namespace HiPerf
