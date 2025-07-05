@@ -334,6 +334,7 @@ float Percentage(const T &a, const T &b)
 
 bool IsRoot();
 bool IsBeta();
+bool IsHM();
 bool IsAllowProfilingUid();
 bool IsHiviewCall();
 bool PowerOfTwo(uint64_t n);
