@@ -1607,7 +1607,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
             HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] App restart success");
         }
     }
-    
+
     if (!CheckTargetPids()) {
         HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] CheckTargetPids failed");
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
@@ -2340,11 +2340,7 @@ bool SubCommandRecord::RegisterSubCommandRecord(void)
 
 void SubCommandRecord::SetHM()
 {
-    utsname unameBuf;
-    if ((uname(&unameBuf)) == 0) {
-        std::string osrelease = unameBuf.release;
-        isHM_ = osrelease.find(HMKERNEL) != std::string::npos;
-    }
+    isHM_ = IsHM();
     virtualRuntime_.SetHM(isHM_);
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);

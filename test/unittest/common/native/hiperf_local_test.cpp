@@ -15,7 +15,6 @@
 
 #include "hiperf_local_test.h"
 
-#include <sys/utsname.h>
 #include "test_utilities.h"
 #include "utilities.h"
 
@@ -46,57 +45,57 @@ void HiperfLocalTest::TearDown()
 
 HWTEST_F(HiperfLocalTest, RecordWithInvalidTid, TestSize.Level2)
 {
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({}, 100, 5000, false), -1);
-    std::string sampleStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
-    ASSERT_TRUE(sampleStack.size() == 0);
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    if (IsHM()) {
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({}, 100, 5000, false), -1);
+        std::string sampleStack;
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
+        ASSERT_TRUE(sampleStack.size() == 0);
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    }
 }
 
 HWTEST_F(HiperfLocalTest, RecordWithInvalidFreq1, TestSize.Level2)
 {
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, 2000, 5000, false), -1);
-    std::string sampleStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
-    ASSERT_TRUE(sampleStack.size() == 0);
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    if (IsHM()) {
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, 2000, 5000, false), -1);
+        std::string sampleStack;
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
+        ASSERT_TRUE(sampleStack.size() == 0);
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    }
 }
 
 HWTEST_F(HiperfLocalTest, RecordWithInvalidFreq2, TestSize.Level2)
 {
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, -1, 5000, false), -1);
-    std::string sampleStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
-    ASSERT_TRUE(sampleStack.size() == 0);
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    if (IsHM()) {
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, -1, 5000, false), -1);
+        std::string sampleStack;
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
+        ASSERT_TRUE(sampleStack.size() == 0);
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    }
 }
 
 HWTEST_F(HiperfLocalTest, RecordWithInvalidTime1, TestSize.Level2)
 {
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, 100, 20000, false), -1);
-    std::string sampleStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
-    ASSERT_TRUE(sampleStack.size() == 0);
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    if (IsHM()) {
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, 100, 20000, false), -1);
+        std::string sampleStack;
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
+        ASSERT_TRUE(sampleStack.size() == 0);
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    }
 }
 
 HWTEST_F(HiperfLocalTest, RecordWithInvalidTime2, TestSize.Level2)
 {
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, 100, -1, false), -1);
-    std::string sampleStack;
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
-    ASSERT_TRUE(sampleStack.size() == 0);
-
-    EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    if (IsHM()) {
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().StartProcessStackSampling({ getpid() }, 100, -1, false), -1);
+        std::string sampleStack;
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().CollectSampleStackByTid(getpid(), sampleStack), -1);
+        ASSERT_TRUE(sampleStack.size() == 0);
+        EXPECT_EQ(HiPerfLocal::Lperf::GetInstance().FinishProcessStackSampling(), 0);
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

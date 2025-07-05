@@ -15,6 +15,7 @@
 
 #include "utilities.h"
 
+#include <sys/utsname.h>
 #include <zlib.h>
 #include <thread>
 #if defined(CONFIG_HAS_SYSPARA) && defined(is_ohos) && is_ohos
@@ -831,6 +832,17 @@ bool IsBeta()
     // default release when usertype param is invalid
     CHECK_TRUE(!userTypeRsp.empty(), true, 1, "GetUserType is empty [%s]", userTypeRsp.c_str());
     return false;
+}
+
+bool IsHM()
+{
+    utsname unameBuf;
+    bool isHM = false;
+    if ((uname(&unameBuf)) == 0) {
+        std::string osrelease = unameBuf.release;
+        isHM = osrelease.find(HMKERNEL) != std::string::npos;
+    }
+    return isHM;
 }
 
 bool IsAllowProfilingUid()

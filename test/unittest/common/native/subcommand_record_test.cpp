@@ -519,13 +519,7 @@ HWTEST_F(SubCommandRecordTest, PeriodAndFrequncyConflict, TestSize.Level2)
 void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk, bool isFork)
 {
     PerfEvents perfEvents;
-    utsname unameBuf;
-    bool isHM = false;
-    if ((uname(&unameBuf)) == 0) {
-        std::string osrelease = unameBuf.release;
-        isHM = osrelease.find(HMKERNEL) != std::string::npos;
-    }
-    perfEvents.SetHM(isHM);
+    perfEvents.SetHM(IsHM());
     for (auto type : TYPE_CONFIGS) {
         auto configs = perfEvents.GetSupportEvents(type.first);
         if (configs.empty()) {
@@ -2112,14 +2106,7 @@ HWTEST_F(SubCommandRecordTest, CheckThreadName, TestSize.Level1)
 
 HWTEST_F(SubCommandRecordTest, CheckDevhostMapOffset, TestSize.Level1)
 {
-    utsname unameBuf;
-    bool isHM = true;
-    if ((uname(&unameBuf)) == 0) {
-        std::string osrelease = unameBuf.release;
-        std::string sysname = unameBuf.sysname;
-        isHM = osrelease.find(HMKERNEL) != std::string::npos;
-    }
-    if (isHM) {
+    if (IsHM()) {
         bool checkRet = false;
         SubCommandRecord cmd;
         cmd.SetHM();
