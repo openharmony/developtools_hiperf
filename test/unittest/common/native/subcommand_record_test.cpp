@@ -321,6 +321,42 @@ HWTEST_F(SubCommandRecordTest, StopSecondsMaxErr, TestSize.Level2)
     TestRecordCommand(opt, false);
 }
 
+HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
+{
+    std::shared_ptr<HiperfEventListener> eventListener = std::make_shared<HiperfEventListener>();
+    std::vector<ListenerRule> sysRules;
+    sysRules.emplace_back(OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE", RuleType::WHOLE_WORD);
+    HiSysEventManager::AddListener(eventListener, sysRules);
+
+    ForkAndRunTest("-d 2 -a ", true, false);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    HiSysEventManager::RemoveListener(eventListener);
+    std::shared_ptr<HiviewDFX::HiSysEventRecord> eventRecord = eventListener->GetLastEvent();
+    ASSERT_NE(eventRecord, nullptr);
+
+    std::string value = "";
+    EXPECT_EQ(eventRecord->GetParamValue("MAIN_CMD", value), VALUE_PARSED_SUCCEED);
+    EXPECT_EQ(value, "record");
+
+    EXPECT_EQ(eventRecord->GetParamValue("SUB_CMD", value), VALUE_PARSED_SUCCEED);
+    EXPECT_EQ(value, " record -d 2 -a");
+
+    EXPECT_EQ(eventRecord->GetParamValue("CALLER", value), VALUE_PARSED_SUCCEED);
+    EXPECT_EQ(value, "./hiperf_unittest");
+
+    EXPECT_EQ(eventRecord->GetParamValue("TARGET_PROCESS", value), VALUE_PARSED_SUCCEED);
+    EXPECT_EQ(value, "ALL");
+
+    EXPECT_EQ(eventRecord->GetParamValue("ERROR_CODE", value), VALUE_PARSED_SUCCEED);
+    EXPECT_EQ(value, "0");
+
+    EXPECT_EQ(eventRecord->GetParamValue("ERROR_MESSAGE", value), VALUE_PARSED_SUCCEED);
+    if (!value.empty()) {
+        EXPECT_EQ(value, "NO_ERR");
+    }
+}
+
 // system wide
 HWTEST_F(SubCommandRecordTest, SystemWide, TestSize.Level1)
 {
