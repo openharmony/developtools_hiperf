@@ -955,6 +955,50 @@ HWTEST_F(UtilitiesTest, IsV8File, TestSize.Level2)
     filepath = "/system/lib64/libv8_shared.so";
     EXPECT_FALSE(IsV8File(filepath));
 }
+
+/**
+ * @tc.name: IscontainDigits_NoDigits_PureAlpha
+ * @tc.desc: Test string without digits (pure alphabet)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IscontainDigits_NoDigits_PureAlpha, TestSize.Level1)
+{
+    std::string str = "abcdefg";
+    bool result = IscontainDigits(str);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: IsExistDebugByPid_InvalidPid_Negative
+ * @tc.desc: Test negative PID (e.g., -1)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsExistDebugByPid_InvalidPid_Negative, TestSize.Level2)
+{
+    std::vector<pid_t> pids = {-1};
+    std::string err;
+    
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    
+    bool result = IsExistDebugByPid(pids, err);
+    std::string output = stdoutRecord.Stop();
+    
+    EXPECT_FALSE(result);
+    EXPECT_EQ(err, "Invalid -p value '-1', the pid should be larger than 0\n");
+    EXPECT_NE(output.find("Invalid -p value '-1', the pid should be larger than 0"), std::string::npos);
+}
+
+/**
+ * @tc.name: IsNumeric_Invalid_WithAlpha
+ * @tc.desc: Test string with numbers and alphabet (invalid)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsNumeric_Invalid_WithAlpha, TestSize.Level1)
+{
+    std::string str = "123a";
+    EXPECT_FALSE(IsNumeric(str));
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
