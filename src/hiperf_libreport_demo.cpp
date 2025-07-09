@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 
+#ifdef IS_UNINDEPENDENT
 #include "hiperf_libreport.h"
+#endif
 
 int main(const int argc, const char *argv[])
 {
+#ifdef IS_UNINDEPENDENT
     Dump("");
     Report("perf.data", "report.txt", "");
+#endif
 }

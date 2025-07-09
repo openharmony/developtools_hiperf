@@ -1067,6 +1067,7 @@ public:
 class V8FileSymbols : public ElfFileSymbols {
 private:
     bool v8Extracted_ = false;
+    bool isV8_ = false;
     [[maybe_unused]] uintptr_t jsvmExtractorptr_ = 0;
 
     pid_t pid_ = 0;
@@ -1094,16 +1095,21 @@ public:
         if (!needParseJsFunc_) {
             return true;
         }
+        if (v8Extracted_) {
+            return isV8_;
+        }
+        v8Extracted_ = true;
         if (jsvmExtractorptr_ == 0 && StringStartsWith(filePath_, "[anon:JSVM_JIT")) {
             auto ret = DfxJsvm::Instance().JsvmCreateJsSymbolExtractor(&jsvmExtractorptr_, pid_);
             if (ret < 0) {
                 jsvmExtractorptr_ = 0;
+                isV8_ = false;
                 HLOGE("failed to call JsvmCreateJsSymbolExtractor, the symbol file is:%s", filePath_.c_str());
             } else {
-                v8Extracted_ = true;
+                isV8_ = true;
             }
         }
-        return jsvmExtractorptr_ != 0;
+        return isV8_;
 #endif
         return true;
     }

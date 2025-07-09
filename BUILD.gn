@@ -452,12 +452,23 @@ ohos_executable("hiperf") {
 
 ohos_executable("hiperf_host") {
   sources = [ "./src/main.cpp" ]
+  
   deps = [ ":hiperf_platform_common" ]
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "faultloggerd:unwinder_host",
+    "protobuf:protobuf_lite",
   ]
+
+  if (is_ohos) {
+    sources += [ "./src/spe_decoder.cpp" ]
+    external_deps += [
+      "faultloggerd:libunwinder",
+      "hilog:libhilog",
+    ]
+  } else {
+    external_deps += [ "faultloggerd:unwinder_host" ]
+  }
 
   if (hiperf_independent_compilation) {
     external_deps += [
@@ -524,10 +535,11 @@ ohos_source_set("hiperf_platform_host") {
 }
 
 ohos_shared_library("hiperf_host_lib") {
-  public_deps = [ ":hiperf_platform_host" ]
+  if (!hiperf_independent_compilation) {
+    public_deps = [ ":hiperf_platform_host" ]
+    ldflags = [ "-static-libstdc++" ]
+  }
   output_name = "hiperf_report"
-
-  ldflags = [ "-static-libstdc++" ]
 
   subsystem_name = "developtools"
   part_name = "hiperf"
@@ -535,8 +547,11 @@ ohos_shared_library("hiperf_host_lib") {
 
 ohos_executable("hiperf_host_lib_demo") {
   sources = [ "./src/hiperf_libreport_demo.cpp" ]
-  deps = [ ":hiperf_host_lib" ]
-  include_dirs = [ "${hiperf_path}/include" ]
+
+  if (!hiperf_independent_compilation) {
+    deps = [ ":hiperf_host_lib" ]
+    include_dirs = [ "${hiperf_path}/include" ]
+  }
 
   subsystem_name = "developtools"
   part_name = "hiperf"
@@ -583,6 +598,7 @@ group("hiperf_target_all") {
       deps = []
       if (!use_libfuzzer) {
         if (!hiperf_independent_compilation) {
+          defines += [ "IS_UNINDEPENDENT" ]
           deps += [
             ":hiperf_host(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
             ":hiperf_host_lib(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
