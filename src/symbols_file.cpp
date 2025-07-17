@@ -1248,7 +1248,7 @@ static bool IsCJFile(const std::string& filepath)
     if (!StringEndsWith(filepath, ".so")) {
         return false;
     }
-    if (!StringStartsWith(filepath, "/data/storage") &&
+    if (filepath.find("/data/storage") == std::string::npos &&
         !StringStartsWith(filepath, "/system/lib64/platformsdk/cjsdk")) {
         return false;
     }
