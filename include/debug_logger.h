@@ -27,8 +27,10 @@
 #include <unistd.h>
 #if !is_mingw
 #include <sys/syscall.h>
+#if !IS_WASM
 #undef gettid
 #define gettid() syscall(SYS_gettid)
+#endif
 #else
 #include "windows.h"
 inline long gettid()
@@ -58,7 +60,7 @@ const std::string DEFAULT_UT_LOG_DIR = "/data/local/tmp/";
 const std::string DEFAULT_LOG_PATH = "/data/local/tmp/hiperf_log.txt";
 #elif is_mingw
 const std::string DEFAULT_LOG_PATH = ".\\hiperf_log.txt";
-#elif is_linux
+#elif is_linux || is_mac
 const std::string DEFAULT_UT_LOG_DIR = "./";
 const std::string DEFAULT_LOG_PATH = "hiperf_log.txt";
 #else

@@ -117,22 +117,16 @@ config("hiperf_inner_config") {
   }
 }
 
-sources_platform_common = [
-  "./src/command.cpp",
-  "./src/command_reporter.cpp",
+# compile the smartperf host trace_streamer using this.
+sources_platform_with_ts_common = [
   "./src/dwarf_encoding.cpp",
-  "./src/ipc_utilities.cpp",
   "./src/option.cpp",
   "./src/perf_event_record.cpp",
   "./src/perf_file_format.cpp",
   "./src/perf_file_reader.cpp",
   "./src/register.cpp",
   "./src/report.cpp",
-  "./src/report_json_file.cpp",
   "./src/subcommand.cpp",
-  "./src/subcommand_dump.cpp",
-  "./src/subcommand_help.cpp",
-  "./src/subcommand_report.cpp",
   "./src/symbols_file.cpp",
   "./src/unique_stack_table.cpp",
   "./src/utilities.cpp",
@@ -140,13 +134,30 @@ sources_platform_common = [
   "./src/virtual_thread.cpp",
 ]
 
+if (hiperf_debug) {
+  sources_platform_with_ts_common += [
+    "./src/debug_logger.cpp",
+  ]
+}
+
+sources_platform_common = [
+  "./src/command.cpp",
+  "./src/command_reporter.cpp",
+  "./src/ipc_utilities.cpp",
+  "./src/report_json_file.cpp",
+  "./src/subcommand_dump.cpp",
+  "./src/subcommand_help.cpp",
+  "./src/subcommand_report.cpp",
+]
+
+sources_platform_common += sources_platform_with_ts_common
+
 if (is_ohos) {
   sources_platform_common += [ "./src/callstack.cpp" ]
 }
 
 if (hiperf_debug) {
   sources_platform_common += [
-    "./src/debug_logger.cpp",
     "./src/option_debug.cpp",
   ]
 }

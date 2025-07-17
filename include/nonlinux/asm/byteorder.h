@@ -12,6 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BYTE_ORDER_H
-#define BYTE_ORDER_H
+#ifndef NOLINUX_BYTE_ORDER_H
+#define NOLINUX_BYTE_ORDER_H
 #endif
