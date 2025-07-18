@@ -967,6 +967,19 @@ HWTEST_F(SymbolsFileTest, CreateCJSymbolsFile, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateCJSymbolsFile2
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, CreateCJSymbolsFile2, TestSize.Level1)
+{
+    std::string cjLibPath = "/data/storage/libohos_app_cangjie_entry.so";
+    std::filesystem::path cjPath(cjLibPath);
+    auto file = SymbolsFile::CreateSymbolsFile(cjLibPath);
+    EXPECT_NE(file, nullptr);
+}
+
+/**
  * @tc.name: CreateV8Symbols
  * @tc.desc: Test CreateSymbolsFile function and parse symbol
  * @tc.type: FUNC
