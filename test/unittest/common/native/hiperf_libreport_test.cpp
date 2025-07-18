@@ -464,7 +464,7 @@ HWTEST_F(HiperfLibReportTest, Test_ReportGetBuildId_IllegalPath, TestSize.Level3
     EXPECT_STREQ(result, "");
 }
 
-HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level1)
+HWTEST_F(HiperfLibReportTest, Test_ReportUnwindJson_Success, TestSize.Level0)
 {
     unlink(REPORT_JSON_OUTPUT_PATH);
     EXPECT_NE(access(REPORT_JSON_OUTPUT_PATH, F_OK), 0);
