@@ -1049,6 +1049,29 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateV8Symbols4
+ * @tc.desc: Test CreateSymbolsFile function and parse symbol
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
+{
+    SymbolsFile::needParseJsFunc_ = true;
+    const std::string filename = "[anon:JSVM_JIT]";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_EQ(symbolsFile->IsV8(), false);
+    uint64_t ip = rnd_();
+    uint64_t begin = rnd_();
+    uint64_t len = rnd_();
+    uint64_t offset = rnd_();
+    uint32_t prot = rnd_();
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+    EXPECT_EQ(symbolsFile->LoadDebugInfo(map, "/system/lib64/libv8_shared.so"), true);
+    EXPECT_EQ(symbolsFile->LoadSymbols(map, "/system/lib64/libv8_shared.so"), true);
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    EXPECT_EQ(symbol.IsValid(), false);
+}
+
+/**
  * @tc.name: V8SymbolsErr
  * @tc.desc: Test CreateSymbolsFile error
  * @tc.type: FUNC

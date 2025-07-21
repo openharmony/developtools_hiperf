@@ -16,6 +16,8 @@
 #include "utilities_test.h"
 #include <chrono>
 #include <thread>
+#include "ipc_utilities.h"
+#include "test_utilities.h"
 #include "utilities.h"
 
 using namespace testing::ext;
@@ -998,6 +1000,20 @@ HWTEST_F(UtilitiesTest, IsNumeric_Invalid_WithAlpha, TestSize.Level1)
 {
     std::string str = "123a";
     EXPECT_FALSE(IsNumeric(str));
+}
+
+/**
+ * @tc.name: IsDebugableApp
+ * @tc.desc: Test IsDebugableApp fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsDebugableApp, TestSize.Level1)
+{
+    std::string testProcesses = "com.ohos.sceneboard";
+    if (!CheckTestApp(testProcesses)) {
+        testProcesses = "com.ohos.launcher";
+    }
+    EXPECT_FALSE(IsDebugableApp(testProcesses));
 }
 } // namespace HiPerf
 } // namespace Developtools
