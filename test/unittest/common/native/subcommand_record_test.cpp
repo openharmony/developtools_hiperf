@@ -235,6 +235,67 @@ static bool CheckIntFromProcFile(const std::string& proc, int expect)
     return value == expect;
 }
 
+bool CheckJsonReport(const std::string& fileName, const std::string& symbolsFile, const int index = 0)
+{
+    cJSON* root = ParseJson(fileName.c_str());
+    if (root == nullptr) {
+        return false;
+    }
+    auto list = cJSON_GetObjectItem(root, "processNameMap");
+    auto size = cJSON_GetArraySize(list);
+    bool find = false;
+    for (int i = 0; i < size; i++) {
+        auto item = cJSON_GetArrayItem(list, i);
+        if (SubCommandRecordTest::testProcesses == item->valuestring) {
+            find = true;
+            break;
+        }
+    }
+    if (!find) {
+        return false;
+    }
+    list = cJSON_GetObjectItem(root, "symbolsFileList");
+    size = cJSON_GetArraySize(list);
+    if (!symbolsFile.empty()) {
+        find = false;
+        for (int i = 0; i < size; i++) {
+            auto item = cJSON_GetArrayItem(list, i);
+            if (symbolsFile == item->valuestring) {
+                find = true;
+                break;
+            }
+        }
+        if (!find) {
+            return false;
+        }
+    }
+    auto listRecord = cJSON_GetObjectItem(root, "recordSampleInfo");
+    if (cJSON_GetArraySize(listRecord) <= 0) {
+        return false;
+    }
+    auto itemRecord = cJSON_GetArrayItem(listRecord, 0);
+    auto listProcesses = cJSON_GetObjectItem(itemRecord, "processes");
+    if (cJSON_GetArraySize(listProcesses) <= 0) {
+        return false;
+    }
+    auto itemProcesses = cJSON_GetArrayItem(listProcesses, index);
+    auto listThreads = cJSON_GetObjectItem(itemProcesses, "threads");
+    if (cJSON_GetArraySize(listThreads) <= 0) {
+        return false;
+    }
+    auto itemThreads = cJSON_GetArrayItem(listThreads, 0);
+    auto listLibs = cJSON_GetObjectItem(itemThreads, "libs");
+    if (cJSON_GetArraySize(listLibs) <= 0) {
+        return false;
+    }
+    auto itemCallOrder = cJSON_GetObjectItem(itemThreads, "CallOrder");
+    auto itemCallStack = cJSON_GetObjectItem(itemCallOrder, "callStack");
+    if (cJSON_GetArraySize(itemCallStack) <= 0) {
+        return false;
+    }
+    return true;
+}
+
 // app package name
 HWTEST_F(SubCommandRecordTest, PackageName, TestSize.Level0)
 {
@@ -1788,12 +1849,15 @@ HWTEST_F(SubCommandRecordTest, ChecKernel, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, RecordAndReport, TestSize.Level1)
 {
-    TestRecordCommand("-d 5 -s dwarf -o /data/local/tmp/test_perf.data", true, true);
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/test_perf.data"), true);
-    std::string stringOut = stdoutRecord.Stop();
-    EXPECT_EQ(stringOut.find("report done") != std::string::npos, true);
+    const std::string cmd = "hiperf record -d 5 --app " +
+                            SubCommandRecordTest::testProcesses +
+                            " -o /data/local/tmp/perf.data";
+    EXPECT_EQ(CheckTraceCommandOutput(cmd, {"Process and Saving data..."}), true);
+    EXPECT_EQ(CheckTraceCommandOutput(
+        "hiperf report --json -i /data/local/tmp/perf.data -o /data/local/tmp/perf.json",
+        {"report done"}),
+              true);
+    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", ""));
 }
 
 /**
@@ -2220,13 +2284,44 @@ HWTEST_F(SubCommandRecordTest, CheckProductCfg, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control01, TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a",
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a -o /data/local/tmp/perf_control01.data",
                                       {"create control hiperf sampling success"}),
               true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
               true);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
               true);
+    EXPECT_EQ(CheckTraceCommandOutput(
+        "hiperf report --json -i /data/local/tmp/perf_control01.data -o /data/local/tmp/perf.json",
+        {"report done"}),
+              true);
+    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", "/system/bin/hiperf", 1));
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control_app
+ * @tc.desc: prepare, start, stop with app
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control_app, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    const std::string cmd = "hiperf record --control prepare --app " +
+                            SubCommandRecordTest::testProcesses +
+                            " -o /data/local/tmp/perf_control_app.data";
+    EXPECT_EQ(CheckTraceCommandOutput(cmd, {"create control hiperf sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+              true);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput(
+        "hiperf report --json -i /data/local/tmp/perf_control_app.data -o /data/local/tmp/perf.json",
+        {"report done"}),
+              true);
+    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", ""));
 }
 
 /**
