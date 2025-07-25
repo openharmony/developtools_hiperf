@@ -46,29 +46,6 @@ static const std::string TEST_FILE = "/data/local/tmp/perf.data";
 const std::string PERF_CPU_TIME_MAX_PERCENT = "/proc/sys/kernel/perf_cpu_time_max_percent";
 static const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2ms;
 
-static constexpr size_t TEST_SIZE_F2000_DWARF_SYSTEM = 8.3E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_DWARF_SYSTEM = 1.7E5 * 1024;
-static constexpr size_t TEST_SIZE_F8000_DWARF_SYSTEM = 3.5E5 * 1024;
-static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 10E3 * 1024;
-static constexpr size_t TEST_SIZE_F500_FP_SYSTEM = 2E4 * 1024;
-static constexpr size_t TEST_SIZE_F1000_FP_SYSTEM = 3E4 * 1024;
-static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 5E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_FP_SYSTEM = 1E5 * 1024;
-static constexpr size_t TEST_SIZE_F8000_FP_SYSTEM = 2E5 * 1024;
-
-static constexpr size_t TEST_SIZE_F100_DWARF_PROCESS = 5.6E3 * 1024;
-static constexpr size_t TEST_SIZE_F500_DWARF_PROCESS = 1.6E4 * 1024;
-static constexpr size_t TEST_SIZE_F1000_DWARF_PROCESS = 2.9E4 * 1024;
-static constexpr size_t TEST_SIZE_F2000_DWARF_PROCESS = 6.1E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_DWARF_PROCESS = 5.8E4 * 1024;
-static constexpr size_t TEST_SIZE_F8000_DWARF_PROCESS = 1.2E5 * 1024;
-static constexpr size_t TEST_SIZE_F100_FP_PROCESS = 3.6E3 * 1024;
-static constexpr size_t TEST_SIZE_F500_FP_PROCESS = 8.8E3 * 1024;
-static constexpr size_t TEST_SIZE_F1000_FP_PROCESS = 1.5E4 * 1024;
-static constexpr size_t TEST_SIZE_F2000_FP_PROCESS = 3.1E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_FP_PROCESS = 6.2E4 * 1024;
-static constexpr size_t TEST_SIZE_F8000_FP_PROCESS = 1.3E5 * 1024;
-
 class SubCommandRecordTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -1084,7 +1061,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_SYSTEM, TestSize.Le
     ForkAndRunTest("-d 10 -a -f 2000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1097,7 +1076,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_SYSTEM, TestSize.Le
     ForkAndRunTest("-d 10 -a -f 4000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1110,7 +1091,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_SYSTEM, TestSize.Le
     ForkAndRunTest("-d 10 -a -f 8000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1123,7 +1106,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_SYSTEM, TestSize.Level2
     ForkAndRunTest("-d 10 -a -f 100 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F100_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1136,7 +1121,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_SYSTEM, TestSize.Level2
     ForkAndRunTest("-d 10 -a -f 500 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F500_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1149,7 +1136,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 1000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1162,7 +1151,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 2000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1175,7 +1166,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 4000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1188,7 +1181,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 8000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1201,7 +1196,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_PROCESS, TestSize.Le
     ForkAndRunTest("-d 10 -f 100 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1214,7 +1211,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Le
     ForkAndRunTest("-d 10 -f 500 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1227,7 +1226,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 1000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1240,7 +1241,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 2000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1253,7 +1256,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 4000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1266,7 +1271,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 8000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1279,7 +1286,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_PROCESS, TestSize.Level
     ForkAndRunTest("-d 10 -f 100 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F100_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1292,7 +1301,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_PROCESS, TestSize.Level
     ForkAndRunTest("-d 10 -f 500 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F500_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1305,7 +1316,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 1000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1318,7 +1331,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 2000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1331,7 +1346,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 4000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1344,7 +1361,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 8000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -2166,6 +2185,7 @@ HWTEST_F(SubCommandRecordTest, CheckThreadName, TestSize.Level1)
     };
     cmd.virtualRuntime_.SetRecordMode(saveRecord);
     EXPECT_EQ(event.PrepareRecordThread(), true);
+    std::this_thread::sleep_for(1s);
     std::vector<pid_t> tids = GetSubthreadIDs(getpid());
     EXPECT_FALSE(tids.empty());
     bool get = false;

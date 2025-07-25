@@ -397,8 +397,8 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
     } else {
         size_t stackOffset = addr - unwindInfoPtr->callStack.stackPoint_;
         *val = *(uintptr_t *)&unwindInfoPtr->callStack.stack_[stackOffset];
-        HLOGM("access_mem addr %p val %" UNW_WORD_PFLAG ", from stack offset %zu",
-              reinterpret_cast<void *>(addr), *val, stackOffset);
+        HLOGM("access_mem addr val %" UNW_WORD_PFLAG ", from stack offset %zu",
+              *val, stackOffset);
     }
 
     return 0;

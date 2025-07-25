@@ -986,7 +986,7 @@ public:
             HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
             return false;
         }
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        HLOGD("map name:%s", map->name.c_str());
         if (debugInfoLoaded_) {
             return true;
         }
@@ -1006,7 +1006,7 @@ public:
             HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
             return false;
         }
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        HLOGD("map name:%s", map->name.c_str());
         CHECK_TRUE(!symbolsLoaded_ && onRecording_, true, 0, "");
         symbolsLoaded_ = true;
         if (!IsHapAbc() && map_->IsMapExec()) {
@@ -1025,7 +1025,7 @@ public:
         if (map == nullptr) {
             return DfxSymbol(ip, "");
         }
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        HLOGD("map name:%s", map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
         if (IsAbc() && needParseJsFunc_) {
@@ -1125,7 +1125,7 @@ public:
             HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
             return false;
         }
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        HLOGD("map name:%s", map->name.c_str());
         if (debugInfoLoaded_) {
             return true;
         }
@@ -1142,7 +1142,7 @@ public:
             HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
             return false;
         }
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        HLOGD("map name:%s", map->name.c_str());
         CHECK_TRUE(!symbolsLoaded_ && onRecording_, true, 0, "");
         symbolsLoaded_ = true;
         return true;
@@ -1158,7 +1158,7 @@ public:
         if (map == nullptr) {
             return DfxSymbol(ip, "");
         }
-        HLOGD("map ptr:%p, map name:%s", map.get(), map->name.c_str());
+        HLOGD("map name:%s", map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
         if (IsV8() && needParseJsFunc_) {
