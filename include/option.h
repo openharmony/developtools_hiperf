@@ -63,7 +63,7 @@ Return true, indicating that the parameter is legal (but the user does not neces
 parameter)
 */
 template<class T>
-bool GetOptionValue(argsVector &args, std::string optionName, T &value)
+bool GetOptionValue(argsVector &args, const std::string optionName, T &value)
 {
     // we need keep the ref if we got failed
     // so we use a local value first.

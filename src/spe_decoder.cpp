@@ -49,13 +49,13 @@ const std::string SpePktName(enum SpePktType type)
     return spePacketName;
 }
 
-static unsigned int SpePayloadLen(unsigned char hdr)
+static unsigned int SpePayloadLen(const unsigned char hdr)
 {
     return 1U << PERF_SPE_HDR_GET_BYTES_5_4(hdr);
 }
 
-static int SpeGetPayload(const unsigned char *buf, size_t len,
-                         unsigned char extHdr, struct SpePkt *packet)
+static int SpeGetPayload(const unsigned char *buf, const size_t len,
+                         const unsigned char extHdr, struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
     size_t payloadLen = SpePayloadLen(buf[extHdr]);
@@ -82,7 +82,7 @@ static int SpeGetPad(struct SpePkt *packet)
     return 1;
 }
 
-static int SpeGetAlignment(const unsigned char *buf, size_t len,
+static int SpeGetAlignment(const unsigned char *buf, const size_t len,
                            struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -102,7 +102,7 @@ static int SpeGetEnd(struct SpePkt *packet)
     return 1;
 }
 
-static int SpeGetTimestamp(const unsigned char *buf, size_t len,
+static int SpeGetTimestamp(const unsigned char *buf, const size_t len,
                            struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -110,7 +110,7 @@ static int SpeGetTimestamp(const unsigned char *buf, size_t len,
     return SpeGetPayload(buf, len, 0, packet);
 }
 
-static int SpeGetEvents(const unsigned char *buf, size_t len,
+static int SpeGetEvents(const unsigned char *buf, const size_t len,
                         struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -119,7 +119,7 @@ static int SpeGetEvents(const unsigned char *buf, size_t len,
     return SpeGetPayload(buf, len, 0, packet);
 }
 
-static int SpeGetDataSource(const unsigned char *buf, size_t len,
+static int SpeGetDataSource(const unsigned char *buf, const size_t len,
                             struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -127,7 +127,7 @@ static int SpeGetDataSource(const unsigned char *buf, size_t len,
     return SpeGetPayload(buf, len, 0, packet);
 }
 
-static int SpeGetContext(const unsigned char *buf, size_t len,
+static int SpeGetContext(const unsigned char *buf, const size_t len,
                          struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -136,7 +136,7 @@ static int SpeGetContext(const unsigned char *buf, size_t len,
     return SpeGetPayload(buf, len, 0, packet);
 }
 
-static int SpeGetOpType(const unsigned char *buf, size_t len,
+static int SpeGetOpType(const unsigned char *buf, const size_t len,
                         struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -145,7 +145,7 @@ static int SpeGetOpType(const unsigned char *buf, size_t len,
     return SpeGetPayload(buf, len, 0, packet);
 }
 
-static int SpeGetCounter(const unsigned char *buf, size_t len,
+static int SpeGetCounter(const unsigned char *buf, const size_t len,
                          const unsigned char extHdr, struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -159,7 +159,7 @@ static int SpeGetCounter(const unsigned char *buf, size_t len,
     return SpeGetPayload(buf, len, extHdr, packet);
 }
 
-static int SpeGetAddr(const unsigned char *buf, size_t len,
+static int SpeGetAddr(const unsigned char *buf, const size_t len,
                       const unsigned char extHdr, struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -173,7 +173,7 @@ static int SpeGetAddr(const unsigned char *buf, size_t len,
     return SpeGetPayload(buf, len, extHdr, packet);
 }
 
-static int SpeDoGetPacket(const unsigned char *buf, size_t len,
+static int SpeDoGetPacket(const unsigned char *buf, const size_t len,
                           struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -235,7 +235,7 @@ static int SpeDoGetPacket(const unsigned char *buf, size_t len,
     return PERF_SPE_BAD_PACKET;
 }
 
-int SpeGetPacket(const unsigned char *buf, size_t len,
+int SpeGetPacket(const unsigned char *buf, const size_t len,
                  struct SpePkt *packet)
 {
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
@@ -574,7 +574,7 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
     return err;
 }
 
-static u64 SpeCalcIp(int index, u64 payload)
+static u64 SpeCalcIp(const int index, u64 payload)
 {
     u64 ns;
     u64 el;
@@ -802,7 +802,7 @@ int SpeDecode(struct SpeDecoder *decoder)
     return SpeReadRecord(decoder);
 }
 
-struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
+struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, const size_t speLen)
 {
     CHECK_TRUE(speBuf != nullptr, nullptr, 1, "Invalid pointer!");
     struct SpeDecoder *decoder;
@@ -823,7 +823,7 @@ struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen)
     return decoder;
 }
 
-bool SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump)
+bool SpeDumpRawData(unsigned char *buf, size_t len, const int indent, FILE *outputDump)
 {
     CHECK_TRUE(buf != nullptr, false, 1, "Invalid pointer!");
     if (outputDump != nullptr) {
@@ -931,7 +931,7 @@ void UpdateHeating()
     }
 }
 
-void GetSpeEventNameByType(uint32_t type, std::string& eventName)
+void GetSpeEventNameByType(const uint32_t type, std::string& eventName)
 {
     switch (type) {
         case PERF_SPE_L1D_ACCESS:
@@ -970,7 +970,7 @@ void GetSpeEventNameByType(uint32_t type, std::string& eventName)
         }
 }
 
-void DumpSpeReportHead(int indent, uint32_t type, uint64_t count)
+void DumpSpeReportHead(const int indent, const uint32_t type, const uint64_t count)
 {
     std::string eventName = "";
     GetSpeEventNameByType(type, eventName);
@@ -995,7 +995,7 @@ void DumpSpeReportHead(int indent, uint32_t type, uint64_t count)
     return;
 }
 
-void DumpSpeReportData(int indent, FILE *outputDump)
+void DumpSpeReportData(const int indent, FILE *outputDump)
 {
     if (outputDump != nullptr) {
         g_outputDump = outputDump;

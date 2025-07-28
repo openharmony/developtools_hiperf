@@ -40,7 +40,7 @@ namespace {
 const uint64_t BAD_IP_ADDRESS = 2;
 }
 // we unable to access 'swapper' from /proc/0/
-VirtualRuntime::VirtualRuntime(bool onDevice)
+VirtualRuntime::VirtualRuntime(const bool onDevice)
 {
     UpdateThread(0, 0, "swapper");
 }
@@ -52,7 +52,7 @@ VirtualRuntime::~VirtualRuntime()
     }
 }
 
-std::string VirtualRuntime::ReadFromSavedCmdLines(pid_t tid)
+std::string VirtualRuntime::ReadFromSavedCmdLines(const pid_t tid)
 {
     if (!savedCmdLines_.is_open()) {
         savedCmdLines_.open(SAVED_CMDLINES, std::ios::in);
@@ -79,7 +79,7 @@ std::string VirtualRuntime::ReadFromSavedCmdLines(pid_t tid)
     return EMPTY_STRING;
 }
 
-std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
+std::string VirtualRuntime::ReadThreadName(const pid_t tid, const bool isThread)
 {
     std::string comm = "";
     if (tid == SYSMGR_PID) {
@@ -99,7 +99,7 @@ std::string VirtualRuntime::ReadThreadName(pid_t tid, bool isThread)
     return comm;
 }
 
-VirtualThread &VirtualRuntime::UpdateThread(pid_t pid, pid_t tid, const std::string name)
+VirtualThread &VirtualRuntime::UpdateThread(const pid_t pid, const pid_t tid, const std::string name)
 {
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
@@ -114,7 +114,7 @@ VirtualThread &VirtualRuntime::UpdateThread(pid_t pid, pid_t tid, const std::str
     return thread;
 }
 
-VirtualThread &VirtualRuntime::CreateThread(pid_t pid, pid_t tid, const std::string name)
+VirtualThread &VirtualRuntime::CreateThread(const pid_t pid, const pid_t tid, const std::string name)
 {
     // make a new one
     if (pid == tid) {
@@ -207,7 +207,7 @@ bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
     return true;
 }
 
-VirtualThread &VirtualRuntime::GetThread(pid_t pid, pid_t tid, const std::string name)
+VirtualThread &VirtualRuntime::GetThread(const pid_t pid, const pid_t tid, const std::string name)
 {
     if (userSpaceThreadMap_.find(pid) == userSpaceThreadMap_.end()) {
         // no pid found
@@ -224,8 +224,9 @@ VirtualThread &VirtualRuntime::GetThread(pid_t pid, pid_t tid, const std::string
     }
 }
 
-std::shared_ptr<DfxMap> VirtualRuntime::UpdateThreadMaps(pid_t pid, pid_t tid, const std::string filename,
-                                                         uint64_t begin, uint64_t len, uint64_t offset, uint32_t prot)
+std::shared_ptr<DfxMap> VirtualRuntime::UpdateThreadMaps(const pid_t pid, const pid_t tid, const std::string filename,
+                                                         const uint64_t begin, const uint64_t len,
+                                                         const uint64_t offset, const uint32_t prot)
 {
     VirtualThread &thread = GetThread(pid, tid);
     std::shared_ptr<DfxMap> map = thread.CreateMapItem(filename, begin, len, offset, prot);
@@ -346,8 +347,8 @@ void VirtualRuntime::UpdateKernelSymbols()
     }
 }
 
-void VirtualRuntime::UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offset,
-                                     std::string filename)
+void VirtualRuntime::UpdatekernelMap(const uint64_t begin, const uint64_t end, const uint64_t offset,
+                                     const std::string &filename)
 {
     HLOGV("update kernel map name:'%s' 0x%" PRIx64 " - 0x%" PRIx64 "@0x%08" PRIx64 "",
           filename.c_str(), begin, end, offset);
@@ -492,8 +493,8 @@ void VirtualRuntime::MakeCallFrame(DfxSymbol &symbol, DfxFrame &callFrame)
     HLOG_ASSERT_MESSAGE(!callFrame.funcName.empty(), "%s", symbol.ToDebugString().c_str());
 }
 
-void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
-                                       pid_t serverPid, perf_callchain_context context)
+void VirtualRuntime::SymbolicCallFrame(PerfRecordSample &recordSample, const uint64_t ip,
+                                       const pid_t serverPid, const perf_callchain_context context)
 {
     pid_t pid = static_cast<pid_t>(recordSample.data_.pid);
     pid_t tid = static_cast<pid_t>(recordSample.data_.tid);
@@ -678,7 +679,7 @@ void VirtualRuntime::UnwindFromRecord(PerfRecordSample &recordSample)
     }
 }
 
-void VirtualRuntime::SetCollectSymbolCallBack(CollectSymbolCallBack collectSymbolCallBack)
+void VirtualRuntime::SetCollectSymbolCallBack(const CollectSymbolCallBack &collectSymbolCallBack)
 {
     collectSymbolCallBack_ = collectSymbolCallBack;
 }
@@ -905,12 +906,12 @@ void VirtualRuntime::SymbolSpeRecord(PerfRecordAuxtrace &recordAuxTrace)
 #endif
 }
 
-void VirtualRuntime::SetRecordMode(RecordCallBack recordCallBack)
+void VirtualRuntime::SetRecordMode(const RecordCallBack &recordCallBack)
 {
     recordCallBack_ = recordCallBack;
 }
 
-void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
+void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, const pid_t pid)
 {
     CHECK_TRUE(map != nullptr && map->symbolFileIndex == -1, NO_RETVAL, 0, "");
     HLOGD("try to find symbols for file: %s", map->name.c_str());
@@ -967,7 +968,7 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
 #endif
 }
 
-const DfxSymbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<DfxMap> &memMaps,
+const DfxSymbol VirtualRuntime::GetKernelSymbol(const uint64_t ip, const std::vector<DfxMap> &memMaps,
                                                 const VirtualThread &thread)
 {
     DfxSymbol vaddrSymbol(ip, thread.name_);
@@ -1013,7 +1014,7 @@ const DfxSymbol VirtualRuntime::GetKernelSymbol(uint64_t ip, const std::vector<D
     return vaddrSymbol;
 }
 
-const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const VirtualThread &thread)
+const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(const uint64_t ip, const VirtualThread &thread)
 {
     DfxSymbol vaddrSymbol(ip, thread.name_);
     int64_t mapIndex = thread.FindMapIndexByAddr(ip);
@@ -1057,7 +1058,7 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
     return vaddrSymbol;
 }
 
-const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &thread)
+const DfxSymbol VirtualRuntime::GetUserSymbol(const uint64_t ip, const VirtualThread &thread)
 {
     DfxSymbol vaddrSymbol(ip, thread.name_);
     int64_t mapIndex = thread.FindMapIndexByAddr(ip);
@@ -1104,7 +1105,7 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(uint64_t ip, const VirtualThread &
     return vaddrSymbol;
 }
 
-bool VirtualRuntime::GetSymbolCache(uint64_t fileVaddr, DfxSymbol &symbol,
+bool VirtualRuntime::GetSymbolCache(const uint64_t fileVaddr, DfxSymbol &symbol,
                                     const perf_callchain_context &context)
 {
     if (context == PERF_CONTEXT_MAX && kThreadSymbolCache_.count(fileVaddr)) {
@@ -1137,7 +1138,8 @@ bool VirtualRuntime::GetSymbolCache(uint64_t fileVaddr, DfxSymbol &symbol,
     return false;
 }
 
-DfxSymbol VirtualRuntime::GetSymbol(uint64_t ip, pid_t pid, pid_t tid, const perf_callchain_context &context)
+DfxSymbol VirtualRuntime::GetSymbol(const uint64_t ip, const pid_t pid, const pid_t tid,
+                                    const perf_callchain_context &context)
 {
     HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles\n", tid, ip, symbolsFiles_.size());
     DfxSymbol symbol;
@@ -1323,8 +1325,8 @@ void VirtualRuntime::UpdateServiceSymbols()
     }
 }
 
-void VirtualRuntime::UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, uint64_t offset,
-                                           std::string filename)
+void VirtualRuntime::UpdateKernelThreadMap(const pid_t pid, const uint64_t begin, const uint64_t len,
+                                           const uint64_t offset, const std::string &filename)
 {
     HLOGV("update kernel thread map pid %u offset 0x%" PRIx64 " name:'%s'", pid, offset, filename.c_str());
 
@@ -1393,7 +1395,7 @@ void VirtualRuntime::UpdateDevhostSymbols()
     }
 }
 
-void VirtualRuntime::FixHMBundleMmap(char *filename, int pid, u16 &headerSize)
+void VirtualRuntime::FixHMBundleMmap(char *filename, const int pid, u16 &headerSize)
 {
     if (!isHM_) {
         return;
@@ -1413,13 +1415,13 @@ void VirtualRuntime::FixHMBundleMmap(char *filename, int pid, u16 &headerSize)
     }
 }
 
-void VirtualRuntime::SetDevhostPid(pid_t devhost)
+void VirtualRuntime::SetDevhostPid(const pid_t devhost)
 {
     HLOGD("Set devhost pid: %d", devhost);
     devhostPid_ = devhost;
 }
 
-bool VirtualRuntime::IsKernelThread(pid_t pid)
+bool VirtualRuntime::IsKernelThread(const pid_t pid)
 {
     if (!isHM_) {
         return false;

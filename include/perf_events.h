@@ -348,9 +348,9 @@ public:
     PerfEvents();
     ~PerfEvents();
 
-    bool AddEvents(const std::vector<std::string> &eventStrings, bool group = false);
+    bool AddEvents(const std::vector<std::string> &eventStrings, const bool group = false);
     bool PrepareTracking(void);
-    bool StartTracking(bool immediately = true);
+    bool StartTracking(const bool immediately = true);
     bool StopTracking(void);
     bool PauseTracking(void);
     bool ResumeTracking(void);
@@ -364,14 +364,14 @@ public:
     bool EnableTracking();
     bool IsTrackRunning();
     bool IsOutputTracking();
-    void SetOutputTrackingStatus(bool status);
+    void SetOutputTrackingStatus(const bool status);
 
-    void SetSystemTarget(bool systemTarget);
+    void SetSystemTarget(const bool systemTarget);
     void SetCpu(const std::vector<pid_t> cpus); // cpu id must be [0~N]
     void SetPid(const std::vector<pid_t> pids); // tis is same as pid in kernel
-    void SetTimeOut(float timeOut);
+    void SetTimeOut(const float timeOut);
     void SetTimeReport(int);
-    void SetVerboseReport(bool);
+    void SetVerboseReport(const bool);
     bool AddOffCpuEvent();
 
     inline void SetTrackedCommand(const std::vector<std::string> &trackedCommand)
@@ -381,41 +381,41 @@ public:
         }
     }
 
-    void SetSampleFrequency(unsigned int frequency);
-    void SetSamplePeriod(unsigned int period);
+    void SetSampleFrequency(const unsigned int frequency);
+    void SetSamplePeriod(const unsigned int period);
 
     // for background track
-    void SetBackTrack(bool backtrack);
-    void SetBackTrackTime(uint64_t backtrackTime);
+    void SetBackTrack(const bool backtrack);
+    void SetBackTrackTime(const uint64_t backtrackTime);
 
     enum SampleStackType {
         NONE,
         FP,
         DWARF,
     };
-    void SetSampleStackType(SampleStackType type);
-    void SetDwarfSampleStackSize(uint32_t stackSize);
-    void SetMmapPages(size_t mmapPages);
+    void SetSampleStackType(const SampleStackType type);
+    void SetDwarfSampleStackSize(const uint32_t stackSize);
+    void SetMmapPages(const size_t mmapPages);
     std::vector<AttrWithId> GetAttrWithId() const;
 
-    void SetInherit(bool inherit)
+    void SetInherit(const bool inherit)
     {
         inherit_ = inherit;
     };
-    void SetClockId(int clockId)
+    void SetClockId(const int clockId)
     {
         clockId_ = clockId;
     };
-    void SetPerCpu(bool perCpu);
-    void SetPerThread(bool perThread);
-    bool SetBranchSampleType(uint64_t value);
-    bool AddDefaultEvent(perf_type_id type);
+    void SetPerCpu(const bool perCpu);
+    void SetPerThread(const bool perThread);
+    bool SetBranchSampleType(const uint64_t value);
+    bool AddDefaultEvent(const perf_type_id type);
 
-    std::map<__u64, std::string> GetSupportEvents(perf_type_id type);
+    std::map<__u64, std::string> GetSupportEvents(const perf_type_id type);
 
     struct Summary {
-        int cpu;
-        pid_t tid;
+        int cpu = 0;
+        pid_t tid = 0;
         __u64 eventCount = 0;
         __u64 timeEnabled = 0;
         __u64 timeRunning = 0;
@@ -427,9 +427,9 @@ public:
     };
 
     struct ReportSum {
-        int cpu;
-        pid_t pid;
-        pid_t tid;
+        int cpu = 0;
+        pid_t pid = 0;
+        pid_t tid = 0;
         double scaleSum = 1.0;
         double commentSum = 0;
         __u64 eventCountSum = 0;
@@ -452,8 +452,8 @@ public:
         std::function<void(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &, FILE*)>;
     using RecordCallBack = std::function<bool(PerfEventRecord&)>;
 
-    void SetStatCallBack(StatCallBack reportCallBack);
-    void SetRecordCallBack(RecordCallBack recordCallBack);
+    void SetStatCallBack(const StatCallBack reportCallBack);
+    void SetRecordCallBack(const RecordCallBack recordCallBack);
     void SetStatReportFd(FILE* reportPtr);
     void GetLostSamples(size_t &lostSamples, size_t &lostNonSamples)
     {
@@ -462,7 +462,7 @@ public:
     }
 
     // review: remove this function.
-    static const std::string GetStaticConfigName(perf_type_id type_id, __u64 config_id)
+    static const std::string GetStaticConfigName(const perf_type_id type_id, __u64 const config_id)
     {
         auto typeConfigs = TYPE_CONFIGS.find(type_id);
         if (typeConfigs != TYPE_CONFIGS.end()) {
@@ -497,7 +497,7 @@ public:
         return std::make_tuple(false, PERF_TYPE_MAX, 0);
     };
 
-    const std::string GetTraceConfigName(__u64 config_id)
+    const std::string GetTraceConfigName(const __u64 config_id)
     {
         auto config = traceConfigTable.find(config_id);
         if (config != traceConfigTable.end()) {
@@ -508,13 +508,13 @@ public:
         return "<not found>";
     };
 
-    static const std::string GetTypeName(perf_type_id type_id);
+    static const std::string GetTypeName(const perf_type_id type_id);
     bool ParseEventName(const std::string &nameStr, std::string &name, bool &excludeUser,
                         bool &excludeKernel, bool &isTracePoint);
 
     // mmap one fd for each cpu
     struct MmapFd {
-        int fd;
+        int fd = -1;
         perf_event_mmap_page *mmapPage = nullptr;
         uint8_t *buf = nullptr;
         size_t bufSize = 0;
@@ -533,7 +533,7 @@ public:
     bool isHM_ = false;
     bool isSpe_ = false;
 
-    void SetHM(bool isHM);
+    void SetHM(const bool isHM);
     void SetConfig(std::map<const std::string, uint64_t> &speOptMaps);
 private:
     size_t recordEventCount_ = 0; // only for debug time
@@ -556,10 +556,10 @@ private:
     bool isLowPriorityThread_ = false;
     void RecordLoop();
     void StatLoop();
-    bool IsRecordInMmap(int timeout);
+    bool IsRecordInMmap(const int timeout);
     void ReadRecordsFromMmaps();
-    void ReadRecordsFromSpeMmaps(MmapFd& mmapFd, u64 auxOffset, u64 auxSize, u32 pid, u32 tid);
-    void SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, u32 size);
+    void ReadRecordsFromSpeMmaps(MmapFd& mmapFd, const u64 auxOffset, u64 auxSize, const u32 pid, const u32 tid);
+    void SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, const u32 size);
     bool GetRecordFromMmap(MmapFd &mmap);
     void GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size);
     void MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxOffset, u64 &auxSize, u32 &pid, u32 &tid);
@@ -611,10 +611,10 @@ private:
 
     struct FdItem {
         OHOS::UniqueFd fd;
-        int cpu;
-        pid_t pid;
-        pid_t tid;
-        __u64 eventCount;
+        int cpu = 0;
+        pid_t pid = 0;
+        pid_t tid = 0;
+        __u64 eventCount = 0;
         mutable uint64_t perfId = 0;
         uint64_t GetPrefId() const
         {
@@ -670,12 +670,12 @@ private:
     RecordCallBack recordCallBack_;
 
     void LoadTracepointEventTypesFromSystem();
-    bool PerfEventsEnable(bool);
-    bool AddEvent(perf_type_id type, __u64 config, bool excludeUser = false,
-                  bool excludeKernel = false, bool followGroup = false);
-    bool AddEvent(const std::string &eventString, bool followGroup = false);
-    bool AddSpeEvent(u32 type, bool followGroup = false);
-    bool IsEventSupport(perf_type_id type, __u64 config);
+    bool PerfEventsEnable(const bool);
+    bool AddEvent(const perf_type_id type, const __u64 config, const bool excludeUser = false,
+                  const bool excludeKernel = false, const bool followGroup = false);
+    bool AddEvent(const std::string &eventString, const bool followGroup = false);
+    bool AddSpeEvent(const u32 type, const bool followGroup = false);
+    bool IsEventSupport(const perf_type_id type, __u64 const config);
     bool IsEventAttrSupport(perf_event_attr &attr);
 
     std::chrono::time_point<std::chrono::steady_clock> trackingStartTime_;
@@ -698,9 +698,9 @@ private:
         return &(eventGroupItem_.at(0).eventItems.at(0).attr);
     };
 
-    OHOS::UniqueFd Open(perf_event_attr &attr, pid_t pid = 0, int cpu = -1, int groupFd = -1,
-                        unsigned long flags = 0);
-    std::unique_ptr<perf_event_attr> CreateDefaultAttr(perf_type_id type, __u64 config);
+    OHOS::UniqueFd Open(perf_event_attr &attr, const pid_t pid = 0, const int cpu = -1, const int groupFd = -1,
+                        const unsigned long flags = 0);
+    std::unique_ptr<perf_event_attr> CreateDefaultAttr(const perf_type_id type, const __u64 config);
 
     // for update time thread
     static bool updateTimeThreadRunning_;

@@ -39,7 +39,7 @@ namespace Developtools {
 namespace HiPerf {
 using namespace OHOS::HiviewDFX;
 
-bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, ADDR_TYPE vaddr, ADDR_TYPE *data)
+bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, const ADDR_TYPE vaddr, ADDR_TYPE *data)
 {
     if (__builtin_expect(unwindInfoPtr.thread.pid_ == unwindInfoPtr.callStack.lastPid_ &&
         vaddr == unwindInfoPtr.callStack.lastAddr_, true)) {
@@ -59,7 +59,7 @@ bool CallStack::ReadVirtualThreadMemory(UnwindInfo &unwindInfoPtr, ADDR_TYPE vad
     }
 }
 
-bool CallStack::GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, size_t regNum) const
+bool CallStack::GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, const size_t regNum) const
 {
     if (regNum > 0) {
         CHECK_TRUE(RegisterGetSPValue(sp, arch_, regs, regNum), false, 1, "unable get sp");
@@ -74,9 +74,9 @@ bool CallStack::GetIpSP(uint64_t &ip, uint64_t &sp, const u64 *regs, size_t regN
     return false;
 }
 
-bool CallStack::UnwindCallStack(const VirtualThread &thread, bool abi32, u64 *regs, u64 regsNum,
-                                const u8 *stack, u64 stackSize, std::vector<DfxFrame> &callStack,
-                                size_t maxStackLevel)
+bool CallStack::UnwindCallStack(const VirtualThread &thread, const bool abi32, u64 *regs, const u64 regsNum,
+                                const u8 *stack, const u64 stackSize, std::vector<DfxFrame> &callStack,
+                                const size_t maxStackLevel)
 {
     regs_ = regs;
     regsNum_ = regsNum;
@@ -141,7 +141,7 @@ use expandLimit to setup how may frame match is needs
 */
 size_t CallStack::DoExpandCallStack(std::vector<DfxFrame> &newCallFrames,
                                     const std::vector<DfxFrame> &cachedCallFrames,
-                                    size_t expandLimit)
+                                    const size_t expandLimit)
 {
     int maxCycle = 0;
 
@@ -206,7 +206,7 @@ size_t CallStack::DoExpandCallStack(std::vector<DfxFrame> &newCallFrames,
     return 0u; // nothing expand
 }
 
-size_t CallStack::ExpandCallStack(pid_t tid, std::vector<DfxFrame> &callFrames, size_t expandLimit)
+size_t CallStack::ExpandCallStack(const pid_t tid, std::vector<DfxFrame> &callFrames, const size_t expandLimit)
 {
     size_t expand = 0u;
     if (expandLimit == 0) {
@@ -257,7 +257,7 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<DfxFrame> &callFrames, 
 
 #if defined(HAVE_LIBUNWINDER) && HAVE_LIBUNWINDER
 bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &callStack,
-                          size_t maxStackLevel)
+                          const size_t maxStackLevel)
 {
 #ifdef target_cpu_x86_64
     return false;
@@ -314,7 +314,7 @@ void CallStack::DumpTableInfo(UnwindTableInfo &outTableInfo)
 }
 
 int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap> map, UnwindInfo *unwindInfoPtr,
-                               uintptr_t pc, UnwindTableInfo& outTableInfo)
+                               const uintptr_t pc, UnwindTableInfo& outTableInfo)
 {
     HLOGM("try search debug info at %s", symbolsFile->filePath_.c_str());
     CHECK_TRUE(unwindInfoPtr != nullptr, -1, 0, "");
@@ -348,7 +348,7 @@ int CallStack::FillUnwindTable(SymbolsFile *symbolsFile, std::shared_ptr<DfxMap>
     return -1;
 }
 
-int CallStack::FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void *arg)
+int CallStack::FindUnwindTable(const uintptr_t pc, UnwindTableInfo& outTableInfo, void *arg)
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
     CHECK_TRUE(unwindInfoPtr != nullptr, -1, 0, "");
@@ -373,7 +373,7 @@ int CallStack::FindUnwindTable(uintptr_t pc, UnwindTableInfo& outTableInfo, void
     return -1;
 }
 
-int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
+int CallStack::AccessMem2(const uintptr_t addr, uintptr_t *val, void *arg)
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
     *val = 0;
@@ -403,7 +403,7 @@ int CallStack::AccessMem2(uintptr_t addr, uintptr_t *val, void *arg)
 
     return 0;
 }
-int CallStack::GetMapByPc(uintptr_t pc, std::shared_ptr<DfxMap>& map, void *arg)
+int CallStack::GetMapByPc(const uintptr_t pc, std::shared_ptr<DfxMap>& map, void *arg)
 {
     UnwindInfo *unwindInfoPtr = static_cast<UnwindInfo *>(arg);
     int64_t mapIndex = unwindInfoPtr->thread.FindMapIndexByAddr(pc);

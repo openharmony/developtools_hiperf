@@ -59,7 +59,7 @@ std::string PerfFileSection::GetFeatureName(FEATURE featureId)
 }
 
 // for read
-void PerfFileSection::Init(const char *buffer, size_t maxSize)
+void PerfFileSection::Init(const char *buffer, const size_t maxSize)
 {
     rBuffer_ = buffer;
     maxSize_ = maxSize;
@@ -67,20 +67,20 @@ void PerfFileSection::Init(const char *buffer, size_t maxSize)
 }
 
 // for write
-void PerfFileSection::Init(char *buffer, size_t maxSize)
+void PerfFileSection::Init(char *buffer, const size_t maxSize)
 {
     wBuffer_ = buffer;
     maxSize_ = maxSize;
     offset_ = 0;
 }
 
-bool PerfFileSection::Write(uint32_t u32)
+bool PerfFileSection::Write(const uint32_t u32)
 {
     uint32_t value = u32;
     return Write((char *)&value, sizeof(uint32_t));
 }
 
-bool PerfFileSection::Write(uint64_t u64)
+bool PerfFileSection::Write(const uint64_t u64)
 {
     uint64_t value = u64;
     return Write((char *)&value, sizeof(uint64_t));
@@ -95,12 +95,12 @@ bool PerfFileSection::Write(const std::string &str)
     }
 }
 
-bool PerfFileSection::Write(const char *buf, size_t size)
+bool PerfFileSection::Write(const char *buf, const size_t size)
 {
     return Write(buf, size, size);
 }
 
-bool PerfFileSection::Write(const char *buf, size_t size, size_t max)
+bool PerfFileSection::Write(const char *buf, const size_t size, const size_t max)
 {
     CHECK_TRUE(offset_ + size <= maxSize_, false, 1,
                "write out of size!!! offset_ %zu size %zu max %zu", offset_, size, maxSize_);
@@ -156,12 +156,12 @@ bool PerfFileSection::Read(std::string &value)
     delete []buf;
     return true;
 }
-void PerfFileSection::Skip(size_t size)
+void PerfFileSection::Skip(const size_t size)
 {
     offset_ += size;
 }
 
-bool PerfFileSection::Read(char *buf, size_t size)
+bool PerfFileSection::Read(char *buf, const size_t size)
 {
     HLOG_ASSERT(buf != nullptr);
     if (size == 0) {
@@ -182,25 +182,25 @@ bool PerfFileSection::Read(char *buf, size_t size)
     return true;
 }
 
-uint32_t PerfFileSection::SizeOf(std::string &string)
+uint32_t PerfFileSection::SizeOf(const std::string &string)
 {
     return sizeof(uint32_t) + string.size() + 1; /* '\0' */
 }
 
-PerfFileSectionString::PerfFileSectionString(FEATURE id, const char *buf, size_t size)
+PerfFileSectionString::PerfFileSectionString(const FEATURE id, const char *buf, size_t size)
     : PerfFileSection(id)
 {
     Init(buf, size);
     CHECK_TRUE(Read(stdString_), NO_RETVAL, 0, ""); // or throw ...
 }
 
-PerfFileSectionString::PerfFileSectionString(FEATURE id, const std::string &charString)
+PerfFileSectionString::PerfFileSectionString(const FEATURE id, const std::string &charString)
     : PerfFileSection(id)
 {
     stdString_ = charString;
 }
 
-bool PerfFileSectionString::GetBinary(char *buf, size_t size)
+bool PerfFileSectionString::GetBinary(char *buf, const size_t size)
 {
     CHECK_TRUE(size >= GetSize(), false, 0, "");
 
@@ -289,7 +289,7 @@ void PerfFileSectionSymbolsFiles::ReadSymbolFileStructs()
     }
 }
 
-PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(FEATURE id, const char *buf, size_t size)
+PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(const FEATURE id, const char *buf, const size_t size)
     : PerfFileSection(id)
 {
     Init(buf, size);
@@ -297,7 +297,7 @@ PerfFileSectionSymbolsFiles::PerfFileSectionSymbolsFiles(FEATURE id, const char 
     HLOGV(" %zu SymbolFileStruct read.", symbolFileStructs_.size());
 }
 
-bool PerfFileSectionSymbolsFiles::GetBinary(char *buf, size_t size)
+bool PerfFileSectionSymbolsFiles::GetBinary(char *buf, const size_t size)
 {
     HLOGV("PerfFileSectionSymbolsFiles get buffer size %zu.", size);
     HLOG_ASSERT(size >= GetSize());
@@ -328,7 +328,7 @@ bool PerfFileSectionSymbolsFiles::GetBinary(char *buf, size_t size)
     return true;
 }
 
-PerfFileSectionUniStackTable::PerfFileSectionUniStackTable(FEATURE id, const char *buf, size_t size)
+PerfFileSectionUniStackTable::PerfFileSectionUniStackTable(const FEATURE id, const char *buf, const size_t size)
     : PerfFileSection(id)
 {
     uint32_t processTableCount;
@@ -354,7 +354,7 @@ PerfFileSectionUniStackTable::PerfFileSectionUniStackTable(FEATURE id, const cha
     }
 }
 
-bool PerfFileSectionUniStackTable::GetBinary(char *buf, size_t size)
+bool PerfFileSectionUniStackTable::GetBinary(char *buf, const size_t size)
 {
     HLOG_ASSERT(size >= GetSize());
     Init(buf, size);
@@ -394,20 +394,20 @@ size_t PerfFileSectionUniStackTable::GetSize()
     return size;
 }
 
-PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t size)
+PerfFileSectionNrCpus::PerfFileSectionNrCpus(const FEATURE id, const char *buf, const size_t size)
     : PerfFileSection(id)
 {
     Init(buf, size);
     CHECK_TRUE(Read(nrCpusAvailable_) && Read(nrCpusOnline_), NO_RETVAL, 0, "");
 }
 
-PerfFileSectionNrCpus::PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailable,
-                                             uint32_t nrCpusOnline)
+PerfFileSectionNrCpus::PerfFileSectionNrCpus(const FEATURE id, const uint32_t nrCpusAvailable,
+                                             const uint32_t nrCpusOnline)
     : PerfFileSection(id), nrCpusAvailable_(nrCpusAvailable), nrCpusOnline_(nrCpusOnline)
 {
 }
 
-bool PerfFileSectionNrCpus::GetBinary(char *buf, size_t size)
+bool PerfFileSectionNrCpus::GetBinary(char *buf, const size_t size)
 {
     CHECK_TRUE(size >= GetSize(), false, 0, "");
 
@@ -428,14 +428,14 @@ void PerfFileSectionNrCpus::GetValue(uint32_t &nrCpusAvailable, uint32_t &nrCpus
     nrCpusOnline = nrCpusOnline_;
 }
 
-PerfFileSectionU64::PerfFileSectionU64(FEATURE id, const char *buf, size_t size)
+PerfFileSectionU64::PerfFileSectionU64(FEATURE id, const char *buf, const size_t size)
     : PerfFileSection(id)
 {
     Init(buf, size);
     CHECK_TRUE(Read(value_), NO_RETVAL, 0, "");
 }
 
-PerfFileSectionU64::PerfFileSectionU64(FEATURE id, uint64_t v) : PerfFileSection(id)
+PerfFileSectionU64::PerfFileSectionU64(const FEATURE id, const uint64_t v) : PerfFileSection(id)
 {
     value_ = v;
 }
@@ -466,7 +466,7 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id,
     eventDesces_ = eventDesces;
 }
 
-PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, size_t size)
+PerfFileSectionEventDesc::PerfFileSectionEventDesc(const FEATURE id, const char *buf, const size_t size)
     : PerfFileSection(id)
 {
     constexpr uint32_t maxIds = 600;
@@ -512,7 +512,7 @@ PerfFileSectionEventDesc::PerfFileSectionEventDesc(FEATURE id, const char *buf, 
     HLOGV("read complete. %zu events", eventDesces_.size());
 }
 
-bool PerfFileSectionEventDesc::GetBinary(char *buf, size_t size)
+bool PerfFileSectionEventDesc::GetBinary(char *buf, const size_t size)
 {
     CHECK_TRUE(size >= GetSize(), false, 0, "");
     Init(buf, size);

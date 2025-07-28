@@ -270,7 +270,7 @@ void SubCommandDump::PrintHeaderInfo(const int &indent)
                  *(reinterpret_cast<const uint64_t *>(&header.features[24])));
 }
 
-void SubCommandDump::DumpPrintFileHeader(int indent)
+void SubCommandDump::DumpPrintFileHeader(const int indent)
 {
     // print header
     PrintHeaderInfo(indent);
@@ -324,7 +324,7 @@ static std::map<int, std::string> g_sampleTypeNames = {
     {PERF_SAMPLE_SERVER_PID, "server_pid"},
 };
 
-void SubCommandDump::DumpSampleType(uint64_t sampleType, int indent)
+void SubCommandDump::DumpSampleType(const uint64_t sampleType, const int indent)
 {
     std::string names;
     for (auto &pair : g_sampleTypeNames) {
@@ -338,7 +338,7 @@ void SubCommandDump::DumpSampleType(uint64_t sampleType, int indent)
     PRINT_INDENT(indent + 1, "sample_type names: %s\n", names.c_str());
 }
 
-void SubCommandDump::DumpPrintEventAttr(const perf_event_attr &attr, int indent)
+void SubCommandDump::DumpPrintEventAttr(const perf_event_attr &attr, const int indent)
 {
     PRINT_INDENT(indent, "event_attr: \n");
 
@@ -379,7 +379,7 @@ void SubCommandDump::DumpPrintEventAttr(const perf_event_attr &attr, int indent)
     PRINT_INDENT(indent + 1, "sample_stack_user 0x%x\n", attr.sample_stack_user);
 }
 
-void SubCommandDump::DumpAttrPortion(int indent)
+void SubCommandDump::DumpAttrPortion(const int indent)
 {
     attrIds_ = reader_->GetAttrSection();
     for (size_t i = 0; i < attrIds_.size(); ++i) {
@@ -457,7 +457,7 @@ void SubCommandDump::DumpCallChain(int indent, const PerfRecordSample& sample)
     }
 }
 
-void SubCommandDump::DumpDataPortion(int indent)
+void SubCommandDump::DumpDataPortion(const int indent)
 {
     int recordCount = 0;
     auto recordcCallback = [&](PerfEventRecord& record) {
@@ -505,7 +505,7 @@ void SubCommandDump::PrintSymbolFile(const int &indent, const SymbolFileStruct &
     }
 }
 
-void SubCommandDump::PrintFeatureEventdesc(int indent,
+void SubCommandDump::PrintFeatureEventdesc(const int indent,
                                            const PerfFileSectionEventDesc &sectionEventdesc)
 {
     PRINT_INDENT(indent + INDENT_TWO, "Event descriptions: %zu\n", sectionEventdesc.eventDesces_.size());
@@ -519,7 +519,7 @@ void SubCommandDump::PrintFeatureEventdesc(int indent,
     PRINT_INDENT(indent + INDENT_TWO, "\n");
 }
 
-void SubCommandDump::DumpFeaturePortion(int indent)
+void SubCommandDump::DumpFeaturePortion(const int indent)
 {
     PRINT_INDENT(indent, "\n ==== features ====\n");
     auto features = reader_->GetFeatures();
@@ -579,7 +579,7 @@ void SubCommandDump::DumpFeaturePortion(int indent)
     }
 }
 
-void SubCommandDump::DumpUniqueStackTableNode(int indent, const PerfFileSectionUniStackTable &uniStackTable)
+void SubCommandDump::DumpUniqueStackTableNode(const int indent, const PerfFileSectionUniStackTable &uniStackTable)
 {
     int tableid = 0;
     PRINT_INDENT(indent + 1, "TableNums: %zu\n\n", uniStackTable.uniStackTableInfos_.size());

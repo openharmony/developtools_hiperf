@@ -56,7 +56,7 @@ const std::string SymbolsFile::GetBuildId() const
     return buildId_;
 }
 
-bool SymbolsFile::UpdateBuildIdIfMatch(std::string buildId)
+bool SymbolsFile::UpdateBuildIdIfMatch(const std::string &buildId)
 {
     /*
         here we have two case
@@ -173,7 +173,7 @@ public:
     {
     }
 
-    DfxSymbol GetSymbolWithPcAndMap(uint64_t pc, std::shared_ptr<DfxMap> map) override
+    DfxSymbol GetSymbolWithPcAndMap(const uint64_t pc, std::shared_ptr<DfxMap> map) override
     {
         const DfxSymbol symbol;
         return symbol;
@@ -485,8 +485,8 @@ private:
         return true;
     }
 
-    uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart,
-                               uint64_t mapPageOffset) const override
+    uint64_t GetVaddrInSymbols(const uint64_t ip, const uint64_t mapStart,
+                               const uint64_t mapPageOffset) const override
     {
         /*
             00200000-002c5000 r--p 00000000 08:02 46400311
@@ -1015,7 +1015,7 @@ public:
         return true;
     }
 
-    DfxSymbol GetSymbolWithPcAndMap(uint64_t ip, std::shared_ptr<DfxMap> map) override
+    DfxSymbol GetSymbolWithPcAndMap(const uint64_t ip, std::shared_ptr<DfxMap> map) override
     {
         // get cache
         auto iter = symbolsMap_.find(ip);
@@ -1148,7 +1148,7 @@ public:
         return true;
     }
 
-    DfxSymbol GetSymbolWithPcAndMap(uint64_t ip, std::shared_ptr<DfxMap> map) override
+    DfxSymbol GetSymbolWithPcAndMap(const uint64_t ip, std::shared_ptr<DfxMap> map) override
     {
         // get cache
         auto iter = symbolsMap_.find(ip);

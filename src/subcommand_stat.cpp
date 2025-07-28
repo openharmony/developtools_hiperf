@@ -180,7 +180,7 @@ void SubCommandStat::PrintUsage()
     printf("%s\n", Help().c_str());
 }
 
-void SubCommandStat::SetReportFlags(bool cpuFlag, bool threadFlag)
+void SubCommandStat::SetReportFlags(const bool cpuFlag, const bool threadFlag)
 {
     g_reportCpuFlag = cpuFlag;
     g_reportThreadFlag = threadFlag;
@@ -237,7 +237,7 @@ void SubCommandStat::PrintPerHead(FILE* filePtr)
 }
 
 void SubCommandStat::PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,
-                                   std::string &configName, FILE* filePtr)
+                                   const std::string &configName, FILE* filePtr)
 {
     if (reportSum == nullptr) {
         return;
@@ -415,7 +415,7 @@ bool SubCommandStat::FindPerCoreEventCount(PerfEvents::Summary &summary, __u64 &
 }
 
 std::string SubCommandStat::GetCommentConfigName(
-    const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName)
+    const std::unique_ptr<PerfEvents::CountEvent> &countEvent, const std::string &eventName)
 {
     std::string commentConfigName = "";
     CHECK_TRUE(countEvent != nullptr && eventName.length() != 0, commentConfigName, 1, "countEvent is nullptr");
@@ -514,8 +514,9 @@ std::string SubCommandStat::GetDetailComments(const std::unique_ptr<PerfEvents::
     return HandleOtherConfig(comment, summary, running_time_in_sec, scale, findRunningTime);
 }
 
-std::string SubCommandStat::HandleOtherConfig(double &comment, PerfEvents::Summary &summary, double running_time_in_sec,
-                                              double scale, bool findRunningTime)
+std::string SubCommandStat::HandleOtherConfig(double &comment, PerfEvents::Summary &summary,
+                                              const double running_time_in_sec, const double scale,
+                                              const bool findRunningTime)
 {
     comment = 0;
     if (findRunningTime) {
@@ -656,7 +657,7 @@ bool SubCommandStat::FindPercoreRunningTime(PerfEvents::Summary &summary, double
     return true;
 }
 
-bool SubCommandStat::CheckOptionPidAndApp(std::vector<pid_t> pids)
+bool SubCommandStat::CheckOptionPidAndApp(const std::vector<pid_t>& pids)
 {
     if (!CheckOptionPid(pids)) {
         printf("Problems finding threads of monitor\n\n");
@@ -668,7 +669,7 @@ bool SubCommandStat::CheckOptionPidAndApp(std::vector<pid_t> pids)
     return true;
 }
 
-bool SubCommandStat::CheckOptionPid(std::vector<pid_t> pids)
+bool SubCommandStat::CheckOptionPid(const std::vector<pid_t>& pids)
 {
     if (pids.empty()) {
         return true;
@@ -774,7 +775,7 @@ bool SubCommandStat::CreateFifoServer()
     return true;
 }
 
-bool SubCommandStat::ClientCommandResponse(bool response)
+bool SubCommandStat::ClientCommandResponse(const bool response)
 {
     return ClientCommandResponse(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
 }

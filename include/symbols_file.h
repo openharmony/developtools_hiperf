@@ -164,7 +164,7 @@ public:
     const std::vector<DfxSymbol *> &GetMatchedSymbols();
 
     // get vaddr(in symbol) from ip(real addr , after mmap reloc)
-    virtual uint64_t GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t mapOffset) const;
+    virtual uint64_t GetVaddrInSymbols(const uint64_t ip, const uint64_t mapStart, const uint64_t mapOffset) const;
 
     // get symbols from vaddr
     const DfxSymbol GetSymbolWithVaddr(uint64_t vaddrInFile);
@@ -207,7 +207,7 @@ public:
     std::vector<DfxSymbol> symbols_ {};
     std::vector<DfxSymbol *> matchedSymbols_ {};
     std::map<uint64_t, DfxSymbol> symbolsMap_;
-    virtual DfxSymbol GetSymbolWithPcAndMap(uint64_t pc, std::shared_ptr<DfxMap> map)
+    virtual DfxSymbol GetSymbolWithPcAndMap(const uint64_t pc, std::shared_ptr<DfxMap> map)
     {
         return DfxSymbol();
     }
@@ -228,7 +228,7 @@ protected:
 
     std::string SearchReadableFile(const std::vector<std::string> &searchPaths,
                                    const std::string &filePath) const;
-    bool UpdateBuildIdIfMatch(std::string buildId);
+    bool UpdateBuildIdIfMatch(const std::string &buildId);
     std::string buildId_ = "";
     std::vector<std::string> symbolsFileSearchPaths_;
 

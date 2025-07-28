@@ -106,17 +106,17 @@ private:
 #if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
     bool DumpProtoFile();
 #endif
-    void DumpPrintFileHeader(int indent = 0);
-    void DumpAttrPortion(int indent = 0);
-    void DumpDataPortion(int indent = 0);
+    void DumpPrintFileHeader(const int indent = 0);
+    void DumpAttrPortion(const int indent = 0);
+    void DumpDataPortion(const int indent = 0);
     void DumpCallChain(int indent, const PerfRecordSample& sample);
-    void DumpFeaturePortion(int indent = 0);
-    void DumpUniqueStackTableNode(int indent, const PerfFileSectionUniStackTable &uniStackTable);
+    void DumpFeaturePortion(const int indent = 0);
+    void DumpUniqueStackTableNode(const int indent, const PerfFileSectionUniStackTable &uniStackTable);
     void ExportUserData(PerfEventRecord& record);
     void ExportUserStack(const PerfRecordSample &recordSample);
     void PrintHeaderInfo(const int &indent);
     void PrintSymbolFile(const int &indent, const SymbolFileStruct &symbolFileStruct);
-    void PrintFeatureEventdesc(int indent, const PerfFileSectionEventDesc &sectionEventdesc);
+    void PrintFeatureEventdesc(const int indent, const PerfFileSectionEventDesc &sectionEventdesc);
     void DumpSpeReport();
     bool CheckOptions();
     bool CheckOutputFile();

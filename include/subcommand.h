@@ -82,19 +82,19 @@ public:
     // get some cmd
     static bool RegisterSubCommand(const std::string& cmdName, std::function<SubCommand&()> func);
     static const std::map<std::string, std::function<SubCommand&()>> &GetSubCommands();
-    static SubCommand *FindSubCommand(std::string &cmdName);
+    static SubCommand *FindSubCommand(const std::string &cmdName);
 
     // for test code
     static bool RegisterSubCommand(const std::string& cmdName, std::unique_ptr<SubCommand> subCommand);
     static void ClearSubCommands();
 
     // check restart option
-    bool CheckRestartOption(std::string &appPackage, bool targetSystemWide, bool restart,
-                                                    std::vector<pid_t> &selectPids);
+    bool CheckRestartOption(const std::string &appPackage, const bool targetSystemWide, const bool restart,
+                            std::vector<pid_t> &selectPids);
 
     // handle subcommand exclude
-    bool HandleSubCommandExclude(const std::vector<pid_t> &excludeTids, const std::vector<std::string>
-                                       &excludeThreadNames, std::vector<pid_t> &selectTids);
+    bool HandleSubCommandExclude(const std::vector<pid_t> &excludeTids,
+                                 const std::vector<std::string> &excludeThreadNames, std::vector<pid_t> &selectTids);
 private:
     void ExcludeTidsFromSelectTids(const std::vector<pid_t> &excludeTids, std::vector<pid_t> &selectTids);
     void ExcludeThreadsFromSelectTids(const std::vector<std::string> &excludeThreadNames,

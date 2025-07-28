@@ -48,12 +48,12 @@ public:
     void RemoveFifoFile();
     bool CreateFifoFile();
     bool SendFifoAndWaitReply(const std::string &cmd, const std::chrono::milliseconds &timeOut);
-    bool WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut);
-    void WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply);
-    void ProcessStopCommand(bool ret);
+    bool WaitFifoReply(const int fd, const std::chrono::milliseconds &timeOut);
+    void WaitFifoReply(const int fd, const std::chrono::milliseconds &timeOut, std::string& reply);
+    void ProcessStopCommand(const bool ret);
     void ProcessOutputCommand(bool ret);
     bool ProcessControlCmd();
-    void SetOutPutEnd(bool outputEnd);
+    void SetOutPutEnd(const bool outputEnd);
 };
 } // namespace HiPerf
 } // namespace Developtools
