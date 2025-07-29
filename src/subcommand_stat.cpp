@@ -956,9 +956,6 @@ HiperfError SubCommandStat::CheckStatOption()
 HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
 {
     CHECK_TRUE(!HelpOption(), HiperfError::NO_ERR, 0, "");
-    if (!CheckOutPutFile()) {
-        return HiperfError::CHECK_OUT_PUT_ERROR;
-    }
     if (!ParseControlCmd(controlCmd_)) {
         return HiperfError::WRONG_CONTROL_CMD;
     }
@@ -967,6 +964,9 @@ HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
         if (errorCode != HiperfError::NO_ERR) {
             return errorCode;
         }
+    }
+    if (!CheckOutPutFile()) {
+        return HiperfError::CHECK_OUT_PUT_ERROR;
     }
     if (!ProcessControl()) {
         return HiperfError::PROCESS_CONTROL_FAIL;
