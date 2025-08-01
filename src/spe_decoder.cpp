@@ -546,14 +546,14 @@ int SpePktDesc(const struct SpePkt *packet, char *buf,
             break;
         case PERF_SPE_DATA_SOURCE:
         case PERF_SPE_TIMESTAMP:
-            SpePktOutString(&err, &buf, &blen, "%s %lld", name.c_str(), payload);
+            SpePktOutString(&err, &buf, &blen, "%s %llu", name.c_str(), payload);
             break;
         case PERF_SPE_ADDRESS:
             err = SpePktDescAddr(packet, buf, bufLen);
             break;
         case PERF_SPE_CONTEXT:
-            SpePktOutString(&err, &buf, &blen, "%s 0x%lx el%d",
-                            name.c_str(), (unsigned long)payload, idx + 1);
+            SpePktOutString(&err, &buf, &blen, "%s 0x%llx el%d",
+                name.c_str(), payload, idx + 1);
             break;
         case PERF_SPE_COUNTER:
             err = SpePktDesCont(packet, buf, bufLen);

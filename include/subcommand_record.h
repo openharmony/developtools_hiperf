@@ -316,7 +316,7 @@ private:
     int nullFd_ = -1;
     std::thread clientCommandHandle_;
     std::thread replyCommandHandle_;
-    bool clientRunning_ = true;
+    std::atomic_bool clientRunning_ = true;
     bool isHiperfClient_ = false;
     struct ControlCommandHandler {
         std::function<bool()> preProcess = []() -> bool {

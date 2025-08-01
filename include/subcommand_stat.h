@@ -185,7 +185,7 @@ private:
     int nullFd_ = -1;
     FILE* filePtr_ = nullptr;
     std::thread clientCommandHandle_;
-    bool clientRunning_ = true;
+    std::atomic_bool clientRunning_ = true;
     struct ControlCommandHandler {
         std::function<bool()> preProcess = []() -> bool {
             return false;

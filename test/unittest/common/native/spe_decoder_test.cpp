@@ -15,6 +15,7 @@
 #include "spe_decoder_test.h"
 
 #include "command.h"
+#include "perf_events.h"
 #include "subcommand_dump.h"
 #include "subcommand_record.h"
 #include "test_utilities.h"
@@ -100,7 +101,6 @@ HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level0)
     std::string cmdString = "record -e arm_spe_0/load_filter=1,min_latency=100/ -d 10 --app ";
     cmdString += " " + testProcesses;
     printf("command : %s\n", cmdString.c_str());
-
     // it need load some symbols and much more log
     stdoutRecord.Start();
     const auto startTime = std::chrono::steady_clock::now();
@@ -109,7 +109,11 @@ HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level0)
         std::chrono::steady_clock::now() - startTime);
     std::string stringOut = stdoutRecord.Stop();
     printf("run %" PRId64 " ms return %d\n", (uint64_t)costMs.count(), static_cast<int>(ret));
-    EXPECT_EQ(true, ret);
+    if (GetSpeType() == UINT_MAX) {
+        EXPECT_EQ(false, ret);
+    } else {
+        EXPECT_EQ(true, ret);
+    }
 }
 
 /**
