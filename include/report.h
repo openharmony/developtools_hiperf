@@ -503,6 +503,12 @@ public:
     virtual ~Report() {}
 
     std::map<uint64_t, size_t> configIdIndexMaps_; // index of configNames_
+    std::string GetConfigName(uint64_t id)
+    {
+        size_t index = GetConfigIndex(id);
+        HIPERF_ASSERT(index < configs_.size(), "unable found config index %zu\n", index);
+        return configs_[index].eventName_;
+    }
 
     size_t GetConfigIndex(uint64_t id)
     {

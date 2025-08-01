@@ -829,6 +829,20 @@ HWTEST_F(ReportTest, PrepareConsole, TestSize.Level1)
         EXPECT_EQ(report_->consoleWidth_, report_->ConsoleDefaultWidth);
     }
 }
+
+HWTEST_F(ReportTest, OverConfigIndex, TestSize.Level1)
+{
+    pid_t pid = fork();
+    ASSERT_NE(pid, -1);
+
+    if (pid == 0) {
+        report_->configIdIndexMaps_.emplace(1000u, 1000u);
+        report_->GetConfigName(1000);
+        _exit(-2);
+    } else {
+        printf("exit.\n");
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
