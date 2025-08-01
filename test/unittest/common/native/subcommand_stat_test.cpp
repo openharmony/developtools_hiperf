@@ -39,6 +39,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+static const std::string TEST_FILE = "/data/local/tmp/perf_stat.txt";
 static std::atomic<bool> g_wait = false;
 class SubCommandStatTest : public testing::Test {
 public:
@@ -229,6 +230,38 @@ void SubCommandStatTest::CheckGroupCoverage(const std::string &stringOut,
             }
         }
     }
+}
+
+bool RemoveFile(const std::string& fileName)
+{
+    if (access(fileName.c_str(), F_OK) == -1) {
+        GTEST_LOG_(INFO) << fileName.c_str() << " does not exist.";
+        return true;
+    }
+
+    if (remove(fileName.c_str()) == 0) {
+        return true;
+    } else {
+        GTEST_LOG_(INFO) << "Delete " << fileName.c_str() << " failed.";
+        return false;
+    }
+}
+
+bool IsFileExistsAndNonEmpty(const std::string& fileName, const bool isCheckFileEmpty)
+{
+    struct stat fileInfo;
+
+    if (stat(fileName.c_str(), &fileInfo) != 0) {
+        GTEST_LOG_(INFO) << fileName.c_str() << " does not exist.";
+        return false;
+    }
+    if (isCheckFileEmpty) {
+        if (fileInfo.st_size <= 0) {
+            GTEST_LOG_(INFO) << fileName.c_str() << " is empty.";
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -2348,13 +2381,18 @@ HWTEST_F(SubCommandStatTest, GetInstance, TestSize.Level1)
  */
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_control01, TestSize.Level1)
 {
+    ASSERT_TRUE(RemoveFile(TEST_FILE));
     ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a",
         {"create control hiperf counting success", "stat result will saved in /data/local/tmp/perf_stat.txt"}), true);
+    sleep(1); // wait 1s
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
         {"start counting success"}), true);
+    sleep(1); // wait 1s
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
         {"stop counting success"}), true);
+    sleep(1); // wait 1s
+    ASSERT_TRUE(IsFileExistsAndNonEmpty(TEST_FILE, true));
 }
 
 /**
@@ -2396,6 +2434,48 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control04, TestSize.Level1)
 }
 
 /**
+ * @tc.name: TestOnSubCommand_control05
+ * @tc.desc: test app restart
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, TestOnSubCommand_control05, TestSize.Level1)
+{
+    ASSERT_TRUE(RemoveFile(TEST_FILE));
+    std::string testProcesses = "com.ohos.sceneboard";
+    if (!CheckTestApp(testProcesses)) {
+        testProcesses = "com.ohos.launcher";
+    }
+    std::string testCmd = "hiperf stat --control prepare --app " + testProcesses + " --restart";
+    const int waitSeconds = 30; // app restart need 30s
+    const int bufferSeconds = 5; // extra wait 5s
+    const std::string expectedStr = "was not stopped within 30 seconds";
+    std::string tempOutputFile = "/data/local/tmp/stat_test_output.tmp";
+    std::string cmdWithOutput = testCmd + " > " + tempOutputFile + " 2>&1";
+ 
+    int ret = system((cmdWithOutput + " &").c_str());
+    ASSERT_EQ(ret, 0);
+
+    std::this_thread::sleep_for(std::chrono::seconds(waitSeconds + bufferSeconds));
+
+    std::ifstream outputFile(tempOutputFile);
+    std::string line;
+    bool found = false;
+    while (std::getline(outputFile, line)) {
+        if (!line.empty()) {
+            GTEST_LOG_(INFO) << "Output line: " << line;
+        }
+        if (line.find(expectedStr) != std::string::npos) {
+            found = true;
+            break;
+        }
+    }
+
+    remove(tempOutputFile.c_str());
+    EXPECT_TRUE(found) << "Expected string not found in any line. File: " << tempOutputFile;
+    ASSERT_FALSE(IsFileExistsAndNonEmpty(TEST_FILE, false));
+}
+
+/**
  * @tc.name: Control_Stability
  * @tc.desc: Call the command 'control' multiple time
  * @tc.type: FUNC
@@ -2404,13 +2484,18 @@ HWTEST_F(SubCommandStatTest, Control_Stability, TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
     for (int i = 0; i < 10; i++) {  // 10: Number of loop
+        ASSERT_TRUE(RemoveFile(TEST_FILE));
         EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a -e hw-cpu-cycles,hw-instructions",
             {"create control hiperf counting success", "stat result will saved in /data/local/tmp/perf_stat.txt"}),
             true);
+        sleep(1); // wait 1s
         EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
             {"start counting success"}), true);
+        sleep(1); // wait 1s
         EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
             {"stop counting success"}), true);
+        sleep(1); // wait 1s
+        ASSERT_TRUE(IsFileExistsAndNonEmpty(TEST_FILE, true));
     }
 }
 
