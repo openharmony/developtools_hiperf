@@ -1043,7 +1043,13 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(uint64_t ip, const Virtual
                 symbolsFile->LoadDebugInfo();
                 symbolsFile->LoadSymbols(map);
             }
-            auto foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            DfxSymbol foundSymbols;
+            if (thread.pid_ == devhostPid_ && recordCallBack_ != nullptr) {
+                foundSymbols = symbolsFile->GetSymbolWithPcAndMap(vaddrSymbol.fileVaddr_, map);
+            } else {
+                foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            }
+
             foundSymbols.taskVaddr_ = ip;
             if (!foundSymbols.IsValid()) {
                 HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s",

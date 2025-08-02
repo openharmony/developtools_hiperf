@@ -361,9 +361,17 @@ private:
     bool isNeedSetPerfHarden_ = false;
     bool isSpe_ = false;
 
+    const bool isRoot_ = IsRoot();
+    uint32_t offset_ = 0;
+    uint32_t devhostPid_ = 0;
+
     // callback to process record
     bool ProcessRecord(PerfEventRecord& record);
     bool SaveRecord(const PerfEventRecord& record);
+    uint32_t GetOffsetNum();
+    void UpdateDevHostMaps(PerfEventRecord& record);
+    void UpdateDevHostCallChains(PerfEventRecord& record);
+    void UpdateDevHostMapsAndIPs(PerfEventRecord& record);
 
     // file format like as 0,1-3,4-6,7,8
     uint32_t GetCountFromFile(const std::string &fileName);

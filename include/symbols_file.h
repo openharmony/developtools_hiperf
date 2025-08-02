@@ -207,6 +207,7 @@ public:
     std::vector<DfxSymbol> symbols_ {};
     std::vector<DfxSymbol *> matchedSymbols_ {};
     std::map<uint64_t, DfxSymbol> symbolsMap_;
+    static uint32_t offsetNum_;
     virtual DfxSymbol GetSymbolWithPcAndMap(uint64_t pc, std::shared_ptr<DfxMap> map)
     {
         return DfxSymbol();

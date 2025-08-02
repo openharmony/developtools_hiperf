@@ -2449,6 +2449,101 @@ HWTEST_F(SubCommandRecordTest, OutPutFileName, TestSize.Level2)
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -a -o /data/log/hiperflog/perf.data",
         {"Invalid output file path, permission denied"}), true);
 }
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, GetOffsetNum, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    uint32_t offset = cmd.GetOffsetNum();
+    EXPECT_GT(offset, 0);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps1, TestSize.Level1)
+{
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    PerfRecordMmap recordIn {true, pid, tid, addr,
+                             len, pgoff, "testdatammap"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = pid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, cmd.offset_ + addr);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps2, TestSize.Level1)
+{
+    constexpr uint32_t devhostPid = 71;
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    PerfRecordMmap recordIn {true, pid, tid, addr,
+                             len, pgoff, "testdatammap"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = devhostPid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, addr);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps3, TestSize.Level1)
+{
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    constexpr uint64_t testNum = 1;
+    PerfRecordMmap2 recordIn {true, pid, tid, addr, len, pgoff,
+                              testNum, testNum, testNum, testNum, testNum, "testdatammap2"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = pid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, cmd.offset_ + addr);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps4, TestSize.Level1)
+{
+    constexpr uint32_t devhostPid = 71;
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    constexpr uint64_t testNum = 1;
+    PerfRecordMmap2 recordIn {true, pid, tid, addr, len, pgoff,
+                              testNum, testNum, testNum, testNum, testNum, "testdatammap2"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = devhostPid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, addr);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
