@@ -363,7 +363,7 @@ private:
 
     const bool isRoot_ = IsRoot();
     uint32_t offset_ = 0;
-    uint32_t devhostPid_ = 0;
+    uint32_t devhostPid_ = UINT32_MAX;
 
     // callback to process record
     bool ProcessRecord(PerfEventRecord& record);
