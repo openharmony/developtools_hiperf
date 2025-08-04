@@ -50,6 +50,7 @@ namespace Developtools {
 namespace HiPerf {
 bool SymbolsFile::onRecording_ = true;
 bool SymbolsFile::needParseJsFunc_ = false;
+uint32_t SymbolsFile::offsetNum_ = 0;
 
 const std::string SymbolsFile::GetBuildId() const
 {
@@ -793,6 +794,50 @@ public:
         // try elf
         return ElfFileSymbols::LoadSymbols(nullptr, filePath_);
     }
+
+    DfxSymbol GetSymbolWithPcAndMap(uint64_t ip, std::shared_ptr<DfxMap> map) override
+    {
+        DfxSymbol symbol;
+        // it should be already order from small to large
+        auto found =
+            std::upper_bound(symbols_.begin(), symbols_.end(), ip, DfxSymbol::ValueLessThen);
+        if (found == symbols_.begin()) {
+            if (!symbol.IsValid()) {
+                HLOGV("NOT found vaddr 0x%" PRIx64 " in symbole file %s(%zu)", ip,
+                    filePath_.c_str(), symbols_.size());
+            }
+            symbol.fileVaddr_ = ip;
+            symbol.symbolFileIndex_ = id_;
+            return symbol;
+        }
+
+        found = std::prev(found);
+        if (found != symbols_.end()) {
+            if (found->Contain(ip)) {
+                found->offsetToVaddr_ = ip - found->funcVaddr_;
+                if (!found->matched_) {
+                    found->matched_ = true;
+                    DfxSymbol matchedSymbol = *found;
+                    // in func UpdateDevHostCallChains add offset to ips, need add offset when saveing
+                    matchedSymbol.funcVaddr_ += SymbolsFile::offsetNum_;
+                    this->symbolsMap_.emplace(ip, matchedSymbol);
+                    matchedSymbols_.push_back(&(symbolsMap_[ip]));
+                }
+                symbol = *found; // copy
+                HLOGV("found '%s' for vaddr 0x%016" PRIx64 "", symbol.ToString().c_str(), ip);
+            }
+        }
+
+        if (!symbol.IsValid()) {
+            HLOGV("NOT found vaddr 0x%" PRIx64 " in symbole file %s(%zu)", ip,
+                filePath_.c_str(), symbols_.size());
+        }
+        symbol.fileVaddr_ = ip;
+        symbol.symbolFileIndex_ = id_;
+
+        return symbol;
+    }
+
     ~KernelThreadSymbols() override {}
 };
 
