@@ -2441,9 +2441,9 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control04, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_control05, TestSize.Level1)
 {
     ASSERT_TRUE(RemoveFile(TEST_FILE));
-    std::string testProcesses = "com.ohos.sceneboard";
+    std::string testProcesses = "com.ohos.launcher";
     if (!CheckTestApp(testProcesses)) {
-        testProcesses = "com.ohos.launcher";
+        testProcesses = "hiview";
     }
     std::string testCmd = "hiperf stat --control prepare --app " + testProcesses + " --restart";
     const int waitSeconds = 30; // app restart need 30s

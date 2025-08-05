@@ -69,7 +69,7 @@ public:
     static std::string testProcesses;
 };
 
-std::string SubCommandRecordTest::testProcesses = "com.ohos.sceneboard";
+std::string SubCommandRecordTest::testProcesses = "com.ohos.launcher";
 
 void SubCommandRecordTest::SetUpTestCase() {}
 
@@ -78,7 +78,7 @@ void SubCommandRecordTest::TearDownTestCase() {}
 void SubCommandRecordTest::SetUp()
 {
     if (!CheckTestApp(SubCommandRecordTest::testProcesses)) {
-        SubCommandRecordTest::testProcesses = "com.ohos.launcher";
+        SubCommandRecordTest::testProcesses = "hiview";
     }
     SubCommand::ClearSubCommands(); // clear the subCommands left from other UT
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
@@ -223,7 +223,7 @@ bool CheckJsonReport(const std::string& fileName, const std::string& symbolsFile
     bool find = false;
     for (int i = 0; i < size; i++) {
         auto item = cJSON_GetArrayItem(list, i);
-        if (SubCommandRecordTest::testProcesses == item->valuestring) {
+        if (std::string(item->valuestring).find(SubCommandRecordTest::testProcesses) != std::string::npos) {
             find = true;
             break;
         }
@@ -1868,7 +1868,7 @@ HWTEST_F(SubCommandRecordTest, ChecKernel, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, RecordAndReport, TestSize.Level1)
 {
-    const std::string cmd = "hiperf record -d 5 --app " +
+    const std::string cmd = "hiperf record -d 5 -s dwarf --app " +
                             SubCommandRecordTest::testProcesses +
                             " -o /data/local/tmp/perf.data";
     EXPECT_EQ(CheckTraceCommandOutput(cmd, {"Process and Saving data..."}), true);

@@ -43,7 +43,7 @@ public:
 
     void TestCpuUsage(const std::string &option, unsigned int expect, bool fixPid);
 
-    std::string testProcesses = "com.ohos.sceneboard";
+    std::string testProcesses = "com.ohos.launcher";
 };
 
 void CpuUsageTest::SetUpTestCase() {}
@@ -53,7 +53,7 @@ void CpuUsageTest::TearDownTestCase() {}
 void CpuUsageTest::SetUp()
 {
     if (!HiPerf::CheckTestApp(testProcesses)) {
-        testProcesses = "com.ohos.launcher";
+        testProcesses = "hiview";
     }
 }
 
