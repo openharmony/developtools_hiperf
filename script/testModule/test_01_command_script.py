@@ -91,7 +91,7 @@ def parser_add_argument():
     other_group.add_argument('--not_hdc_root', action='store_true',
                              help="""Force hdc to run in non root mode. """)
     args = parser.parse_args()
-    args.package_name = 'com.ohos.sceneboard'
+    args.package_name = 'hiview'
     return args
 
 

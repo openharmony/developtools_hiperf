@@ -426,9 +426,9 @@ HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level2)
 HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level0)
 {
     HiperfClient::RecordOption opt;
-    std::string testProcesses = "com.ohos.sceneboard";
+    std::string testProcesses = "com.ohos.launcher";
     if (!CheckTestApp(testProcesses)) {
-        testProcesses = "com.ohos.launcher";
+        testProcesses = "hiview";
     }
     opt.SetAppPackage(testProcesses);
 

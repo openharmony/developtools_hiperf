@@ -931,9 +931,6 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid)
      * seg2      /data/storage/el1/bundle/entry.hap       r-xp    ELF
      * seg3      /data/storage/el1/bundle/entry.hap       r--p    ABC
      * seg4      /data/storage/el1/bundle/entry.hap       r--p    ABC
-     * seg1      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
-     * seg2      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
-     * seg3      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
      * segN      .hap                                     r--p    .an/jit/etc
      * 1.map.name == symbolsFile.filePath_
      * 2.map.FileType == symbolsFiles_[map.symbolFileIndex]

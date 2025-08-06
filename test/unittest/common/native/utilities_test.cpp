@@ -1009,9 +1009,9 @@ HWTEST_F(UtilitiesTest, IsNumeric_Invalid_WithAlpha, TestSize.Level1)
  */
 HWTEST_F(UtilitiesTest, IsDebugableApp, TestSize.Level1)
 {
-    std::string testProcesses = "com.ohos.sceneboard";
+    std::string testProcesses = "com.ohos.launcher";
     if (!CheckTestApp(testProcesses)) {
-        testProcesses = "com.ohos.launcher";
+        testProcesses = "hiview";
     }
     EXPECT_FALSE(IsDebugableApp(testProcesses));
 }
