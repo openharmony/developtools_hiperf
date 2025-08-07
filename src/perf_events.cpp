@@ -156,12 +156,12 @@ u32 GetSpeType()
     fd = fopen("/sys/devices/arm_spe_0/type", "r");
     if (fd == nullptr) {
         HLOGV("open sysfs file failed");
-        return -1;
+        return UINT_MAX;
     }
     if (fscanf_s(fd, "%u", &speType) <= 0) {
         HLOGV("fscanf_s file failed");
         (void)fclose(fd);
-        return -1;
+        return UINT_MAX;
     }
 
     (void)fclose(fd);
@@ -367,6 +367,10 @@ bool PerfEvents::AddEvent(const std::string &eventString, bool followGroup)
     } else {
         if (eventName == "arm_spe_0") {
             u32 speType = GetSpeType();
+            if (speType == UINT_MAX) {
+                HLOGE("Failed to get SPE type.");
+                return false;
+            }
             return AddSpeEvent(speType);
         }
         if (StringStartsWith(eventName, "0x")

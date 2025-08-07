@@ -331,6 +331,8 @@ struct read_format_no_group {
     __u64 id;           /* if PERF_FORMAT_ID */
 };
 
+u32 GetSpeType();
+
 class PerfEvents {
 public:
     static constexpr uint64_t DEFAULT_SAMPLE_FREQUNCY = 4000;
