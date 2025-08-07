@@ -2028,7 +2028,6 @@ void SubCommandRecord::AddCommandLineFeature()
     std::string fullCommandline =
         ReadFileToString("/proc/self/cmdline").c_str() + Command::fullArgument;
     fileWriter_->AddStringFeature(FEATURE::CMDLINE, fullCommandline);
-    HIPERF_HILOGI(MODULE_DEFAULT, "cmd : %{public}s", fullCommandline.c_str());
 }
 
 void SubCommandRecord::AddCpuOffFeature()
@@ -2214,7 +2213,7 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
         }
 
         serverPid = sample->GetServerPidof(i);
-        if (!isRoot_ && serverPid == devhostPid_) {
+        if (!isRoot_ && static_cast<uint32_t>(serverPid) == devhostPid_) {
             // in func UpdateDevHostCallChains add offset_ to ips, need sub offset_ when symboling
             if (sample->data_.ips[i] > offset_) {
                 sample->data_.ips[i] -= offset_;
@@ -2527,10 +2526,10 @@ void SubCommandRecord::UpdateDevHostMaps(PerfEventRecord& record)
 void SubCommandRecord::UpdateDevHostCallChains(PerfEventRecord& record)
 {
     if (record.GetType() == PERF_RECORD_SAMPLE) {
-        pid_t serverPid;
+        uint32_t serverPid;
         const uint64_t BAD_IP_ADDRESS = 2;
         auto sample = static_cast<PerfRecordSample*>(&record);
-        serverPid = sample->GetServerPidof(0);
+        serverPid = static_cast<uint32_t>(sample->GetServerPidof(0));
         if (serverPid == devhostPid_) {
             sample->data_.ip += offset_;
         }
@@ -2538,7 +2537,7 @@ void SubCommandRecord::UpdateDevHostCallChains(PerfEventRecord& record)
             if (sample->data_.ips[i] >= PERF_CONTEXT_MAX || sample->data_.ips[i] < BAD_IP_ADDRESS) {
                 continue;
             }
-            serverPid = sample->GetServerPidof(i);
+            serverPid = static_cast<uint32_t>(sample->GetServerPidof(i));
             if (serverPid == devhostPid_) {
                 sample->data_.ips[i] += offset_;
             }
