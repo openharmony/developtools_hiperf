@@ -509,7 +509,6 @@ public:
         HIPERF_ASSERT(index < configs_.size(), "unable found config index %zu\n", index);
         return configs_[index].eventName_;
     }
-
     size_t GetConfigIndex(uint64_t id)
     {
         HIPERF_ASSERT(configIdIndexMaps_.find(id) != configIdIndexMaps_.end(), "unable found id %" PRIx64 "\n", id);
