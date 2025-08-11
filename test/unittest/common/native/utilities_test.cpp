@@ -963,7 +963,7 @@ HWTEST_F(UtilitiesTest, IsV8File, TestSize.Level2)
  * @tc.desc: Test string without digits (pure alphabet)
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, IscontainDigits_NoDigits_PureAlpha, TestSize.Level1)
+HWTEST_F(UtilitiesTest, IscontainDigitsNoDigitsPureAlpha, TestSize.Level1)
 {
     std::string str = "abcdefg";
     bool result = IscontainDigits(str);
@@ -975,7 +975,7 @@ HWTEST_F(UtilitiesTest, IscontainDigits_NoDigits_PureAlpha, TestSize.Level1)
  * @tc.desc: Test negative PID (e.g., -1)
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, IsExistDebugByPid_InvalidPid_Negative, TestSize.Level2)
+HWTEST_F(UtilitiesTest, IsExistDebugByPidInvalidPidNegative, TestSize.Level2)
 {
     std::vector<pid_t> pids = {-1};
     std::string err;
@@ -996,7 +996,7 @@ HWTEST_F(UtilitiesTest, IsExistDebugByPid_InvalidPid_Negative, TestSize.Level2)
  * @tc.desc: Test string with numbers and alphabet (invalid)
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, IsNumeric_Invalid_WithAlpha, TestSize.Level1)
+HWTEST_F(UtilitiesTest, IsNumericInvalidWithAlpha, TestSize.Level1)
 {
     std::string str = "123a";
     EXPECT_FALSE(IsNumeric(str));

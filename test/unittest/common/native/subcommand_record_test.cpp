@@ -1868,7 +1868,7 @@ HWTEST_F(SubCommandRecordTest, ChecKernel, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, RecordAndReport, TestSize.Level1)
 {
-    const std::string cmd = "hiperf record -d 5 -s dwarf --app " +
+    const std::string cmd = "hiperf record -d 1 -s dwarf -f 100 --app " +
                             SubCommandRecordTest::testProcesses +
                             " -o /data/local/tmp/perf.data";
     EXPECT_EQ(CheckTraceCommandOutput(cmd, {"Process and Saving data..."}), true);

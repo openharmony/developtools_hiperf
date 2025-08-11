@@ -498,7 +498,7 @@ HWTEST_F(HiperfClientTest, Output, TestSize.Level1)
  * @tc.desc: SetCallStackSamplingConfigs(int duration)
  * @tc.type: FUNC
  */
-HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigs_WithZeroDuration, TestSize.Level2)
+HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigsWithZeroDuration, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
@@ -522,7 +522,7 @@ HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigs_WithZeroDuration, TestSiz
  * @tc.desc: SetOption(const std::string &name, bool enable)
  * @tc.type: FUNC
  */
-HWTEST_F(HiperfClientTest, SetOption_RemoveExistingArgument, TestSize.Level2)
+HWTEST_F(HiperfClientTest, SetOptionRemoveExistingArgument, TestSize.Level2)
 {
     HiperfClient::RecordOption opt;
     const std::string targetArg = "-a";
