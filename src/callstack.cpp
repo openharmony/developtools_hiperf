@@ -215,8 +215,6 @@ size_t CallStack::ExpandCallStack(pid_t tid, std::vector<DfxFrame> &callFrames, 
         HLOGM("new callstack is too small, skip it");
         return expand;
     }
-
-    std::lock_guard<std::mutex> lock(cacheMutex_);
     if (!cachedCallFramesMap_.count(tid)) {
         cachedCallFramesMap_[tid].reserve(MAX_CALL_FRAME_EXPAND_CACHE_SIZE);
     }
@@ -437,7 +435,6 @@ CallStack::CallStack()
 
 void CallStack::ClearCache()
 {
-    std::lock_guard<std::mutex> lock(cacheMutex_);
     cachedCallFramesMap_.clear();
     lastPid_ = -1;
     lastAddr_ = 0;

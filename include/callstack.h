@@ -53,7 +53,6 @@ public:
     size_t ExpandCallStack(pid_t tid, std::vector<DfxFrame> &callFrames, size_t expandLimit = 1u);
 
 private:
-    mutable std::mutex cacheMutex_;
     pid_t lastPid_ = -1;
     ADDR_TYPE lastAddr_ = 0;
     ADDR_TYPE lastData_ = 0;
