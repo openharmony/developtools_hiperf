@@ -1059,7 +1059,7 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsV8(), true);
-    uint64_t ip = getpid();
+    uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
     uint64_t offset = rnd_();
