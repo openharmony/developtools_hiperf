@@ -376,7 +376,7 @@ bool StringToUint64(const std::string &str, uint64_t &val)
     errno = 0;
     uint64_t num = std::strtoull(str.c_str(), &endPtr, 10); // 10 : decimal scale
     if (endPtr == str.c_str() || *endPtr != '\0' || errno != 0 || num > ULLONG_MAX || str.c_str()[0] == '-') {
-        HIPERF_HILOGE(MODULE_DEFAULT, "get uint64 failed, str: %{public}s", str.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "get uint64 failed");
         return false;
     }
     val = num;

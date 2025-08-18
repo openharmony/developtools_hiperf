@@ -335,8 +335,8 @@ void RecordOption::SetBackTrackSec(int backTracesec)
 
 Client::Client(const std::string &outputDir)
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "%" HILOG_PUBLIC "s default init with %" HILOG_PUBLIC "s\n",
-                  __FUNCTION__, outputDir.c_str());
+    HIPERF_HILOGI(MODULE_CPP_API, "%" HILOG_PUBLIC "s default init\n",
+                  __FUNCTION__);
     Setup(outputDir);
 }
 
@@ -347,7 +347,7 @@ bool Client::Setup(std::string outputDir)
     if (!outputDir.empty() && outputDir.back() != '/') {
         outputDir.push_back('/');
     }
-    HIPERF_HILOGI(MODULE_CPP_API, "outputDir setup to %" HILOG_PUBLIC "s\n", outputDir.c_str());
+    HIPERF_HILOGI(MODULE_CPP_API, "outputDir setup\n");
 
     executeCommandPath_ = SystemCommandPath;
 

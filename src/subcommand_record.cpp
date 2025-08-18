@@ -743,8 +743,8 @@ bool SubCommandRecord::IsAppRestarted()
     HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect oldpids begin");
     CollectPidsByAppname(oldPids, appPackage_);
     for (auto it = oldPids.begin(); it != oldPids.end(); it++) {
-        HIPERF_HILOGI(MODULE_DEFAULT, "[IsAppRestarted] get oldpids %{public}d for %{public}s",
-            *it, appPackage_.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "[IsAppRestarted] get oldpids %{public}d for app",
+            *it);
     }
     HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect oldpids finish");
     std::string info = "please restart " + appPackage_ + " for profiling within 30 seconds\n";
@@ -753,8 +753,8 @@ bool SubCommandRecord::IsAppRestarted()
         HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect newPids begin");
         CollectPidsByAppname(newPids, appPackage_);
         for (auto it = newPids.begin(); it != newPids.end(); it++) {
-            HIPERF_HILOGI(MODULE_DEFAULT, "[IsAppRestarted] get newPids %{public}d for %{public}s",
-                *it, appPackage_.c_str());
+            HIPERF_HILOGI(MODULE_DEFAULT, "[IsAppRestarted] get newPids %{public}d for app",
+                *it);
         }
         HIPERF_HILOGI(MODULE_DEFAULT, "[CollectPidsByAppname] collect newPids finish");
         std::set_intersection(oldPids.begin(), oldPids.end(),
@@ -803,8 +803,8 @@ pid_t SubCommandRecord::GetPidFromAppPackage(const pid_t oldPid, const uint64_t 
             if (IsSameCommand(ReadFileToString(fileName), appPackage_)) {
                 res = static_cast<pid_t>(std::stoul(subDir, nullptr));
                 HLOGD("[GetAppPackagePid]: get appPid for %s is %d", appPackage_.c_str(), res);
-                HIPERF_HILOGD(MODULE_DEFAULT, "[GetAppPackagePid] get appPid %{public}d for app %{public}s",
-                    res, appPackage_.c_str());
+                HIPERF_HILOGD(MODULE_DEFAULT, "[GetAppPackagePid] get appPid %{public}d for app",
+                    res);
                 return res;
             }
         }
@@ -823,8 +823,8 @@ bool SubCommandRecord::IsAppRunning()
             return false;
         }
         HLOGD("[CheckAppIsRunning] get appPid %d for app %s", appPid, appPackage_.c_str());
-        HIPERF_HILOGD(MODULE_DEFAULT, "[CheckAppIsRunning] get appPid %{public}d for app %{public}s",
-            appPid, appPackage_.c_str());
+        HIPERF_HILOGD(MODULE_DEFAULT, "[CheckAppIsRunning] get appPid %{public}d for app",
+            appPid);
         selectPids_.push_back(appPid);
     }
     return true;
@@ -1677,8 +1677,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
             CloseClientThread();
         }
         HLOGE("Fail to create record file %s", outputFilename_.c_str());
-        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to create record file %{public}s",
-            outputFilename_.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to create record file");
         return HiperfError::CREATE_OUTPUT_FILE_FAIL;
     }
     HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CreateInitRecordFile finished");
@@ -1726,7 +1725,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     if (!backtrack_) {
         if (!FinishWriteRecordFile()) {
             HLOGE("Fail to finish record file %s", outputFilename_.c_str());
-            HIPERF_HILOGE(MODULE_DEFAULT, "Fail to finish record file %{public}s", outputFilename_.c_str());
+            HIPERF_HILOGE(MODULE_DEFAULT, "Fail to finish record file");
             return HiperfError::FINISH_WRITE_RECORD_FILE_FAIL;
         } else if (!PostProcessRecordFile()) {
             HLOGE("Fail to post process record file");
@@ -2398,16 +2397,16 @@ bool SubCommandRecord::OnlineReportData()
     if (!report_) {
         return true;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s begin to report file %" HILOG_PUBLIC "s",
-                  __FUNCTION__, outputFilename_.c_str());
+    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s begin to report file",
+                  __FUNCTION__);
     bool ret = false;
     std::string tempFileName = outputFilename_ + ".tmp";
     if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s can't rename file %" HILOG_PUBLIC "s"
+        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s can't rename file "
                       "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      __FUNCTION__, outputFilename_.c_str(), errno, errInfo);
+                      __FUNCTION__, errno, errInfo);
         return false;
     }
 
@@ -2426,9 +2425,9 @@ bool SubCommandRecord::OnlineReportData()
     if (remove(tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s remove file failed %" HILOG_PUBLIC "s"
+        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s remove file failed"
                       "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      __FUNCTION__, tempFileName.c_str(), errno, errInfo);
+                      __FUNCTION__, errno, errInfo);
     }
     HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s report result %" HILOG_PUBLIC "s",
                   __FUNCTION__, ret ? "success" : "fail");
