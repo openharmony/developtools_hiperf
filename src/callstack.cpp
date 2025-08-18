@@ -273,14 +273,14 @@ bool CallStack::DoUnwind2(const VirtualThread &thread, std::vector<DfxFrame> &ca
     auto unwinder = pidUnwinder_[thread.pid_];
 
 #ifdef target_cpu_arm
-    static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm>();
+    thread_local std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm>();
     std::vector<uintptr_t> tempRegs;
     for (u64 i = 0; i < regsNum_; ++i) {
         tempRegs.push_back(static_cast<uintptr_t>(regs_[i]));
     }
     regs->SetRegsData(tempRegs);
 #else
-    static std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
+    thread_local std::shared_ptr<DfxRegs> regs = std::make_shared<DfxRegsArm64>();
     regs->SetRegsData(reinterpret_cast<uintptr_t*>(regs_), regsNum_);
 #endif
     CHECK_TRUE(unwinder != nullptr, false, 0, "");
@@ -396,9 +396,12 @@ int CallStack::AccessMem2(const uintptr_t addr, uintptr_t *val, void *arg)
         }
     } else {
         size_t stackOffset = addr - unwindInfoPtr->callStack.stackPoint_;
-        *val = *(uintptr_t *)&unwindInfoPtr->callStack.stack_[stackOffset];
-        HLOGM("access_mem addr %p val %" UNW_WORD_PFLAG ", from stack offset %zu",
-              reinterpret_cast<void *>(addr), *val, stackOffset);
+        if (memcpy_s(val, sizeof(uintptr_t), &unwindInfoPtr->callStack.stack_[stackOffset], sizeof(uintptr_t)) != 0) {
+            HLOGE("memcpy_s failed for stack offset %zu", stackOffset);
+            return -1;
+        }
+        HLOGM("access_mem addr val %" UNW_WORD_PFLAG ", from stack offset %zu",
+              *val, stackOffset);
     }
 
     return 0;

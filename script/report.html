@@ -5257,17 +5257,17 @@ input{
 
             console.log(detail.key);
             if (detail.key === 'total') {
-                this.source.sort(compare('totalCount',detail.sort,'number'));
+                this.ds.sort(compare('totalCount',detail.sort,'number'));
             } else if (detail.key === 'self') {
-                this.source.sort(compare('selfCount',detail.sort,'number'));
+                this.ds.sort(compare('selfCount',detail.sort,'number'));
             } else if (detail.key === 'samples') {
-                this.source.sort(compare('samples',detail.sort,'number'));
+                this.ds.sort(compare('samples',detail.sort,'number'));
             } else {
-                this.source.sort(compare(detail.key,detail.sort,'string'));
+                this.ds.sort(compare(detail.key,detail.sort,'string'));
             }
             this.pagination.current = 1;
-            this.pagination.total = this.source.length;
-            this.table.dataSource = this.paginationHandler(this.pagination.current,parseInt(this.pagination.pageSize));
+            this.pagination.total = this.ds.length;
+            this.table.dataSource = this.paginationHandler(this.pagination.current,parseInt(this.pagination.pageSize),this.ds);
         }
 
         updateTableSource(e) {

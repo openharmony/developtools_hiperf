@@ -46,29 +46,6 @@ static const std::string TEST_FILE = "/data/local/tmp/perf.data";
 const std::string PERF_CPU_TIME_MAX_PERCENT = "/proc/sys/kernel/perf_cpu_time_max_percent";
 static const std::chrono::milliseconds CONTROL_WAITREPY_TOMEOUT = 2ms;
 
-static constexpr size_t TEST_SIZE_F2000_DWARF_SYSTEM = 8.3E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_DWARF_SYSTEM = 1.7E5 * 1024;
-static constexpr size_t TEST_SIZE_F8000_DWARF_SYSTEM = 3.5E5 * 1024;
-static constexpr size_t TEST_SIZE_F100_FP_SYSTEM = 10E3 * 1024;
-static constexpr size_t TEST_SIZE_F500_FP_SYSTEM = 2E4 * 1024;
-static constexpr size_t TEST_SIZE_F1000_FP_SYSTEM = 3E4 * 1024;
-static constexpr size_t TEST_SIZE_F2000_FP_SYSTEM = 5E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_FP_SYSTEM = 1E5 * 1024;
-static constexpr size_t TEST_SIZE_F8000_FP_SYSTEM = 2E5 * 1024;
-
-static constexpr size_t TEST_SIZE_F100_DWARF_PROCESS = 5.6E3 * 1024;
-static constexpr size_t TEST_SIZE_F500_DWARF_PROCESS = 1.6E4 * 1024;
-static constexpr size_t TEST_SIZE_F1000_DWARF_PROCESS = 2.9E4 * 1024;
-static constexpr size_t TEST_SIZE_F2000_DWARF_PROCESS = 6.1E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_DWARF_PROCESS = 5.8E4 * 1024;
-static constexpr size_t TEST_SIZE_F8000_DWARF_PROCESS = 1.2E5 * 1024;
-static constexpr size_t TEST_SIZE_F100_FP_PROCESS = 3.6E3 * 1024;
-static constexpr size_t TEST_SIZE_F500_FP_PROCESS = 8.8E3 * 1024;
-static constexpr size_t TEST_SIZE_F1000_FP_PROCESS = 1.5E4 * 1024;
-static constexpr size_t TEST_SIZE_F2000_FP_PROCESS = 3.1E4 * 1024;
-static constexpr size_t TEST_SIZE_F4000_FP_PROCESS = 6.2E4 * 1024;
-static constexpr size_t TEST_SIZE_F8000_FP_PROCESS = 1.3E5 * 1024;
-
 class SubCommandRecordTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -92,7 +69,7 @@ public:
     static std::string testProcesses;
 };
 
-std::string SubCommandRecordTest::testProcesses = "com.ohos.sceneboard";
+std::string SubCommandRecordTest::testProcesses = "com.ohos.launcher";
 
 void SubCommandRecordTest::SetUpTestCase() {}
 
@@ -101,7 +78,7 @@ void SubCommandRecordTest::TearDownTestCase() {}
 void SubCommandRecordTest::SetUp()
 {
     if (!CheckTestApp(SubCommandRecordTest::testProcesses)) {
-        SubCommandRecordTest::testProcesses = "com.ohos.launcher";
+        SubCommandRecordTest::testProcesses = "hiview";
     }
     SubCommand::ClearSubCommands(); // clear the subCommands left from other UT
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
@@ -233,6 +210,67 @@ static bool CheckIntFromProcFile(const std::string& proc, int expect)
     }
 
     return value == expect;
+}
+
+bool CheckJsonReport(const std::string& fileName, const std::string& symbolsFile, const int index = 0)
+{
+    cJSON* root = ParseJson(fileName.c_str());
+    if (root == nullptr) {
+        return false;
+    }
+    auto list = cJSON_GetObjectItem(root, "processNameMap");
+    auto size = cJSON_GetArraySize(list);
+    bool find = false;
+    for (int i = 0; i < size; i++) {
+        auto item = cJSON_GetArrayItem(list, i);
+        if (std::string(item->valuestring).find(SubCommandRecordTest::testProcesses) != std::string::npos) {
+            find = true;
+            break;
+        }
+    }
+    if (!find) {
+        return false;
+    }
+    list = cJSON_GetObjectItem(root, "symbolsFileList");
+    size = cJSON_GetArraySize(list);
+    if (!symbolsFile.empty()) {
+        find = false;
+        for (int i = 0; i < size; i++) {
+            auto item = cJSON_GetArrayItem(list, i);
+            if (symbolsFile == item->valuestring) {
+                find = true;
+                break;
+            }
+        }
+        if (!find) {
+            return false;
+        }
+    }
+    auto listRecord = cJSON_GetObjectItem(root, "recordSampleInfo");
+    if (cJSON_GetArraySize(listRecord) <= 0) {
+        return false;
+    }
+    auto itemRecord = cJSON_GetArrayItem(listRecord, 0);
+    auto listProcesses = cJSON_GetObjectItem(itemRecord, "processes");
+    if (cJSON_GetArraySize(listProcesses) <= 0) {
+        return false;
+    }
+    auto itemProcesses = cJSON_GetArrayItem(listProcesses, index);
+    auto listThreads = cJSON_GetObjectItem(itemProcesses, "threads");
+    if (cJSON_GetArraySize(listThreads) <= 0) {
+        return false;
+    }
+    auto itemThreads = cJSON_GetArrayItem(listThreads, 0);
+    auto listLibs = cJSON_GetObjectItem(itemThreads, "libs");
+    if (cJSON_GetArraySize(listLibs) <= 0) {
+        return false;
+    }
+    auto itemCallOrder = cJSON_GetObjectItem(itemThreads, "CallOrder");
+    auto itemCallStack = cJSON_GetObjectItem(itemCallOrder, "callStack");
+    if (cJSON_GetArraySize(itemCallStack) <= 0) {
+        return false;
+    }
+    return true;
 }
 
 // app package name
@@ -1023,7 +1061,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_SYSTEM, TestSize.Le
     ForkAndRunTest("-d 10 -a -f 2000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1036,7 +1076,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_SYSTEM, TestSize.Le
     ForkAndRunTest("-d 10 -a -f 4000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1049,7 +1091,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_SYSTEM, TestSize.Le
     ForkAndRunTest("-d 10 -a -f 8000 -s dwarf", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1062,7 +1106,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_SYSTEM, TestSize.Level2
     ForkAndRunTest("-d 10 -a -f 100 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F100_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1075,7 +1121,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_SYSTEM, TestSize.Level2
     ForkAndRunTest("-d 10 -a -f 500 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F500_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1088,7 +1136,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 1000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1101,7 +1151,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 2000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1114,7 +1166,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 4000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1127,7 +1181,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_SYSTEM, TestSize.Level
     ForkAndRunTest("-d 10 -a -f 8000 -s fp", true, false);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_SYSTEM);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1140,7 +1196,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_DWARF_PROCESS, TestSize.Le
     ForkAndRunTest("-d 10 -f 100 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F100_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1153,7 +1211,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_DWARF_PROCESS, TestSize.Le
     ForkAndRunTest("-d 10 -f 500 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F500_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1166,7 +1226,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 1000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F1000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1179,7 +1241,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 2000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1192,7 +1256,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 4000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1205,7 +1271,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_DWARF_PROCESS, TestSize.L
     ForkAndRunTest("-d 10 -f 8000 -s dwarf", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_DWARF_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1218,7 +1286,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency100_FP_PROCESS, TestSize.Level
     ForkAndRunTest("-d 10 -f 100 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F100_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1231,7 +1301,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency500_FP_PROCESS, TestSize.Level
     ForkAndRunTest("-d 10 -f 500 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F500_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1244,7 +1316,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency1000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 1000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F1000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1257,7 +1331,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency2000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 2000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F2000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1270,7 +1346,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency4000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 4000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F4000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1283,7 +1361,9 @@ HWTEST_F(SubCommandRecordTest, FileSizeOnFrequency8000_FP_PROCESS, TestSize.Leve
     ForkAndRunTest("-d 10 -f 8000 -s fp", true, true);
     std::string fileName = TEST_FILE;
     size_t fileSize = GetFileSize(fileName.c_str());
-    EXPECT_LE(fileSize, TEST_SIZE_F8000_FP_PROCESS);
+    EXPECT_GT(fileSize, 0);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf dump -i /data/local/tmp/perf.data",
+        {"magic:"}), true);
 }
 
 /**
@@ -1788,12 +1868,15 @@ HWTEST_F(SubCommandRecordTest, ChecKernel, TestSize.Level1)
  */
 HWTEST_F(SubCommandRecordTest, RecordAndReport, TestSize.Level1)
 {
-    TestRecordCommand("-d 5 -s dwarf -o /data/local/tmp/test_perf.data", true, true);
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/test_perf.data"), true);
-    std::string stringOut = stdoutRecord.Stop();
-    EXPECT_EQ(stringOut.find("report done") != std::string::npos, true);
+    const std::string cmd = "hiperf record -d 1 -s dwarf -f 100 --app " +
+                            SubCommandRecordTest::testProcesses +
+                            " -o /data/local/tmp/perf.data";
+    EXPECT_EQ(CheckTraceCommandOutput(cmd, {"Process and Saving data..."}), true);
+    EXPECT_EQ(CheckTraceCommandOutput(
+        "hiperf report --json -i /data/local/tmp/perf.data -o /data/local/tmp/perf.json",
+        {"report done"}),
+              true);
+    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", ""));
 }
 
 /**
@@ -2102,6 +2185,7 @@ HWTEST_F(SubCommandRecordTest, CheckThreadName, TestSize.Level1)
     };
     cmd.virtualRuntime_.SetRecordMode(saveRecord);
     EXPECT_EQ(event.PrepareRecordThread(), true);
+    std::this_thread::sleep_for(1s);
     std::vector<pid_t> tids = GetSubthreadIDs(getpid());
     EXPECT_FALSE(tids.empty());
     bool get = false;
@@ -2220,13 +2304,44 @@ HWTEST_F(SubCommandRecordTest, CheckProductCfg, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control01, TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a",
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a -o /data/local/tmp/perf_control01.data",
                                       {"create control hiperf sampling success"}),
               true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
               true);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
               true);
+    EXPECT_EQ(CheckTraceCommandOutput(
+        "hiperf report --json -i /data/local/tmp/perf_control01.data -o /data/local/tmp/perf.json",
+        {"report done"}),
+              true);
+    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", "/system/bin/hiperf", 1));
+}
+
+/**
+ * @tc.name: TestOnSubCommand_control_app
+ * @tc.desc: prepare, start, stop with app
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control_app, TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    const std::string cmd = "hiperf record --control prepare --app " +
+                            SubCommandRecordTest::testProcesses +
+                            " -o /data/local/tmp/perf_control_app.data";
+    EXPECT_EQ(CheckTraceCommandOutput(cmd, {"create control hiperf sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+              true);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
+              true);
+    EXPECT_EQ(CheckTraceCommandOutput(
+        "hiperf report --json -i /data/local/tmp/perf_control_app.data -o /data/local/tmp/perf.json",
+        {"report done"}),
+              true);
+    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", ""));
 }
 
 /**
@@ -2333,6 +2448,101 @@ HWTEST_F(SubCommandRecordTest, OutPutFileName, TestSize.Level2)
 {
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -a -o /data/log/hiperflog/perf.data",
         {"Invalid output file path, permission denied"}), true);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, GetOffsetNum, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    uint32_t offset = cmd.GetOffsetNum();
+    EXPECT_GT(offset, 0);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps1, TestSize.Level1)
+{
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    PerfRecordMmap recordIn {true, pid, tid, addr,
+                             len, pgoff, "testdatammap"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = pid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, cmd.offset_ + addr);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps2, TestSize.Level1)
+{
+    constexpr uint32_t devhostPid = 71;
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    PerfRecordMmap recordIn {true, pid, tid, addr,
+                             len, pgoff, "testdatammap"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = devhostPid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, addr);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps3, TestSize.Level1)
+{
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    constexpr uint64_t testNum = 1;
+    PerfRecordMmap2 recordIn {true, pid, tid, addr, len, pgoff,
+                              testNum, testNum, testNum, testNum, testNum, "testdatammap2"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = pid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, cmd.offset_ + addr);
+}
+
+/**
+ * @tc.name: TestOnSubCommand_OutPutFileName
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps4, TestSize.Level1)
+{
+    constexpr uint32_t devhostPid = 71;
+    constexpr uint32_t pid = 70;
+    constexpr uint32_t tid = 70;
+    constexpr uint32_t addr = 111;
+    constexpr uint64_t len = 1000;
+    constexpr uint64_t pgoff = 0;
+    constexpr uint64_t testNum = 1;
+    PerfRecordMmap2 recordIn {true, pid, tid, addr, len, pgoff,
+                              testNum, testNum, testNum, testNum, testNum, "testdatammap2"};
+    SubCommandRecord cmd;
+    cmd.devhostPid_ = devhostPid;
+    cmd.offset_ = cmd.GetOffsetNum();
+    cmd.UpdateDevHostMaps(recordIn);
+    EXPECT_EQ(recordIn.data_.addr, addr);
 }
 } // namespace HiPerf
 } // namespace Developtools

@@ -840,7 +840,7 @@ void SubCommandStat::ClientCommandHandle()
     InitControlCommandHandlerMap();
 
     bool hasRead = true;
-    while (clientRunning_) {
+    while (clientRunning_.load()) {
         if (isFifoServer_ && hasRead) {
             if (clientPipeInput_ != -1) {
                 // after read(), block is disabled, the poll will be waked neven if no data
@@ -957,9 +957,6 @@ HiperfError SubCommandStat::CheckStatOption()
 HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
 {
     CHECK_TRUE(!HelpOption(), HiperfError::NO_ERR, 0, "");
-    if (!CheckOutPutFile()) {
-        return HiperfError::CHECK_OUT_PUT_ERROR;
-    }
     if (!ParseControlCmd(controlCmd_)) {
         return HiperfError::WRONG_CONTROL_CMD;
     }
@@ -968,6 +965,9 @@ HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
         if (errorCode != HiperfError::NO_ERR) {
             return errorCode;
         }
+    }
+    if (!CheckOutPutFile()) {
+        return HiperfError::CHECK_OUT_PUT_ERROR;
     }
     if (!ProcessControl()) {
         return HiperfError::PROCESS_CONTROL_FAIL;
@@ -997,7 +997,7 @@ HiperfError SubCommandStat::OnSubCommand(std::vector<std::string>& args)
 void SubCommandStat::CloseClientThread()
 {
     if (clientCommandHandle_.joinable()) {
-        clientRunning_ = false;
+        clientRunning_.store(false);
         HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
             close(nullFd_);

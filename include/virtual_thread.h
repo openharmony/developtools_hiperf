@@ -68,8 +68,8 @@ public:
         HLOGV("%d %d map from parent size is %zu", pid, tid, memMaps_.size());
     };
 
-    pid_t pid_ = 0;
-    pid_t tid_ = 0;
+    pid_t pid_ = -1;
+    pid_t tid_ = -1;
     std::string name_;
 
     const std::vector<std::shared_ptr<DfxMap>> &GetMaps() const

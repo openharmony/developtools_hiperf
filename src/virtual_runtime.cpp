@@ -932,9 +932,6 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, const pid_t pid)
      * seg2      /data/storage/el1/bundle/entry.hap       r-xp    ELF
      * seg3      /data/storage/el1/bundle/entry.hap       r--p    ABC
      * seg4      /data/storage/el1/bundle/entry.hap       r--p    ABC
-     * seg1      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
-     * seg2      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
-     * seg3      /system/app/SceneBoard/SceneBoard.hap    r--p    ABC
      * segN      .hap                                     r--p    .an/jit/etc
      * 1.map.name == symbolsFile.filePath_
      * 2.map.FileType == symbolsFiles_[map.symbolFileIndex]
@@ -1044,7 +1041,13 @@ const DfxSymbol VirtualRuntime::GetKernelThreadSymbol(const uint64_t ip, const V
                 symbolsFile->LoadDebugInfo();
                 symbolsFile->LoadSymbols(map);
             }
-            auto foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            DfxSymbol foundSymbols;
+            if (thread.pid_ == devhostPid_ && recordCallBack_ != nullptr) {
+                foundSymbols = symbolsFile->GetSymbolWithPcAndMap(vaddrSymbol.fileVaddr_, map);
+            } else {
+                foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            }
+
             foundSymbols.taskVaddr_ = ip;
             if (!foundSymbols.IsValid()) {
                 HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s",

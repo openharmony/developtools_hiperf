@@ -335,7 +335,7 @@ struct ReportProcessItem {
 };
 
 struct ReportConfigItem {
-    int index_ = 0;
+    int index_ = -1;
     std::string eventName_;
     uint64_t eventCount_ = 0;
     std::map<pid_t, ReportProcessItem> processes_;

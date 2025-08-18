@@ -1055,10 +1055,10 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
 {
-    SymbolsFile::needParseJsFunc_ = true;
+    SymbolsFile::needParseJsFunc_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
-    EXPECT_EQ(symbolsFile->IsV8(), false);
+    EXPECT_EQ(symbolsFile->IsV8(), true);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();

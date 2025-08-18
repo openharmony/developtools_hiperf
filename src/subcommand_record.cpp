@@ -21,6 +21,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <memory>
+#include <random>
+
 #if defined(CONFIG_HAS_SYSPARA)
 #include <parameters.h>
 #endif
@@ -1143,7 +1145,9 @@ void SubCommandRecord::PrepareKernelMaps()
         // prepare from kernel and ko
         virtualRuntime_.SetNeedKernelCallChain(!callChainUserOnly_);
         virtualRuntime_.UpdateKernelSpaceMaps();
-        virtualRuntime_.UpdateKernelModulesSpaceMaps();
+        if (isRoot_) {
+            virtualRuntime_.UpdateKernelModulesSpaceMaps();
+        }
         if (isHM_) {
             virtualRuntime_.UpdateServiceSpaceMaps();
         }
@@ -1157,6 +1161,9 @@ void SubCommandRecord::PrepareKernelMaps()
 bool SubCommandRecord::PrepareVirtualRuntime()
 {
     auto saveRecord = [this](PerfEventRecord& record) -> bool {
+        if (!isRoot_) {
+            UpdateDevHostMaps(record);
+        }
         return this->SaveRecord(record);
     };
     virtualRuntime_.SetRecordMode(saveRecord);
@@ -1418,7 +1425,7 @@ void SubCommandRecord::ClientCommandHandle()
     InitControlCommandHandlerMap();
 
     bool hasRead = true;
-    while (clientRunning_) {
+    while (clientRunning_.load()) {
         if (isFifoServer_ && hasRead) {
             if (clientPipeInput_ != -1) {
                 // after read(), block is disabled, the poll will be waked neven if no data
@@ -1608,6 +1615,12 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         }
     }
 
+    if (!isRoot_) {
+        offset_ = GetOffsetNum();
+        SymbolsFile::offsetNum_ = offset_;
+        HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] get offset success");
+    }
+
     if (!CheckTargetPids()) {
         HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] CheckTargetPids failed");
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
@@ -1738,7 +1751,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
 void SubCommandRecord::CloseClientThread()
 {
     if (clientCommandHandle_.joinable()) {
-        clientRunning_ = false;
+        clientRunning_.store(false);
         HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
             close(nullFd_);
@@ -1755,7 +1768,7 @@ void SubCommandRecord::CloseClientThread()
 void SubCommandRecord::CloseReplyThread()
 {
     if (replyCommandHandle_.joinable()) {
-        clientRunning_ = false;
+        clientRunning_.store(false);
         HLOGI("CloseReplyThread");
         replyCommandHandle_.join();
     }
@@ -1773,6 +1786,15 @@ void SubCommandRecord::RemoveVdsoTmpFile()
             }
         }
     }
+}
+
+void SubCommandRecord::UpdateDevHostMapsAndIPs(PerfEventRecord& record)
+{
+    if (isRoot_) {
+        return;
+    }
+    UpdateDevHostCallChains(record);
+    UpdateDevHostMaps(record);
 }
 
 bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
@@ -1818,6 +1840,7 @@ bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 #ifdef HIPERF_DEBUG_TIME
     prcessRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
+    UpdateDevHostMapsAndIPs(record);
     return SaveRecord(record);
 #endif
 }
@@ -2005,7 +2028,6 @@ void SubCommandRecord::AddCommandLineFeature()
     std::string fullCommandline =
         ReadFileToString("/proc/self/cmdline").c_str() + Command::fullArgument;
     fileWriter_->AddStringFeature(FEATURE::CMDLINE, fullCommandline);
-    HIPERF_HILOGI(MODULE_DEFAULT, "cmd : %{public}s", fullCommandline.c_str());
 }
 
 void SubCommandRecord::AddCpuOffFeature()
@@ -2177,24 +2199,32 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
         } else {
             userSymbolsHits_[sample->data_.pid].insert(sample->data_.ip);
         }
-    } else {
-        for (u64 i = 0; i < sample->data_.nr; i++) {
-            if (sample->data_.ips[i] >= PERF_CONTEXT_MAX) {
-                if (sample->data_.ips[i] == PERF_CONTEXT_KERNEL) {
-                    context = PERF_CONTEXT_KERNEL;
-                } else {
-                    context = PERF_CONTEXT_USER;
-                }
+        return;
+    }
+
+    for (u64 i = 0; i < sample->data_.nr; i++) {
+        if (sample->data_.ips[i] >= PERF_CONTEXT_MAX) {
+            if (sample->data_.ips[i] == PERF_CONTEXT_KERNEL) {
+                context = PERF_CONTEXT_KERNEL;
             } else {
-                serverPid = sample->GetServerPidof(i);
-                if (virtualRuntime_.IsKernelThread(serverPid)) {
-                    kernelThreadSymbolsHits_[serverPid].insert(sample->data_.ips[i]);
-                } else if (context == PERF_CONTEXT_KERNEL) {
-                    kernelSymbolsHits_.insert(sample->data_.ips[i]);
-                } else {
-                    userSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
-                }
+                context = PERF_CONTEXT_USER;
             }
+            continue;
+        }
+
+        serverPid = sample->GetServerPidof(i);
+        if (!isRoot_ && static_cast<uint32_t>(serverPid) == devhostPid_) {
+            // in func UpdateDevHostCallChains add offset_ to ips, need sub offset_ when symboling
+            if (sample->data_.ips[i] > offset_) {
+                sample->data_.ips[i] -= offset_;
+            }
+        }
+        if (virtualRuntime_.IsKernelThread(serverPid)) {
+            kernelThreadSymbolsHits_[serverPid].insert(sample->data_.ips[i]);
+        } else if (context == PERF_CONTEXT_KERNEL) {
+            kernelSymbolsHits_.insert(sample->data_.ips[i]);
+        } else {
+            userSymbolsHits_[sample->data_.pid].insert(sample->data_.ips[i]);
         }
     }
 }
@@ -2356,6 +2386,7 @@ void SubCommandRecord::SetHM()
             std::string cmdline = GetProcessName(pid);
             if (cmdline == "/bin/" + DEVHOST_FILE_NAME) {
                 virtualRuntime_.SetDevhostPid(pid);
+                devhostPid_ = static_cast<uint32_t>(pid);
                 break;
             }
         }
@@ -2456,6 +2487,62 @@ void SubCommandRecord::SetCheckRecordCallback(CheckRecordCallBack callback)
 #ifdef HIPERF_UNITTEST
     checkCallback_ = callback;
 #endif
+}
+
+uint32_t SubCommandRecord::GetOffsetNum()
+{
+    uint32_t result = 0;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis(0, UINT32_MAX);
+    result = dis(gen);
+
+    std::ifstream randomFile("/dev/random", std::ios::binary);
+    do {
+        if (!randomFile.is_open()) {
+            break;
+        }
+        randomFile.read(reinterpret_cast<char*>(&result), sizeof(result));
+    } while (0);
+    randomFile.close();
+    return result;
+}
+
+void SubCommandRecord::UpdateDevHostMaps(PerfEventRecord& record)
+{
+    if (record.GetType() == PERF_RECORD_MMAP) {
+        auto recordMmap = static_cast<PerfRecordMmap*>(&record);
+        if (recordMmap->data_.pid == devhostPid_) {
+            recordMmap->data_.addr += offset_;
+        }
+    } else if (record.GetType() == PERF_RECORD_MMAP2) {
+        auto recordMmap2 = static_cast<PerfRecordMmap2*>(&record);
+        if (recordMmap2->data_.pid == devhostPid_) {
+            recordMmap2->data_.addr += offset_;
+        }
+    }
+}
+
+void SubCommandRecord::UpdateDevHostCallChains(PerfEventRecord& record)
+{
+    if (record.GetType() == PERF_RECORD_SAMPLE) {
+        uint32_t serverPid;
+        const uint64_t BAD_IP_ADDRESS = 2;
+        auto sample = static_cast<PerfRecordSample*>(&record);
+        serverPid = static_cast<uint32_t>(sample->GetServerPidof(0));
+        if (serverPid == devhostPid_) {
+            sample->data_.ip += offset_;
+        }
+        for (u64 i = 0; i < sample->data_.nr; i++) {
+            if (sample->data_.ips[i] >= PERF_CONTEXT_MAX || sample->data_.ips[i] < BAD_IP_ADDRESS) {
+                continue;
+            }
+            serverPid = static_cast<uint32_t>(sample->GetServerPidof(i));
+            if (serverPid == devhostPid_) {
+                sample->data_.ips[i] += offset_;
+            }
+        }
+    }
 }
 } // namespace HiPerf
 } // namespace Developtools

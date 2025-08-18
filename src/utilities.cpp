@@ -700,7 +700,7 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
     return res;
 }
 
-bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, const int checkAppMs)
+bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, const int checkAppMs)
 {
     if (!appPackage.empty()) {
         pid_t appPid = GetAppPackagePid(appPackage, -1, checkAppMs, waitAppRunCheckTimeOut);
@@ -875,9 +875,11 @@ bool NeedAdaptSandboxPath(char *filename, const int pid, u16 &headerSize)
         std::string newFilename = "/proc/" + std::to_string(pid) + "/root" + oldFilename;
         if (memset_s(filename, KILO, '\0', KILO) != EOK) {
             HLOGD("memset_s filename failed!");
+            return false;
         }
         if (strncpy_s(filename, KILO, newFilename.c_str(), newFilename.size()) != 0) {
             HLOGD("strncpy_s recordMmap2 failed!");
+            return false;
         }
         headerSize += newFilename.size() - oldFilename.size();
         return true;

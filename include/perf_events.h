@@ -331,6 +331,8 @@ struct read_format_no_group {
     __u64 id;           /* if PERF_FORMAT_ID */
 };
 
+u32 GetSpeType();
+
 class PerfEvents {
 public:
     static constexpr uint64_t DEFAULT_SAMPLE_FREQUNCY = 4000;
@@ -414,8 +416,8 @@ public:
     std::map<__u64, std::string> GetSupportEvents(const perf_type_id type);
 
     struct Summary {
-        int cpu = 0;
-        pid_t tid = 0;
+        int cpu = -1;
+        pid_t tid = -1;
         __u64 eventCount = 0;
         __u64 timeEnabled = 0;
         __u64 timeRunning = 0;
@@ -427,9 +429,9 @@ public:
     };
 
     struct ReportSum {
-        int cpu = 0;
-        pid_t pid = 0;
-        pid_t tid = 0;
+        int cpu = -1;
+        pid_t pid = -1;
+        pid_t tid = -1;
         double scaleSum = 1.0;
         double commentSum = 0;
         __u64 eventCountSum = 0;
@@ -462,7 +464,7 @@ public:
     }
 
     // review: remove this function.
-    static const std::string GetStaticConfigName(const perf_type_id type_id, __u64 const config_id)
+    static const std::string GetStaticConfigName(const perf_type_id type_id, const __u64 config_id)
     {
         auto typeConfigs = TYPE_CONFIGS.find(type_id);
         if (typeConfigs != TYPE_CONFIGS.end()) {
@@ -525,9 +527,9 @@ public:
         uint64_t timestamp = 0;
         const perf_event_attr *attr = nullptr;
         size_t posCallChain = 0;
-        int cpu = 0;
+        int cpu = -1;
         void *auxBuf = nullptr;
-        pid_t tid_ = 0;
+        pid_t tid_ = -1;
     };
 
     bool isHM_ = false;
@@ -611,9 +613,9 @@ private:
 
     struct FdItem {
         OHOS::UniqueFd fd;
-        int cpu = 0;
-        pid_t pid = 0;
-        pid_t tid = 0;
+        int cpu = -1;
+        pid_t pid = -1;
+        pid_t tid = -1;
         __u64 eventCount = 0;
         mutable uint64_t perfId = 0;
         uint64_t GetPrefId() const
@@ -675,7 +677,7 @@ private:
                   const bool excludeKernel = false, const bool followGroup = false);
     bool AddEvent(const std::string &eventString, const bool followGroup = false);
     bool AddSpeEvent(const u32 type, const bool followGroup = false);
-    bool IsEventSupport(const perf_type_id type, __u64 const config);
+    bool IsEventSupport(const perf_type_id type, const __u64 config);
     bool IsEventAttrSupport(perf_event_attr &attr);
 
     std::chrono::time_point<std::chrono::steady_clock> trackingStartTime_;
