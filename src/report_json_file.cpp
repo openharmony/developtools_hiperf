@@ -30,7 +30,7 @@ namespace Developtools {
 namespace HiPerf {
 bool ReportJsonFile::debug_ = false;
 
-void ReportJsonFile::AddNewFunction(int libId, std::string name)
+void ReportJsonFile::AddNewFunction(const int libId, std::string name)
 {
     auto it = functionMap_.find(libId);
     if (it == functionMap_.end()) {
@@ -88,7 +88,7 @@ void ReportJsonFile::UpdateCallNodeEventCount()
     }
 }
 
-ReportConfigItem &ReportJsonFile::GetConfig(uint64_t id)
+ReportConfigItem &ReportJsonFile::GetConfig(const uint64_t id)
 {
     for (auto &configpair : reportConfigItems_) {
         if (find(configpair.first.begin(), configpair.first.end(), id) != configpair.first.end()) {
@@ -100,7 +100,7 @@ ReportConfigItem &ReportJsonFile::GetConfig(uint64_t id)
     return reportConfigItems_.begin()->second;
 }
 
-int ReportJsonFile::GetFunctionID(int libId, const std::string &function)
+int ReportJsonFile::GetFunctionID(const int libId, const std::string &function)
 {
     auto functionMapIt = functionMap_.find(libId);
     if (functionMapIt == functionMap_.end()) {
@@ -117,7 +117,8 @@ int ReportJsonFile::GetFunctionID(int libId, const std::string &function)
     return funcMapIt->second.reportFuncId_;
 }
 
-void ReportJsonFile::UpdateReportSample(uint64_t id, pid_t pid, pid_t tid, uint64_t eventCount)
+void ReportJsonFile::UpdateReportSample(const uint64_t id, const pid_t pid,
+                                        const pid_t tid, const uint64_t eventCount)
 {
     auto &config = GetConfig(id);
 
@@ -130,7 +131,7 @@ void ReportJsonFile::UpdateReportSample(uint64_t id, pid_t pid, pid_t tid, uint6
     sampleCount_++;
 }
 
-void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem &callNode,
+void ReportJsonFile::AddReportCallStack(const uint64_t eventCount, ReportCallNodeItem &callNode,
                                         const std::vector<DfxFrame> &frames)
 {
     std::map<int, ReportCallNodeItem> *child = &callNode.childrenMap;
@@ -162,7 +163,7 @@ void ReportJsonFile::AddReportCallStack(uint64_t eventCount, ReportCallNodeItem 
     }
 }
 
-void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNodeItem &callNode,
+void ReportJsonFile::AddReportCallStackReverse(const uint64_t eventCount, ReportCallNodeItem &callNode,
                                                const std::vector<DfxFrame> &frames)
 {
     std::map<int, ReportCallNodeItem> *child = &callNode.childrenMap;
@@ -194,18 +195,18 @@ void ReportJsonFile::AddReportCallStackReverse(uint64_t eventCount, ReportCallNo
     }
 }
 
-uint32_t ReportJsonFile::GetConfigIndex(uint64_t id)
+uint32_t ReportJsonFile::GetConfigIndex(const uint64_t id)
 {
     return GetConfig(id).index_;
 }
 
-std::string ReportJsonFile::GetConfigName(uint64_t id)
+std::string ReportJsonFile::GetConfigName(const uint64_t id)
 {
     auto &config = GetConfig(id);
     return config.eventName_;
 }
 
-int ReportJsonFile::GetLibID(std::string_view filepath)
+int ReportJsonFile::GetLibID(const std::string_view filepath)
 {
     auto it = find(libList_.begin(), libList_.end(), filepath);
     if (it != libList_.end()) {
@@ -216,8 +217,8 @@ int ReportJsonFile::GetLibID(std::string_view filepath)
     }
 }
 
-void ReportJsonFile::UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, uint64_t eventCount,
-                                           std::vector<DfxFrame> &frames)
+void ReportJsonFile::UpdateReportCallStack(const uint64_t id, const pid_t pid, const pid_t tid,
+                                           uint64_t const eventCount, const std::vector<DfxFrame> &frames)
 {
     auto &config = GetConfig(id);
     std::set<int> RepeatFunctionId;

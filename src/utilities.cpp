@@ -85,7 +85,7 @@ std::string CanonicalizeSpecPath(const char* src)
     return res;
 }
 
-uint32_t RoundUp(uint32_t x, const int align)
+uint32_t RoundUp(const uint32_t x, const int align)
 {
     return (((x) + (align) >= 1 ? (x) + (align) - 1 : 0) / (align)) * (align);
 }
@@ -295,7 +295,7 @@ std::string ReadFileToString(const std::string &fileName)
     return content;
 }
 
-bool ReadFileToString(const std::string &fileName, std::string &fileData, size_t fileSize)
+bool ReadFileToString(const std::string &fileName, std::string &fileData, const size_t fileSize)
 {
     fileData.clear();
     std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
@@ -340,7 +340,7 @@ bool IsRoot()
 #endif
 }
 
-bool PowerOfTwo(uint64_t n)
+bool PowerOfTwo(const uint64_t n)
 {
     return n && (!(n & (n - 1)));
 }
@@ -399,7 +399,7 @@ bool ReadIntFromProcFile(const std::string &path, int &value)
     return true;
 }
 
-bool WriteIntToProcFile(const std::string &path, int value)
+bool WriteIntToProcFile(const std::string &path, const int value)
 {
     std::string s = std::to_string(value);
 
@@ -615,7 +615,7 @@ bool StringEndsWith(const std::string &string, const std::string &with)
     return string.rfind(with) == (string.length() - with.length());
 }
 
-bool HexDump(const void *buf, size_t size, size_t maxSize)
+bool HexDump(const void *buf, const size_t size, const size_t maxSize)
 {
     CHECK_TRUE(buf != nullptr, false, 0, "");
     const unsigned char *byteBuf = static_cast<const unsigned char *>(buf);
@@ -639,7 +639,7 @@ std::string BufferToHexString(const std::vector<unsigned char> &vec)
     return BufferToHexString(vec.data(), vec.size());
 }
 
-std::string BufferToHexString(const unsigned char buf[], size_t size)
+std::string BufferToHexString(const unsigned char buf[], const size_t size)
 {
     std::stringstream ss;
     ss << size << ":";
@@ -700,7 +700,7 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
     return res;
 }
 
-bool CheckAppIsRunning (std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs)
+bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, const int checkAppMs)
 {
     if (!appPackage.empty()) {
         pid_t appPid = GetAppPackagePid(appPackage, -1, checkAppMs, waitAppRunCheckTimeOut);
@@ -857,7 +857,7 @@ bool IsAllowProfilingUid()
 #endif
 }
 
-std::string GetProcessName(int pid)
+std::string GetProcessName(const int pid)
 {
 #if defined(is_ohos) && is_ohos
     std::string filePath = "/proc/" + std::to_string(pid) + "/cmdline";
@@ -868,14 +868,18 @@ std::string GetProcessName(int pid)
 #endif
 }
 
-bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize)
+bool NeedAdaptSandboxPath(char *filename, const int pid, u16 &headerSize)
 {
     std::string oldFilename = filename;
     if (oldFilename.find("/data/storage") == 0 && access(oldFilename.c_str(), F_OK) != 0) {
         std::string newFilename = "/proc/" + std::to_string(pid) + "/root" + oldFilename;
-        (void)memset_s(filename, KILO, '\0', KILO);
+        if (memset_s(filename, KILO, '\0', KILO) != EOK) {
+            HLOGD("memset_s filename failed!");
+            return false;
+        }
         if (strncpy_s(filename, KILO, newFilename.c_str(), newFilename.size()) != 0) {
             HLOGD("strncpy_s recordMmap2 failed!");
+            return false;
         }
         headerSize += newFilename.size() - oldFilename.size();
         return true;
@@ -1021,7 +1025,7 @@ bool IsDirectoryExists(const std::string& fileName)
     return false;
 }
 
-bool CreateDirectory(const std::string& path, mode_t mode)
+bool CreateDirectory(const std::string& path, const mode_t mode)
 {
 #if defined(is_ohos) && is_ohos
     std::string::size_type pos = 0;

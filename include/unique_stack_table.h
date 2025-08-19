@@ -77,12 +77,12 @@ static_assert(sizeof(Node) == 8, "Node size must be 8 byte");
 class UniqueStackTable {
 public:
     bool Init();
-    explicit UniqueStackTable(pid_t pid) : pid_(pid)
+    explicit UniqueStackTable(const pid_t pid) : pid_(pid)
     {
         Init();
     }
 
-    UniqueStackTable(pid_t pid, uint32_t size) : pid_(pid), tableSize_(size)
+    UniqueStackTable(const pid_t pid, const uint32_t size) : pid_(pid), tableSize_(size)
     {
         Init();
     }
@@ -91,9 +91,9 @@ public:
         tableBuf_ = nullptr;
     }
 
-    uint64_t PutIpsInTable(StackId *stackId, u64 *ips, u64 nr);
+    uint64_t PutIpsInTable(StackId *stackId, const u64 *ips, const u64 nr);
     bool GetIpsByStackId(const StackId stackId, std::vector<u64>& ips);
-    bool ImportNode(uint32_t index, const Node& node);
+    bool ImportNode(const uint32_t index, const Node& node);
     size_t GetWriteSize();
 
     bool Resize();
@@ -120,8 +120,8 @@ public:
 
 private:
     Node* GetFrame(uint64_t stackId);
-    uint64_t PutIpInSlot(uint64_t thisIp, uint64_t prevIdx);
-    u32 pid_;
+    uint64_t PutIpInSlot(const uint64_t thisIp, const uint64_t prevIdx);
+    u32 pid_ = 0;
     uint32_t tableSize_ = INITIAL_TABLE_SIZE;
     std::unique_ptr<uint8_t[]> tableBuf_ = nullptr;
     std::vector<uint32_t> usedSlots_;

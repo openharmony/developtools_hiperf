@@ -725,7 +725,7 @@ bool SubCommandRecord::CheckSpeOption()
     return true;
 }
 
-void SubCommandRecord::MsgPrintAndTrans(bool isTrans, const std::string& msg)
+void SubCommandRecord::MsgPrintAndTrans(const bool isTrans, const std::string& msg)
 {
     if (isTrans && controlCmd_ == CONTROL_CMD_PREPARE) {
         ChildResponseToMain(msg);
@@ -1208,7 +1208,7 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
     }
 }
 
-bool SubCommandRecord::ClientCommandResponse(bool response)
+bool SubCommandRecord::ClientCommandResponse(const bool response)
 {
     return ClientCommandResponse(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
 }
@@ -1238,7 +1238,7 @@ bool SubCommandRecord::ClientCommandResponse(const std::string& str)
     return true;
 }
 
-bool SubCommandRecord::ChildResponseToMain(bool response)
+bool SubCommandRecord::ChildResponseToMain(const bool response)
 {
     return ChildResponseToMain(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
 }
@@ -1259,7 +1259,7 @@ bool SubCommandRecord::ChildResponseToMain(const std::string& str)
     return true;
 }
 
-bool SubCommandRecord::MainRecvFromChild(int fd, std::string& reply)
+bool SubCommandRecord::MainRecvFromChild(const int fd, std::string& reply)
 {
     struct pollfd pollFd {
         fd, POLLIN, 0
@@ -1350,7 +1350,7 @@ void SubCommandRecord::OutputRecordFile()
     fileWriter_ = nullptr;
 }
 
-bool SubCommandRecord::PostOutputRecordFile(bool output)
+bool SubCommandRecord::PostOutputRecordFile(const bool output)
 {
     if (output) {
         OutputRecordFile();
@@ -2065,7 +2065,7 @@ bool SubCommandRecord::AddFeatureRecordFile()
     return true;
 }
 
-bool SubCommandRecord::CreateInitRecordFile(bool compressData)
+bool SubCommandRecord::CreateInitRecordFile(const bool compressData)
 {
     if (fileWriter_ == nullptr) {
         fileWriter_ = std::make_unique<PerfFileWriter>();
@@ -2464,7 +2464,7 @@ void SubCommandRecord::SetExcludeHiperf()
     }
 }
 
-bool SubCommandRecord::IsThreadExcluded(pid_t pid, pid_t tid)
+bool SubCommandRecord::IsThreadExcluded(const pid_t pid, const pid_t tid)
 {
     if (excludePids_.find(pid) != excludePids_.end()) {
         return true;

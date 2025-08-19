@@ -81,8 +81,8 @@ const static std::vector<FEATURE> FeatureStrings = {
 };
 
 struct perf_file_section {
-    uint64_t offset;
-    uint64_t size;
+    uint64_t offset = 0;
+    uint64_t size = 0;
 };
 
 struct perf_file_attr {
@@ -91,7 +91,7 @@ struct perf_file_attr {
 };
 
 struct perf_header_string {
-    uint32_t len;
+    uint32_t len = 0;
     char string[0]; /* zero terminated */
 };
 
@@ -114,7 +114,7 @@ public:
     struct perf_file_section header;
     const FEATURE featureId_;
 
-    virtual bool GetBinary(char *buf, size_t size) = 0;
+    virtual bool GetBinary(char *buf, const size_t size) = 0;
     virtual size_t GetSize() = 0;
     virtual ~PerfFileSection() {}
     explicit PerfFileSection(const FEATURE featureId) : featureId_(featureId)
@@ -122,7 +122,7 @@ public:
         header.size = 0;
         header.offset = 0;
     }
-    static std::string GetFeatureName(FEATURE featureId);
+    static std::string GetFeatureName(const FEATURE featureId);
 
 protected:
     const char *rBuffer_ = nullptr;
@@ -131,23 +131,23 @@ protected:
     size_t offset_ = 0;
 
     // for read
-    void Init(const char *buffer, size_t maxSize);
+    void Init(const char *buffer, const size_t maxSize);
     // for write
-    void Init(char *buffer, size_t maxSize);
-    bool Write(uint32_t u32);
-    bool Write(uint64_t u64);
+    void Init(char *buffer, const size_t maxSize);
+    bool Write(const uint32_t u32);
+    bool Write(const uint64_t u64);
     bool Write(const std::string &str);
 
-    bool Write(const char *buf, size_t size);
-    bool Write(const char *buf, size_t size, size_t max);
+    bool Write(const char *buf, const size_t size);
+    bool Write(const char *buf, const size_t size, const size_t max);
 
     bool Read(uint32_t &value);
     bool Read(uint64_t &value);
     bool Read(std::string &value);
     bool Read(char *buf, size_t size);
-    void Skip(size_t size);
+    void Skip(const size_t size);
 
-    uint32_t SizeOf(std::string &string);
+    uint32_t SizeOf(const std::string &string);
 };
 
 class PerfFileSectionString : public PerfFileSection {
@@ -156,10 +156,10 @@ class PerfFileSectionString : public PerfFileSection {
 public:
     // convert buff to PerfFileSectionString, used to read file
     // if the data in buf is incorrect, ......
-    PerfFileSectionString(FEATURE id, const char *buf, size_t size);
-    PerfFileSectionString(FEATURE id, const std::string &charString);
+    PerfFileSectionString(const FEATURE id, const char *buf, size_t size);
+    PerfFileSectionString(const FEATURE id, const std::string &charString);
 
-    bool GetBinary(char *buf, size_t size);
+    bool GetBinary(char *buf, const size_t size);
     size_t GetSize();
     const std::string ToString() const;
 };
@@ -170,7 +170,7 @@ struct SymbolStruct {
     uint32_t len_ = 0;
     std::string symbolName_ = EMPTY_STRING;
     SymbolStruct() {}
-    SymbolStruct(uint64_t vaddr, uint32_t len, const std::string &symbolName)
+    SymbolStruct(const uint64_t vaddr, const uint32_t len, const std::string &symbolName)
         : vaddr_(vaddr), len_(len), symbolName_(symbolName)
     {
     }
@@ -178,9 +178,9 @@ struct SymbolStruct {
 
 struct SymbolFileStruct {
     std::string filePath_ = EMPTY_STRING;
-    uint32_t symbolType_;
-    uint64_t textExecVaddr_;
-    uint64_t textExecVaddrFileOffset_;
+    uint32_t symbolType_ = 0;
+    uint64_t textExecVaddr_ = 0;
+    uint64_t textExecVaddrFileOffset_ = 0;
     std::string buildId_;
     std::vector<SymbolStruct> symbolStructs_;
 };
@@ -190,14 +190,14 @@ public:
     std::vector<SymbolFileStruct> symbolFileStructs_;
 
     size_t GetSize();
-    PerfFileSectionSymbolsFiles(FEATURE id, const std::vector<SymbolFileStruct> &symbolFileStructs)
+    PerfFileSectionSymbolsFiles(const FEATURE id, const std::vector<SymbolFileStruct> &symbolFileStructs)
         : PerfFileSection(id), symbolFileStructs_(symbolFileStructs)
     {
     }
     // if the data in buf is incorrect, ......
-    PerfFileSectionSymbolsFiles(FEATURE id, const char *buf, size_t size);
+    PerfFileSectionSymbolsFiles(const FEATURE id, const char *buf, const size_t size);
 
-    bool GetBinary(char *buf, size_t size);
+    bool GetBinary(char *buf, const size_t size);
     void ReadSymbolFileStructs();
 private:
 };
@@ -208,10 +208,10 @@ class PerfFileSectionNrCpus : public PerfFileSection {
     uint32_t nrCpusOnline_ = 0;
 
 public:
-    PerfFileSectionNrCpus(FEATURE id, const char *buf, size_t size);
-    PerfFileSectionNrCpus(FEATURE id, uint32_t nrCpusAvailable, uint32_t nrCpusOnline);
+    PerfFileSectionNrCpus(const FEATURE id, const char *buf, const size_t size);
+    PerfFileSectionNrCpus(const FEATURE id, const uint32_t nrCpusAvailable, const uint32_t nrCpusOnline);
 
-    bool GetBinary(char *buf, size_t size);
+    bool GetBinary(char *buf, const size_t size);
     size_t GetSize();
     void GetValue(uint32_t &nrCpusAvailable, uint32_t &nrCpusOnline) const;
 };
@@ -220,10 +220,10 @@ class PerfFileSectionU64 : public PerfFileSection {
     uint64_t value_;
 
 public:
-    PerfFileSectionU64(FEATURE id, const char *buf, size_t size);
-    PerfFileSectionU64(FEATURE id, uint64_t v);
+    PerfFileSectionU64(const FEATURE id, const char *buf, const size_t size);
+    PerfFileSectionU64(const FEATURE id, const uint64_t v);
 
-    bool GetBinary(char *buf, size_t size);
+    bool GetBinary(char *buf, const size_t size);
     size_t GetSize();
     void GetValue(uint64_t &v) const;
 };
@@ -231,14 +231,14 @@ public:
 class PerfFileSectionUniStackTable : public PerfFileSection {
 public:
     std::vector<UniStackTableInfo> uniStackTableInfos_;
-    PerfFileSectionUniStackTable(FEATURE id,
+    PerfFileSectionUniStackTable(const FEATURE id,
         const ProcessStackMap *table)
         : PerfFileSection(id), processStackTable_(table) {}
-    PerfFileSectionUniStackTable(FEATURE id, const char *buf, size_t size);
+    PerfFileSectionUniStackTable(const FEATURE id, const char *buf, const size_t size);
 private:
     const ProcessStackMap *processStackTable_;
     size_t GetSize();
-    bool GetBinary(char *buf, size_t size);
+    bool GetBinary(char *buf, const size_t size);
 };
 
 struct AttrWithId;
@@ -246,10 +246,10 @@ class PerfFileSectionEventDesc : public PerfFileSection {
 public:
     std::vector<AttrWithId> eventDesces_;
 
-    PerfFileSectionEventDesc(FEATURE id, const char *buf, size_t size);
-    PerfFileSectionEventDesc(FEATURE id, const std::vector<AttrWithId> &eventDesces);
+    PerfFileSectionEventDesc(const FEATURE id, const char *buf, const size_t size);
+    PerfFileSectionEventDesc(const FEATURE id, const std::vector<AttrWithId> &eventDesces);
 
-    bool GetBinary(char *buf, size_t size);
+    bool GetBinary(char *buf, const size_t size);
     size_t GetSize();
     void GetValue(std::vector<AttrWithId> &eventDesces) const;
 };

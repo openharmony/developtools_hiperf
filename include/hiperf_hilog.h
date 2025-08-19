@@ -124,7 +124,7 @@ static inline std::string StringFormat(const char* fmt, ...)
 #define LOG_TYPE_WITH_HILOG 3
 #define CHECK_TRUE(expr, retval, log, fmt, ...)                                                    \
     do {                                                                                           \
-        if (!(expr)) {                                                                                \
+        if (!(expr)) {                                                                             \
             if (log == 1) {                                                                        \
                 std::string str = StringFormat(fmt, ##__VA_ARGS__);                                \
                 HLOGE("%s", str.c_str());                                                          \

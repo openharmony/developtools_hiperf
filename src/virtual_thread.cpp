@@ -203,7 +203,7 @@ void VirtualThread::ReportVaddrMapMiss(uint64_t vaddr) const
 #endif
 }
 
-bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) const
+bool VirtualThread::ReadRoMemory(uint64_t vaddr, uint8_t *data, const size_t size) const
 {
     uint64_t pageIndex = vaddr >> 12;
     uint64_t memMapIndex = -1;
@@ -306,7 +306,7 @@ void VirtualThread::ParseServiceMap(const std::string &filename)
     CreateMapItem(filename, begin, end - begin, 0);
 }
 
-void VirtualThread::ParseDevhostMap(pid_t devhost)
+void VirtualThread::ParseDevhostMap(const pid_t devhost)
 {
     std::string mapPath = StringPrintf("/proc/%d/maps", devhost);
     std::string mapContent = ReadFileToString(mapPath);
@@ -387,8 +387,9 @@ void VirtualThread::SortMemMaps()
     }
 }
 
-std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string filename, uint64_t begin, uint64_t len,
-                                                     uint64_t offset, uint32_t prot)
+std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string &filename, uint64_t const begin,
+                                                     const uint64_t len, const uint64_t offset,
+                                                     const uint32_t prot)
 {
     if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(filename)) {
         return nullptr; // skip some memmap

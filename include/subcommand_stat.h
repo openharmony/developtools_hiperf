@@ -131,8 +131,8 @@ private:
     bool verboseReport_ {false};
     std::vector<std::string> trackedCommand_ {};
     bool helpOption_ {false};
-    bool CheckOptionPidAndApp(std::vector<pid_t> pids);
-    bool CheckOptionPid(std::vector<pid_t> pids);
+    bool CheckOptionPidAndApp(const std::vector<pid_t>& pids);
+    bool CheckOptionPid(const std::vector<pid_t>& pids);
     bool CheckOutPutFile();
     static bool FindEventCount(
         const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
@@ -145,7 +145,7 @@ private:
         double &running_time_in_sec, __u64 &group_id, double &main_scale);
     static bool IsMonitoredAtAllTime(const double &scale);
     static std::string GetCommentConfigName(
-        const std::unique_ptr<PerfEvents::CountEvent> &countEvent, std::string eventName);
+        const std::unique_ptr<PerfEvents::CountEvent> &countEvent, const std::string &eventName);
 
     static void Report(const std::map<std::string,
                        std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
@@ -157,7 +157,7 @@ private:
     static void ReportDetailInfos(const std::map<std::string,
                                   std::unique_ptr<PerfEvents::CountEvent>> &countEvents, FILE* filePtr);
     static void PrintPerValue(const std::unique_ptr<PerfEvents::ReportSum> &reportSum, const float &ratio,
-                              std::string &configName, FILE* filePtr);
+                              const std::string &configName, FILE* filePtr);
     static void InitPerMap(const std::unique_ptr<PerfEvents::ReportSum> &newPerMap,
                            const PerfEvents::Summary &summary, VirtualRuntime& virtualInstance);
     static bool FindPerCoreEventCount(PerfEvents::Summary &summary, __u64 &eventCount, double &scale);
@@ -165,7 +165,8 @@ private:
     static std::string GetDetailComments(const std::unique_ptr<PerfEvents::CountEvent> &countEvent, double &comment,
                                   PerfEvents::Summary &summary, std::string &configName);
     static std::string HandleOtherConfig(double &comment, PerfEvents::Summary &summary,
-                                         double running_time_in_sec, double scale, bool findRunningTime);
+                                         const double running_time_in_sec, const double scale,
+                                         const bool findRunningTime);
 
     void PrintUsage();
     inline bool HelpOption()
@@ -175,7 +176,7 @@ private:
     bool PrepairEvents();
     bool CheckOptions(const std::vector<pid_t> &pids);
     bool CheckSelectCpuPidOption();
-    void SetReportFlags(bool cpuFlag, bool threadFlag);
+    void SetReportFlags(const bool cpuFlag, const bool threadFlag);
     void SetPerfEvent();
     HiperfError CheckStatOption();
 
@@ -197,7 +198,7 @@ private:
     void ClientCommandHandle();
     void InitControlCommandHandlerMap();
     void DispatchControlCommand(const std::string& command);
-    bool ClientCommandResponse(bool response);
+    bool ClientCommandResponse(const bool response);
     bool ClientCommandResponse(const std::string& str);
     bool IsSamplingRunning();
 

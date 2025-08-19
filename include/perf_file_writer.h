@@ -43,15 +43,15 @@ public:
     }
     ~PerfFileWriter();
 
-    bool Open(const std::string &fileName, bool compressData = false);
+    bool Open(const std::string &fileName, const bool compressData = false);
     // WriteAttrAndId() must be called before WriteRecord()
-    bool WriteAttrAndId(const std::vector<AttrWithId> &attrIds, bool isSpe = false);
+    bool WriteAttrAndId(const std::vector<AttrWithId> &attrIds, const bool isSpe = false);
     bool WriteRecord(const PerfEventRecord &record);
-    bool AddNrCpusFeature(FEATURE feature, uint32_t nrCpusAvailable, uint32_t nrCpusOnline);
-    bool AddEventDescFeature(FEATURE feature, const std::vector<AttrWithId> &eventDesces);
-    bool AddStringFeature(FEATURE feature, std::string string);
-    bool AddU64Feature(FEATURE feature, uint64_t v);
-    bool AddBoolFeature(FEATURE feature);
+    bool AddNrCpusFeature(const FEATURE feature, const uint32_t nrCpusAvailable, const uint32_t nrCpusOnline);
+    bool AddEventDescFeature(const FEATURE feature, const std::vector<AttrWithId> &eventDesces);
+    bool AddStringFeature(const FEATURE feature, const std::string& string);
+    bool AddU64Feature(const FEATURE feature, const uint64_t v);
+    bool AddBoolFeature(const FEATURE feature);
     bool AddSymbolsFeature(const std::vector<std::unique_ptr<SymbolsFile>> &);
     bool AddUniStackTableFeature(const ProcessStackMap *table);
     // close file

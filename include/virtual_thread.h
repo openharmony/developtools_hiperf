@@ -43,7 +43,7 @@ public:
     VirtualThread(const VirtualThread &) = delete;
     VirtualThread &operator=(const VirtualThread &) = delete;
 
-    VirtualThread(pid_t pid, const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
+    VirtualThread(const pid_t pid, const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
         : pid_(pid),
           tid_(pid),
           symbolsFiles_(symbolsFiles),
@@ -53,7 +53,7 @@ public:
           memMapsIndexs_(processMemMapsIndexs_),
           parent_(*this) {}
 
-    VirtualThread(pid_t pid, pid_t tid, VirtualThread &thread,
+    VirtualThread(const pid_t pid, const pid_t tid, VirtualThread &thread,
                   const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
         : pid_(pid),
           tid_(tid),
@@ -68,8 +68,8 @@ public:
         HLOGV("%d %d map from parent size is %zu", pid, tid, memMaps_.size());
     };
 
-    pid_t pid_;
-    pid_t tid_;
+    pid_t pid_ = -1;
+    pid_t tid_ = -1;
     std::string name_;
 
     const std::vector<std::shared_ptr<DfxMap>> &GetMaps() const
@@ -79,16 +79,16 @@ public:
     void ParseMap();
     void FixHMBundleMap();
     void ParseServiceMap(const std::string &filename);
-    void ParseDevhostMap(pid_t devhost);
-    std::shared_ptr<DfxMap> CreateMapItem(const std::string filename, uint64_t begin,
-                                          uint64_t len, uint64_t offset, uint32_t prot = 0);
-    std::shared_ptr<DfxMap> FindMapByAddr(uint64_t addr) const;
-    std::shared_ptr<DfxMap> FindMapByFileInfo(const std::string name, uint64_t offset) const;
-    int64_t FindMapIndexByAddr(uint64_t addr) const;
+    void ParseDevhostMap(const pid_t devhost);
+    std::shared_ptr<DfxMap> CreateMapItem(const std::string &filename, const uint64_t begin,
+                                          const uint64_t len, const uint64_t offset, const uint32_t prot = 0);
+    std::shared_ptr<DfxMap> FindMapByAddr(const uint64_t addr) const;
+    std::shared_ptr<DfxMap> FindMapByFileInfo(const std::string name, const uint64_t offset) const;
+    int64_t FindMapIndexByAddr(const uint64_t addr) const;
     SymbolsFile *FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) const;
-    bool ReadRoMemory(uint64_t vaddr, uint8_t *data, size_t size) const;
+    bool ReadRoMemory(const uint64_t vaddr, uint8_t *data, const size_t size) const;
 #ifdef HIPERF_DEBUG
-    void ReportVaddrMapMiss(uint64_t vaddr) const;
+    void ReportVaddrMapMiss(const uint64_t vaddr) const;
 #endif
 
 private:

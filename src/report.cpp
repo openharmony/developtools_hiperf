@@ -33,7 +33,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 unsigned long long ReportItem::allIndex_ = 0;
-void Report::AddReportItem(const PerfRecordSample &sample, bool includeCallStack)
+void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCallStack)
 {
     size_t configIndex = GetConfigIndex(sample.data_.id);
     HLOG_ASSERT_MESSAGE(configs_.size() > configIndex,
@@ -350,7 +350,7 @@ void Report::OutputStdStatistics(ReportEventConfigItem &config)
     fprintf(output_, "%" PRIu64 "\n", config.eventCount_);
 }
 
-void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
+void Report::OutputStdHead(ReportEventConfigItem &config, const bool diffMode)
 {
     // head print
     const std::string head = "Heating";
@@ -390,8 +390,8 @@ void Report::OutputStdHead(ReportEventConfigItem &config, bool diffMode)
     }
 }
 
-bool Report::OutputStdCallFrame(int indent, const std::string_view &funcName, uint64_t eventCount,
-                                uint64_t totalEventCount)
+bool Report::OutputStdCallFrame(const int indent, const std::string_view &funcName, const uint64_t eventCount,
+                                const uint64_t totalEventCount)
 {
     float heat = Percentage(eventCount, totalEventCount);
     float num = 100.0;
@@ -437,7 +437,8 @@ void Report::PrepareConsole()
     HLOGD("consoleWidth_:%d", consoleWidth_);
 }
 
-void Report::OutputStdCallFrames(int indent, const ReportItemCallFrame &callFrame, uint64_t totalEventCount)
+void Report::OutputStdCallFrames(const int indent, const ReportItemCallFrame &callFrame,
+                                 const uint64_t totalEventCount)
 {
     /*
     90% a
@@ -515,7 +516,7 @@ void Report::OutputStdContentItem(const ReportItem &reportItem)
     }
 }
 
-void Report::OutputStdItemHeating(float heat, float heat2)
+void Report::OutputStdItemHeating(const float heat, const float heat2)
 {
     if (heat == heat2 && heat == 0.0f) {
         fprintf(output_, "something error , all it is end.\n");
