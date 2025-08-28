@@ -2451,7 +2451,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control05, TestSize.Level1)
     const std::string expectedStr = "was not stopped within 30 seconds";
     std::string tempOutputFile = "/data/local/tmp/stat_test_output.tmp";
     std::string cmdWithOutput = testCmd + " > " + tempOutputFile + " 2>&1";
- 
+
     int ret = system((cmdWithOutput + " &").c_str());
     ASSERT_EQ(ret, 0);
 
@@ -2517,6 +2517,13 @@ HWTEST_F(SubCommandStatTest, OutPutFileName02, TestSize.Level1)
 {
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a -o /data/log/hiperflog/stat.txt",
         {"Invalid output file path, permission denied"}), true);
+}
+
+HWTEST_F(SubCommandStatTest, CheckPcStatPath, TestSize.Level1)
+{
+    std::string defaultName = "/data/local/tmp/perf_stat.txt";
+    std::string outputPath = GetDefaultPathByEnv("perf_stat.txt");
+    EXPECT_EQ(defaultName, outputPath);
 }
 } // namespace HiPerf
 } // namespace Developtools

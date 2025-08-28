@@ -2544,6 +2544,13 @@ HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps4, TestSize.Level1)
     cmd.UpdateDevHostMaps(recordIn);
     EXPECT_EQ(recordIn.data_.addr, addr);
 }
+
+HWTEST_F(SubCommandRecordTest, CheckPcRecordPath, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    string defaultName = "/data/local/tmp/perf.data";
+    EXPECT_EQ(cmd.outputFilename_, defaultName);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

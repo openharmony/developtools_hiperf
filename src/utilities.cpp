@@ -25,6 +25,10 @@
 #include <io.h>
 #endif
 
+#if defined(is_ohos) && is_ohos
+#include <sys/xattr.h>
+#endif
+
 #ifdef CONFIG_HAS_CCM
 #include "config_policy_utils.h"
 #endif
@@ -1077,6 +1081,58 @@ void AgeHiperflogFiles()
         HIPERF_HILOGI(MODULE_DEFAULT, "remove hiperflog file : %{public}s", file.c_str());
     }
 #endif
+}
+
+bool IsHiShellLabel()
+{
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+    pid_t ppid = syscall(SYS_getppid);
+    char buf[DEFAULT_STRING_BUF_SIZE] = "";
+    if (snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "/proc/%d/attr/current", ppid) < 0) {
+        HLOGE("get buf failed, pid is %d", ppid);
+        return false;
+    }
+
+    const char* attrName = "security.selinux";
+    ssize_t attrSize = getxattr(buf, attrName, nullptr, 0);
+    if (attrSize == 0 || attrSize == - 1) {
+        return false;
+    }
+    char* attrValue = new(std::nothrow) char[attrSize];
+    if (attrValue == nullptr) {
+        return false;
+    }
+    if (getxattr(buf, attrName, attrValue, attrSize) == -1) {
+        delete []attrValue;
+        return false;
+    }
+    std::string label(attrValue, attrSize - 1);
+    delete []attrValue;
+    return label == "u:r:hishell_hap:s0";
+#else
+    return false;
+#endif
+}
+
+std::string GetDefaultPathByEnv(const std::string fileType)
+{
+    std::string outputFilename = "/data/local/tmp/" + fileType;
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+    if (IsHiShellLabel()) {
+        char* outputPathEnv = std::getenv("TMPDIR");
+        if (outputPathEnv != nullptr && strlen(outputPathEnv) > 0) {
+            std::string tmpFilename = outputPathEnv;
+            std::string fileName = StringEndsWith(outputFilename, "/") ? fileType : "/" + fileType;
+            tmpFilename += fileName;
+            outputFilename = CanonicalizeSpecPath(tmpFilename.c_str());
+            HIPERF_HILOGI(MODULE_DEFAULT, "get TMPDIR env success");
+        } else {
+            outputFilename = "/storage/Users/currentUser/" + fileType;
+            HIPERF_HILOGE(MODULE_DEFAULT, "get TMPDIR env failed");
+        }
+    }
+#endif
+    return outputFilename;
 }
 } // namespace HiPerf
 } // namespace Developtools

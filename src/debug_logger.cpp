@@ -19,12 +19,18 @@
 #if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
+#include "utilities.h"
 
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-DebugLogger::DebugLogger() : timeStamp_(std::chrono::steady_clock::now()), logPath_(DEFAULT_LOG_PATH)
+DebugLogger::DebugLogger() : timeStamp_(std::chrono::steady_clock::now())
 {
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+    logPath_ = GetDefaultPathByEnv("hiperf_log.txt");
+#else
+    logPath_ = "/data/local/tmp/hiperf_log.txt";
+#endif
     OpenLog();
 }
 

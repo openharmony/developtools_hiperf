@@ -37,7 +37,11 @@ const uint16_t THOUSANDS_SEPARATOR = 3;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+const std::string DEFAULT_STAT_FILE = GetDefaultPathByEnv("perf_stat.txt");
+#else
 const std::string DEFAULT_STAT_FILE = "/data/local/tmp/perf_stat.txt";
+#endif
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT = 2000ms;
 static std::map<pid_t, ThreadInfos> thread_map_;
@@ -912,7 +916,7 @@ HiperfError SubCommandStat::CheckStatOption()
     if (!CheckRestartOption(appPackage_, targetSystemWide_, restart_, selectPids_)) {
         return HiperfError::CHECK_RESTART_OPTION_FAIL;
     }
-    
+
     // check option
     if (!CheckSelectCpuPidOption()) {
         return HiperfError::CHECK_SELECT_CPU_PID_FAIL;

@@ -418,6 +418,8 @@ cJSON* ParseJson(const std::string &filePath);
 bool GetJsonNum(cJSON* tag, const char* key, size_t &value);
 bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value);
 #endif
+
+std::string GetDefaultPathByEnv(const std::string fileType);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

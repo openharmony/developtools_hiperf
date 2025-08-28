@@ -2078,7 +2078,6 @@ bool SubCommandRecord::CreateInitRecordFile(const bool compressData)
     CHECK_TRUE(fileWriter_->WriteAttrAndId(perfEvents_.GetAttrWithId(), isSpe_), false, 0, "");
 
     CHECK_TRUE(AddFeatureRecordFile(), false, 0, "");
-
     HLOGD("create new record file %s", outputFilename_.c_str());
     return true;
 }
@@ -2101,7 +2100,11 @@ bool SubCommandRecord::PostProcessRecordFile()
         fileWriter_.reset();
         if (!CreateInitRecordFile(compressData_)) {
             // create again
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+            HLOGEP("Fail to open data file");
+#else
             HLOGEP("Fail to open data file %s ", outputFilename_.c_str());
+#endif
             return false;
         }
 
