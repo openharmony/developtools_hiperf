@@ -12,6 +12,9 @@
   "component": {
     "name": "hiperf",
     "subsystem": "developtools",
+    "features": [
+      "hiperf_sandbox_log_path_mapping"
+    ],
     "adapted_system_type": [
       "standard"
     ],

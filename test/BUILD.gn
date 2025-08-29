@@ -113,6 +113,10 @@ ohos_unittest("hiperf_unittest") {
     "CONFIG_HAS_CCM",
   ]
 
+  if (hiperf_sandbox_log_path_mapping) {
+    defines += [ "is_sandbox_mapping=${hiperf_sandbox_log_path_mapping}" ]
+  }
+
   public_deps = []
   external_deps = [
     "abseil-cpp:absl_container",

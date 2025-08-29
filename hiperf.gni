@@ -34,6 +34,7 @@ declare_args() {
   hiperf_independent_compilation = true
   bundle_framework_enable = false
   ability_base_enable = false
+  hiperf_sandbox_log_path_mapping = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.bundlemanager_bundle_framework)) {
     bundle_framework_enable = true

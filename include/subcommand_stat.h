@@ -90,7 +90,11 @@ public:
         "           start: start counting\n"
         "           stop: stop counting\n"
         "   -o <output_file_name>\n"
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+        "         Set output file name, default is " + GetDefaultPathByEnv("perf_stat.txt") + ".\n"
+#else
         "         Set output file name, default is /data/local/tmp/perf_stat.txt.\n"
+#endif
         "         Only restrain using with --control prepare.\n"
                      // clang-format on
                      ),

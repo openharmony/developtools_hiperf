@@ -135,9 +135,7 @@ sources_platform_with_ts_common = [
 ]
 
 if (hiperf_debug) {
-  sources_platform_with_ts_common += [
-    "./src/debug_logger.cpp",
-  ]
+  sources_platform_with_ts_common += [ "./src/debug_logger.cpp" ]
 }
 
 sources_platform_common = [
@@ -157,9 +155,7 @@ if (is_ohos) {
 }
 
 if (hiperf_debug) {
-  sources_platform_common += [
-    "./src/option_debug.cpp",
-  ]
+  sources_platform_common += [ "./src/option_debug.cpp" ]
 }
 
 sources_platform_linux = [
@@ -226,6 +222,9 @@ ohos_source_set("hiperf_platform_common") {
       "samgr:samgr_proxy",
     ]
     defines += [ "CONFIG_HAS_CCM" ]
+    if (hiperf_sandbox_log_path_mapping) {
+      defines += [ "is_sandbox_mapping=${hiperf_sandbox_log_path_mapping}" ]
+    }
     if (bundle_framework_enable) {
       external_deps += [
         "bundle_framework:appexecfwk_base",
@@ -273,6 +272,9 @@ ohos_source_set("hiperf_platform_linux") {
       "init:libbegetutil",
     ]
     defines = [ "CONFIG_HAS_CCM" ]
+    if (hiperf_sandbox_log_path_mapping) {
+      defines += [ "is_sandbox_mapping=${hiperf_sandbox_log_path_mapping}" ]
+    }
   } else {
     external_deps = [ "faultloggerd:unwinder_host" ]
   }
@@ -463,7 +465,7 @@ ohos_executable("hiperf") {
 
 ohos_executable("hiperf_host") {
   sources = [ "./src/main.cpp" ]
-  
+
   deps = [ ":hiperf_platform_common" ]
 
   external_deps = [
