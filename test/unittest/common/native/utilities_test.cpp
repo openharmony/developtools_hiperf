@@ -39,9 +39,16 @@ public:
     const int sleepTime_ = {500};
 };
 
-void UtilitiesTest::SetUpTestCase() {}
+void UtilitiesTest::SetUpTestCase()
+{
+    chmod("/data/test/hiperf_test_demo", 0755); // 0755 : -rwxr-xr-x
+    system("/data/test/hiperf_test_demo &");
+}
 
-void UtilitiesTest::TearDownTestCase() {}
+void UtilitiesTest::TearDownTestCase()
+{
+    system("kill -9 `pidof hiperf_test_demo`");
+}
 
 void UtilitiesTest::SetUp() {}
 
@@ -1009,11 +1016,7 @@ HWTEST_F(UtilitiesTest, IsNumericInvalidWithAlpha, TestSize.Level1)
  */
 HWTEST_F(UtilitiesTest, IsDebugableApp, TestSize.Level1)
 {
-    std::string testProcesses = "com.ohos.launcher";
-    if (!CheckTestApp(testProcesses)) {
-        testProcesses = "hiview";
-    }
-    EXPECT_FALSE(IsDebugableApp(testProcesses));
+    EXPECT_FALSE(IsDebugableApp("hiperf_test_demo"));
 }
 } // namespace HiPerf
 } // namespace Developtools

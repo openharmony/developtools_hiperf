@@ -42,20 +42,20 @@ public:
     float GetAverageCpuUsage(pid_t pid, uint64_t timeOut);
 
     void TestCpuUsage(const std::string &option, unsigned int expect, bool fixPid);
-
-    std::string testProcesses = "com.ohos.launcher";
 };
 
-void CpuUsageTest::SetUpTestCase() {}
-
-void CpuUsageTest::TearDownTestCase() {}
-
-void CpuUsageTest::SetUp()
+void CpuUsageTest::SetUpTestCase()
 {
-    if (!HiPerf::CheckTestApp(testProcesses)) {
-        testProcesses = "hiview";
-    }
+    chmod("/data/test/hiperf_test_demo", 0755); // 0755 : -rwxr-xr-x
+    system("/data/test/hiperf_test_demo &");
 }
+
+void CpuUsageTest::TearDownTestCase()
+{
+    system("kill -9 `pidof hiperf_test_demo`");
+}
+
+void CpuUsageTest::SetUp() {}
 
 void CpuUsageTest::TearDown() {}
 
@@ -221,8 +221,7 @@ void CpuUsageTest::TestCpuUsage(const std::string &option, unsigned int expect, 
 {
     std::string cmd = "hiperf record ";
     if (fixPid) {
-        cmd += "--app ";
-        cmd += " " + testProcesses;
+        cmd += "--app hiperf_test_demo";
     }
     cmd += " " + option;
 

@@ -39,18 +39,21 @@ public:
     static void TestCaseOption(const HiperfClient::RecordOption &opt);
 };
 
-void HiperfClientTest::SetUpTestCase() {}
+void HiperfClientTest::SetUpTestCase()
+{
+    chmod("/data/test/hiperf_test_demo", 0755); // 0755 : -rwxr-xr-x
+    system("/data/test/hiperf_test_demo &");
+}
 
 void HiperfClientTest::TearDownTestCase()
 {
     DebugLogger::GetInstance()->Reset();
+    system("kill -9 `pidof hiperf_test_demo`");
 }
 
 void HiperfClientTest::SetUp() {}
 
-void HiperfClientTest::TearDown()
-{
-}
+void HiperfClientTest::TearDown() {}
 
 /**
  * @tc.name:
@@ -426,11 +429,7 @@ HWTEST_F(HiperfClientTest, SetDataLimit, TestSize.Level2)
 HWTEST_F(HiperfClientTest, SetAppPackage, TestSize.Level0)
 {
     HiperfClient::RecordOption opt;
-    std::string testProcesses = "com.ohos.launcher";
-    if (!CheckTestApp(testProcesses)) {
-        testProcesses = "hiview";
-    }
-    opt.SetAppPackage(testProcesses);
+    opt.SetAppPackage("hiperf_test_demo");
 
     TestCaseOption(opt);
 }
