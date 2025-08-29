@@ -2475,7 +2475,7 @@ HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps1, TestSize.Level1)
     PerfRecordMmap recordIn {true, pid, tid, addr,
                              len, pgoff, "testdatammap"};
     SubCommandRecord cmd;
-    cmd.devhostPid_ = pid;
+    cmd.sensitiveServicePids_.insert(pid);
     cmd.offset_ = cmd.GetOffsetNum();
     cmd.UpdateDevHostMaps(recordIn);
     EXPECT_EQ(recordIn.data_.addr, cmd.offset_ + addr);
@@ -2496,7 +2496,7 @@ HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps2, TestSize.Level1)
     PerfRecordMmap recordIn {true, pid, tid, addr,
                              len, pgoff, "testdatammap"};
     SubCommandRecord cmd;
-    cmd.devhostPid_ = devhostPid;
+    cmd.sensitiveServicePids_.insert(devhostPid);
     cmd.offset_ = cmd.GetOffsetNum();
     cmd.UpdateDevHostMaps(recordIn);
     EXPECT_EQ(recordIn.data_.addr, addr);
@@ -2517,7 +2517,7 @@ HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps3, TestSize.Level1)
     PerfRecordMmap2 recordIn {true, pid, tid, addr, len, pgoff,
                               testNum, testNum, testNum, testNum, testNum, "testdatammap2"};
     SubCommandRecord cmd;
-    cmd.devhostPid_ = pid;
+    cmd.sensitiveServicePids_.insert(pid);
     cmd.offset_ = cmd.GetOffsetNum();
     cmd.UpdateDevHostMaps(recordIn);
     EXPECT_EQ(recordIn.data_.addr, cmd.offset_ + addr);
@@ -2539,7 +2539,7 @@ HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps4, TestSize.Level1)
     PerfRecordMmap2 recordIn {true, pid, tid, addr, len, pgoff,
                               testNum, testNum, testNum, testNum, testNum, "testdatammap2"};
     SubCommandRecord cmd;
-    cmd.devhostPid_ = devhostPid;
+    cmd.sensitiveServicePids_.insert(devhostPid);
     cmd.offset_ = cmd.GetOffsetNum();
     cmd.UpdateDevHostMaps(recordIn);
     EXPECT_EQ(recordIn.data_.addr, addr);

@@ -284,6 +284,8 @@ private:
     std::vector<std::string> excludeProcessNameArgs_ = {};
     std::set<pid_t> excludePids_ = {};
     std::set<pid_t> excludeTids_ = {};
+    std::unordered_set<uint32_t> sensitiveServicePids_;
+
     void CollectExcludeThread();
     void SetExcludeHiperf();
     bool IsThreadExcluded(const pid_t pid, const pid_t tid);
@@ -375,7 +377,6 @@ private:
 
     const bool isRoot_ = IsRoot();
     uint32_t offset_ = 0;
-    uint32_t devhostPid_ = UINT32_MAX;
 
     // callback to process record
     bool ProcessRecord(PerfEventRecord& record);
