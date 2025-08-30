@@ -2519,7 +2519,7 @@ HWTEST_F(SubCommandStatTest, OutPutFileName02, TestSize.Level1)
         {"Invalid output file path, permission denied"}), true);
 }
 
-HWTEST_F(SubCommandStatTest, CheckPcStatPath, TestSize.Level1)
+HWTEST_F(SubCommandStatTest, CheckStatDefaultPath, TestSize.Level1)
 {
     std::string defaultName = "/data/local/tmp/perf_stat.txt";
     std::string outputPath = GetDefaultPathByEnv("perf_stat.txt");

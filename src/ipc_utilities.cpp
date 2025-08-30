@@ -62,20 +62,18 @@ bool IsDebugableApp(const std::string& bundleName)
             break;
         }
 
-        AppExecFwk::ApplicationInfo appInfo;
-        bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::GET_APPLICATION_INFO_WITH_DISABLE,
-                                             AppExecFwk::Constants::ANY_USERID, appInfo);
-        if (!ret) {
-            err = "GetApplicationInfo failed!";
+        bool isDebugApp = false;
+        auto ret = proxy->IsDebuggableApplication(bundleName, isDebugApp);
+        if (ret != ERR_OK) {
+            err = "IsDebuggableApplication failed!";
             break;
         }
 
-        if (appInfo.appProvisionType != AppExecFwk::Constants::APP_PROVISION_TYPE_DEBUG) {
-            err = "appProvisionType is " + appInfo.appProvisionType;
+        if (!isDebugApp) {
+            err = "app is not debuggable";
             break;
         }
-        HIPERF_HILOGI(MODULE_DEFAULT, "appProvisionType: %{public}s",
-                      appInfo.appProvisionType.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "app is debuggable");
         return true;
     } while (0);
 
