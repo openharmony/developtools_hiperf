@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
-RingBuffer::RingBuffer(size_t size) : size_(size)
+RingBuffer::RingBuffer(const size_t size) : size_(size)
 {
     if (size > 0) {
         buf_ = std::make_unique<uint8_t[]>(size);
@@ -42,7 +42,7 @@ size_t RingBuffer::GetFreeSize() const
     return size_ - (head_.load(std::memory_order_relaxed) - tail_.load(std::memory_order_relaxed));
 }
 
-uint8_t *RingBuffer::AllocForWrite(size_t writeSize)
+uint8_t *RingBuffer::AllocForWrite(const size_t writeSize)
 {
     if (buf_ == nullptr) {
         HLOGE("buf_ is nullptr");

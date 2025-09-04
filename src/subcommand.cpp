@@ -63,7 +63,7 @@ bool SubCommand::OnSubCommandOptions(std::vector<std::string> args)
     return true;
 }
 
-bool SubCommand::CheckRestartOption(std::string &appPackage, bool targetSystemWide, bool restart,
+bool SubCommand::CheckRestartOption(const std::string &appPackage, const bool targetSystemWide, const bool restart,
                                     std::vector<pid_t> &selectPids)
 {
     if (!restart) {
@@ -84,8 +84,9 @@ bool SubCommand::CheckRestartOption(std::string &appPackage, bool targetSystemWi
     return false;
 }
 
-bool SubCommand::HandleSubCommandExclude(const std::vector<pid_t> &excludeTids, const std::vector<std::string>
-                                         &excludeThreadNames, std::vector<pid_t> &selectTids)
+bool SubCommand::HandleSubCommandExclude(const std::vector<pid_t> &excludeTids,
+                                         const std::vector<std::string> &excludeThreadNames,
+                                         std::vector<pid_t> &selectTids)
 {
     if (!excludeTids.empty() && !excludeThreadNames.empty()) {
         printf("option --exclude-thread and --exclude-tid is conflict, please check usage\n");
@@ -194,7 +195,7 @@ const std::map<std::string, std::function<SubCommand&()>>& SubCommand::GetSubCom
     return subCommandFuncMap_;
 }
 
-SubCommand *SubCommand::FindSubCommand(std::string &cmdName)
+SubCommand *SubCommand::FindSubCommand(const std::string &cmdName)
 {
     HLOGV("%s", cmdName.c_str());
     std::lock_guard<std::mutex> lock(subCommandMutex_);

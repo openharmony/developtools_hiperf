@@ -155,6 +155,18 @@ public:
         "         Set the clock id to use for the various time fields in the perf_event_type records.\n"
         "         monotonic and monotonic_raw are supported,\n"
         "         some events might also allow boottime, realtime and clock_tai.\n"
+        "   --pipe_input\n"
+        "         Enable anonymous pipe for the client (calling process) to send control\n"
+        "         commands to the server (hiperf executable program).\n"
+        "         This parameter is designed for system-side C++ interface calls.\n"
+        "         Application developers do not need to pay attention to this parameter\n"
+        "         when using the hiperf command tool.\n"
+        "   --pipe_output\n"
+        "         Enable anonymous pipe for the server (hiperf executable program) to send\n"
+        "         response to the client (calling process).\n"
+        "         This parameter is designed for system-side C++ interface calls.\n"
+        "         Application developers do not need to pay attention to this parameter\n"
+        "         when using the hiperf command tool.\n"
         "   --symbol-dir <dir>\n"
         "         Set directory to look for symbol files, used for unwinding. \n"
         "   -m <mmap_pages>\n"
@@ -274,7 +286,7 @@ private:
     std::set<pid_t> excludeTids_ = {};
     void CollectExcludeThread();
     void SetExcludeHiperf();
-    bool IsThreadExcluded(pid_t pid, pid_t tid);
+    bool IsThreadExcluded(const pid_t pid, const pid_t tid);
 
     // for background track
     bool backtrack_ = false;
@@ -282,7 +294,7 @@ private:
     bool outputEnd_ = false;
     bool PreOutputRecordFile();
     void OutputRecordFile();
-    bool PostOutputRecordFile(bool output);
+    bool PostOutputRecordFile(const bool output);
 
 #ifdef CONFIG_HAS_CCM
     static constexpr char PRODUCT_CONFIG_PATH[] = "etc/hiperf/hiperf_cfg.json";
@@ -331,9 +343,9 @@ private:
     void ReplyCommandHandle();
     void InitControlCommandHandlerMap();
     void DispatchControlCommand(const std::string& command);
-    bool ClientCommandResponse(bool response);
+    bool ClientCommandResponse(const bool response);
     bool ClientCommandResponse(const std::string& str);
-    bool ChildResponseToMain(bool response);
+    bool ChildResponseToMain(const bool response);
     bool ChildResponseToMain(const std::string& str);
     bool IsSamplingRunning();
 
@@ -346,7 +358,7 @@ private:
     std::map<pid_t, std::vector<pid_t>> mapPids_;
     bool ProcessControl();
     bool CreateFifoServer();
-    bool MainRecvFromChild(int fd, std::string& reply);
+    bool MainRecvFromChild(const int fd, std::string& reply);
     void CloseClientThread();
     void CloseReplyThread();
 
@@ -386,7 +398,7 @@ private:
     void AddDevhostFeature();
     bool AddFeatureRecordFile();
 
-    bool CreateInitRecordFile(bool compressData = false);
+    bool CreateInitRecordFile(const bool compressData = false);
     bool FinishWriteRecordFile();
     bool PostProcessRecordFile();
     bool RecordCompleted();
@@ -396,7 +408,7 @@ private:
 
     bool CollectionSymbol(PerfEventRecord& record);
     void CollectSymbol(PerfRecordSample *sample);
-    bool SetPerfLimit(const std::string& file, int value, std::function<bool (int, int)> const& cmd,
+    bool SetPerfLimit(const std::string& file, const int value, std::function<bool (int, int)> const& cmd,
         const std::string& param);
     bool SetPerfCpuMaxPercent();
     bool SetPerfMaxSampleRate();
@@ -418,7 +430,7 @@ private:
     pid_t GetPidFromAppPackage(const pid_t oldPid, const uint64_t waitAppTimeOut);
     bool IsAppRunning();
     bool IsPidAndTidExist();
-    void MsgPrintAndTrans(bool isTrans, const std::string& msg);
+    void MsgPrintAndTrans(const bool isTrans, const std::string& msg);
     void WriteCommEventBeforeSampling();
     void RemoveVdsoTmpFile();
     void RemoveFifoFile();

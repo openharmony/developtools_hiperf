@@ -503,7 +503,7 @@ bool PerfFileWriter::AddEventDescFeature(FEATURE feature,
     return true;
 }
 
-bool PerfFileWriter::AddStringFeature(FEATURE feature, std::string string)
+bool PerfFileWriter::AddStringFeature(FEATURE feature, const std::string& string)
 {
     HLOGV("add feature '%s' string '%s'", PerfFileSection::GetFeatureName(feature).c_str(),
           string.c_str());
@@ -514,13 +514,13 @@ bool PerfFileWriter::AddStringFeature(FEATURE feature, std::string string)
     return true;
 }
 
-bool PerfFileWriter::AddBoolFeature(FEATURE feature)
+bool PerfFileWriter::AddBoolFeature(const FEATURE feature)
 {
     // same as u64, just use 1 as value
     return AddU64Feature(feature, 1u);
 }
 
-bool PerfFileWriter::AddU64Feature(FEATURE feature, uint64_t v)
+bool PerfFileWriter::AddU64Feature(const FEATURE feature, const uint64_t v)
 {
     HLOGV("add feature '%s' uint64_t '%" PRIu64 "'",
           PerfFileSection::GetFeatureName(feature).c_str(), v);

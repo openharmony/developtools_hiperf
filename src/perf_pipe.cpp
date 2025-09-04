@@ -133,7 +133,7 @@ bool PerfPipe::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::m
     return ret;
 }
 
-bool PerfPipe::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut)
+bool PerfPipe::WaitFifoReply(const int fd, const std::chrono::milliseconds &timeOut)
 {
     std::string reply;
     WaitFifoReply(fd, timeOut, reply);
@@ -141,7 +141,7 @@ bool PerfPipe::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut)
     return reply == HiperfClient::ReplyOK;
 }
 
-void PerfPipe::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, std::string& reply)
+void PerfPipe::WaitFifoReply(const int fd, const std::chrono::milliseconds &timeOut, std::string& reply)
 {
     struct pollfd pollFd {
         fd, POLLIN, 0
@@ -173,12 +173,12 @@ void PerfPipe::WaitFifoReply(int fd, const std::chrono::milliseconds &timeOut, s
     }
 }
 
-void PerfPipe::SetOutPutEnd(bool outputEnd)
+void PerfPipe::SetOutPutEnd(const bool outputEnd)
 {
     outputEnd_ = outputEnd;
 }
 
-void PerfPipe::ProcessStopCommand(bool ret)
+void PerfPipe::ProcessStopCommand(const bool ret)
 {
     if (ret) {
         // wait sampling process exit really

@@ -49,7 +49,7 @@ DebugLogger::~DebugLogger()
     }
 }
 
-void DebugLogger::Disable(bool disable)
+void DebugLogger::Disable(const bool disable)
 {
     if (logDisabled_ != disable) {
         logDisabled_ = disable;
@@ -74,7 +74,7 @@ int DebugLogger::HiLog(std::string &buffer) const
 #endif
 #endif
 
-int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fmt, ...) const
+int DebugLogger::Log(const DebugLevel level, const std::string &logTag, const char *fmt, ...) const
 {
     constexpr const int DEFAULT_STRING_BUF_SIZE = 4096;
 #ifdef HIPERF_DEBUG_TIME
@@ -130,7 +130,7 @@ int DebugLogger::Log(DebugLevel level, const std::string &logTag, const char *fm
     return ret;
 }
 
-bool DebugLogger::EnableHiLog(bool enable)
+bool DebugLogger::EnableHiLog(const bool enable)
 {
     enableHilog_ = enable;
     if (enable) {
@@ -141,12 +141,12 @@ bool DebugLogger::EnableHiLog(bool enable)
     return enableHilog_;
 }
 
-bool DebugLogger::ShouldLog(DebugLevel level, const std::string &logtag) const
+bool DebugLogger::ShouldLog(const DebugLevel level, const std::string &logtag) const
 {
     return GetLogLevelByTag(logtag) <= level;
 }
 
-DebugLevel DebugLogger::SetLogLevel(DebugLevel debugLevel)
+DebugLevel DebugLogger::SetLogLevel(const DebugLevel debugLevel)
 {
     DebugLevel lastLevel = DebugLogger::GetInstance()->debugLevel_;
     debugLevel_ = debugLevel;
@@ -155,7 +155,7 @@ DebugLevel DebugLogger::SetLogLevel(DebugLevel debugLevel)
     return lastLevel;
 }
 
-bool DebugLogger::SetMixLogOutput(bool enable)
+bool DebugLogger::SetMixLogOutput(const bool enable)
 {
     bool lastMixLogOutput = mixLogOutput_;
     mixLogOutput_ = enable;
@@ -209,7 +209,7 @@ DebugLevel DebugLogger::GetLogLevelByTag(const std::string &tag) const
     }
 }
 
-const std::string DebugLogger::GetLogLevelName(DebugLevel level) const
+const std::string DebugLogger::GetLogLevelName(const DebugLevel level) const
 {
     return DebugLevelMap.at(level);
 }

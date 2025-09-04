@@ -313,7 +313,7 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
     return true;
 }
 
-bool PerfFileReader::Read(void *buf, size_t len)
+bool PerfFileReader::Read(void *buf, const size_t len)
 {
     if (buf == nullptr || len == 0) {
         HLOG_ASSERT(buf != nullptr);
@@ -333,7 +333,7 @@ const perf_file_header &PerfFileReader::GetHeader() const
     return header_;
 }
 
-bool PerfFileReader::Read(char *buf, uint64_t offset, size_t len)
+bool PerfFileReader::Read(char *buf, const uint64_t offset, const size_t len)
 {
     if (buf == nullptr || len == 0) {
         HLOG_ASSERT(buf != nullptr);
@@ -379,7 +379,7 @@ const std::string PerfFileReader::GetFeatureString(const FEATURE feature) const
     return EMPTY_STRING;
 }
 
-const PerfFileSection *PerfFileReader::GetFeatureSection(FEATURE feature) const
+const PerfFileSection *PerfFileReader::GetFeatureSection(const FEATURE feature) const
 {
     for (auto const &it : perfFileSections_) {
         HLOGV("perfFileSections");

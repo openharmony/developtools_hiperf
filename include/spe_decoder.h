@@ -285,13 +285,13 @@ struct SpeDecoder {
     struct SpePkt packet;
 };
 
-struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, size_t speLen);
+struct SpeDecoder *SpeDecoderDataNew(const unsigned char *speBuf, const size_t speLen);
 void SpeDecoderFree(struct SpeDecoder *decoder);
 
 int SpeDecode(struct SpeDecoder *decoder);
 
-int SpePktDesc(const struct SpePkt *packet, char *buf, size_t len);
-bool SpeDumpRawData(unsigned char *buf, size_t len, int indent, FILE *outputDump);
+int SpePktDesc(const struct SpePkt *packet, char *buf, const size_t len);
+bool SpeDumpRawData(unsigned char *buf, size_t len, const int indent, FILE *outputDump);
 
 struct ReportItemAuxRawData {
     u32 type;
@@ -306,9 +306,9 @@ struct ReportItemAuxRawData {
 
 void AddReportItems(const std::vector<ReportItemAuxRawData>& auxRawData);
 void UpdateHeating();
-void DumpSpeReportData(int indent, FILE *outputDump);
-void DumpSpeReportHead(int indent, uint32_t type, uint64_t count);
-void GetSpeEventNameByType(uint32_t type, std::string& eventName);
+void DumpSpeReportData(const int indent, FILE *outputDump);
+void DumpSpeReportHead(const int indent, const uint32_t type, const uint64_t count);
+void GetSpeEventNameByType(const uint32_t type, std::string& eventName);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

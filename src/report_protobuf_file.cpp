@@ -54,7 +54,7 @@ void ReportProtobufFileWriter::Close()
     }
 }
 
-bool ReportProtobufFileWriter::Write(const void *buffer, int size)
+bool ReportProtobufFileWriter::Write(const void *buffer, const int size)
 {
     if (protobufFileStream_ == nullptr) {
         HLOGE("protobufFileStream_ is nullptr");
@@ -74,7 +74,7 @@ bool ReportProtobufFileWriter::Write(const void *buffer, int size)
     return false;
 }
 
-bool ReportProtobufFileWriter::Create(std::string fileName)
+bool ReportProtobufFileWriter::Create(const std::string fileName)
 {
     fileName_ = fileName;
     try {
@@ -254,7 +254,7 @@ bool ReportProtobufFileReader::CheckFileMagic()
     return true;
 }
 
-bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readBack)
+bool ReportProtobufFileReader::Dump(const std::string fileName, ProtobufReadBack readBack)
 {
     const int defaultIndent = 0;
     fileName_ = fileName;
@@ -306,7 +306,7 @@ bool ReportProtobufFileReader::Dump(std::string fileName, ProtobufReadBack readB
     return false;
 }
 
-bool ReportProtobufFileReader::Dump(const CallStackSample &message, int indent)
+bool ReportProtobufFileReader::Dump(const CallStackSample &message, const int indent)
 {
     PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_time()) {
@@ -338,7 +338,7 @@ bool ReportProtobufFileReader::Dump(const CallStackSample &message, int indent)
     return true;
 }
 
-bool ReportProtobufFileReader::Dump(const SampleStatistic &message, int indent)
+bool ReportProtobufFileReader::Dump(const SampleStatistic &message, const int indent)
 {
     PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_count()) {
@@ -350,7 +350,7 @@ bool ReportProtobufFileReader::Dump(const SampleStatistic &message, int indent)
     return false;
 }
 
-bool ReportProtobufFileReader::Dump(const SymbolTableFile &message, int indent)
+bool ReportProtobufFileReader::Dump(const SymbolTableFile &message, const int indent)
 {
     PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_id()) {
@@ -364,7 +364,7 @@ bool ReportProtobufFileReader::Dump(const SymbolTableFile &message, int indent)
     }
     return false;
 }
-bool ReportProtobufFileReader::Dump(const VirtualThreadInfo &message, int indent)
+bool ReportProtobufFileReader::Dump(const VirtualThreadInfo &message, const int indent)
 {
     PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     if (message.has_pid()) {
@@ -378,7 +378,7 @@ bool ReportProtobufFileReader::Dump(const VirtualThreadInfo &message, int indent
     }
     return false;
 }
-bool ReportProtobufFileReader::Dump(const ReportInfo &message, int indent)
+bool ReportProtobufFileReader::Dump(const ReportInfo &message, const int indent)
 {
     PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
     for (int i = 0; i < message.config_name_size(); i++) {
@@ -389,7 +389,7 @@ bool ReportProtobufFileReader::Dump(const ReportInfo &message, int indent)
     }
     return true;
 }
-bool ReportProtobufFileReader::Dump(const HiperfRecord &record, int indent)
+bool ReportProtobufFileReader::Dump(const HiperfRecord &record, const int indent)
 {
     PRINT_INDENT(indent, "%s:\n", record.GetTypeName().c_str());
     if (record.has_sample()) {

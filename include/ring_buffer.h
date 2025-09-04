@@ -24,13 +24,13 @@ public:
     // little endian, perf_event_header.type is less than 0xff, so set it
     static constexpr uint8_t MARGIN_BYTE = 0xFF;
 
-    explicit RingBuffer(size_t size);
+    explicit RingBuffer(const size_t size);
     ~RingBuffer();
     // get size of the writable space
     size_t GetFreeSize() const;
 
     // before writing data to rbuff, alloc space first
-    uint8_t *AllocForWrite(size_t writeSize);
+    uint8_t *AllocForWrite(const size_t writeSize);
     // after writing data, move head pointer
     void EndWrite();
     // get data from buff, return nullptr if no readable data
