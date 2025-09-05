@@ -46,7 +46,7 @@ public:
     bool ReadFeatureSection();
     const std::vector<FEATURE> &GetFeatures() const;
     const std::vector<std::unique_ptr<PerfFileSection>> &GetFeatureSections() const;
-    const PerfFileSection *GetFeatureSection(FEATURE feature) const;
+    const PerfFileSection *GetFeatureSection(const FEATURE feature) const;
     explicit PerfFileReader(const std::string &fileName, FILE *fp);
 
     const std::string GetFeatureString(const FEATURE feature) const;
@@ -59,8 +59,8 @@ public:
 
     // fuzz user this
 protected:
-    virtual bool Read(void *buf, size_t len);
-    virtual bool Read(char *buf, uint64_t offset, size_t len);
+    virtual bool Read(void *buf, const size_t len);
+    virtual bool Read(char *buf, const uint64_t offset, const size_t len);
     FILE *fp_ = nullptr;
     bool ReadFileHeader();
     bool ReadAttrSection();
@@ -77,7 +77,7 @@ private:
     const perf_event_attr *GetDefaultAttr();
 
     const std::string fileName_;
-    uint64_t dataSectionSize_;
+    uint64_t dataSectionSize_ = 0;
     bool compressData_ = false;
 
     perf_file_header header_;
@@ -85,7 +85,7 @@ private:
     std::vector<std::vector<uint64_t>> vecAttrIds_;
 
     std::unordered_map<uint64_t, size_t> mapId2Attr_;
-    uint64_t featureSectionOffset_;
+    uint64_t featureSectionOffset_ = 0;
     std::vector<FEATURE> features_;
     std::vector<std::unique_ptr<PerfFileSection>> perfFileSections_;
 

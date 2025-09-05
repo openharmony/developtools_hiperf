@@ -40,7 +40,7 @@ static const std::map<size_t, const std::string> PERF_REG_NAME_MAP = {
 };
 
 // these copy from kerne uapi perf_regs.h
-uint64_t GetSupportedRegMask(ArchType arch)
+uint64_t GetSupportedRegMask(const ArchType arch)
 {
     uint64_t result = 0;
     switch (arch) {
@@ -66,7 +66,7 @@ uint64_t GetSupportedRegMask(ArchType arch)
     return result;
 }
 
-const std::string UpdatePerfContext(uint64_t addr, perf_callchain_context &perfCallchainContext)
+const std::string UpdatePerfContext(const uint64_t addr, perf_callchain_context &perfCallchainContext)
 {
     if (PERF_CONTEXT_NAME.count(addr) != 0) {
         perfCallchainContext = static_cast<perf_callchain_context>(addr);
@@ -77,7 +77,7 @@ const std::string UpdatePerfContext(uint64_t addr, perf_callchain_context &perfC
     }
 }
 
-const std::string GetArchName(ArchType arch)
+const std::string GetArchName(const ArchType arch)
 {
     switch (arch) {
         case ArchType::ARCH_X86:
@@ -93,7 +93,7 @@ const std::string GetArchName(ArchType arch)
     }
 }
 
-size_t RegisterGetIP(ArchType arch)
+size_t RegisterGetIP(const ArchType arch)
 {
     switch (arch) {
         case ArchType::ARCH_X86:
@@ -123,7 +123,7 @@ size_t RegisterGetSP(ArchType arch)
     }
 }
 
-const std::string RegisterGetName(size_t registerIndex)
+const std::string RegisterGetName(const size_t registerIndex)
 {
     std::string name;
     name.append("PerfReg[");
@@ -167,7 +167,7 @@ ArchType GetArchTypeFromUname(const std::string &machine)
     }
 }
 
-ArchType GetArchTypeFromABI(bool abi32)
+ArchType GetArchTypeFromABI(const bool abi32)
 {
     if (g_deviceArchType == ArchType::ARCH_UNKNOWN) {
         g_deviceArchType = GetDeviceArch();
@@ -182,7 +182,7 @@ ArchType GetArchTypeFromABI(bool abi32)
     return g_deviceArchType;
 }
 
-ArchType SetDeviceArch(ArchType arch)
+ArchType SetDeviceArch(const ArchType arch)
 {
     HLOGD("g_deviceArchType change to  %s", GetArchName(arch).c_str());
     g_deviceArchType = arch;
@@ -214,7 +214,7 @@ ArchType GetDeviceArch()
 #endif
 }
 
-void UpdateRegForABI(ArchType arch, u64 *regs)
+void UpdateRegForABI(const ArchType arch, u64 *regs)
 {
     if (g_deviceArchType == ArchType::ARCH_ARM64 && arch == ArchType::ARCH_ARM) {
         // arm in arm64

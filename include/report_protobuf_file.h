@@ -39,7 +39,7 @@ using ProtobufReadBack = std::function<void(Proto::HiperfRecord &record)>;
 
 class ReportProtobufFileWriter : public google::protobuf::io::CopyingOutputStream {
 public:
-    bool Create(std::string fileName);
+    bool Create(const std::string fileName);
 
     bool ProcessRecord(const PerfEventRecord &record);
     bool ProcessSampleRecord(const PerfRecordSample &recordSample, uint32_t configIndex,
@@ -61,7 +61,7 @@ private:
     uint64_t recordLost_ = 0;
 
     bool IsOpen();
-    bool Write(const void *buffer, int size) override;
+    bool Write(const void *buffer, const int size) override;
     virtual bool ProcessRecord(const PerfRecordComm &recordComm);
     virtual bool ProcessRecord(const PerfRecordLost &recordLost);
     void BeforeClose();
@@ -69,7 +69,7 @@ private:
 
 class ReportProtobufFileReader : public google::protobuf::io::CopyingInputStream {
 public:
-    bool Dump(std::string fileName, ProtobufReadBack readBack = nullptr);
+    bool Dump(const std::string fileName, ProtobufReadBack readBack = nullptr);
 
 private:
     std::unique_ptr<google::protobuf::io::CopyingInputStreamAdaptor> protpbufInputStream_;
@@ -79,13 +79,13 @@ private:
 
     bool IsOpen();
     bool CheckFileMagic();
-    int Read(void *buffer, int size) override;
-    bool Dump(const Proto::HiperfRecord &record, int indent = 0);
-    bool Dump(const Proto::CallStackSample &message, int indent = 0);
-    bool Dump(const Proto::SampleStatistic &message, int indent = 0);
-    bool Dump(const Proto::SymbolTableFile &message, int indent = 0);
-    bool Dump(const Proto::VirtualThreadInfo &message, int indent = 0);
-    bool Dump(const Proto::ReportInfo &message, int indent = 0);
+    int Read(void *buffer, const int size) override;
+    bool Dump(const Proto::HiperfRecord &record, const int indent = 0);
+    bool Dump(const Proto::CallStackSample &message, const int indent = 0);
+    bool Dump(const Proto::SampleStatistic &message, const int indent = 0);
+    bool Dump(const Proto::SymbolTableFile &message, const int indent = 0);
+    bool Dump(const Proto::VirtualThreadInfo &message, const int indent = 0);
+    bool Dump(const Proto::ReportInfo &message, const int indent = 0);
 };
 } // namespace HiPerf
 } // namespace Developtools

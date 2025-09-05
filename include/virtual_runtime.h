@@ -45,7 +45,7 @@ using uSymbolsHits = std::unordered_map<pid_t, std::unordered_set<uint64_t>>;
 
 class VirtualRuntime {
 public:
-    explicit VirtualRuntime(bool onDevice = true);
+    explicit VirtualRuntime(const bool onDevice = true);
     ~VirtualRuntime();
     // thread need hook the record
     // from the record , it will call back to write some Simulated Record
@@ -54,8 +54,8 @@ public:
     using RecordCallBack = std::function<bool(PerfEventRecord&)>;
     using CollectSymbolCallBack = std::function<void(PerfRecordSample*)>;
 
-    void SetRecordMode(RecordCallBack recordCallBack);
-    void SetCollectSymbolCallBack(CollectSymbolCallBack collectSymbolCallBack);
+    void SetRecordMode(const RecordCallBack &recordCallBack);
+    void SetCollectSymbolCallBack(const CollectSymbolCallBack &collectSymbolCallBack);
 
     // this both used in report and record follow
     // it process the record, and rebuild the trhread maps
@@ -78,8 +78,8 @@ public:
     void UpdateDevhostSymbols();
 
     pid_t devhostPid_ = -1;
-    void SetDevhostPid(pid_t devhost);
-    void FixHMBundleMmap(char *filename, int pid, u16 &headerSize);
+    void SetDevhostPid(const pid_t devhost);
+    void FixHMBundleMmap(char *filename, const int pid, u16 &headerSize);
 
     // set symbols path , it will send to every symobile file for search
     bool SetSymbolsPaths(const std::vector<std::string> &symbolsPaths);
@@ -97,18 +97,18 @@ public:
         return &processStackMap_;
     }
 
-    void SetCallStackExpend(size_t mergeLevel = 0)
+    void SetCallStackExpend(const size_t mergeLevel = 0)
     {
         callstackMergeLevel_ = mergeLevel;
     }
 
-    void SetDisableUnwind(bool disableUnwind)
+    void SetDisableUnwind(const bool disableUnwind)
     {
         HLOGV("disableUnwind change to %d", disableUnwind);
         disableUnwind_ = disableUnwind;
     }
 
-    void EnableDebugInfoSymbolic(bool enable)
+    void EnableDebugInfoSymbolic(const bool enable)
     {
         enableDebugInfoSymbolic_ = enable;
     }
@@ -125,15 +125,15 @@ public:
         isHM_ = isHM;
     }
 
-    void SetNeedKernelCallChain(bool kernelCallChain)
+    void SetNeedKernelCallChain(const bool kernelCallChain)
     {
         needkernelCallChain_ = kernelCallChain;
     }
-    DfxSymbol GetSymbol(uint64_t ip, pid_t pid, pid_t tid,
+    DfxSymbol GetSymbol(const uint64_t ip, const pid_t pid, const pid_t tid,
                            const perf_callchain_context &context = PERF_CONTEXT_MAX);
     void ClearSymbolCache();
 
-    VirtualThread &GetThread(pid_t pid, pid_t tid, const std::string name = "");
+    VirtualThread &GetThread(const pid_t pid, const pid_t tid, const std::string name = "");
     const std::map<pid_t, VirtualThread> &GetThreads() const
     {
         return userSpaceThreadMap_;
@@ -144,9 +144,9 @@ public:
     // report use
     void UpdateFromPerfData(const std::vector<SymbolFileStruct> &);
     void UnwindFromRecord(PerfRecordSample &recordSample);
-    std::string ReadThreadName(pid_t tid, bool isThread);
-    std::string ReadFromSavedCmdLines(pid_t tid);
-    bool IsKernelThread(pid_t pid);
+    std::string ReadThreadName(const pid_t tid, const bool isThread);
+    std::string ReadFromSavedCmdLines(const pid_t tid);
+    bool IsKernelThread(const pid_t pid);
     void CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
                             uSymbolsHits &userSymbolsHits);
     // debug time
@@ -191,11 +191,11 @@ private:
     HashList<uint64_t, DfxSymbol> userSymbolCache_;
     HashList<uint64_t, DfxSymbol> kernelSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
     HashList<uint64_t, DfxSymbol> kThreadSymbolCache_ {KERNEL_SYMBOL_CACHE_LIMIT};
-    bool GetSymbolCache(uint64_t fileVaddr, DfxSymbol &symbol,
+    bool GetSymbolCache(const uint64_t fileVaddr, DfxSymbol &symbol,
                         const perf_callchain_context &context);
     // find synbols function name
     void MakeCallFrame(DfxSymbol &symbol, DfxFrame &callFrame);
-    void UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid);
+    void UpdateSymbols(std::shared_ptr<DfxMap> map, const pid_t pid);
     // we don't know whether hap vma mapping is stand for a so
     // thus we need try to parse it first
     bool UpdateHapSymbols(std::shared_ptr<DfxMap> map);
@@ -206,28 +206,30 @@ private:
     void DedupFromRecord(PerfRecordSample *recordSample);
     void UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace);
     // threads
-    VirtualThread &UpdateThread(pid_t pid, pid_t tid, const std::string name = "");
-    VirtualThread &CreateThread(pid_t pid, pid_t tid, const std::string name = "");
+    VirtualThread &UpdateThread(const pid_t pid, const pid_t tid, const std::string name = "");
+    VirtualThread &CreateThread(const pid_t pid, const pid_t tid, const std::string name = "");
 
     // maps
-    std::shared_ptr<DfxMap> UpdateThreadMaps(pid_t pid, pid_t tid, const std::string filename, uint64_t begin,
-                          uint64_t len, uint64_t offset, uint32_t prot = 0);
-    void UpdatekernelMap(uint64_t begin, uint64_t end, uint64_t offset, std::string filename);
+    std::shared_ptr<DfxMap> UpdateThreadMaps(const pid_t pid, const pid_t tid, const std::string filename,
+                                             const uint64_t begin, const uint64_t len, const uint64_t offset,
+                                             const uint32_t prot = 0);
+    void UpdatekernelMap(const uint64_t begin, const uint64_t end, const uint64_t offset, const std::string &filename);
 
-    const DfxSymbol GetKernelSymbol(uint64_t ip, const std::vector<DfxMap> &memMaps,
-                                 const VirtualThread &thread);
-    const DfxSymbol GetUserSymbol(uint64_t ip, const VirtualThread &thread);
-    const DfxSymbol GetKernelThreadSymbol(uint64_t ip, const VirtualThread &thread);
+    const DfxSymbol GetKernelSymbol(const uint64_t ip, const std::vector<DfxMap> &memMaps,
+                                    const VirtualThread &thread);
+    const DfxSymbol GetUserSymbol(const uint64_t ip, const VirtualThread &thread);
+    const DfxSymbol GetKernelThreadSymbol(const uint64_t ip, const VirtualThread &thread);
 #ifdef HIPERF_DEBUG
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
 #endif
-    void SymbolicCallFrame(PerfRecordSample &recordSample, uint64_t ip,
-                           pid_t serverPid, perf_callchain_context context);
+    void SymbolicCallFrame(PerfRecordSample &recordSample, const uint64_t ip,
+                           const pid_t serverPid, const perf_callchain_context context);
     bool RecoverCallStack(PerfRecordSample &recordSample);
     std::vector<std::string> symbolsPaths_;
 
     // kernel thread
-    void UpdateKernelThreadMap(pid_t pid, uint64_t begin, uint64_t len, uint64_t offset, std::string filename);
+    void UpdateKernelThreadMap(const pid_t pid, const uint64_t begin, const uint64_t len,
+                               const uint64_t offset, const std::string &filename);
     bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
     void ProcessKernelCallChain(PerfRecordSample &sample);
     void AdjustCallChain(PerfRecordSample &sample);

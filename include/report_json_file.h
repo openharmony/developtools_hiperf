@@ -60,7 +60,7 @@ void OutputJsonKey(FILE *output, const T &value)
     }
 }
 template<class T>
-void OutputJsonValue(FILE *output, const T &value, bool first = true)
+void OutputJsonValue(FILE *output, const T &value, const bool first = true)
 {
     if (!first) {
         fprintf(output, ",");
@@ -89,7 +89,7 @@ void OutputJsonValue(FILE *output, const T &value, bool first = true)
     k:1
 */
 template<class K, class T>
-void OutputJsonPair(FILE *output, const K &key, const T &value, bool first = false)
+void OutputJsonPair(FILE *output, const K &key, const T &value, const bool first = false)
 {
     if (!first) {
         if (fprintf(output, ",") < 0) {
@@ -107,7 +107,7 @@ void OutputJsonPair(FILE *output, const K &key, const T &value, bool first = fal
 */
 template<class T>
 void OutputJsonVectorList(FILE *output, const std::string &key, const std::vector<T> &value,
-                          bool first = false)
+                          const bool first = false)
 {
     if (!first) {
         if (fprintf(output, ",") < 0) {
@@ -131,7 +131,7 @@ void OutputJsonVectorList(FILE *output, const std::string &key, const std::vecto
 */
 template<class K, class V>
 void OutputJsonMapList(FILE *output, const std::string &key, const std::map<K, V> &value,
-                       bool first = false)
+                       const bool first = false)
 {
     if (!first) {
         if (fprintf(output, ",") < 0) {
@@ -155,7 +155,7 @@ void OutputJsonMapList(FILE *output, const std::string &key, const std::map<K, V
 */
 template<class K, class V>
 void OutputJsonMap(FILE *output, const std::string &key, const std::map<K, V> &value,
-                   bool first = false)
+                   const bool first = false)
 {
     if (!first) {
         if (fprintf(output, ",") < 0) {
@@ -335,7 +335,7 @@ struct ReportProcessItem {
 };
 
 struct ReportConfigItem {
-    int index_;
+    int index_ = -1;
     std::string eventName_;
     uint64_t eventCount_ = 0;
     std::map<pid_t, ReportProcessItem> processes_;
@@ -368,9 +368,10 @@ public:
     {
     }
 
-    void UpdateReportSample(uint64_t configid, pid_t pid, pid_t tid, uint64_t eventCount);
-    void UpdateReportCallStack(uint64_t id, pid_t pid, pid_t tid, uint64_t eventCount,
-                               std::vector<DfxFrame> &frames);
+    void UpdateReportSample(const uint64_t configid, const pid_t pid,
+                            const pid_t tid, const uint64_t eventCount);
+    void UpdateReportCallStack(const uint64_t id, const pid_t pid, const pid_t tid, const uint64_t eventCount,
+                               const std::vector<DfxFrame> &frames);
     void UpdateCallNodeEventCount();
     void ProcessSymbolsFiles(const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles);
 
@@ -385,22 +386,22 @@ private:
     std::vector<std::string_view> libList_;
     int functionId_ = 0;
     std::map<int, std::map<std::string, ReportFuncMapItem>> functionMap_;
-    void AddNewFunction(int libId, std::string name);
+    void AddNewFunction(const int libId, std::string name);
     void OutputJsonFunctionMap(FILE *output);
 
-    ReportConfigItem &GetConfig(uint64_t id);
-    std::string GetConfigName(uint64_t id);
-    uint32_t GetConfigIndex(uint64_t id);
+    ReportConfigItem &GetConfig(const uint64_t id);
+    std::string GetConfigName(const uint64_t id);
+    uint32_t GetConfigIndex(const uint64_t id);
 
-    int GetFunctionID(int libId, const std::string &function);
-    int GetLibID(std::string_view filepath);
+    int GetFunctionID(const int libId, const std::string &function);
+    int GetLibID(const std::string_view filepath);
 
     void OutputJsonFeatureString();
     void OutputJsonRuntimeInfo();
 
-    void AddReportCallStack(uint64_t eventCount, ReportCallNodeItem &callNode,
+    void AddReportCallStack(const uint64_t eventCount, ReportCallNodeItem &callNode,
                             const std::vector<DfxFrame> &frames);
-    void AddReportCallStackReverse(uint64_t eventCount, ReportCallNodeItem &callNode,
+    void AddReportCallStackReverse(const uint64_t eventCount, ReportCallNodeItem &callNode,
                                    const std::vector<DfxFrame> &frames);
     uint64_t sampleCount_ = 0;
 };

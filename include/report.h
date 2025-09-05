@@ -34,13 +34,13 @@ namespace HiPerf {
 class ReportItemCallFrame {
 public:
     std::string func_;
-    uint64_t vaddr_;
+    uint64_t vaddr_ = 0;
     std::string dso_;
     uint64_t eventCount_ = 0;     // call chain event
     uint64_t selfEventCount_ = 0; // call chain event end in this function
     std::vector<ReportItemCallFrame> childs;
-    ReportItemCallFrame(std::string func, uint64_t vaddr, std::string dso,
-                        uint64_t eventCount, uint64_t selfEventCount)
+    ReportItemCallFrame(const std::string func, const uint64_t vaddr, const std::string dso,
+                        const uint64_t eventCount, const uint64_t selfEventCount)
         : func_(func),
           vaddr_(vaddr),
           dso_(dso),
@@ -64,7 +64,7 @@ public:
         return a.eventCount_ > b.eventCount_;
     }
 
-    static void OrderCallFrames(std::vector<ReportItemCallFrame> &callframes, int indent = 2)
+    static void OrderCallFrames(std::vector<ReportItemCallFrame> &callframes, const int indent = 2)
     {
         int i = 2;
         if (callframes.size() > 0) {
@@ -81,7 +81,7 @@ public:
     }
 
     // just a log
-    static void DumpCallFrames(std::vector<ReportItemCallFrame> &callframes, int indent = 2)
+    static void DumpCallFrames(std::vector<ReportItemCallFrame> &callframes, const int indent = 2)
     {
         int y = 2;
         if (callframes.size() > 0) {
@@ -122,11 +122,11 @@ public:
     std::vector<ReportItemCallFrame> callStacks_;
     float heat = 0.0f;
     static unsigned long long allIndex_; // debug only
-    unsigned long long index_;
+    unsigned long long index_ = 0;
 
     // only for ut test
-    ReportItem(pid_t pid, pid_t tid, const char *comm, const char *dso, const char *func,
-               uint64_t vaddr, uint64_t eventCount)
+    ReportItem(const pid_t pid, const pid_t tid, const char *comm, const char *dso, const char *func,
+               const uint64_t vaddr, uint64_t eventCount)
         : pid_(pid),
           tid_(tid),
           comm_(comm),
@@ -199,7 +199,7 @@ public:
             return 0;
         }
     }
-    static const std::string GetPid(const ReportItem &a, size_t len, const std::string &format)
+    static const std::string GetPid(const ReportItem &a, const size_t len, const std::string &format)
     {
         return StringPrintf(format.c_str(), len, a.pid_);
     }
@@ -213,7 +213,7 @@ public:
             return 0;
         }
     }
-    static const std::string GetTid(const ReportItem &a, size_t len, const std::string &format)
+    static const std::string GetTid(const ReportItem &a, const size_t len, const std::string &format)
     {
         return StringPrintf(format.c_str(), len, a.tid_);
     }
@@ -224,7 +224,7 @@ public:
         int result = a.comm_.compare(b.comm_);
         return result;
     }
-    static const std::string GetComm(const ReportItem &a, size_t len, const std::string &format)
+    static const std::string GetComm(const ReportItem &a, const size_t len, const std::string &format)
     {
         return StringPrintf(format.c_str(), len, a.comm_.data());
     }
@@ -234,7 +234,7 @@ public:
     {
         return a.func_.compare(b.func_);
     }
-    static const std::string GetFunc(const ReportItem &a, size_t len, const std::string &format)
+    static const std::string GetFunc(const ReportItem &a, const size_t len, const std::string &format)
     {
         return StringPrintf(format.c_str(), len, a.func_.data());
     }
@@ -244,7 +244,7 @@ public:
     {
         return a.dso_.compare(b.dso_);
     }
-    static const std::string GetDso(const ReportItem &a, size_t len, const std::string &format)
+    static const std::string GetDso(const ReportItem &a, const size_t len, const std::string &format)
     {
         return StringPrintf(format.c_str(), len, a.dso_.data());
     }
@@ -254,7 +254,7 @@ public:
     {
         return a.fromDso_.compare(b.fromDso_);
     }
-    static const std::string GetFromDso(const ReportItem &a, size_t len, const std::string &format)
+    static const std::string GetFromDso(const ReportItem &a, const size_t len, const std::string &format)
     {
         return StringPrintf(format.c_str(), len, a.fromDso_.data());
     }
@@ -264,7 +264,7 @@ public:
     {
         return a.fromFunc_.compare(b.fromFunc_);
     }
-    static const std::string GetFromFunc(const ReportItem &a, size_t len, const std::string &format)
+    static const std::string GetFromFunc(const ReportItem &a, const size_t len, const std::string &format)
     {
         return StringPrintf(format.c_str(), len, a.fromFunc_.data());
     }
@@ -312,7 +312,7 @@ struct ReportKey {
         }
     }
 
-    void UpdateValueMaxLen(size_t value)
+    void UpdateValueMaxLen(const size_t value)
     {
         size_t newMaxLen = std::max(maxLen_, std::to_string(value).size());
         if (maxLen_ < newMaxLen) {
@@ -375,7 +375,7 @@ public:
     Report(ReportOption &option) : option_(option), virtualRuntime_(false) {}
     bool MultiLevelSame(const ReportItem &a, const ReportItem &b);
     void AdjustReportItems();
-    void AddReportItem(const PerfRecordSample &sample, bool includeCallStack);
+    void AddReportItem(const PerfRecordSample &sample, const bool includeCallStack);
     void AddReportItemBranch(const PerfRecordSample &sample);
     void OutputStd(FILE *output);
     void OutputStdDiff(FILE *output, Report &other);
@@ -475,8 +475,8 @@ public:
         uint64_t sampleCount_ = 0;
         uint64_t eventCount_ = 0;
         std::vector<ReportItem> reportItems_;
-        uint32_t type_;
-        uint64_t config_;
+        uint32_t type_ = 0;
+        uint64_t config_ = 0;
         std::vector<uint64_t> ids_;
 
         bool coutMode_ = true; // use cout or time ?
@@ -503,13 +503,13 @@ public:
     virtual ~Report() {}
 
     std::map<uint64_t, size_t> configIdIndexMaps_; // index of configNames_
-    std::string GetConfigName(uint64_t id)
+    std::string GetConfigName(const uint64_t id)
     {
         size_t index = GetConfigIndex(id);
         HIPERF_ASSERT(index < configs_.size(), "unable found config index %zu\n", index);
         return configs_[index].eventName_;
     }
-    size_t GetConfigIndex(uint64_t id)
+    size_t GetConfigIndex(const uint64_t id)
     {
         HIPERF_ASSERT(configIdIndexMaps_.find(id) != configIdIndexMaps_.end(), "unable found id %" PRIx64 "\n", id);
         return configIdIndexMaps_.at(id);
@@ -543,17 +543,17 @@ private:
 
     void OutputStdStatistics(ReportEventConfigItem &config);
 
-    void OutputStdHead(ReportEventConfigItem &config, bool diffMode = false);
+    void OutputStdHead(ReportEventConfigItem &config, const bool diffMode = false);
 
     void OutputStdContent(ReportEventConfigItem &config);
     void OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfigItem &right);
 
     void OutputStdContentItem(const ReportItem &reportItem);
 
-    void OutputStdCallFrames(int indent, const ReportItemCallFrame &callFrame, uint64_t totalEventCount);
-    bool OutputStdCallFrame(int indent, const std::string_view &funcName, uint64_t eventCount,
-                            uint64_t totalEventCount);
-    void OutputStdItemHeating(float heat, float heat2);
+    void OutputStdCallFrames(const int indent, const ReportItemCallFrame &callFrame, const uint64_t totalEventCount);
+    bool OutputStdCallFrame(const int indent, const std::string_view &funcName, const uint64_t eventCount,
+                            const uint64_t totalEventCount);
+    void OutputStdItemHeating(const float heat, const float heat2);
 };
 } // namespace HiPerf
 } // namespace Developtools

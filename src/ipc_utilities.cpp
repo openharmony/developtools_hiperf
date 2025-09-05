@@ -74,13 +74,13 @@ bool IsDebugableApp(const std::string& bundleName)
             err = "appProvisionType is " + appInfo.appProvisionType;
             break;
         }
-        HIPERF_HILOGI(MODULE_DEFAULT, "bundleName is %{public}s,appProvisionType: %{public}s",
-                      bundleName.c_str(), appInfo.appProvisionType.c_str());
+        HIPERF_HILOGI(MODULE_DEFAULT, "appProvisionType: %{public}s",
+                      appInfo.appProvisionType.c_str());
         return true;
     } while (0);
 
-    HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, bundleName: [%{public}s] err: [%{public}s]",
-                  bundleName.c_str(), err.c_str());
+    HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: [%{public}s]",
+                  err.c_str());
     return false;
 #else
     return false;

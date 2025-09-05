@@ -87,22 +87,22 @@ public:
     ~DebugLogger();
 
     static DebugLogger *GetInstance();
-    DebugLevel SetLogLevel(DebugLevel debugLevel);
-    bool SetMixLogOutput(bool enable);
+    DebugLevel SetLogLevel(const DebugLevel debugLevel);
+    bool SetMixLogOutput(const bool enable);
     bool SetLogPath(const std::string &logPath);
     void SetLogTags(const std::string &tags);
 
-    int Log(DebugLevel level, const std::string &logTag, const char *fmt, ...) const
+    int Log(const DebugLevel level, const std::string &logTag, const char *fmt, ...) const
         __attribute__((format(printf, 4, 5)));
     // for class, pointer need add 1 offset (first one is *this)
 
-    bool EnableHiLog(bool enable = true);
+    bool EnableHiLog(const bool enable = true);
     DebugLevel GetLogLevel() const
     {
         return debugLevel_;
     };
 
-    void Disable(bool disable = true);
+    void Disable(const bool disable = true);
     static bool logDisabled_;
 
 #ifdef HIPERF_DEBUG_TIME
@@ -118,10 +118,10 @@ public:
     void Reset();
 
 private:
-    bool ShouldLog(DebugLevel level, const std::string &logtag) const;
+    bool ShouldLog(const DebugLevel level, const std::string &logtag) const;
     DebugLevel GetLogLevelByName(const std::string &) const;
     DebugLevel GetLogLevelByTag(const std::string &) const;
-    const std::string GetLogLevelName(DebugLevel) const;
+    const std::string GetLogLevelName(const DebugLevel) const;
 
     int HiLog(std::string &buffer) const;
 

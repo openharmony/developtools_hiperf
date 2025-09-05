@@ -135,38 +135,36 @@ constexpr ArchType BUILD_ARCH_TYPE = ArchType::ARCH_ARM;
 #error NOT SUPPORT ARCH
 #endif
 
-const std::string UpdatePerfContext(uint64_t addr, perf_callchain_context &perfCallchainContext);
-const std::string GetArchName(ArchType arch);
-uint64_t GetSupportedRegMask(ArchType arch);
+const std::string UpdatePerfContext(const uint64_t addr, perf_callchain_context &perfCallchainContext);
+const std::string GetArchName(const ArchType arch);
+uint64_t GetSupportedRegMask(const ArchType arch);
 
 // this is only for debug
-const std::string RegisterGetName(size_t registerIndex);
+const std::string RegisterGetName(const size_t registerIndex);
 
 bool RegisterGetValue(uint64_t &value, const u64 registers[], const size_t registerIndex,
                       const size_t registerNumber);
 
-size_t RegisterGetSP(ArchType arch);
-size_t RegisterGetIP(ArchType arch);
+size_t RegisterGetSP(const ArchType arch);
+size_t RegisterGetIP(const ArchType arch);
 
-inline bool RegisterGetSPValue(uint64_t &value, ArchType arch, const u64 registers[],
+inline bool RegisterGetSPValue(uint64_t &value, const ArchType arch, const u64 registers[],
                                const size_t registerNumber)
 {
     return RegisterGetValue(value, registers, RegisterGetSP(arch), registerNumber);
 }
 
-inline bool RegisterGetIPValue(uint64_t &value, ArchType arch, const u64 registers[],
+inline bool RegisterGetIPValue(uint64_t &value, const ArchType arch, const u64 registers[],
                                const size_t registerNumber)
 {
     return RegisterGetValue(value, registers, RegisterGetIP(arch), registerNumber);
 }
 
-int LibunwindRegIdToPerfReg(int regnum);
-
 ArchType GetDeviceArch();
-ArchType SetDeviceArch(ArchType arch);
+ArchType SetDeviceArch(const ArchType arch);
 ArchType GetArchTypeFromUname(const std::string &machine);
-ArchType GetArchTypeFromABI(bool abi32);
-void UpdateRegForABI(ArchType arch, u64 *registers);
+ArchType GetArchTypeFromABI(const bool abi32);
+void UpdateRegForABI(const ArchType arch, u64 *registers);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

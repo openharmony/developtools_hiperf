@@ -78,7 +78,7 @@ bool UniqueStackTable::Resize()
     return true;
 }
 
-uint64_t UniqueStackTable::PutIpInSlot(uint64_t thisIp, uint64_t prevIdx)
+uint64_t UniqueStackTable::PutIpInSlot(const uint64_t thisIp, const uint64_t prevIdx)
 {
     Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     uint64_t curIpIdx = (((thisIp >> 2) ^ (prevIdx << 4)) % hashModulus_) + availableIndex_;
@@ -116,7 +116,7 @@ uint64_t UniqueStackTable::PutIpInSlot(uint64_t thisIp, uint64_t prevIdx)
     return 0;
 }
 
-uint64_t UniqueStackTable::PutIpsInTable(StackId *stackId, u64 *ips, u64 nr)
+uint64_t UniqueStackTable::PutIpsInTable(StackId *stackId, const u64 *ips, const u64 nr)
 {
     if (tableBuf_ == nullptr) {
         HLOGE("Hashtable not exist, fatal error!");
@@ -161,7 +161,7 @@ Node* UniqueStackTable::GetFrame(uint64_t stackId)
     return reinterpret_cast<Node *>(&tableHead[stackId]);
 }
 
-bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
+bool UniqueStackTable::GetIpsByStackId(const StackId stackId, std::vector<u64>& ips)
 {
     CHECK_TRUE(tableBuf_ != nullptr, false, 1, "Hashtable not exist, failed to find frame!");
     uint64_t nr = stackId.section.nr;
@@ -180,7 +180,7 @@ bool UniqueStackTable::GetIpsByStackId(StackId stackId, std::vector<u64>& ips)
     return true;
 }
 
-bool UniqueStackTable::ImportNode(uint32_t index, const Node& node)
+bool UniqueStackTable::ImportNode(const uint32_t index, const Node& node)
 {
     CHECK_TRUE(index < tableSize_, false, 0, "");
     Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());

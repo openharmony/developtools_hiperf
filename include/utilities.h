@@ -187,8 +187,8 @@ std::string SetToString(const std::unordered_set<T> &items)
 }
 
 std::string BufferToHexString(const std::vector<unsigned char> &vec);
-std::string BufferToHexString(const unsigned char buf[], size_t size);
-bool HexDump(const void *buf, size_t size, size_t max_size = 0);
+std::string BufferToHexString(const unsigned char buf[], const size_t size);
+bool HexDump(const void *buf, const size_t size, const size_t max_size = 0);
 
 std::string &StringTrim(std::string &s);
 
@@ -271,7 +271,7 @@ uint32_t RoundUp(uint32_t x, const int align);
 
 // data convert function
 template<class T>
-std::string ToHex(const T &source, int size = sizeof(T), bool prefix = false)
+std::string ToHex(const T &source, const int size = sizeof(T), const bool prefix = false)
 {
     std::stringstream ss;
     if (prefix) {
@@ -299,7 +299,7 @@ size_t inline CopyFromBufferAndMove(S *&buffer, T *dest, size_t size = 0)
 bool ReadIntFromProcFile(const std::string &path, int &value);
 bool WriteIntToProcFile(const std::string &path, int value);
 std::string ReadFileToString(const std::string &fileName);
-bool ReadFileToString(const std::string &fileName, std::string &content, size_t fileSize = 0);
+bool ReadFileToString(const std::string &fileName, std::string &content, const size_t fileSize = 0);
 bool WriteStringToFile(const std::string &fileName, const std::string &value);
 
 // stdout
@@ -337,13 +337,13 @@ bool IsBeta();
 bool IsHM();
 bool IsAllowProfilingUid();
 bool IsHiviewCall();
-bool PowerOfTwo(uint64_t n);
+bool PowerOfTwo(const uint64_t n);
 bool IsNumeric(const std::string& str);
 bool IscontainDigits(const std::string& str);
 bool IsStringToIntSuccess(const std::string &str, int &num);
 bool StringToUint64(const std::string &str, uint64_t &val);
 bool IsDirectoryExists(const std::string& fileName);
-bool CreateDirectory(const std::string& path, mode_t mode);
+bool CreateDirectory(const std::string& path, const mode_t mode);
 bool IsValidOutPath(const std::string& path);
 void AgeHiperflogFiles();
 
@@ -387,7 +387,7 @@ void CollectPidsByAppname(std::set<pid_t> &pids, const Container& appPackage)
     }
 }
 
-bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, int checkAppMs);
+bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, const int checkAppMs);
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err);
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
 bool IsSupportNonDebuggableApp();
@@ -395,9 +395,9 @@ const std::string GetUserType();
 bool GetDeveloperMode();
 bool IsArkJsFile(const std::string& filepath);
 bool IsV8File(const std::string& filepath);
-std::string GetProcessName(int pid);
+std::string GetProcessName(const int pid);
 std::string HandleAppInfo(const std::string& appPackage, const std::vector<pid_t> &inputPidTidArgs);
-bool NeedAdaptSandboxPath(char *filename, int pid, u16 &headerSize);
+bool NeedAdaptSandboxPath(char *filename, const int pid, u16 &headerSize);
 bool NeedAdaptHMBundlePath(std::string& filename, const std::string& threadname);
 
 template<typename T>
