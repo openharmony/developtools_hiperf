@@ -81,9 +81,16 @@ public:
 std::mutex SubCommandStatTest::mtx;
 std::condition_variable SubCommandStatTest::cv;
 
-void SubCommandStatTest::SetUpTestCase() {}
+void SubCommandStatTest::SetUpTestCase()
+{
+    chmod("/data/test/hiperf_test_demo", 0755); // 0755 : -rwxr-xr-x
+    system("/data/test/hiperf_test_demo &");
+}
 
-void SubCommandStatTest::TearDownTestCase() {}
+void SubCommandStatTest::TearDownTestCase()
+{
+    system("kill -9 `pidof hiperf_test_demo`");
+}
 
 void SubCommandStatTest::SetUp()
 {
@@ -2441,11 +2448,7 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control04, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, TestOnSubCommand_control05, TestSize.Level1)
 {
     ASSERT_TRUE(RemoveFile(TEST_FILE));
-    std::string testProcesses = "com.ohos.launcher";
-    if (!CheckTestApp(testProcesses)) {
-        testProcesses = "hiview";
-    }
-    std::string testCmd = "hiperf stat --control prepare --app " + testProcesses + " --restart";
+    std::string testCmd = "hiperf stat --control prepare --app hiperf_test_demo --restart";
     const int waitSeconds = 30; // app restart need 30s
     const int bufferSeconds = 5; // extra wait 5s
     const std::string expectedStr = "was not stopped within 30 seconds";

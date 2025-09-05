@@ -33,9 +33,16 @@ public:
     void TearDown();
 };
 
-void SpeDecoderTest::SetUpTestCase() {}
+void SpeDecoderTest::SetUpTestCase()
+{
+    chmod("/data/test/hiperf_test_demo", 0755); // 0755 : -rwxr-xr-x
+    system("/data/test/hiperf_test_demo &");
+}
 
-void SpeDecoderTest::TearDownTestCase() {}
+void SpeDecoderTest::TearDownTestCase()
+{
+    system("kill -9 `pidof hiperf_test_demo`");
+}
 
 void SpeDecoderTest::SetUp()
 {
@@ -94,12 +101,7 @@ HWTEST_F(SpeDecoderTest, TestGetSpeEventNameByType, TestSize.Level1)
 HWTEST_F(SpeDecoderTest, TestRecord, TestSize.Level0)
 {
     StdoutRecord stdoutRecord;
-    std::string testProcesses = "com.ohos.launcher";
-    if (!CheckTestApp(testProcesses)) {
-        testProcesses = "hiview";
-    }
-    std::string cmdString = "record -e arm_spe_0/load_filter=1,min_latency=100/ -d 10 --app ";
-    cmdString += " " + testProcesses;
+    std::string cmdString = "record -e arm_spe_0/load_filter=1,min_latency=100/ -d 10 --app hiperf_test_demo";
     printf("command : %s\n", cmdString.c_str());
     // it need load some symbols and much more log
     stdoutRecord.Start();

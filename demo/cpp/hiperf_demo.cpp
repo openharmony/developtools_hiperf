@@ -20,11 +20,7 @@
 
 using namespace OHOS::Developtools::HiPerf;
 
-#if defined(__aarch64__)
-static const std::string TEST_PROCESSES = "com.ohos.launcher";
-#else
-static const std::string TEST_PROCESSES = "hiview";
-#endif
+static const std::string TEST_PROCESSES = "hiperf_test_demo";
 
 namespace HiperfClientDemo {
 void TestCodeThread(int id)
