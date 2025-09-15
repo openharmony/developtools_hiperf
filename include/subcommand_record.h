@@ -292,7 +292,7 @@ private:
     std::vector<std::string> excludeProcessNameArgs_ = {};
     std::set<pid_t> excludePids_ = {};
     std::set<pid_t> excludeTids_ = {};
-    std::unordered_set<uint32_t> sensitiveServicePids_;
+    std::unordered_set<uint32_t> rootPids_;
 
     void CollectExcludeThread();
     void SetExcludeHiperf();
@@ -460,6 +460,8 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> startSaveFileTimes_;
 
     void SetHM();
+    void CollectRootPids();
+    void HandleRootProcess(const pid_t& pid);
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
     bool OnlineReportData();
