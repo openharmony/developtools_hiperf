@@ -345,6 +345,9 @@ bool StringToUint64(const std::string &str, uint64_t &val);
 bool IsDirectoryExists(const std::string& fileName);
 bool CreateDirectory(const std::string& path, const mode_t mode);
 bool IsValidOutPath(const std::string& path);
+bool IsRootThread(const pid_t& pid);
+bool GetUidFromPid(const pid_t& pid, uid_t& ruid);
+bool GetStatusLineId(const std::string& line, uid_t& target);
 void AgeHiperflogFiles();
 
 const std::string HMKERNEL = "HongMeng";

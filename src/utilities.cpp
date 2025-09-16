@@ -36,6 +36,10 @@
 #include "hiperf_hilog.h"
 #include "ipc_utilities.h"
 
+#ifndef UID_MAX
+#define UID_MAX UINT32_MAX
+#endif
+
 using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
@@ -45,6 +49,8 @@ static const std::string USER_DOMESTIC_BETA = "beta";
 static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";
 static const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
+const std::string UID_TAG = "Uid:";
+const int STATUS_ID_INDEX = 4;
 
 std::string CanonicalizeSpecPath(const char* src)
 {
@@ -1133,6 +1139,61 @@ std::string GetDefaultPathByEnv(const std::string fileType)
     }
 #endif
     return outputFilename;
+}
+
+bool GetStatusLineId(const std::string& line, uid_t& target)
+{
+    size_t start = line.find_first_of("\t");
+    CHECK_TRUE(start != std::string::npos, false, 1, "[GetStatusLineId] find start \t failed");
+    start += 1;
+    size_t end = line.find_first_of("\t", start);
+    CHECK_TRUE(end != std::string::npos, false, 1, "[GetStatusLineId] find end \t failed");
+    std::string targetStr = line.substr(start, end - start);
+    std::istringstream iss(targetStr);
+    uid_t result = 0;
+    iss >> result;
+    if (iss.fail() || !iss.eof()) {
+        return false;
+    }
+    target = result;
+    return true;
+}
+
+bool GetUidFromPid(const pid_t& pid, uid_t& ruid)
+{
+    std::string line;
+    std::string procStatusPath = "/proc/" + std::to_string(pid) + "/status";
+    std::ifstream fileStream(procStatusPath);
+
+    if (!fileStream.is_open()) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "GetUidGidFromPid cannot open proc status file for pid: %{public}d", pid);
+        return false;
+    }
+    while (std::getline(fileStream, line)) {
+        if (line.substr(0, STATUS_ID_INDEX) == UID_TAG) {
+            if (!GetStatusLineId(line, ruid)) {
+                HIPERF_HILOGE(MODULE_DEFAULT, "GetUidGidFromPid get uid failed");
+                fileStream.close();
+                return false;
+            } else {
+                fileStream.close();
+                return true;
+            }
+        }
+    }
+    fileStream.close();
+    return false;
+}
+
+bool IsRootThread(const pid_t& pid)
+{
+    uid_t ruid = UID_MAX;
+    if (GetUidFromPid(pid, ruid)) {
+        if (ruid == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace HiPerf
 } // namespace Developtools

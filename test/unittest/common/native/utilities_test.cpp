@@ -108,6 +108,25 @@ void UtilitiesTest::ExitThreads()
     printf("all threads exited\n");
 }
 
+pid_t GetPidFromApp(const std::string appPackage)
+{
+    pid_t res {-1};
+    const std::string basePath {"/proc/"};
+    const std::string cmdline {"/cmdline"};
+    std::vector<std::string> subDirs = GetSubDirs(basePath);
+    for (const auto &subDir : subDirs) {
+        if (!IsDigits(subDir)) {
+            continue;
+        }
+        std::string fileName {basePath + subDir + cmdline};
+        if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+            res = std::stoul(subDir, nullptr);
+            return res;
+        }
+    }
+    return res;
+}
+
 /**
  * @tc.name: StringReplace
  * @tc.desc:
@@ -1017,6 +1036,69 @@ HWTEST_F(UtilitiesTest, IsNumericInvalidWithAlpha, TestSize.Level1)
 HWTEST_F(UtilitiesTest, IsDebugableApp, TestSize.Level1)
 {
     EXPECT_FALSE(IsDebugableApp("hiperf_test_demo"));
+}
+
+/**
+ * @tc.name: GetUidFromPid
+ * @tc.desc: Test GetUidFromPid fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetUidFromPid, TestSize.Level1)
+{
+    const std::string hiviewName = "hiview";
+    pid_t pid = GetPidFromApp(hiviewName);
+    EXPECT_NE(pid, -1);
+    uid_t uid = 0;
+    EXPECT_TRUE(GetUidFromPid(pid, uid));
+    EXPECT_NE(uid, 0);
+}
+
+/**
+ * @tc.name: GetStatusLineId_ValidLine
+ * @tc.desc: Test GetStatusLineId with valid line containing numeric ID
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetStatusLineId_ValidLine, TestSize.Level1)
+{
+    std::string line = "Uid:\t1000\t2000\t3000\t4000";
+    uid_t target = 0;
+    EXPECT_TRUE(GetStatusLineId(line, target));
+    EXPECT_EQ(target, 1000);
+}
+
+/**
+ * @tc.name: GetStatusLineId_InvalidLine_NoTabs
+ * @tc.desc: Test GetStatusLineId with line missing tabs
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetStatusLineId_InvalidLine_NoTabs, TestSize.Level2)
+{
+    std::string line = "Uid:1000 2000 3000 4000";
+    uid_t target = 0;
+    EXPECT_FALSE(GetStatusLineId(line, target));
+}
+
+/**
+ * @tc.name: GetStatusLineId_InvalidLine_NonNumeric
+ * @tc.desc: Test GetStatusLineId with non-numeric ID
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetStatusLineId_InvalidLine_NonNumeric, TestSize.Level2)
+{
+    std::string line = "Uid:\tabc\t2000\t3000\t4000";
+    uid_t target = 0;
+    EXPECT_FALSE(GetStatusLineId(line, target));
+}
+
+/**
+ * @tc.name: IsRootThread
+ * @tc.desc: Test IsRootThread with init process (PID 1, typically root)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsRootThread_InitProcess, TestSize.Level2)
+{
+    pid_t initPid = 1;
+    EXPECT_TRUE(IsRootThread(initPid));
 }
 } // namespace HiPerf
 } // namespace Developtools
