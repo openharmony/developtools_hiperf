@@ -838,6 +838,18 @@ public:
         return symbol;
     }
 
+    bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
+    {
+        if (onRecording_) {
+            if (IsHM()) {
+                debugInfoLoaded_ = true;
+                debugInfoLoadResult_ = true;
+                return true;
+            }
+        }
+        return ElfFileSymbols::LoadDebugInfo(map, symbolFilePath);
+    }
+
     ~KernelThreadSymbols() override {}
 };
 
