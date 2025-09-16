@@ -322,6 +322,7 @@ public:
     pid_t GetServerPidof(unsigned int ipNr);
 private:
     static bool dumpRemoveStack_;
+    void ParseRecordData(uint8_t *p, const perf_event_attr &attr, u64 &dataSize, uint8_t *start);
 };
 
 class PerfRecordExit : public PerfEventRecordTemplate<PerfRecordExitData, PERF_RECORD_TYPE_EXIT> {

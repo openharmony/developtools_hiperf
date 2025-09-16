@@ -47,6 +47,7 @@ static std::atomic_bool g_trackRunning = false;
 static constexpr int32_t UPDATE_TIME_INTERVAL = 10;    // 10ms
 static constexpr uint64_t NANO_SECONDS_PER_SECOND = 1000000000;
 static constexpr uint32_t POLL_FAIL_COUNT_THRESHOLD = 10;
+static constexpr unsigned int MAX_WAKEUP_MARK = 1024 * 1024;
 
 OHOS::UniqueFd PerfEvents::Open(perf_event_attr &attr, const pid_t pid, const int cpu, const int groupFd,
                                 const unsigned long flags)
@@ -443,6 +444,56 @@ void PerfEvents::SetConfig(std::map<const std::string, uint64_t> &speOptMaps)
     config2_ |= speOptMaps["min_latency"] & 0xfff;
 }
 
+void PerfEvents::SetEventAttr(EventItem &eventItem, const perf_type_id type, const bool followGroup)
+{
+    if (samplePeriod_ > 0) {
+        eventItem.attr.freq = 0;
+        eventItem.attr.sample_freq = 0;
+        eventItem.attr.sample_period = samplePeriod_;
+    } else if (sampleFreq_ > 0) {
+        eventItem.attr.freq = 1;
+        eventItem.attr.sample_freq = sampleFreq_;
+    } else {
+        if (type == PERF_TYPE_TRACEPOINT) {
+            eventItem.attr.freq = 0;
+            eventItem.attr.sample_period = DEFAULT_SAMPLE_PERIOD;
+        } else {
+            eventItem.attr.freq = 1;
+            eventItem.attr.sample_freq = DEFAULT_SAMPLE_FREQUNCY;
+        }
+    }
+
+    eventItem.attr.watermark = 1;
+    eventItem.attr.wakeup_watermark = (mmapPages_ * pageSize_) >> 1;
+    if (eventItem.attr.wakeup_watermark > MAX_WAKEUP_MARK) {
+        eventItem.attr.wakeup_watermark = MAX_WAKEUP_MARK;
+    }
+
+    // for a group of events, only enable comm/mmap on the first event
+    if (!followGroup) {
+        eventItem.attr.comm = 1;
+        eventItem.attr.mmap = 1;
+        eventItem.attr.mmap2 = 1;
+        eventItem.attr.mmap_data = 1;
+    }
+
+    if (sampleStackType_ == SampleStackType::DWARF) {
+        eventItem.attr.sample_type = SAMPLE_TYPE | PERF_SAMPLE_CALLCHAIN |
+                                        PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
+        eventItem.attr.exclude_callchain_user = 1;
+        eventItem.attr.sample_regs_user = GetSupportedRegMask(GetDeviceArch());
+        eventItem.attr.sample_stack_user = dwarfSampleStackSize_;
+    } else if (sampleStackType_ == SampleStackType::FP) {
+        eventItem.attr.sample_type = SAMPLE_TYPE | PERF_SAMPLE_CALLCHAIN;
+    } else {
+        eventItem.attr.sample_type = SAMPLE_TYPE;
+    }
+
+    if (isHM_) {
+        eventItem.attr.sample_type |= PERF_SAMPLE_SERVER_PID;
+    }
+}
+
 bool PerfEvents::AddEvent(const perf_type_id type, const __u64 config, const bool excludeUser,
                           const bool excludeKernel, const bool followGroup)
 {
@@ -452,20 +503,17 @@ bool PerfEvents::AddEvent(const perf_type_id type, const __u64 config, const boo
     CHECK_TRUE(IsEventSupport(type, config), false, 0, "");
     HLOGV("type %d config %llu excludeUser %d excludeKernel %d followGroup %d", type, config,
           excludeUser, excludeKernel, followGroup);
-
     // if use follow ?
     EventGroupItem &eventGroupItem = followGroup ? eventGroupItem_.back()
                                                  : eventGroupItem_.emplace_back();
     // always new item
     EventItem &eventItem = eventGroupItem.eventItems.emplace_back();
-
     eventItem.typeName = GetTypeName(type);
     if (type == PERF_TYPE_TRACEPOINT) {
         eventItem.configName = GetTraceConfigName(config);
     } else {
         eventItem.configName = GetStaticConfigName(type, config);
     }
-
     // attr
     if (memset_s(&eventItem.attr, sizeof(perf_event_attr), 0, sizeof(perf_event_attr)) != EOK) {
         HLOGE("memset_s failed in PerfEvents::AddEvent");
@@ -477,62 +525,13 @@ bool PerfEvents::AddEvent(const perf_type_id type, const __u64 config, const boo
     eventItem.attr.disabled = 1;
     eventItem.attr.read_format =
         PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING | PERF_FORMAT_ID;
-
     eventItem.attr.inherit = (inherit_ ? 1 : 0);
     eventItem.attr.exclude_kernel = excludeKernel;
     eventItem.attr.exclude_user = excludeUser;
-
     // we also need mmap for record
     if (recordCallBack_) {
-        if (samplePeriod_ > 0) {
-            eventItem.attr.freq = 0;
-            eventItem.attr.sample_freq = 0;
-            eventItem.attr.sample_period = samplePeriod_;
-        } else if (sampleFreq_ > 0) {
-            eventItem.attr.freq = 1;
-            eventItem.attr.sample_freq = sampleFreq_;
-        } else {
-            if (type == PERF_TYPE_TRACEPOINT) {
-                eventItem.attr.freq = 0;
-                eventItem.attr.sample_period = DEFAULT_SAMPLE_PERIOD;
-            } else {
-                eventItem.attr.freq = 1;
-                eventItem.attr.sample_freq = DEFAULT_SAMPLE_FREQUNCY;
-            }
-        }
-
-        eventItem.attr.watermark = 1;
-        eventItem.attr.wakeup_watermark = (mmapPages_ * pageSize_) >> 1;
-        static constexpr unsigned int maxWakeupMark = 1024 * 1024;
-        if (eventItem.attr.wakeup_watermark > maxWakeupMark) {
-            eventItem.attr.wakeup_watermark = maxWakeupMark;
-        }
-
-        // for a group of events, only enable comm/mmap on the first event
-        if (!followGroup) {
-            eventItem.attr.comm = 1;
-            eventItem.attr.mmap = 1;
-            eventItem.attr.mmap2 = 1;
-            eventItem.attr.mmap_data = 1;
-        }
-
-        if (sampleStackType_ == SampleStackType::DWARF) {
-            eventItem.attr.sample_type = SAMPLE_TYPE | PERF_SAMPLE_CALLCHAIN |
-                                         PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
-            eventItem.attr.exclude_callchain_user = 1;
-            eventItem.attr.sample_regs_user = GetSupportedRegMask(GetDeviceArch());
-            eventItem.attr.sample_stack_user = dwarfSampleStackSize_;
-        } else if (sampleStackType_ == SampleStackType::FP) {
-            eventItem.attr.sample_type = SAMPLE_TYPE | PERF_SAMPLE_CALLCHAIN;
-        } else {
-            eventItem.attr.sample_type = SAMPLE_TYPE;
-        }
-
-        if (isHM_) {
-            eventItem.attr.sample_type |= PERF_SAMPLE_SERVER_PID;
-        }
+        PerfEvents::SetEventAttr(eventItem, type, followGroup);
     }
-
     // set clock id
     if (clockId_ != -1) {
         eventItem.attr.use_clockid = 1;
@@ -542,11 +541,9 @@ bool PerfEvents::AddEvent(const perf_type_id type, const __u64 config, const boo
         eventItem.attr.sample_type |= PERF_SAMPLE_BRANCH_STACK;
         eventItem.attr.branch_sample_type = branchSampleType_;
     }
-
     HLOGV("Add Event: '%s':'%s' %s %s %s", eventItem.typeName.c_str(), eventItem.configName.c_str(),
           excludeUser ? "excludeUser" : "", excludeKernel ? "excludeKernel" : "",
           followGroup ? "" : "group leader");
-
     return true;
 }
 
@@ -1104,6 +1101,64 @@ bool PerfEvents::PrepareFdEvents(void)
     return true;
 }
 
+int PerfEvents::CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu, const size_t ipid,
+                                         uint &fdNumber, int &groupFdCache)
+{
+    UniqueFd fd = Open(eventItem.attr, pids_[ipid], cpus_[icpu],
+                       groupFdCache, 0);
+    // clang-format on
+    if (fd < 0) {
+        if (errno == ESRCH) {
+            if (verboseReport_) {
+                printf("pid %d does not exist.\n", pids_[ipid]);
+            }
+            HLOGE("pid %d does not exist.\n", pids_[ipid]);
+            HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFdEvents] pid %{public}d does not exist.",
+                pids_[ipid]);
+            return 1;
+        } else {
+            // clang-format off
+            if (verboseReport_) {
+                char errInfo[ERRINFOLEN] = { 0 };
+                strerror_r(errno, errInfo, ERRINFOLEN);
+                printf("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
+                    eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
+            }
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
+            HLOGE("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
+                eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
+            // clang-format on
+            return 0; // jump to next cpu
+        }
+    }
+    // after open successed , fill the result
+    // make a new FdItem
+    FdItem &fdItem = eventItem.fdItems.emplace_back();
+    fdItem.fd = std::move(fd);
+    fdItem.cpu = cpus_[icpu];
+    fdItem.pid = pids_[ipid];
+    fdNumber++;
+
+    // if sampling, mmap ring buffer
+    bool createMmapSucc = true;
+    if (recordCallBack_) {
+        createMmapSucc = isSpe_ ?
+            CreateSpeMmap(fdItem, eventItem.attr) : CreateMmap(fdItem, eventItem.attr);
+    }
+    if (!createMmapSucc) {
+        printf("create mmap fail\n");
+        HIPERF_HILOGI(MODULE_DEFAULT, "create mmap fail");
+        return -1;
+    }
+    // update group leader
+    int groupFdCacheNum = groupFdCache;
+    if (groupFdCacheNum == -1) {
+        groupFdCache = fdItem.fd.Get();
+    }
+    return 1;
+}
+
 bool PerfEvents::CreateFdEvents(void)
 {
     // must be some events , or will failed
@@ -1167,57 +1222,12 @@ bool PerfEvents::CreateFdEvents(void)
                     // one fd event group must match same cpu and same pid config (event can be
                     // different)
                     // clang-format off
-                    UniqueFd fd = Open(eventItem.attr, pids_[ipid], cpus_[icpu],
-                                       groupFdCache[icpu][ipid], 0);
-                    // clang-format on
-                    if (fd < 0) {
-                        if (errno == ESRCH) {
-                            if (verboseReport_) {
-                                printf("pid %d does not exist.\n", pids_[ipid]);
-                            }
-                            HLOGE("pid %d does not exist.\n", pids_[ipid]);
-                            HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFdEvents] pid %{public}d does not exist.",
-                                pids_[ipid]);
-                            continue;
-                        } else {
-                            // clang-format off
-                            if (verboseReport_) {
-                                char errInfo[ERRINFOLEN] = { 0 };
-                                strerror_r(errno, errInfo, ERRINFOLEN);
-                                printf("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
-                                    eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
-                            }
-                            char errInfo[ERRINFOLEN] = { 0 };
-                            strerror_r(errno, errInfo, ERRINFOLEN);
-                            HLOGE("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
-                                eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
-                            // clang-format on
-                            break; // jump to next cpu
-                        }
-                    }
-                    // after open successed , fill the result
-                    // make a new FdItem
-                    FdItem &fdItem = eventItem.fdItems.emplace_back();
-                    fdItem.fd = std::move(fd);
-                    fdItem.cpu = cpus_[icpu];
-                    fdItem.pid = pids_[ipid];
-                    fdNumber++;
-
-                    // if sampling, mmap ring buffer
-                    bool createMmapSucc = true;
-                    if (recordCallBack_) {
-                        createMmapSucc = isSpe_ ?
-                            CreateSpeMmap(fdItem, eventItem.attr) : CreateMmap(fdItem, eventItem.attr);
-                    }
-                    if (!createMmapSucc) {
-                        printf("create mmap fail\n");
-                        HIPERF_HILOGI(MODULE_DEFAULT, "create mmap fail");
+                    int ret = CreateFdEventsForEachPid(eventItem, icpu, ipid,
+                                                       fdNumber, groupFdCache[icpu][ipid]);
+                    if (ret == -1) {
                         return false;
-                    }
-                    // update group leader
-                    int groupFdCacheNum = groupFdCache[icpu][ipid];
-                    if (groupFdCacheNum == -1) {
-                        groupFdCache[icpu][ipid] = fdItem.fd.Get();
+                    } else if (ret == 0) {
+                        break;
                     }
                 }
             }
@@ -1465,25 +1475,8 @@ static bool CompareRecordTime(const PerfEvents::MmapFd *left, const PerfEvents::
     return left->timestamp > right->timestamp;
 }
 
-void PerfEvents::ReadRecordsFromMmaps()
+void PerfEvents::GetRecords(bool &enableFlag)
 {
-#ifdef HIPERF_DEBUG_TIME
-    const auto readKenelStartTime = steady_clock::now();
-#endif
-    // get readable mmap at this time
-    for (auto &it : cpuMmap_) {
-        ssize_t dataSize = it.second.mmapPage->data_head - it.second.mmapPage->data_tail;
-        __sync_synchronize(); // this same as rmb in gcc, after reading mmapPage->data_head
-        if (dataSize <= 0) {
-            continue;
-        }
-        it.second.dataSize = dataSize;
-        MmapRecordHeap_.push_back(&(it.second));
-    }
-    if (MmapRecordHeap_.empty()) {
-        return;
-    }
-    bool enableFlag = false;
     if (MmapRecordHeap_.size() > 1) {
         for (const auto &it : MmapRecordHeap_) {
             GetRecordFromMmap(*it);
@@ -1512,7 +1505,6 @@ void PerfEvents::ReadRecordsFromMmaps()
             }
         }
     }
-
     while (GetRecordFromMmap(*MmapRecordHeap_.front())) {
         bool auxEvent = false;
         u32 pid = 0;
@@ -1525,6 +1517,28 @@ void PerfEvents::ReadRecordsFromMmaps()
             enableFlag = true;
         }
     }
+}
+
+void PerfEvents::ReadRecordsFromMmaps()
+{
+#ifdef HIPERF_DEBUG_TIME
+    const auto readKenelStartTime = steady_clock::now();
+#endif
+    // get readable mmap at this time
+    for (auto &it : cpuMmap_) {
+        ssize_t dataSize = it.second.mmapPage->data_head - it.second.mmapPage->data_tail;
+        __sync_synchronize(); // this same as rmb in gcc, after reading mmapPage->data_head
+        if (dataSize <= 0) {
+            continue;
+        }
+        it.second.dataSize = dataSize;
+        MmapRecordHeap_.push_back(&(it.second));
+    }
+    if (MmapRecordHeap_.empty()) {
+        return;
+    }
+    bool enableFlag = false;
+    GetRecords(enableFlag);
     if (isSpe_ && enableFlag) {
         PerfEventsEnable(false);
         PerfEventsEnable(true);
@@ -1865,70 +1879,74 @@ void PerfEvents::RecordLoop()
     }
 }
 
+bool PerfEvents::GetStat(const steady_clock::time_point &startTime, steady_clock::time_point &nextReportTime,
+                         milliseconds &usedTimeMsTick, __u64 &durationInSec, int64_t thresholdTimeInMs)
+{
+    const auto endTime = startTime + timeOut_;
+    // time check point
+    const auto thisTime = steady_clock::now();
+    if (timeReport_ != milliseconds::zero()) {
+        // stat cmd
+        if (thisTime >= nextReportTime) {
+            usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
+            durationInSec = usedTimeMsTick.count();
+            auto lefTimeMsTick = duration_cast<milliseconds>(endTime - thisTime);
+            if (reportPtr_ == nullptr) {
+                printf("\nReport at %" PRIu64 " ms (%" PRIu64 " ms left):\n",
+                    static_cast<uint64_t>(usedTimeMsTick.count()),
+                    static_cast<uint64_t>(lefTimeMsTick.count()));
+            } else {
+                fprintf(reportPtr_, "\nReport at %" PRIu64 " ms (%" PRIu64 " ms left):\n",
+                    static_cast<uint64_t>(usedTimeMsTick.count()),
+                    static_cast<uint64_t>(lefTimeMsTick.count()));
+            }
+            // end of comments
+            nextReportTime += timeReport_;
+            StatReport(durationInSec);
+        }
+    }
+    if (HaveTargetsExit(startTime)) {
+        return true;
+    }
+    if (thisTime >= endTime) {
+        usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
+        durationInSec = usedTimeMsTick.count();
+        if (reportPtr_ == nullptr) {
+            printf("Timeout exit (total %" PRIu64 " ms)\n", static_cast<uint64_t>(usedTimeMsTick.count()));
+        } else {
+            fprintf(reportPtr_, "Timeout exit (total %" PRIu64 " ms)\n",
+                static_cast<uint64_t>(usedTimeMsTick.count()));
+        }
+        if (trackedCommand_) {
+            trackedCommand_->Stop();
+        }
+        return true;
+    }
+    // lefttime > 200ms sleep 100ms, else sleep 200us
+    uint64_t defaultSleepUs = 2 * HUNDREDS; // 200us
+    if (timeReport_ == milliseconds::zero() && (timeOut_.count() * THOUSANDS) > thresholdTimeInMs) {
+        milliseconds leftTimeMsTmp = duration_cast<milliseconds>(endTime - thisTime);
+        if (leftTimeMsTmp.count() > thresholdTimeInMs) {
+            defaultSleepUs = HUNDREDS * THOUSANDS; // 100ms
+        }
+    }
+    std::this_thread::sleep_for(microseconds(defaultSleepUs));
+    return false;
+}
+
 void PerfEvents::StatLoop()
 {
     // calc the time
     const auto startTime = steady_clock::now();
-    const auto endTime = startTime + timeOut_;
     auto nextReportTime = startTime + timeReport_;
     milliseconds usedTimeMsTick {};
     __u64 durationInSec = 0;
     int64_t thresholdTimeInMs = 2 * HUNDREDS;
 
     while (g_trackRunning) {
-        // time check point
-        const auto thisTime = steady_clock::now();
-        if (timeReport_ != milliseconds::zero()) {
-            // stat cmd
-            if (thisTime >= nextReportTime) {
-                // only for log or debug?
-                usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
-                durationInSec = usedTimeMsTick.count();
-                auto lefTimeMsTick = duration_cast<milliseconds>(endTime - thisTime);
-                if (reportPtr_ == nullptr) {
-                    printf("\nReport at %" PRIu64 " ms (%" PRIu64 " ms left):\n",
-                        static_cast<uint64_t>(usedTimeMsTick.count()),
-                        static_cast<uint64_t>(lefTimeMsTick.count()));
-                } else {
-                    fprintf(reportPtr_, "\nReport at %" PRIu64 " ms (%" PRIu64 " ms left):\n",
-                        static_cast<uint64_t>(usedTimeMsTick.count()),
-                        static_cast<uint64_t>(lefTimeMsTick.count()));
-                }
-                // end of comments
-                nextReportTime += timeReport_;
-                StatReport(durationInSec);
-            }
-        }
-
-        if (HaveTargetsExit(startTime)) {
+        if (GetStat(startTime, nextReportTime, usedTimeMsTick, durationInSec, thresholdTimeInMs)) {
             break;
         }
-
-        if (thisTime >= endTime) {
-            usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
-            durationInSec = usedTimeMsTick.count();
-            if (reportPtr_ == nullptr) {
-                printf("Timeout exit (total %" PRIu64 " ms)\n", static_cast<uint64_t>(usedTimeMsTick.count()));
-            } else {
-                fprintf(reportPtr_, "Timeout exit (total %" PRIu64 " ms)\n",
-                    static_cast<uint64_t>(usedTimeMsTick.count()));
-            }
-            if (trackedCommand_) {
-                trackedCommand_->Stop();
-            }
-            break;
-        }
-
-        // lefttime > 200ms sleep 100ms, else sleep 200us
-        uint64_t defaultSleepUs = 2 * HUNDREDS; // 200us
-        if (timeReport_ == milliseconds::zero()
-            && (timeOut_.count() * THOUSANDS) > thresholdTimeInMs) {
-            milliseconds leftTimeMsTmp = duration_cast<milliseconds>(endTime - thisTime);
-            if (leftTimeMsTmp.count() > thresholdTimeInMs) {
-                defaultSleepUs = HUNDREDS * THOUSANDS; // 100ms
-            }
-        }
-        std::this_thread::sleep_for(microseconds(defaultSleepUs));
     }
 
     if (!g_trackRunning) {

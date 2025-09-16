@@ -353,6 +353,24 @@ HWTEST_F(ReportProtobufFileTest, ProcessSampleRecord, TestSize.Level1)
 
     EXPECT_EQ(expectRecord, 1);
 }
+
+/**
+ * @tc.name: ReadCallBackWithNull
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, ReadCallBackWithNull, TestSize.Level2)
+{
+    std::string fileName = "perf.proto";
+    std::vector<std::string> configNames = {"config1", "config2", "config3"};
+    std::string workloadCmd = "workcommand";
+
+    ASSERT_EQ(protobufOutputFileWriter_->Create(fileName), true);
+    protobufOutputFileWriter_->ProcessReportInfo(configNames, workloadCmd);
+    protobufOutputFileWriter_->Close();
+
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

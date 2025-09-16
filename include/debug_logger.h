@@ -122,6 +122,7 @@ private:
     DebugLevel GetLogLevelByName(const std::string &) const;
     DebugLevel GetLogLevelByTag(const std::string &) const;
     const std::string GetLogLevelName(const DebugLevel) const;
+    void PrintHilog(std::string &buffer, const std::chrono::steady_clock::time_point startTime, int& ret) const;
 
     int HiLog(std::string &buffer) const;
 

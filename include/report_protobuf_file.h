@@ -86,6 +86,7 @@ private:
     bool Dump(const Proto::SymbolTableFile &message, const int indent = 0);
     bool Dump(const Proto::VirtualThreadInfo &message, const int indent = 0);
     bool Dump(const Proto::ReportInfo &message, const int indent = 0);
+    int Dump(uint32_t &recordLength, ProtobufReadBack readBack);
 };
 } // namespace HiPerf
 } // namespace Developtools

@@ -63,6 +63,48 @@ Return true, indicating that the parameter is legal (but the user does not neces
 parameter)
 */
 template<class T>
+bool GetValue(argsVector &args, const std::string &optionName, T &value, T &localValues)
+{
+    if (!CheckOptionFormat(optionName)) {
+        if (optionName.empty()) {
+            printf("unable to use empty option name!\n");
+        } else {
+            printf("format error. must use '-' at the begin of option '%s'!\n", optionName.c_str());
+        }
+        return false; // something wrong
+    }
+    auto it = FindOption(args, optionName);
+    if (it == args.end()) {
+        HLOGV("not found option, return default value");
+        return true; // not found but also not error
+    } else {
+        it = args.erase(it);
+        // some special case
+        if constexpr (std::is_same<T, bool>::value) {
+            // for bool we don't need get value.
+            // this always return true
+            GetValueFromString(optionName, optionName, value);
+            return true;
+        } else if (it == args.end()) {
+            // no value means failed
+            printf("option %s value missed\n", optionName.c_str());
+            return false;
+        } else if (GetValueFromString(*it, optionName, localValues)) {
+            // got some value
+            value = localValues;
+            args.erase(it);
+            return true;
+        } else {
+            // have value but convert failed.
+            printf("incorrect option value '%s' for option '%s'. View the usage with the --help option.\n",
+                   (*it).c_str(), optionName.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+template<class T>
 bool GetOptionValue(argsVector &args, const std::string optionName, T &value)
 {
     // we need keep the ref if we got failed
@@ -87,43 +129,7 @@ bool GetOptionValue(argsVector &args, const std::string optionName, T &value)
         }
         return true;
     } else {
-        if (!CheckOptionFormat(optionName)) {
-            if (optionName.empty()) {
-                printf("unable to use empty option name!\n");
-            } else {
-                printf("format error. must use '-' at the begin of option '%s'!\n",
-                       optionName.c_str());
-            }
-            return false; // something wrong
-        }
-        auto it = FindOption(args, optionName);
-        if (it == args.end()) {
-            HLOGV("not found option, return default value");
-            return true; // not found but also not error
-        } else {
-            it = args.erase(it);
-            // some special case
-            if constexpr (std::is_same<T, bool>::value) {
-                // for bool we don't need get value.
-                // this always return true
-                GetValueFromString(optionName, optionName, value);
-                return true;
-            } else if (it == args.end()) {
-                // no value means failed
-                printf("option %s value missed\n", optionName.c_str());
-                return false;
-            } else if (GetValueFromString(*it, optionName, localValues)) {
-                // got some value
-                value = localValues;
-                args.erase(it);
-                return true;
-            } else {
-                // have value but convert failed.
-                printf("incorrect option value '%s' for option '%s'. View the usage with the --help option.\n",
-                       (*it).c_str(), optionName.c_str());
-                return false;
-            }
-        }
+        return GetValue(args, optionName, value, localValues);
     }
 }
 

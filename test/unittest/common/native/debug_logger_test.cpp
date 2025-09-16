@@ -288,6 +288,25 @@ HWTEST_F(DebugLoggerTest, EnableHiLog, TestSize.Level1)
     DebugLogger::GetInstance()->EnableHiLog(false);
 #endif
 }
+
+/**
+ * @tc.name: PrintHilog
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(DebugLoggerTest, PrintHilog, TestSize.Level1)
+{
+#if is_ohos
+    DebugLogger::GetInstance()->EnableHiLog(true);
+
+    LogLevelTest(static_cast<DebugLevel>(LEVEL_MUCH));
+    std::string test = "test string";
+    int ret = 0;
+    const auto startTime = std::chrono::steady_clock::now();
+    DebugLogger::GetInstance()->PrintHilog(test, startTime, ret);
+    EXPECT_EQ(ret >= 47, true); // 47: return from hilog, msg length
+#endif
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

@@ -519,6 +519,52 @@ void SubCommandDump::PrintFeatureEventdesc(const int indent,
     PRINT_INDENT(indent + INDENT_TWO, "\n");
 }
 
+void SubCommandDump::DumpFeatureSection(const int indent, const std::unique_ptr<PerfFileSection> &featureSection)
+{
+    PRINT_INDENT(indent + 1, "feature %d:%s content: \n", featureSection.get()->featureId_,
+                 PerfFileSection::GetFeatureName(featureSection.get()->featureId_).c_str());
+    if (reader_->IsFeatrureStringSection(featureSection.get()->featureId_)) {
+        const PerfFileSectionString *sectionString =
+            static_cast<const PerfFileSectionString *>(featureSection.get());
+        PRINT_INDENT(indent + INDENT_TWO, "%s\n", sectionString->ToString().c_str());
+        return;
+    } else if (featureSection.get()->featureId_ == FEATURE::EVENT_DESC) {
+        PrintFeatureEventdesc(
+            indent, *static_cast<const PerfFileSectionEventDesc *>(featureSection.get()));
+        return;
+    } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_SYMBOL) {
+        const PerfFileSectionSymbolsFiles *sectionSymbolsFiles =
+            static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
+        if (sectionSymbolsFiles != nullptr) {
+            PRINT_INDENT(indent + INDENT_TWO, "SymbolFiles:%zu\n",
+                         sectionSymbolsFiles->symbolFileStructs_.size());
+
+            int fileid = 0;
+            for (auto &symbolFileStruct : sectionSymbolsFiles->symbolFileStructs_) {
+                PRINT_INDENT(indent + INDENT_TWO, "\n");
+                PRINT_INDENT(indent + INDENT_TWO, "fileid:%d\n", fileid);
+                fileid++;
+                // symbol file info
+                PrintSymbolFile(indent, symbolFileStruct);
+            }
+        } else {
+            PRINT_INDENT(indent + INDENT_TWO, "get SymbolFiles failed\n");
+        }
+        return;
+    } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
+        const PerfFileSectionUniStackTable *sectioniStackTable =
+            static_cast<PerfFileSectionUniStackTable *>(const_cast<PerfFileSection *>(featureSection.get()));
+        if (sectioniStackTable != nullptr) {
+            DumpUniqueStackTableNode(indent + 1, *sectioniStackTable);
+        } else {
+            PRINT_INDENT(indent + INDENT_TWO, "get StackTable failed\n");
+        }
+        return;
+    } else {
+        PRINT_INDENT(indent + INDENT_TWO, "not support dump this feature(%d).\n", featureSection.get()->featureId_);
+    }
+}
+
 void SubCommandDump::DumpFeaturePortion(const int indent)
 {
     PRINT_INDENT(indent, "\n ==== features ====\n");
@@ -534,48 +580,7 @@ void SubCommandDump::DumpFeaturePortion(const int indent)
     PRINT_INDENT(indent, "\n ==== feature sections ====\n");
 
     for (auto &featureSection : featureSections) {
-        PRINT_INDENT(indent + 1, "feature %d:%s content: \n", featureSection.get()->featureId_,
-                     PerfFileSection::GetFeatureName(featureSection.get()->featureId_).c_str());
-        if (reader_->IsFeatrureStringSection(featureSection.get()->featureId_)) {
-            const PerfFileSectionString *sectionString =
-                static_cast<const PerfFileSectionString *>(featureSection.get());
-            PRINT_INDENT(indent + INDENT_TWO, "%s\n", sectionString->ToString().c_str());
-            continue;
-        } else if (featureSection.get()->featureId_ == FEATURE::EVENT_DESC) {
-            PrintFeatureEventdesc(
-                indent, *static_cast<const PerfFileSectionEventDesc *>(featureSection.get()));
-            continue;
-        } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_SYMBOL) {
-            const PerfFileSectionSymbolsFiles *sectionSymbolsFiles =
-                static_cast<const PerfFileSectionSymbolsFiles *>(featureSection.get());
-            if (sectionSymbolsFiles != nullptr) {
-                PRINT_INDENT(indent + INDENT_TWO, "SymbolFiles:%zu\n",
-                             sectionSymbolsFiles->symbolFileStructs_.size());
-
-                int fileid = 0;
-                for (auto &symbolFileStruct : sectionSymbolsFiles->symbolFileStructs_) {
-                    PRINT_INDENT(indent + INDENT_TWO, "\n");
-                    PRINT_INDENT(indent + INDENT_TWO, "fileid:%d\n", fileid);
-                    fileid++;
-                    // symbol file info
-                    PrintSymbolFile(indent, symbolFileStruct);
-                }
-            } else {
-                PRINT_INDENT(indent + INDENT_TWO, "get SymbolFiles failed\n");
-            }
-            continue;
-        } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
-            const PerfFileSectionUniStackTable *sectioniStackTable =
-                static_cast<PerfFileSectionUniStackTable *>(const_cast<PerfFileSection *>(featureSection.get()));
-            if (sectioniStackTable != nullptr) {
-                DumpUniqueStackTableNode(indent + 1, *sectioniStackTable);
-            } else {
-                PRINT_INDENT(indent + INDENT_TWO, "get StackTable failed\n");
-            }
-            continue;
-        } else {
-            PRINT_INDENT(indent + INDENT_TWO, "not support dump this feature(%d).\n", featureSection.get()->featureId_);
-        }
+        DumpFeatureSection(indent, featureSection);
     }
 }
 
