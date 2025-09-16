@@ -1087,6 +1087,20 @@ HWTEST_F(SymbolsFileTest, V8SymbolsErr, TestSize.Level1)
     auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
     EXPECT_EQ(symbol.IsValid(), false);
 }
+
+/**
+ * @tc.name: KernerlThreadSymbolsParse
+ * @tc.desc: Test parse kernerlthreadsymbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, KernerlThreadSymbolsParse, TestSize.Level1)
+{
+    const std::string filename = DEVHOST_LINUX_FILE_NAME;
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    if (IsHM()) {
+        EXPECT_EQ(symbolsFile->LoadDebugInfo(), true);
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
