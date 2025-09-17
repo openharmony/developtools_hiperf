@@ -515,23 +515,8 @@ PerfRecordSample::PerfRecordSample(const PerfRecordSample& sample)
     removeStack_ = sample.removeStack_;
 }
 
-void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
+void PerfRecordSample::ParseRecordData(uint8_t *p, const perf_event_attr &attr, u64 &dataSize, uint8_t *start)
 {
-    PerfEventRecord::InitHeader(p);
-
-    HLOG_ASSERT(p != nullptr);
-    // clear the vector data
-    Clean();
-    sampleType_ = attr.sample_type;
-    skipKernel_ = 0;
-    skipPid_ = 0;
-    stackId_ = {0};
-    removeStack_ = false;
-    data_ = {};
-    uint8_t *start = p;
-    u64 dataSize = static_cast<u64>(RECORD_SIZE_LIMIT);
-    SetPointerOffset(p, sizeof(header_), dataSize);
-
     // parse record according SAMPLE_TYPE
     PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id, dataSize);
     PopFromBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip, dataSize);
@@ -545,7 +530,6 @@ void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
     PopFromBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr, dataSize);
     if (data_.nr > 0) {
         // the pointer is from input(p), require caller keep input(p) with *this together
-        // think it in next time
         data_.ips = reinterpret_cast<u64 *>(p);
         SetPointerOffset(p, data_.nr * sizeof(u64), dataSize);
     }
@@ -583,6 +567,26 @@ void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
     }
 }
 
+void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
+{
+    PerfEventRecord::InitHeader(p);
+
+    HLOG_ASSERT(p != nullptr);
+    // clear the vector data
+    Clean();
+    sampleType_ = attr.sample_type;
+    skipKernel_ = 0;
+    skipPid_ = 0;
+    stackId_ = {0};
+    removeStack_ = false;
+    data_ = {};
+    uint8_t *start = p;
+    u64 dataSize = static_cast<u64>(RECORD_SIZE_LIMIT);
+    SetPointerOffset(p, sizeof(header_), dataSize);
+
+    ParseRecordData(p, attr, dataSize, start);
+}
+
 void PerfRecordSample::SetDumpRemoveStack(bool dumpRemoveStack)
 {
     dumpRemoveStack_ = dumpRemoveStack;
@@ -598,10 +602,8 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     if (buf.size() < GetSize()) {
         buf.resize(GetSize());
     }
-
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
-
     PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id);
     PushToBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip);
     PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid);

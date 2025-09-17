@@ -254,9 +254,41 @@ bool ReportProtobufFileReader::CheckFileMagic()
     return true;
 }
 
-bool ReportProtobufFileReader::Dump(const std::string fileName, ProtobufReadBack readBack)
+int ReportProtobufFileReader::Dump(uint32_t &recordLength, ProtobufReadBack readBack)
 {
     const int defaultIndent = 0;
+    protpbufCodedInputStream_->ReadLittleEndian32(&recordLength);
+    if (recordLength != 0) {
+        PRINT_INDENT(defaultIndent, "record length:%u (%x)\n", recordLength, recordLength);
+        HiperfRecord record;
+        std::string recordBuf;
+        recordBuf.resize(recordLength);
+        if (!protpbufCodedInputStream_->ReadString(&recordBuf, recordLength)) {
+            printf("read record error\n");
+            return -1;
+        }
+        if (!record.ParseFromString(recordBuf)) {
+            printf("parse format error\n");
+            return -1;
+        } else {
+            if (readBack == nullptr) {
+                PRINT_INDENT(defaultIndent, "\n");
+                Dump(record, defaultIndent);
+            } else {
+                readBack(record);
+            }
+        }
+    } else {
+        if (readBack == nullptr) {
+            printf("no more record\n");
+        }
+        return 1;
+    }
+    return 0;
+}
+
+bool ReportProtobufFileReader::Dump(const std::string fileName, ProtobufReadBack readBack)
+{
     fileName_ = fileName;
     try {
         protobufFileStream_->exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -271,31 +303,10 @@ bool ReportProtobufFileReader::Dump(const std::string fileName, ProtobufReadBack
             std::make_unique<google::protobuf::io::CodedInputStream>(protpbufInputStream_.get());
         uint32_t recordLength = 0;
         do {
-            protpbufCodedInputStream_->ReadLittleEndian32(&recordLength);
-            if (recordLength != 0) {
-                PRINT_INDENT(defaultIndent, "record length:%u (%x)\n", recordLength, recordLength);
-                HiperfRecord record;
-                std::string recordBuf;
-                recordBuf.resize(recordLength);
-                if (!protpbufCodedInputStream_->ReadString(&recordBuf, recordLength)) {
-                    printf("read record error\n");
-                    return false;
-                }
-                if (!record.ParseFromString(recordBuf)) {
-                    printf("parse format error\n");
-                    return false;
-                } else {
-                    if (readBack == nullptr) {
-                        PRINT_INDENT(defaultIndent, "\n");
-                        Dump(record, defaultIndent);
-                    } else {
-                        readBack(record);
-                    }
-                }
-            } else {
-                if (readBack == nullptr) {
-                    printf("no more record\n");
-                }
+            int ret = Dump(recordLength, readBack);
+            if (ret == -1) {
+                return false;
+            } else if (ret == 1) {
                 break;
             }
         } while (recordLength != 0);

@@ -563,6 +563,7 @@ private:
     void ReadRecordsFromSpeMmaps(MmapFd& mmapFd, const u64 auxOffset, u64 auxSize, const u32 pid, const u32 tid);
     void SpeReadData(void *dataPage, u64 *dataTail, uint8_t *buf, const u32 size);
     bool GetRecordFromMmap(MmapFd &mmap);
+    void GetRecords(bool &enableFlag);
     void GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size);
     void MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxOffset, u64 &auxSize, u32 &pid, u32 &tid);
     size_t GetCallChainPosInSampleRecord(const perf_event_attr &attr);
@@ -576,6 +577,9 @@ private:
     void WaitRecordThread();
     bool HaveTargetsExit(const std::chrono::steady_clock::time_point &startTime);
     void ExitReadRecordBufThread();
+    bool GetStat(const std::chrono::steady_clock::time_point &startTime,
+        std::chrono::steady_clock::time_point &nextReportTime, std::chrono::milliseconds &usedTimeMsTick,
+        __u64 &durationInSec, int64_t thresholdTimeInMs);
 
 #ifdef CONFIG_HAS_CCM
     static constexpr char PRODUCT_CONFIG_PATH[] = "etc/hiperf/hiperf_cfg.json";
@@ -676,6 +680,7 @@ private:
     bool AddEvent(const perf_type_id type, const __u64 config, const bool excludeUser = false,
                   const bool excludeKernel = false, const bool followGroup = false);
     bool AddEvent(const std::string &eventString, const bool followGroup = false);
+    void SetEventAttr(EventItem &eventItem, const perf_type_id type, const bool followGroup);
     bool AddSpeEvent(const u32 type, const bool followGroup = false);
     bool IsEventSupport(const perf_type_id type, const __u64 config);
     bool IsEventAttrSupport(perf_event_attr &attr);
@@ -689,6 +694,8 @@ private:
     void PutAllCpus();
     bool PrepareFdEvents();
     bool CreateFdEvents();
+    int CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu, const size_t ipid,
+                                 uint &fdNumber, int &groupFdCache);
     bool StatReport(const __u64 &durationInSec);
     bool CreateMmap(const FdItem &item, const perf_event_attr &attr);
     bool CreateSpeMmap(const FdItem &item, const perf_event_attr &attr);

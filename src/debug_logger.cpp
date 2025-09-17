@@ -80,6 +80,26 @@ int DebugLogger::HiLog(std::string &buffer) const
 #endif
 #endif
 
+void DebugLogger::PrintHilog(std::string &buffer, const std::chrono::steady_clock::time_point startTime, int& ret) const
+{
+    if (enableHilog_) {
+#if is_ohos && !defined(CONFIG_NO_HILOG)
+        std::lock_guard<std::recursive_mutex> lock(logMutex_);
+        ret = HiLog(buffer); // to the hilog
+#endif
+    } else if (file_ != nullptr) {
+        std::lock_guard<std::recursive_mutex> lock(logMutex_);
+#ifdef HIPERF_DEBUG_TIME
+        const auto startWriteTime = std::chrono::steady_clock::now();
+#endif
+        auto timeStamp = startTime - timeStamp_;
+        fprintf(file_, "%05" PRId64 "ms %s", (int64_t)timeStamp.count(), buffer.data()); // to the file
+#ifdef HIPERF_DEBUG_TIME
+        logWriteTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startWriteTime);
+#endif
+    }
+}
+
 int DebugLogger::Log(const DebugLevel level, const std::string &logTag, const char *fmt, ...) const
 {
     constexpr const int DEFAULT_STRING_BUF_SIZE = 4096;
@@ -106,24 +126,7 @@ int DebugLogger::Log(const DebugLevel level, const std::string &logTag, const ch
     if ((mixLogOutput_ && level < LEVEL_FATAL) || level == LEVEL_FATAL) {
         ret = fprintf(stdout, "%s", buffer.data()); // to the stdout
     }
-
-    if (enableHilog_) {
-#if is_ohos && !defined(CONFIG_NO_HILOG)
-        std::lock_guard<std::recursive_mutex> lock(logMutex_);
-        ret = HiLog(buffer); // to the hilog
-#endif
-    } else if (file_ != nullptr) {
-        std::lock_guard<std::recursive_mutex> lock(logMutex_);
-#ifdef HIPERF_DEBUG_TIME
-        const auto startWriteTime = std::chrono::steady_clock::now();
-#endif
-        auto timeStamp = startTime - timeStamp_;
-        fprintf(file_, "%05" PRId64 "ms %s", (int64_t)timeStamp.count(), buffer.data()); // to the file
-#ifdef HIPERF_DEBUG_TIME
-        logWriteTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startWriteTime);
-#endif
-    }
-
+    PrintHilog(buffer, startTime, ret);
 #ifdef HIPERF_DEBUG_TIME
     logTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startTime);
     logCount_++;

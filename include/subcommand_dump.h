@@ -111,6 +111,7 @@ private:
     void DumpDataPortion(const int indent = 0);
     void DumpCallChain(int indent, const PerfRecordSample& sample);
     void DumpFeaturePortion(const int indent = 0);
+    void DumpFeatureSection(const int indent, const std::unique_ptr<PerfFileSection> &featureSection);
     void DumpUniqueStackTableNode(const int indent, const PerfFileSectionUniStackTable &uniStackTable);
     void ExportUserData(PerfEventRecord& record);
     void ExportUserStack(const PerfRecordSample &recordSample);

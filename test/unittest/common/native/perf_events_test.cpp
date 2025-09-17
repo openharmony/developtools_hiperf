@@ -564,6 +564,41 @@ HWTEST_F(PerfEventsTest, SetConfig1, TestSize.Level2)
     event.SetConfig(speOptMap);
     EXPECT_EQ(event.config_, config);
 }
+
+HWTEST_F(PerfEventsTest, GetStat, TestSize.Level2)
+{
+    PerfEvents event;
+    // prepare
+    event.SetMmapPages(DEFAULT_SAMPLE_MMAPAGE);
+    event.SetRecordCallBack(nullptr);
+    event.SetStatCallBack(StatCount);
+    std::vector<pid_t> selectCpus_;
+    event.SetCpu(selectCpus_);
+    std::vector<pid_t> pids;
+    event.SetPid(pids);
+    const unsigned int frequency = 1000;
+    event.SetSampleFrequency(frequency);
+    event.SetSystemTarget(true);
+    event.SetTimeOut(DEFAULT_TRACKING_TIME);
+    event.SetInherit(false);
+    std::vector<std::string> trackedCommand_ {"ls"};
+    event.SetTrackedCommand(trackedCommand_);
+    event.AddDefaultEvent(PERF_TYPE_SOFTWARE);
+    event.AddDefaultEvent(PERF_TYPE_HARDWARE);
+
+    ASSERT_EQ(event.PrepareTracking(), true);
+
+    std::thread runThread(RunTrack, std::ref(event));
+    std::vector<std::thread> testThreads;
+    RunTestThreads(testThreads);
+
+    std::this_thread::sleep_for(TEST_TIME); // wait for clearing mmap buffer
+    EXPECT_EQ(event.StopTracking(), true);
+    runThread.join();
+    for (std::thread &t : testThreads) {
+        t.join();
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

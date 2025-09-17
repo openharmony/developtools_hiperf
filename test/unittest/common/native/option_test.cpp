@@ -640,6 +640,21 @@ HWTEST_F(OptionTest, TestGetValueFromStringUINT64_T03, TestSize.Level3)
     // 18446744073709551616: UINT64_T_MAX +1
     EXPECT_EQ(Option::GetValueFromString("18446744073709551616", OPTION_NAME, value), false);
 }
+
+/**
+ * @tc.name: GetValue
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(OptionTest, GetValue, TestSize.Level1)
+{
+    std::string stringValue;
+    std::vector<std::string> args = {OPTION_NAME, OPTION_STRING_VALUE};
+    std::string localValues = OPTION_STRING_VALUE;
+    // one arg
+    EXPECT_EQ(Option::GetValue(args = ONE_ARGS_WITH_VALUE, OPTION_NAME, stringValue, localValues), true);
+    EXPECT_EQ(stringValue, OPTION_STRING_VALUE);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
