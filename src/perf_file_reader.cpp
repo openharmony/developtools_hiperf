@@ -322,7 +322,7 @@ bool PerfFileReader::Read(void *buf, const size_t len)
     }
 
     if (fread(buf, len, 1, fp_) != 1) {
-        printf("failed to read file: %d", errno);
+        printf("failed to read file");
         return false;
     }
     return true;

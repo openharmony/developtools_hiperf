@@ -355,6 +355,7 @@ private:
 
     bool LoadEhFrameHDR(const unsigned char *buffer, size_t bufferSize, uint64_t shdrOffset)
     {
+        CHECK_TRUE(bufferSize >= sizeof(eh_frame_hdr), false, 0, "");
         const eh_frame_hdr *ehFrameHdr = reinterpret_cast<const eh_frame_hdr *>(buffer);
         CHECK_TRUE(ehFrameHdr != nullptr, false, 0, "");
         const uint8_t *dataPtr = ehFrameHdr->encode_data;
