@@ -28,6 +28,7 @@
 #endif
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "command.h"
@@ -54,6 +55,7 @@ const std::string SCHED_SWITCH = "/sys/kernel/tracing/events/sched/sched_switch/
 const std::string SCHED_SWITCH_DEBUG = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
 const std::string PROC_VERSION = "/proc/version";
 const std::string SAVED_CMDLINES_SIZE = "/sys/kernel/tracing/saved_cmdlines_size";
+const std::string CALL_STOP = "called stop\n";
 
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT = 2000ms;
@@ -766,7 +768,10 @@ bool SubCommandRecord::IsAppRestarted()
         std::this_thread::sleep_for(milliseconds(CHECK_FREQUENCY));
     } while (steady_clock::now() < endTime && !g_callStop.load());
     std::string err = "app " + appPackage_ + " was not stopped within 30 seconds\n";
-    MsgPrintAndTrans(!g_callStop.load(), err);
+    if (g_callStop.load()) {
+        err = CALL_STOP;
+    }
+    MsgPrintAndTrans(true, err);
     return false;
 }
 
@@ -819,7 +824,10 @@ bool SubCommandRecord::IsAppRunning()
         pid_t appPid = GetPidFromAppPackage(-1, waitAppRunCheckTimeOut);
         if (appPid <= 0) {
             std::string err = "app " +  appPackage_ + " not running\n";
-            MsgPrintAndTrans(!g_callStop.load(), err);
+            if (g_callStop.load()) {
+                err = CALL_STOP;
+            }
+            MsgPrintAndTrans(true, err);
             return false;
         }
         HLOGD("[CheckAppIsRunning] get appPid %d for app %s", appPid, appPackage_.c_str());
@@ -1521,7 +1529,7 @@ bool SubCommandRecord::CreateFifoServer()
     }
 
     int pipeFd[2];
-    if (pipe(pipeFd)  == -1) {
+    if (pipe(pipeFd) == -1) {
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("pipe creation error, errno:(%d:%s)", errno, errInfo);
         HIPERF_HILOGE(MODULE_DEFAULT, "pipe creation error, errno:(%{public}d:%{public}s)", errno, errInfo);
@@ -1541,54 +1549,89 @@ bool SubCommandRecord::CreateFifoServer()
         close(pipeFd[PIPE_WRITE]);
         return false;
     } else if (pid == 0) { // child process
-        close(STDIN_FILENO);
-        close(STDERR_FILENO);
-        close(pipeFd[PIPE_READ]);
-        writeFd_ = pipeFd[PIPE_WRITE];
-        isFifoServer_ = true;
-        nullFd_ = open("/dev/null", O_WRONLY);
-        (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
+        HandleChildProcess(pipeFd);
+        return true;
     } else {            // parent process
-        close(pipeFd[PIPE_WRITE]);
-        readFd_ = pipeFd[PIPE_READ];
-        isFifoClient_ = true;
-        bool isSuccess = false;
-        bool isPrint = false;
-        const auto startTime = steady_clock::now();
-        const auto endTime = startTime + std::chrono::seconds(WAIT_TIMEOUT);
-        do {
-            std::string reply = "";
-            bool ret = MainRecvFromChild(readFd_, reply);
-            if (ret && reply.find("OK") != std::string::npos) {
-                printf("%s control hiperf sampling success.\n", restart_ ? "start" : "create");
-                isSuccess = true;
-                break;
+        return HandleParentProcess(pipeFd, pid);
+    }
+}
+
+void SubCommandRecord::HandleChildProcess(int pipeFd[2])
+{
+    close(STDIN_FILENO);
+    close(STDERR_FILENO);
+    close(pipeFd[PIPE_READ]);
+    writeFd_ = pipeFd[PIPE_WRITE];
+    isFifoServer_ = true;
+    nullFd_ = open("/dev/null", O_WRONLY);
+    (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
+}
+
+bool SubCommandRecord::HandleParentProcess(int pipeFd[2], pid_t pid)
+{
+    close(pipeFd[PIPE_WRITE]);
+    readFd_ = pipeFd[PIPE_READ];
+    isFifoClient_ = true;
+    bool isSuccess = false;
+    bool shouldPrintReply = true;
+    const auto startTime = steady_clock::now();
+    const auto endTime = startTime + std::chrono::seconds(WAIT_TIMEOUT);
+    do {
+        std::string reply = "";
+        bool recvSuccess = MainRecvFromChild(readFd_, reply);
+        if (HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply)) {
+            break;
+        }
+    } while (steady_clock::now() < endTime);
+    return HandleFinalResult(isSuccess, pid, shouldPrintReply);
+}
+
+bool SubCommandRecord::HandleReply(bool recvSuccess, const std::string& reply,
+                                   bool& isSuccess, bool& shouldPrintReply)
+{
+    if (recvSuccess && reply.find("OK") != std::string::npos) {
+        printf("%s control hiperf sampling success.\n", restart_ ? "start" : "create");
+        isSuccess = true;
+        return true;
+    }
+    HLOGE("reply is (%s)", reply.c_str());
+    HIPERF_HILOGE(MODULE_DEFAULT, "reply is (%{public}s)", reply.c_str());
+    if (recvSuccess && reply.find("FAIL") == std::string::npos) {
+        bool shouldPrint = true;
+        if (reply.find("not running") != std::string::npos ||
+            reply.find("not stopped") != std::string::npos ||
+            reply.find(CALL_STOP) != std::string::npos) {
+            shouldPrintReply = false;
+            if (reply.find(CALL_STOP) != std::string::npos) {
+                shouldPrint = false;
             }
-            HLOGE("reply is (%s)", reply.c_str());
-            HIPERF_HILOGE(MODULE_DEFAULT, "reply is (%{public}s)", reply.c_str());
-            if (ret && reply.find("FAIL") == std::string::npos) {
-                printf("%s", reply.c_str());
-                if (reply.find("debug application") != std::string::npos) {
-                    isPrint = true;
-                }
-                continue;
-            }
-            if (ret && reply.find("FAIL") != std::string::npos) {
-                break;
-            }
-            if (!ret) {
-                isPrint = true;
-                break;
-            }
-        } while (steady_clock::now() < endTime);
-        if (!isSuccess) {
-            kill(pid, SIGKILL);
-            RemoveFifoFile();
-            if (isPrint) {
-                strerror_r(errno, errInfo, ERRINFOLEN);
-                printf("create control hiperf sampling failed. %d:%s\n", errno, errInfo);
-                return false;
-            }
+        }
+        if (shouldPrint) {
+            printf("%s", reply.c_str());
+        }
+        return false;
+    }
+    return true;
+}
+
+bool SubCommandRecord::HandleFinalResult(bool isSuccess, pid_t pid, bool shouldPrintReply)
+{
+    if (!isSuccess) {
+        if (kill(pid, SIGTERM) != 0) {
+            HLOGE("Failed to send SIGTERM: %d", pid);
+            HIPERF_HILOGE(MODULE_DEFAULT, "Failed to send SIGTERM to pid: %{public}d", pid);
+        }
+        // wait for process exit
+        if (waitpid(pid, nullptr, 0) == -1) {
+            HLOGE("Failed to wait for pid: %d", pid);
+            HIPERF_HILOGE(MODULE_DEFAULT, "Failed to wait for pid: %{public}d", pid);
+        }
+        char errInfo[ERRINFOLEN] = {0};
+        RemoveFifoFile();
+        if (shouldPrintReply) {
+            strerror_r(errno, errInfo, ERRINFOLEN);
+            printf("create control hiperf sampling failed. %d:%s\n", errno, errInfo);
+            return false;
         }
     }
     return true;

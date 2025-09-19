@@ -369,6 +369,10 @@ private:
     bool ProcessControl();
     bool CreateFifoServer();
     bool MainRecvFromChild(const int fd, std::string& reply);
+    void HandleChildProcess(int pipeFd[2]);
+    bool HandleParentProcess(int pipeFd[2], pid_t pid);
+    bool HandleReply(bool recvSuccess, const std::string& reply, bool& isSuccess, bool& shouldPrintReply);
+    bool HandleFinalResult(bool isSuccess, pid_t pid, bool shouldPrintReply);
     void CloseClientThread();
     void CloseReplyThread();
 
