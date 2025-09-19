@@ -303,51 +303,23 @@ static int SpePktDescEvent(const struct SpePkt *packet,
     CHECK_TRUE(buf != nullptr && packet != nullptr, -1, 1, "Invalid pointer!");
     u64 payload = packet->payload;
     int err = 0;
-
-    SpePktOutString(&err, &buf, &bufLen, "EV");
-    if (payload & BIT(EVENT_EXCEPTION_GEN)) {
-        SpePktOutString(&err, &buf, &bufLen, " EXCEPTION-GEN");
+    if (bufLen > 0) {
+        SpePktOutString(&err, &buf, &bufLen, "EV");
     }
-    if (payload & BIT(EVENT_RETIRED)) {
-        SpePktOutString(&err, &buf, &bufLen, " RETIRED");
+    std::vector<std::pair<enum SpeEvents, const char*>> events = {
+        {EVENT_EXCEPTION_GEN, " EXCEPTION-GEN"}, {EVENT_RETIRED, " RETIRED"},
+        {EVENT_L1D_ACCESS, " L1D-ACCESS"}, {EVENT_L1D_REFILL, " L1D-REFILL"},
+        {EVENT_TLB_ACCESS, " TLB-ACCESS"}, {EVENT_TLB_WALK, " TLB-REFILL"},
+        {EVENT_NOT_TAKEN, " NOT-TAKEN"}, {EVENT_MISPRED, " MISPRED"},
+        {EVENT_LLC_ACCESS, " LLC-ACCESS"}, {EVENT_LLC_MISS, " LLC-REFILL"},
+        {EVENT_REMOTE_ACCESS, " REMOTE-ACCESS"}, {EVENT_ALIGNMENT, " ALIGNMENT"},
+        {EVENT_PARTIAL_PREDICATE, " SVE-PARTIAL-PRED"}, {EVENT_EMPTY_PREDICATE, " SVE-EMPTY-PRED"}
+    };
+    for (auto it = events.begin(); it != events.end(); ++it) {
+        if ((payload & BIT(it->first)) && bufLen > 0) {
+            SpePktOutString(&err, &buf, &bufLen, it->second);
+        }
     }
-    if (payload & BIT(EVENT_L1D_ACCESS)) {
-        SpePktOutString(&err, &buf, &bufLen, " L1D-ACCESS");
-    }
-    if (payload & BIT(EVENT_L1D_REFILL)) {
-        SpePktOutString(&err, &buf, &bufLen, " L1D-REFILL");
-    }
-    if (payload & BIT(EVENT_TLB_ACCESS)) {
-        SpePktOutString(&err, &buf, &bufLen, " TLB-ACCESS");
-    }
-    if (payload & BIT(EVENT_TLB_WALK)) {
-        SpePktOutString(&err, &buf, &bufLen, " TLB-REFILL");
-    }
-    if (payload & BIT(EVENT_NOT_TAKEN)) {
-        SpePktOutString(&err, &buf, &bufLen, " NOT-TAKEN");
-    }
-    if (payload & BIT(EVENT_MISPRED)) {
-        SpePktOutString(&err, &buf, &bufLen, " MISPRED");
-    }
-    if (payload & BIT(EVENT_LLC_ACCESS)) {
-        SpePktOutString(&err, &buf, &bufLen, " LLC-ACCESS");
-    }
-    if (payload & BIT(EVENT_LLC_MISS)) {
-        SpePktOutString(&err, &buf, &bufLen, " LLC-REFILL");
-    }
-    if (payload & BIT(EVENT_REMOTE_ACCESS)) {
-        SpePktOutString(&err, &buf, &bufLen, " REMOTE-ACCESS");
-    }
-    if (payload & BIT(EVENT_ALIGNMENT)) {
-        SpePktOutString(&err, &buf, &bufLen, " ALIGNMENT");
-    }
-    if (payload & BIT(EVENT_PARTIAL_PREDICATE)) {
-        SpePktOutString(&err, &buf, &bufLen, " SVE-PARTIAL-PRED");
-    }
-    if (payload & BIT(EVENT_EMPTY_PREDICATE)) {
-        SpePktOutString(&err, &buf, &bufLen, " SVE-EMPTY-PRED");
-    }
-
     return err;
 }
 
