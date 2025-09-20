@@ -15,7 +15,9 @@
 
 #include "utilities.h"
 
+#if defined(is_ohos) && is_ohos
 #include <sys/utsname.h>
+#endif
 #include <zlib.h>
 #include <thread>
 #if defined(CONFIG_HAS_SYSPARA) && defined(is_ohos) && is_ohos
@@ -32,7 +34,9 @@
 #ifdef CONFIG_HAS_CCM
 #include "config_policy_utils.h"
 #endif
+#if !is_mingw
 #include "directory_ex.h"
+#endif
 #include "hiperf_hilog.h"
 #include "ipc_utilities.h"
 
@@ -50,7 +54,6 @@ static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";
 static const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
 const std::string UID_TAG = "Uid:";
-const int STATUS_ID_INDEX = 4;
 
 std::string CanonicalizeSpecPath(const char* src)
 {
@@ -183,11 +186,11 @@ bool StdoutRecord::Start()
             return false;
         }
     }
-
+#if defined(is_ohos) && is_ohos
     // we save the stdout
     stdoutFile_ = OHOS::UniqueFd(dup(STDOUT_FILENO));
     CHECK_TRUE(stdoutFile_ != -1, false, 1, "std dup failed");
-
+#endif
     // setup temp file as stdout
     if (dup2(fileno(recordFile_), STDOUT_FILENO) != -1) {
         stop_ = false;
@@ -204,9 +207,10 @@ std::string StdoutRecord::Stop()
         return content_;
     }
     fflush(stdout);
+#if defined(is_ohos) && is_ohos
     // restore fd
     dup2(stdoutFile_, STDOUT_FILENO);
-
+#endif
     // return file content
     if (recordFile_ != nullptr) {
         const long fileLength = lseek(fileno(recordFile_), 0, SEEK_END);
@@ -307,6 +311,7 @@ std::string ReadFileToString(const std::string &fileName)
 
 bool ReadFileToString(const std::string &fileName, std::string &fileData, const size_t fileSize)
 {
+#if defined(is_ohos) && is_ohos
     fileData.clear();
     std::string resolvedPath = CanonicalizeSpecPath(fileName.c_str());
     OHOS::UniqueFd fd(open(resolvedPath.c_str(), O_RDONLY | O_BINARY));
@@ -325,6 +330,9 @@ bool ReadFileToString(const std::string &fileName, std::string &fileData, const 
         fileData.append(buf, readSize);
     }
     return (readSize == 0) ? true : false;
+#else
+    return false;
+#endif
 }
 
 bool WriteStringToFile(const std::string &fileName, const std::string &value)
@@ -846,6 +854,7 @@ bool IsBeta()
 
 bool IsHM()
 {
+#if defined(is_ohos) && is_ohos
     utsname unameBuf;
     bool isHM = false;
     if ((uname(&unameBuf)) == 0) {
@@ -853,6 +862,9 @@ bool IsHM()
         isHM = osrelease.find(HMKERNEL) != std::string::npos;
     }
     return isHM;
+#else
+    return false;
+#endif
 }
 
 bool IsAllowProfilingUid()
@@ -1141,7 +1153,7 @@ std::string GetDefaultPathByEnv(const std::string fileType)
     return outputFilename;
 }
 
-bool GetStatusLineId(const std::string& line, uid_t& target)
+bool GetStatusLineId(const std::string& line, uint32_t& target)
 {
     size_t start = line.find_first_of("\t");
     CHECK_TRUE(start != std::string::npos, false, 1, "[GetStatusLineId] find start \t failed");
@@ -1150,7 +1162,7 @@ bool GetStatusLineId(const std::string& line, uid_t& target)
     CHECK_TRUE(end != std::string::npos, false, 1, "[GetStatusLineId] find end \t failed");
     std::string targetStr = line.substr(start, end - start);
     std::istringstream iss(targetStr);
-    uid_t result = 0;
+    uint32_t result = 0;
     iss >> result;
     if (iss.fail() || !iss.eof()) {
         return false;
@@ -1159,8 +1171,9 @@ bool GetStatusLineId(const std::string& line, uid_t& target)
     return true;
 }
 
-bool GetUidFromPid(const pid_t& pid, uid_t& ruid)
+bool GetUidFromPid(const pid_t& pid, uint32_t& ruid)
 {
+#if defined(is_ohso) && is_ohos || defined(HIPERF_UNITTEST)
     std::string line;
     std::string procStatusPath = "/proc/" + std::to_string(pid) + "/status";
     std::ifstream fileStream(procStatusPath);
@@ -1169,8 +1182,9 @@ bool GetUidFromPid(const pid_t& pid, uid_t& ruid)
         HIPERF_HILOGE(MODULE_DEFAULT, "GetUidGidFromPid cannot open proc status file for pid: %{public}d", pid);
         return false;
     }
+    const int statusIdIndex = 4;
     while (std::getline(fileStream, line)) {
-        if (line.substr(0, STATUS_ID_INDEX) == UID_TAG) {
+        if (line.substr(0, statusIdIndex) == UID_TAG) {
             if (!GetStatusLineId(line, ruid)) {
                 HIPERF_HILOGE(MODULE_DEFAULT, "GetUidGidFromPid get uid failed");
                 fileStream.close();
@@ -1182,17 +1196,20 @@ bool GetUidFromPid(const pid_t& pid, uid_t& ruid)
         }
     }
     fileStream.close();
+#endif
     return false;
 }
 
 bool IsRootThread(const pid_t& pid)
 {
-    uid_t ruid = UID_MAX;
+#if defined(is_ohso) && is_ohos || defined(HIPERF_UNITTEST)
+    uint32_t ruid = UID_MAX;
     if (GetUidFromPid(pid, ruid)) {
         if (ruid == 0) {
             return true;
         }
     }
+#endif
     return false;
 }
 } // namespace HiPerf

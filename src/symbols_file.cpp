@@ -1125,7 +1125,7 @@ public:
 class V8FileSymbols : public ElfFileSymbols {
 private:
     bool v8Extracted_ = false;
-    bool isV8_ = false;
+    [[maybe_unused]] bool isV8_ = false;
     [[maybe_unused]] uintptr_t jsvmExtractorptr_ = 0;
 
     pid_t pid_ = 0;

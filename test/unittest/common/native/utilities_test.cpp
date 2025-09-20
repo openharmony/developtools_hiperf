@@ -1048,7 +1048,7 @@ HWTEST_F(UtilitiesTest, GetUidFromPid, TestSize.Level1)
     const std::string hiviewName = "hiview";
     pid_t pid = GetPidFromApp(hiviewName);
     EXPECT_NE(pid, -1);
-    uid_t uid = 0;
+    uint32_t uid = 0;
     EXPECT_TRUE(GetUidFromPid(pid, uid));
     EXPECT_NE(uid, 0);
 }
@@ -1061,7 +1061,7 @@ HWTEST_F(UtilitiesTest, GetUidFromPid, TestSize.Level1)
 HWTEST_F(UtilitiesTest, GetStatusLineId_ValidLine, TestSize.Level1)
 {
     std::string line = "Uid:\t1000\t2000\t3000\t4000";
-    uid_t target = 0;
+    uint32_t target = 0;
     EXPECT_TRUE(GetStatusLineId(line, target));
     EXPECT_EQ(target, 1000);
 }
@@ -1074,7 +1074,7 @@ HWTEST_F(UtilitiesTest, GetStatusLineId_ValidLine, TestSize.Level1)
 HWTEST_F(UtilitiesTest, GetStatusLineId_InvalidLine_NoTabs, TestSize.Level2)
 {
     std::string line = "Uid:1000 2000 3000 4000";
-    uid_t target = 0;
+    uint32_t target = 0;
     EXPECT_FALSE(GetStatusLineId(line, target));
 }
 
@@ -1086,7 +1086,7 @@ HWTEST_F(UtilitiesTest, GetStatusLineId_InvalidLine_NoTabs, TestSize.Level2)
 HWTEST_F(UtilitiesTest, GetStatusLineId_InvalidLine_NonNumeric, TestSize.Level2)
 {
     std::string line = "Uid:\tabc\t2000\t3000\t4000";
-    uid_t target = 0;
+    uint32_t target = 0;
     EXPECT_FALSE(GetStatusLineId(line, target));
 }
 

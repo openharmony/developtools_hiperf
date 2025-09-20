@@ -193,6 +193,7 @@ ohos_unittest("hiperf_unittest") {
     external_deps += [
       "init:libbegetutil",
       "ipc:ipc_core",
+      "protobuf:protobuf_lite",
       "samgr:samgr_proxy",
     ]
   }

@@ -22,11 +22,17 @@
 #include <stdint.h>
 #include <string>
 #include <sys/types.h>
+#if defined(is_ohos) && is_ohos
 #include <unique_fd.h>
+#endif
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#if defined(is_ohos) && is_ohos
 #include <linux/perf_event.h>
+#else
+#include "linux/perf_event_host.h"
+#endif
 #include <linux/types.h>
 
 #include "debug_logger.h"
