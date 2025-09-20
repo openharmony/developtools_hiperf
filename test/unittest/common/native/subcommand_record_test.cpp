@@ -2616,6 +2616,96 @@ HWTEST_F(SubCommandRecordTest, CheckRecordDefaultPath, TestSize.Level1)
     string defaultName = "/data/local/tmp/perf.data";
     EXPECT_EQ(cmd.outputFilename_, defaultName);
 }
+
+/**
+ * @tc.name: HandleReply_Success_OK
+ */
+HWTEST_F(SubCommandRecordTest, HandleReply_Success_OK, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    cmd.restart_ = false;
+    
+    bool recvSuccess = true;
+    std::string reply = "OK";
+    bool isSuccess = false;
+    bool shouldPrintReply = false;
+    
+    bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
+    
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(isSuccess);
+    EXPECT_FALSE(shouldPrintReply);
+}
+
+/**
+ * @tc.name: HandleReply_Success_NotRunning
+ */
+HWTEST_F(SubCommandRecordTest, HandleReply_Success_NotRunning, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    
+    bool recvSuccess = true;
+    std::string reply = "app not running";
+    bool isSuccess = false;
+    bool shouldPrintReply = true;
+    
+    bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
+    
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(isSuccess);
+    EXPECT_FALSE(shouldPrintReply);
+}
+
+/**
+ * @tc.name: HandleReply_Success_CallStop
+ */
+HWTEST_F(SubCommandRecordTest, HandleReply_Success_CallStop, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    
+    bool recvSuccess = true;
+    std::string reply = "called stop\n";
+    bool isSuccess = false;
+    bool shouldPrintReply = true;
+    
+    bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
+    
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(isSuccess);
+    EXPECT_FALSE(shouldPrintReply);
+}
+
+/**
+ * @tc.name: HandleReply_Fail_WithFAIL
+ */
+HWTEST_F(SubCommandRecordTest, HandleReply_Fail_WithFAIL, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    
+    bool recvSuccess = true;
+    std::string reply = "Operation FAIL";
+    bool isSuccess = false;
+    bool shouldPrintReply = false;
+    
+    bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
+    
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(isSuccess);
+    EXPECT_FALSE(shouldPrintReply);
+}
+
+/**
+ * @tc.name: HandleFinalResult_Success_Case
+ */
+HWTEST_F(SubCommandRecordTest, HandleFinalResult_Success_Case, TestSize.Level1)
+{
+    SubCommandRecord cmd;
+    pid_t testPid = getpid();
+    bool isSuccess = true;
+    bool shouldPrintReply = false;
+    bool result = cmd.HandleFinalResult(isSuccess, testPid, shouldPrintReply);
+    EXPECT_TRUE(result);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
