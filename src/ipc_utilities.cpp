@@ -56,7 +56,7 @@ bool IsDebugableApp(const std::string& bundleName)
             break;
         }
 
-        sptr<AppExecFwk::BundleMgrProxy> proxy = iface_cast<AppExecFwk::BundleMgrProxy>(remoteObject);
+        sptr<AppExecFwk::IBundleMgr> proxy = iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
         if (proxy == nullptr) {
             err = "iface_cast failed!";
             break;
@@ -100,7 +100,7 @@ bool IsApplicationEncryped(const int pid)
     CHECK_TRUE(sam != nullptr, true, LOG_TYPE_PRINTF, "GetSystemAbilityManager failed!\n");
     sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     CHECK_TRUE(remoteObject != nullptr, true, LOG_TYPE_PRINTF, "Get BundleMgr SA failed!\n");
-    sptr<AppExecFwk::BundleMgrProxy> proxy = iface_cast<AppExecFwk::BundleMgrProxy>(remoteObject);
+    sptr<AppExecFwk::IBundleMgr> proxy = iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
     CHECK_TRUE(proxy != nullptr, true, LOG_TYPE_PRINTF, "iface_cast failed!\n");
 
     AppExecFwk::ApplicationInfo appInfo;
