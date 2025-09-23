@@ -54,6 +54,8 @@ const std::string SCHED_SWITCH = "/sys/kernel/tracing/events/sched/sched_switch/
 const std::string SCHED_SWITCH_DEBUG = "/sys/kernel/debug/tracing/events/sched/sched_switch/enable";
 const std::string PROC_VERSION = "/proc/version";
 const std::string SAVED_CMDLINES_SIZE = "/sys/kernel/tracing/saved_cmdlines_size";
+const std::string CALL_STOP = "called stop\n";
+const std::string BLANK_PRINT = "print blank\n";
 
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT = 2000ms;
@@ -766,7 +768,10 @@ bool SubCommandRecord::IsAppRestarted()
         std::this_thread::sleep_for(milliseconds(CHECK_FREQUENCY));
     } while (steady_clock::now() < endTime && !g_callStop.load());
     std::string err = "app " + appPackage_ + " was not stopped within 30 seconds\n";
-    MsgPrintAndTrans(!g_callStop.load(), err);
+    if (g_callStop.load()) {
+        err = CALL_STOP;
+    }
+    MsgPrintAndTrans(true, err);
     return false;
 }
 
@@ -819,7 +824,10 @@ bool SubCommandRecord::IsAppRunning()
         pid_t appPid = GetPidFromAppPackage(-1, waitAppRunCheckTimeOut);
         if (appPid <= 0) {
             std::string err = "app " +  appPackage_ + " not running\n";
-            MsgPrintAndTrans(!g_callStop.load(), err);
+            if (g_callStop.load()) {
+                err = CALL_STOP;
+            }
+            MsgPrintAndTrans(true, err);
             return false;
         }
         HLOGD("[CheckAppIsRunning] get appPid %d for app %s", appPid, appPackage_.c_str());
@@ -1521,7 +1529,7 @@ bool SubCommandRecord::CreateFifoServer()
     }
 
     int pipeFd[2];
-    if (pipe(pipeFd)  == -1) {
+    if (pipe(pipeFd) == -1) {
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("pipe creation error, errno:(%d:%s)", errno, errInfo);
         HIPERF_HILOGE(MODULE_DEFAULT, "pipe creation error, errno:(%{public}d:%{public}s)", errno, errInfo);
@@ -1554,6 +1562,7 @@ bool SubCommandRecord::CreateFifoServer()
         isFifoClient_ = true;
         bool isSuccess = false;
         bool isPrint = false;
+        bool isPrintCheck = false;
         const auto startTime = steady_clock::now();
         const auto endTime = startTime + std::chrono::seconds(WAIT_TIMEOUT);
         do {
@@ -1567,13 +1576,26 @@ bool SubCommandRecord::CreateFifoServer()
             HLOGE("reply is (%s)", reply.c_str());
             HIPERF_HILOGE(MODULE_DEFAULT, "reply is (%{public}s)", reply.c_str());
             if (ret && reply.find("FAIL") == std::string::npos) {
+                bool shouldPrint = true;
                 printf("%s", reply.c_str());
                 if (reply.find("debug application") != std::string::npos) {
-                    isPrint = true;
+                    isPrintCheck = true;
+                }
+                if (reply.find("called stop") != std::string::npos) {
+                    shouldPrint = false;
+                }
+                if (reply.find("print blank") != std::string::npos) {
+                    shouldPrint = false;
+                    isPrintCheck = true;
+                    printf("\n");
+                }
+                if (shouldPrint) {
+                    printf("%s", reply.c_str());
                 }
                 continue;
             }
             if (ret && reply.find("FAIL") != std::string::npos) {
+                isPrint = true;
                 break;
             }
             if (!ret) {
@@ -1584,7 +1606,7 @@ bool SubCommandRecord::CreateFifoServer()
         if (!isSuccess) {
             kill(pid, SIGKILL);
             RemoveFifoFile();
-            if (isPrint) {
+            if (isPrint && isPrintCheck) {
                 strerror_r(errno, errInfo, ERRINFOLEN);
                 printf("create control hiperf sampling failed. %d:%s\n", errno, errInfo);
                 return false;
@@ -1645,6 +1667,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     // prepare PerfEvents
     if (!PrepareSysKernel()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1653,6 +1676,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] PrepareSysKernel finish");
     if (!PreparePerfEvent()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1662,6 +1686,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     // prepar some attr before CreateInitRecordFile
     if (!perfEvents_.PrepareTracking()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1673,6 +1698,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
 
     if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1683,6 +1709,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CreateInitRecordFile finished");
     if (!PrepareVirtualRuntime()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
