@@ -56,6 +56,7 @@ const std::string SCHED_SWITCH_DEBUG = "/sys/kernel/debug/tracing/events/sched/s
 const std::string PROC_VERSION = "/proc/version";
 const std::string SAVED_CMDLINES_SIZE = "/sys/kernel/tracing/saved_cmdlines_size";
 const std::string CALL_STOP = "called stop\n";
+const std::string BLANK_PRINT = "print blank\n";
 
 // when there are many events, start record will take more time.
 const std::chrono::milliseconds CONTROL_WAITREPY_TIMEOUT = 2000ms;
@@ -1606,6 +1607,10 @@ bool SubCommandRecord::HandleReply(bool recvSuccess, const std::string& reply,
                 shouldPrint = false;
             }
         }
+        if (reply.find("print blank") != std::string::npos) {
+            shouldPrint = false;
+            printf("\n");
+        }
         if (shouldPrint) {
             printf("%s", reply.c_str());
         }
@@ -1688,6 +1693,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     // prepare PerfEvents
     if (!PrepareSysKernel()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1696,6 +1702,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] PrepareSysKernel finish");
     if (!PreparePerfEvent()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1705,6 +1712,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     // prepar some attr before CreateInitRecordFile
     if (!perfEvents_.PrepareTracking()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1716,6 +1724,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
 
     if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
@@ -1726,6 +1735,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CreateInitRecordFile finished");
     if (!PrepareVirtualRuntime()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
+            ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
