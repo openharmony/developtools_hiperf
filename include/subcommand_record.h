@@ -469,6 +469,19 @@ private:
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
     bool OnlineReportData();
+    HiperfError CheckTargetAndApp();
+    HiperfError PrepareSystemAndRecorder();
+    HiperfError PrepareRuntimeAndThreads();
+    HiperfError StartSamplingAndFile();
+    bool AddEventsAndHandleOffCpu();
+    bool ConfigureStackAndBranch();
+    bool HandleArmSpeEvent();
+    bool ProcessSymbolsIfNeeded();
+    bool ProcessUserSymbols();
+    void ConfigureBasicParams();
+    void ConfigureSamplingAndBacktrack();
+    void CleanupForBacktrack();
+    void UpdateKernelRelatedSymbols();
 
     // only used in UT
     using CheckRecordCallBack = std::function<void(const PerfEventRecord&)>;
