@@ -15,7 +15,6 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
-#include <thread>
 
 const int WAITTIME = 200000;
 const int BUFSIZE = 1048576;

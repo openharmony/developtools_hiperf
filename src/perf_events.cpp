@@ -1104,8 +1104,7 @@ bool PerfEvents::PrepareFdEvents(void)
 int PerfEvents::CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu, const size_t ipid,
                                          uint &fdNumber, int &groupFdCache)
 {
-    UniqueFd fd = Open(eventItem.attr, pids_[ipid], cpus_[icpu],
-                       groupFdCache, 0);
+    UniqueFd fd = Open(eventItem.attr, pids_[ipid], cpus_[icpu], groupFdCache, 0);
     // clang-format on
     if (fd < 0) {
         if (errno == ESRCH) {
@@ -1113,33 +1112,28 @@ int PerfEvents::CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu
                 printf("pid %d does not exist.\n", pids_[ipid]);
             }
             HLOGE("pid %d does not exist.\n", pids_[ipid]);
-            HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFdEvents] pid %{public}d does not exist.",
-                pids_[ipid]);
+            HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFdEvents] pid %{public}d does not exist.", pids_[ipid]);
             return 1;
         } else {
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
             // clang-format off
             if (verboseReport_) {
-                char errInfo[ERRINFOLEN] = { 0 };
-                strerror_r(errno, errInfo, ERRINFOLEN);
                 printf("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
                     eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
             }
-            char errInfo[ERRINFOLEN] = { 0 };
-            strerror_r(errno, errInfo, ERRINFOLEN);
             HLOGE("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
                 eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
             // clang-format on
             return 0; // jump to next cpu
         }
     }
-    // after open successed , fill the result
-    // make a new FdItem
+    // after open successed , fill the result and make a new FdItem
     FdItem &fdItem = eventItem.fdItems.emplace_back();
     fdItem.fd = std::move(fd);
     fdItem.cpu = cpus_[icpu];
     fdItem.pid = pids_[ipid];
     fdNumber++;
-
     // if sampling, mmap ring buffer
     bool createMmapSucc = true;
     if (recordCallBack_) {
@@ -1924,7 +1918,7 @@ bool PerfEvents::GetStat(const steady_clock::time_point &startTime, steady_clock
     }
     // lefttime > 200ms sleep 100ms, else sleep 200us
     uint64_t defaultSleepUs = 2 * HUNDREDS; // 200us
-    if (timeReport_ == milliseconds::zero() && (timeOut_.count() * THOUSANDS) > thresholdTimeInMs) {
+    if (timeReport_ == milliseconds::zero() && (timeOut_.count() > thresholdTimeInMs)) {
         milliseconds leftTimeMsTmp = duration_cast<milliseconds>(endTime - thisTime);
         if (leftTimeMsTmp.count() > thresholdTimeInMs) {
             defaultSleepUs = HUNDREDS * THOUSANDS; // 100ms
