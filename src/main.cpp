@@ -39,13 +39,32 @@ using namespace OHOS::Developtools::HiPerf;
 #define main HiperfFuzzerMain
 #endif
 
+void RegisterCommandComponent()
+{
+    // register all the main command
+#ifdef HIPERF_DEBUG
+    RegisterMainCommandDebug();
+#endif
+
+    // register all the sub command
+    SubCommandHelp::RegisterSubCommandHelp();
+
+#if SUPPORT_PERF_EVENT
+    RegisterSubCommandStat();
+    SubCommandList::RegisterSubCommandList();
+    SubCommandRecord::RegisterSubCommandRecord();
+#endif
+
+    SubCommandDump::RegisterSubCommandDump();
+    SubCommandReport::RegisterSubCommandReport();
+}
+
 int main(const int argc, const char *argv[])
 {
     if (!GetDeveloperMode() && !IsAllowProfilingUid()) {
         printf("error: not in developermode, exit.\n");
         return -1;
     }
-
     if (argc > 128) { // 128 : max input argument counts
         printf("The number of input arguments exceeds the upper limit.\n");
         return -1;
@@ -66,28 +85,11 @@ int main(const int argc, const char *argv[])
     for (int i = 1; i < argc; i++) {
         args.push_back(argv[i]);
     }
-
     if (args.empty()) {
         printf("no command input.\n");
         args.push_back("help"); // no cmd like help cmd
     }
-
-// register all the main command
-#ifdef HIPERF_DEBUG
-    RegisterMainCommandDebug();
-#endif
-
-    // register all the sub command
-    SubCommandHelp::RegisterSubCommandHelp();
-
-#if SUPPORT_PERF_EVENT
-    RegisterSubCommandStat();
-    SubCommandList::RegisterSubCommandList();
-    SubCommandRecord::RegisterSubCommandRecord();
-#endif
-
-    SubCommandDump::RegisterSubCommandDump();
-    SubCommandReport::RegisterSubCommandReport();
+    RegisterCommandComponent();
 #ifdef FUZZER_TEST
     bool isRecordCmd = false;
     if (args[0] == "record") {
@@ -106,7 +108,6 @@ int main(const int argc, const char *argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(msWaitSysReleaseThread));
     }
 #endif
-
     HLOGD("normal exit.");
     return 0;
 }

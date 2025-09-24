@@ -599,6 +599,20 @@ HWTEST_F(PerfEventsTest, GetStat, TestSize.Level2)
         t.join();
     }
 }
+
+HWTEST_F(PerfEventsTest, HandleTokensNoTracePoint, TestSize.Level2)
+{
+    PerfEvents event;
+    std::vector<std::string> eventTokens = {"hw-instructions", "k"};
+    std::string name = "";
+    bool excludeUser = false;
+    bool excludeKernel = false;
+    bool isTracePoint = false;
+    event.HandleTokensNoTracePoint(eventTokens, name, excludeUser, excludeKernel, isTracePoint);
+    EXPECT_FALSE(excludeKernel);
+    EXPECT_FALSE(isTracePoint);
+    EXPECT_EQ(name, "hw-instructions");
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

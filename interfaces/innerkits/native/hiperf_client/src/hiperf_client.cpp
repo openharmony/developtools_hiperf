@@ -441,6 +441,25 @@ void Client::GetExecCmd(std::vector<std::string> &cmd,
     cmd.insert(cmd.end(), args.begin(), args.end());
 }
 
+void Client::ChildProcessHandle(const std::vector<std::string> &args, int *clientToServerFd, int *serverToClientFd)
+{
+    close(clientToServerFd[PIPE_WRITE]);
+    close(serverToClientFd[PIPE_READ]);
+
+    std::vector<std::string> cmd;
+    GetExecCmd(cmd, clientToServerFd[PIPE_READ], serverToClientFd[PIPE_WRITE], args);
+    ChildRunExecv(cmd);
+}
+
+void Client::ParentHandleProcess(int *clientToServerFd, int *serverToClientFd)
+{
+    close(clientToServerFd[PIPE_READ]);
+    close(serverToClientFd[PIPE_WRITE]);
+
+    clientToServerFd_ = clientToServerFd[PIPE_WRITE];
+    serverToClientFd_ = serverToClientFd[PIPE_READ];
+}
+
 bool Client::Start(const std::vector<std::string> &args, bool immediately)
 {
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
@@ -476,20 +495,9 @@ bool Client::Start(const std::vector<std::string> &args, bool immediately)
         close(serverToClientFd[PIPE_WRITE]);
         return false;
     } else if (hperfPrePid_ == 0) {
-        // child process
-        close(clientToServerFd[PIPE_WRITE]);
-        close(serverToClientFd[PIPE_READ]);
-
-        std::vector<std::string> cmd;
-        GetExecCmd(cmd, clientToServerFd[PIPE_READ], serverToClientFd[PIPE_WRITE], args);
-        ChildRunExecv(cmd);
+        ChildProcessHandle(args, clientToServerFd, serverToClientFd);
     } else {
-        // parent process
-        close(clientToServerFd[PIPE_READ]);
-        close(serverToClientFd[PIPE_WRITE]);
-
-        clientToServerFd_ = clientToServerFd[PIPE_WRITE];
-        serverToClientFd_ = serverToClientFd[PIPE_READ];
+        ParentHandleProcess(clientToServerFd, serverToClientFd);
     }
     using namespace std::chrono_literals;
     if (!WaitCommandReply(2000ms)) {
