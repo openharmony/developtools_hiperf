@@ -22,6 +22,8 @@
 
 #include <hilog/log.h>
 
+#include "virtual_thread.h"
+#include "subcommand_record.h"
 #include "symbols_file_test.h"
 
 using namespace testing::ext;
@@ -407,6 +409,28 @@ HWTEST_F(VirtualThreadTest, ReadRoMemory, TestSize.Level2)
         ASSERT_EQ(thread.ReadRoMemory(addr++, &readRoByte, 1u), false);
         thread.ParseServiceMap(TEST_FILE_ELF_FULL_PATH);
         thread.ParseDevhostMap(getpid());
+    }
+}
+
+HWTEST_F(VirtualThreadTest, ParseDevhostMapEachLine, TestSize.Level1)
+{
+    if (IsHM()) {
+        SubCommandRecord cmd;
+        cmd.SetHM();
+        VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.devhostPid_,
+                                                               cmd.virtualRuntime_.devhostPid_);
+        std::string mapPath = StringPrintf("/proc/%d/maps", cmd.virtualRuntime_.devhostPid_);
+        EXPECT_EQ(!mapPath.empty(), true);
+        std::string mapContent = ReadFileToString(mapPath);
+        EXPECT_EQ(!mapContent.empty(), true);
+        std::string filename;
+        if (mapContent.size() > 0) {
+            std::istringstream s(mapContent);
+            std::string line;
+            while (std::getline(s, line)) {
+                kthread.ParseDevhostMapEachLine(filename, s, line);
+            }
+        }
     }
 }
 } // namespace HiPerf

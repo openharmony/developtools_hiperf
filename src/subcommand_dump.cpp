@@ -523,7 +523,7 @@ void SubCommandDump::DumpFeatureSection(const int indent, const std::unique_ptr<
 {
     PRINT_INDENT(indent + 1, "feature %d:%s content: \n", featureSection.get()->featureId_,
                  PerfFileSection::GetFeatureName(featureSection.get()->featureId_).c_str());
-    if (reader_->IsFeatrureStringSection(featureSection.get()->featureId_)) {
+    if (reader_->IsFeatureStringSection(featureSection.get()->featureId_)) {
         const PerfFileSectionString *sectionString =
             static_cast<const PerfFileSectionString *>(featureSection.get());
         PRINT_INDENT(indent + INDENT_TWO, "%s\n", sectionString->ToString().c_str());
@@ -553,7 +553,7 @@ void SubCommandDump::DumpFeatureSection(const int indent, const std::unique_ptr<
         return;
     } else if (featureSection.get()->featureId_ == FEATURE::HIPERF_FILES_UNISTACK_TABLE) {
         const PerfFileSectionUniStackTable *sectioniStackTable =
-            static_cast<PerfFileSectionUniStackTable *>(const_cast<PerfFileSection *>(featureSection.get()));
+            static_cast<const PerfFileSectionUniStackTable *>(featureSection.get());
         if (sectioniStackTable != nullptr) {
             DumpUniqueStackTableNode(indent + 1, *sectioniStackTable);
         } else {

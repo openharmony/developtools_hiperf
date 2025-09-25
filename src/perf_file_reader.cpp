@@ -243,6 +243,68 @@ const perf_event_attr *PerfFileReader::GetDefaultAttr()
     return &(vecAttr_[0].attr);
 }
 
+void PerfFileReader::ReadSpeRecord(perf_event_header *header, uint8_t *buf, size_t &speSize)
+{
+    CHECK_TRUE(header != nullptr && buf != nullptr, NO_RETVAL, 0, "");
+    struct PerfRecordAuxtraceData *auxtrace =
+        reinterpret_cast<struct PerfRecordAuxtraceData *>(header + 1);
+    speSize = auxtrace->size;
+    if (speSize > 0) {
+        Read(buf + header->size, auxtrace->size);
+    }
+}
+
+bool PerfFileReader::ReadRecordByAttr(ProcessRecordCB &callback, uint8_t *buf,
+                                      uint64_t &remainingSize, size_t &recordNumber, const perf_event_attr *attr)
+{
+    CHECK_TRUE(buf != nullptr && attr != nullptr, false, 0, "");
+    if (remainingSize < sizeof(perf_event_header)) {
+        HLOGW("not enough sizeof perf_event_header");
+        return false;
+    } else if (!Read(buf, sizeof(perf_event_header))) {
+        HLOGW("read perf_event_header failed.");
+        return false;
+    }
+    perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
+    if (header->size > RECORD_SIZE_LIMIT || header->size < sizeof(perf_event_header)) {
+        HLOGE("read record header size error %hu", header->size);
+        return false;
+    }
+    if (remainingSize < header->size) {
+        HLOGE("not enough header->size.");
+        return false;
+    }
+    size_t headerSize = sizeof(perf_event_header);
+    if (!Read(buf + headerSize, header->size - headerSize)) {
+        HLOGE("read record data size failed %zu", header->size - headerSize);
+        return false;
+    }
+    size_t speSize = 0;
+    if (header->type == PERF_RECORD_AUXTRACE) {
+        ReadSpeRecord(header, buf, speSize);
+    }
+    uint8_t *data = buf;
+    PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
+        static_cast<perf_event_type>(header->type), data, *attr);
+    // unknown record , break the process
+    if (record.GetName() == nullptr) {
+        return false;
+    }
+    HLOGV("record type %u", record.GetType());
+    remainingSize = remainingSize - header->size - speSize;
+#ifdef HIPERF_DEBUG_TIME
+    const auto startCallbackTime = steady_clock::now();
+#endif
+    // call callback to process, then destroy record
+    callback(record);
+    recordNumber++;
+#ifdef HIPERF_DEBUG_TIME
+    readCallbackTime_ +=
+        duration_cast<microseconds>(steady_clock::now() - startCallbackTime);
+#endif
+    return true;
+}
+
 bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
 {
 #ifdef HIPERF_DEBUG_TIME
@@ -256,55 +318,9 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
     const perf_event_attr *attr = GetDefaultAttr();
     CHECK_TRUE(attr != nullptr, false, 1, "attr is null");
     while (remainingSize > 0) {
-        if (remainingSize < sizeof(perf_event_header)) {
-            HLOGW("not enough sizeof perf_event_header");
-            return false;
-        } else if (!Read(buf, sizeof(perf_event_header))) {
-            HLOGW("read perf_event_header failed.");
+        if (!ReadRecordByAttr(callback, buf, remainingSize, recordNumber, attr)) {
             return false;
         }
-        perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
-        if (header->size > RECORD_SIZE_LIMIT || header->size < sizeof(perf_event_header)) {
-            HLOGE("read record header size error %hu", header->size);
-            return false;
-        }
-        if (remainingSize < header->size) {
-            HLOGE("not enough header->size.");
-            return false;
-        }
-        size_t headerSize = sizeof(perf_event_header);
-        if (!Read(buf + headerSize, header->size - headerSize)) {
-            HLOGE("read record data size failed %zu", header->size - headerSize);
-            return false;
-        }
-        size_t speSize = 0;
-        if (header->type == PERF_RECORD_AUXTRACE) {
-            struct PerfRecordAuxtraceData *auxtrace =
-                reinterpret_cast<struct PerfRecordAuxtraceData *>(header + 1);
-            speSize = auxtrace->size;
-            if (speSize > 0) {
-                Read(buf + header->size, auxtrace->size);
-            }
-        }
-        uint8_t *data = buf;
-        PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
-            static_cast<perf_event_type>(header->type), data, *attr);
-        // unknown record , break the process
-        if (record.GetName() == nullptr) {
-            return false;
-        }
-        HLOGV("record type %u", record.GetType());
-        remainingSize = remainingSize - header->size - speSize;
-#ifdef HIPERF_DEBUG_TIME
-        const auto startCallbackTime = steady_clock::now();
-#endif
-        // call callback to process, then destroy record
-        callback(record);
-        recordNumber++;
-#ifdef HIPERF_DEBUG_TIME
-        readCallbackTime_ +=
-            duration_cast<microseconds>(steady_clock::now() - startCallbackTime);
-#endif
     }
     HLOGD("read back %zu records", recordNumber);
 #ifdef HIPERF_DEBUG_TIME
@@ -364,7 +380,7 @@ const std::string PerfFileReader::GetFeatureString(const FEATURE feature) const
 {
     std::string featureName = PerfFileSection::GetFeatureName(feature);
     HLOGV("GetFeatureSection %s", featureName.c_str());
-    if (!IsFeatrureStringSection(feature)) {
+    if (!IsFeatureStringSection(feature)) {
         HLOGV("not a string feature: %s", featureName.c_str());
     } else {
         const PerfFileSection *featureSection = GetFeatureSection(feature);
@@ -412,7 +428,7 @@ bool PerfFileReader::ReadFeatureSection()
         // read failed ??
         CHECK_TRUE(Read(&buf[0], sectionHeader.offset, buf.size()), false, LOG_TYPE_PRINTF,
                    "file format not correct. featureSectionDataOffset '0x%" PRIx64 "\n", sectionHeader.offset);
-        if (IsFeatrureStringSection(feature)) {
+        if (IsFeatureStringSection(feature)) {
             perfFileSections_.emplace_back(
                 std::make_unique<PerfFileSectionString>(feature, (char *)&buf[0], buf.size()));
         } else if (feature == FEATURE::HIPERF_FILES_SYMBOL) {

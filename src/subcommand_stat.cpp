@@ -539,13 +539,99 @@ bool SubCommandStat::IsMonitoredAtAllTime(const double &scale)
     return (fabs(scale - 1.0) < SCALE_ERROR_LIMIT);
 }
 
+void SubCommandStat::GetHwCpuCyclesComments(
+    const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+    std::map<std::string, std::string> &comments, std::string &configName,
+    double scale, EventProcessingContext &context)
+{
+    if (context.findRunningTime &&
+        ((context.group_id == countEvent->id) ||
+         (IsMonitoredAtAllTime(context.main_scale) && IsMonitoredAtAllTime(scale)))) {
+        double hz = 0;
+        if (std::abs(context.running_time_in_sec) > ALMOST_ZERO &&
+            std::abs(scale) > ALMOST_ZERO) {
+            hz = countEvent->eventCount / (context.running_time_in_sec / scale);
+        }
+        comments[configName] = StringPrintf("%lf GHz", hz / 1e9);
+    } else {
+        comments[configName] = "";
+    }
+}
+
+bool SubCommandStat::GetHwInstructionsComments(
+    const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
+    const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+    std::map<std::string, std::string> &comments, std::string &configName, double scale)
+{
+    std::string cpuSyclesName = GetCommentConfigName(countEvent, "hw-cpu-cycles");
+    double otherScale = 1.0;
+    __u64 cpuCyclesCount = 0;
+    bool other = FindEventCount(countEvents, cpuSyclesName, countEvent->id, cpuCyclesCount,
+                                otherScale);
+    if (other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) {
+        CHECK_TRUE(countEvent->eventCount != 0, false, 0, "");
+        double cpi = static_cast<double>(cpuCyclesCount) / countEvent->eventCount;
+        comments[configName] = StringPrintf("%lf cycles per instruction", cpi);
+        return true;
+    }
+    return false;
+}
+
+bool SubCommandStat::GetHwBranchMissesComments(
+    const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
+    const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+    std::map<std::string, std::string> &comments, std::string &configName, double scale)
+{
+    std::string branchInsName = GetCommentConfigName(countEvent, "hw-branch-instructions");
+    double otherScale = 1.0;
+    __u64 branchInstructionsCount = 0;
+    bool other = FindEventCount(countEvents, branchInsName, countEvent->id,
+                                branchInstructionsCount, otherScale);
+    if ((other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) &&
+        branchInstructionsCount != 0) {
+        double miss_rate =
+            static_cast<double>(countEvent->eventCount) / branchInstructionsCount;
+        comments[configName] = StringPrintf("%lf miss rate", miss_rate * ONE_HUNDRED);
+        return true;
+    }
+    return false;
+}
+
+bool SubCommandStat::GetRateComments(
+    const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+    std::map<std::string, std::string> &comments, std::string &configName,
+    EventProcessingContext &context, double scale)
+{
+    double rate = 0.0;
+    if (fabs(context.running_time_in_sec) > ALMOST_ZERO &&
+        fabs(scale) > ALMOST_ZERO) {
+        rate = countEvent->eventCount / (context.running_time_in_sec / scale);
+    }
+    if (rate > 1e9) {
+        comments[configName] = StringPrintf("%.3lf G/sec", rate / 1e9);
+        return true;
+    }
+    if (rate > 1e6) {
+        comments[configName] = StringPrintf("%.3lf M/sec", rate / 1e6);
+        return true;
+    }
+    if (rate > 1e3) {
+        comments[configName] = StringPrintf("%.3lf K/sec", rate / 1e3);
+        return true;
+    }
+    comments[configName] = StringPrintf("%.3lf /sec", rate);
+    return false;
+}
+
 void SubCommandStat::GetComments(const std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
     std::map<std::string, std::string> &comments)
 {
-    double running_time_in_sec = 0;
-    __u64 group_id = 0;
-    double main_scale = 1.0;
-    bool findRunningTime = FindRunningTime(countEvents, running_time_in_sec, group_id, main_scale);
+    EventProcessingContext context;
+    context.running_time_in_sec = 0;
+    context.group_id = 0;
+    context.main_scale = 1.0;
+    context.findRunningTime = FindRunningTime(countEvents,
+        context.running_time_in_sec, context.group_id, context.main_scale);
     for (auto it = countEvents.begin(); it != countEvents.end(); it++) {
         std::string configName = it->first;
         std::string commentConfigName = GetCommentConfigName(it->second, "sw-cpu-clock");
@@ -565,63 +651,26 @@ void SubCommandStat::GetComments(const std::map<std::string, std::unique_ptr<Per
         }
         commentConfigName = GetCommentConfigName(it->second, "hw-cpu-cycles");
         if (configName == commentConfigName) {
-            if (findRunningTime &&
-                ((group_id == it->second->id) ||
-                 (IsMonitoredAtAllTime(main_scale) && IsMonitoredAtAllTime(scale)))) {
-                double hz = 0;
-                if (abs(running_time_in_sec) > ALMOST_ZERO) {
-                    hz = it->second->eventCount / (running_time_in_sec / scale);
-                }
-                comments[configName] = StringPrintf("%lf GHz", hz / 1e9);
-            } else {
-                comments[configName] = "";
-            }
+            GetHwCpuCyclesComments(it->second, comments, configName, scale, context);
             continue;
         }
         commentConfigName = GetCommentConfigName(it->second, "hw-instructions");
         if (configName == commentConfigName && it->second->eventCount != 0) {
-            std::string cpuSyclesName = GetCommentConfigName(it->second, "hw-cpu-cycles");
-            double otherScale = 1.0;
-            __u64 cpuCyclesCount = 0;
-            bool other = FindEventCount(countEvents, cpuSyclesName, it->second->id, cpuCyclesCount,
-                                        otherScale);
-            if (other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) {
-                double cpi = static_cast<double>(cpuCyclesCount) / it->second->eventCount;
-                comments[configName] = StringPrintf("%lf cycles per instruction", cpi);
+            if (GetHwInstructionsComments(countEvents, it->second, comments, configName, scale)) {
                 continue;
             }
         }
         commentConfigName = GetCommentConfigName(it->second, "hw-branch-misses");
         if (configName == commentConfigName) {
-            std::string branchInsName = GetCommentConfigName(it->second, "hw-branch-instructions");
-            double otherScale = 1.0;
-            __u64 branchInstructionsCount = 0;
-            bool other = FindEventCount(countEvents, branchInsName, it->second->id,
-                                        branchInstructionsCount, otherScale);
-            if ((other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) &&
-                branchInstructionsCount != 0) {
-                double miss_rate =
-                    static_cast<double>(it->second->eventCount) / branchInstructionsCount;
-                comments[configName] = StringPrintf("%lf miss rate", miss_rate * ONE_HUNDRED);
+            if (GetHwBranchMissesComments(countEvents, it->second, comments, configName, scale)) {
                 continue;
             }
         }
-        if (findRunningTime && ((group_id == it->second->id) || (IsMonitoredAtAllTime(main_scale) &&
-                                                                 IsMonitoredAtAllTime(scale)))) {
-            double rate = it->second->eventCount / (running_time_in_sec / scale);
-            if (rate > 1e9) {
-                comments[configName] = StringPrintf("%.3lf G/sec", rate / 1e9);
+        if (context.findRunningTime && ((context.group_id == it->second->id) ||
+                                        (IsMonitoredAtAllTime(context.main_scale) && IsMonitoredAtAllTime(scale)))) {
+            if (GetRateComments(it->second, comments, configName, context, scale)) {
                 continue;
             }
-            if (rate > 1e6) {
-                comments[configName] = StringPrintf("%.3lf M/sec", rate / 1e6);
-                continue;
-            }
-            if (rate > 1e3) {
-                comments[configName] = StringPrintf("%.3lf K/sec", rate / 1e3);
-                continue;
-            }
-            comments[configName] = StringPrintf("%.3lf /sec", rate);
         } else {
             comments[configName] = "";
         }

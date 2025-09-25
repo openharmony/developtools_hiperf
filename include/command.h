@@ -17,6 +17,7 @@
 
 #include <string>
 #include <vector>
+#include "command_reporter.h"
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -25,6 +26,8 @@ public:
     static std::string fullArgument;
     static bool DispatchCommands(std::vector<std::string> arguments);
     static bool DispatchCommand(std::string argument);
+private:
+    static bool DispatchSubCommands(std::vector<std::string> &arguments, CommandReporter &reporter);
 };
 } // namespace HiPerf
 } // namespace Developtools

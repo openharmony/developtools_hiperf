@@ -257,17 +257,21 @@ bool ReportProtobufFileReader::CheckFileMagic()
 int ReportProtobufFileReader::Dump(uint32_t &recordLength, ProtobufReadBack readBack)
 {
     const int defaultIndent = 0;
-    protpbufCodedInputStream_->ReadLittleEndian32(&recordLength);
+    bool readSuccess = protpbufCodedInputStream_->ReadLittleEndian32(&recordLength);
+    if (!readSuccess) {
+        printf("failed to read record length\n");
+        return -1;
+    }
     if (recordLength != 0) {
         PRINT_INDENT(defaultIndent, "record length:%u (%x)\n", recordLength, recordLength);
         HiperfRecord record;
         std::string recordBuf;
         recordBuf.resize(recordLength);
-        if (!protpbufCodedInputStream_->ReadString(&recordBuf, recordLength)) {
+        if (!protpbufCodedInputStream_->ReadRaw(&recordBuf[0], recordLength)) {
             printf("read record error\n");
             return -1;
         }
-        if (!record.ParseFromString(recordBuf)) {
+        if (!record.ParseFromArray(recordBuf.data(), recordLength)) {
             printf("parse format error\n");
             return -1;
         } else {
