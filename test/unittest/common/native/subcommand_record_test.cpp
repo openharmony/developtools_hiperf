@@ -73,13 +73,17 @@ std::string SubCommandRecordTest::testProcesses = "hiperf_test_demo";
 
 void SubCommandRecordTest::SetUpTestCase()
 {
-    chmod("/data/test/hiperf_test_demo", 0755); // 0755 : -rwxr-xr-x
+    if (chmod("/data/test/hiperf_test_demo", 0755) == -1) { // 0755 : -rwxr-xr-x
+        GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
+    }
     system("/data/test/hiperf_test_demo &");
 }
 
 void SubCommandRecordTest::TearDownTestCase()
 {
-    system("kill -9 `pidof hiperf_test_demo`");
+    if (system("kill -9 `pidof hiperf_test_demo`") != 0) {
+        GTEST_LOG_(ERROR) << "kill hiperf_test_demo failed.";
+    }
 }
 
 void SubCommandRecordTest::SetUp()

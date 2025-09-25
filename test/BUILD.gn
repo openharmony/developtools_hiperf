@@ -95,7 +95,6 @@ config("hiperf_test_config") {
   include_dirs = [ "${hiperf_path}/test/unittest/common/native/include" ]
 }
 
-
 ohos_executable("hiperf_test_demo") {
   cflags = [ "-O0" ]
   sources = [ "unittest/common/native/hiperf_test_demo.cpp" ]

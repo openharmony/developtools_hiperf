@@ -586,14 +586,14 @@ HWTEST_F(PerfEventsTest, GetStat, TestSize.Level2)
     event.AddDefaultEvent(PERF_TYPE_SOFTWARE);
     event.AddDefaultEvent(PERF_TYPE_HARDWARE);
 
-    ASSERT_EQ(event.PrepareTracking(), true);
+    EXPECT_TRUE(event.PrepareTracking());
 
     std::thread runThread(RunTrack, std::ref(event));
     std::vector<std::thread> testThreads;
     RunTestThreads(testThreads);
 
     std::this_thread::sleep_for(TEST_TIME); // wait for clearing mmap buffer
-    EXPECT_EQ(event.StopTracking(), true);
+    EXPECT_TRUE(event.StopTracking());
     runThread.join();
     for (std::thread &t : testThreads) {
         t.join();
