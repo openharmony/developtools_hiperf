@@ -2239,7 +2239,7 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
         }
 
         serverPid = sample->GetServerPidof(i);
-        if (!isRoot_ && static_cast<uint32_t>(serverPid) == devhostPid_) {
+        if (!isRoot_ && rootPids_.find(static_cast<uint32_t>(serverPid)) != rootPids_.end()) {
             // in func UpdateDevHostCallChains add offset_ to ips, need sub offset_ when symboling
             if (sample->data_.ips[i] > offset_) {
                 sample->data_.ips[i] -= offset_;
@@ -2400,23 +2400,36 @@ void SubCommandRecord::SetHM()
     virtualRuntime_.SetHM(isHM_);
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
-    if (isHM_) {
-        // find devhost pid
-        const std::string basePath {"/proc/"};
-        std::vector<std::string> subDirs = GetSubDirs(basePath);
-        for (const auto &subDir : subDirs) {
-            if (!IsDigits(subDir)) {
-                continue;
-            }
-            pid_t pid = std::stoll(subDir);
-            std::string cmdline = GetProcessName(pid);
-            if (cmdline == "/bin/" + DEVHOST_FILE_NAME) {
-                virtualRuntime_.SetDevhostPid(pid);
-                devhostPid_ = static_cast<uint32_t>(pid);
-                break;
-            }
+    if (!isHM_) {
+        return;
+    }
+    CollectRootPids();
+}
+
+void SubCommandRecord::CollectRootPids()
+{
+    const std::string basePath {"/proc/"};
+    std::vector<std::string> subDirs = GetSubDirs(basePath);
+
+    for (const auto &subDir : subDirs) {
+        if (!IsDigits(subDir)) {
+            continue;
+        }
+
+        pid_t pid = std::stoll(subDir);
+        if (IsRootThread(pid)) {
+            HandleRootProcess(pid);
         }
     }
+}
+
+void SubCommandRecord::HandleRootProcess(const pid_t& pid)
+{
+    std::string cmdline = GetProcessName(pid);
+    if (cmdline == "/bin/" + DEVHOST_FILE_NAME) {
+        virtualRuntime_.SetDevhostPid(pid);
+    }
+    rootPids_.insert(pid);
 }
 
 bool SubCommandRecord::OnlineReportData()
@@ -2538,12 +2551,12 @@ void SubCommandRecord::UpdateDevHostMaps(PerfEventRecord& record)
 {
     if (record.GetType() == PERF_RECORD_MMAP) {
         auto recordMmap = static_cast<PerfRecordMmap*>(&record);
-        if (recordMmap->data_.pid == devhostPid_) {
+        if (rootPids_.find(recordMmap->data_.pid) != rootPids_.end()) {
             recordMmap->data_.addr += offset_;
         }
     } else if (record.GetType() == PERF_RECORD_MMAP2) {
         auto recordMmap2 = static_cast<PerfRecordMmap2*>(&record);
-        if (recordMmap2->data_.pid == devhostPid_) {
+        if (rootPids_.find(recordMmap2->data_.pid) != rootPids_.end()) {
             recordMmap2->data_.addr += offset_;
         }
     }
@@ -2556,7 +2569,7 @@ void SubCommandRecord::UpdateDevHostCallChains(PerfEventRecord& record)
         const uint64_t BAD_IP_ADDRESS = 2;
         auto sample = static_cast<PerfRecordSample*>(&record);
         serverPid = static_cast<uint32_t>(sample->GetServerPidof(0));
-        if (serverPid == devhostPid_) {
+        if (rootPids_.find(serverPid) != rootPids_.end()) {
             sample->data_.ip += offset_;
         }
         for (u64 i = 0; i < sample->data_.nr; i++) {
@@ -2564,7 +2577,7 @@ void SubCommandRecord::UpdateDevHostCallChains(PerfEventRecord& record)
                 continue;
             }
             serverPid = static_cast<uint32_t>(sample->GetServerPidof(i));
-            if (serverPid == devhostPid_) {
+            if (rootPids_.find(serverPid) != rootPids_.end()) {
                 sample->data_.ips[i] += offset_;
             }
         }
