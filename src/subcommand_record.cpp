@@ -1055,30 +1055,53 @@ void SubCommandRecord::RecoverSavedCmdlinesSize()
 
 bool SubCommandRecord::PreparePerfEvent()
 {
-    // we need to notify perfEvents_ sampling mode by SetRecordCallBack first
     auto processRecord = [this](PerfEventRecord& record) -> bool {
         return this->ProcessRecord(record);
     };
     perfEvents_.SetRecordCallBack(processRecord);
 
-    if (selectEvents_.size() > 0 && selectEvents_[0] == "arm_spe_0") {
-        if (!IsRoot()) {
-            printf("%s options needs root privilege, please check usage\n", selectEvents_[0].c_str());
-            return false;
-        }
-        selectEvents_.insert(selectEvents_.begin(), "sw-dummy");
-        perfEvents_.isSpe_ = true;
-        perfEvents_.SetConfig(speOptMap_);
-        isSpe_ = true;
+    CHECK_TRUE(HandleArmSpeEvent(), false, 1, "HandleArmSpeEvent failed");
+    ConfigureBasicParams();
+    CHECK_TRUE(ConfigureStackAndBranch(), false, 1, "ConfigureStackAndBranch failed");
+    ConfigureSamplingAndBacktrack();
+    if (selectEvents_.empty() && selectGroups_.empty()) {
+        selectEvents_.push_back("hw-cpu-cycles");
     }
 
+    CHECK_TRUE(AddEventsAndHandleOffCpu(), false, 1, "AddEventsAndHandleOffCpu failed");
+    return true;
+}
+
+bool SubCommandRecord::HandleArmSpeEvent()
+{
+    if (selectEvents_.empty() || selectEvents_[0] != "arm_spe_0") {
+        return true;
+    }
+    CHECK_TRUE(IsRoot(), false, LOG_TYPE_PRINTF,
+        "%s options needs root privilege, please check usage\n", selectEvents_[0].c_str());
+    selectEvents_.insert(selectEvents_.begin(), "sw-dummy");
+    perfEvents_.isSpe_ = true;
+    perfEvents_.SetConfig(speOptMap_);
+    isSpe_ = true;
+    return true;
+}
+
+void SubCommandRecord::ConfigureBasicParams()
+{
     perfEvents_.SetCpu(selectCpus_);
     perfEvents_.SetPid(selectPids_); // Tids has insert Pids in CheckTargetProcessOptions()
-
     perfEvents_.SetSystemTarget(targetSystemWide_);
     perfEvents_.SetTimeOut(timeStopSec_);
     perfEvents_.SetVerboseReport(verboseReport_);
     perfEvents_.SetMmapPages(mmapPages_);
+
+    if (!clockId_.empty()) {
+        perfEvents_.SetClockId(GetClockId(clockId_));
+    }
+}
+
+bool SubCommandRecord::ConfigureStackAndBranch()
+{
     if (isCallStackFp_) {
         perfEvents_.SetSampleStackType(PerfEvents::SampleStackType::FP);
     } else if (isCallStackDwarf_) {
@@ -1088,14 +1111,15 @@ bool SubCommandRecord::PreparePerfEvent()
     if (!perfEvents_.SetBranchSampleType(branchSampleType_)) {
         printf("branch sample %s is not supported\n", VectorToString(vecBranchFilters_).c_str());
         HLOGE("Fail to SetBranchSampleType %" PRIx64 "", branchSampleType_);
-        HIPERF_HILOGE(MODULE_DEFAULT, "[PreparePerfEvent] Fail to SetBranchSampleType %{public}" PRIx64 "",
+        HIPERF_HILOGE(MODULE_DEFAULT, "[ConfigureStackAndBranch] Fail to SetBranchSampleType %{public}" PRIx64 "",
             branchSampleType_);
         return false;
     }
-    if (!clockId_.empty()) {
-        perfEvents_.SetClockId(GetClockId(clockId_));
-    }
+    return true;
+}
 
+void SubCommandRecord::ConfigureSamplingAndBacktrack()
+{
     if (frequency_ > 0) {
         perfEvents_.SetSampleFrequency(frequency_);
     } else if (period_ > 0) {
@@ -1104,15 +1128,12 @@ bool SubCommandRecord::PreparePerfEvent()
 
     perfEvents_.SetBackTrack(backtrack_);
     perfEvents_.SetBackTrackTime(backtrackTime_);
-
     perfEvents_.SetInherit(!noInherit_);
     perfEvents_.SetTrackedCommand(trackedCommand_);
+}
 
-    // set default sample event
-    if (selectEvents_.empty() && selectGroups_.empty()) {
-        selectEvents_.push_back("hw-cpu-cycles");
-    }
-
+bool SubCommandRecord::AddEventsAndHandleOffCpu()
+{
     CHECK_TRUE(perfEvents_.AddEvents(selectEvents_), false, 1, "Fail to AddEvents events");
     for (auto &group : selectGroups_) {
         CHECK_TRUE(perfEvents_.AddEvents(group, true), false, 1, "Fail to AddEvents groups");
@@ -1124,7 +1145,6 @@ bool SubCommandRecord::PreparePerfEvent()
         // insert a sched_switch event to trace offcpu event
         CHECK_TRUE(perfEvents_.AddOffCpuEvent(), false, 1, "Fail to AddEOffCpuvent");
     }
-
     return true;
 }
 
@@ -1642,15 +1662,8 @@ bool SubCommandRecord::HandleFinalResult(bool isSuccess, pid_t pid, bool shouldP
     return true;
 }
 
-HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
+HiperfError SubCommandRecord::CheckTargetAndApp()
 {
-    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord onSubCommand start");
-    if (!ProcessControl()) {
-        return HiperfError::PROCESS_CONTROL_FAIL;
-    } else if (isFifoClient_) {
-        return HiperfError::NO_ERR;
-    }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] ProcessControl finish");
     if (controlCmd_ == CONTROL_CMD_PREPARE) {
         CreateClientThread();
         if (!appPackage_.empty() && restart_) {
@@ -1659,29 +1672,26 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
                 CloseClientThread();
                 return HiperfError::CHECK_RESTART_OPTION_FAIL;
             }
-            HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] App restart success");
+            HIPERF_HILOGI(MODULE_DEFAULT, "[CheckTargetAndApp] App restart success");
         }
     }
 
     if (!isRoot_) {
         offset_ = GetOffsetNum();
         SymbolsFile::offsetNum_ = offset_;
-        HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] get offset success");
+        HIPERF_HILOGI(MODULE_DEFAULT, "[HandleControlAndInit] get offset success");
     }
 
     if (!CheckTargetPids()) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] CheckTargetPids failed");
+        HIPERF_HILOGE(MODULE_DEFAULT, "[CheckTargetAndApp] CheckTargetPids failed");
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(false);
             CloseClientThread();
         }
-        if (controlCmd_.empty()) {
-            return HiperfError::NO_ERR;
-        } else {
-            return HiperfError::CHECK_OPTION_PID_FAIL;
-        }
+        return controlCmd_.empty() ? HiperfError::NO_ERR : HiperfError::CHECK_OPTION_PID_FAIL;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CheckTargetPids success");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[CheckTargetAndApp] CheckTargetPids success");
+
     std::string err = OHOS::Developtools::HiPerf::HandleAppInfo(appPackage_, inputPidTidArgs_);
     if (!err.empty()) {
         ChildResponseToMain(err);
@@ -1689,8 +1699,13 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         CloseClientThread();
         return HiperfError::CHECK_DEBUG_APP_FAIL;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] HandleAppInfo finish");
-    // prepare PerfEvents
+    HIPERF_HILOGI(MODULE_DEFAULT, "[CheckTargetAndApp] HandleAppInfo finish");
+
+    return HiperfError::NO_ERR;
+}
+
+HiperfError SubCommandRecord::PrepareSystemAndRecorder()
+{
     if (!PrepareSysKernel()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(BLANK_PRINT);
@@ -1699,7 +1714,8 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         }
         return HiperfError::PREPARE_SYS_KERNEL_FAIL;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] PrepareSysKernel finish");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareSystemAndRecorder] PrepareSysKernel finish");
+
     if (!PreparePerfEvent()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(BLANK_PRINT);
@@ -1708,19 +1724,19 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         }
         return HiperfError::PREPARE_PERF_EVENT_FAIL;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] PreparePerfEvent finish");
-    // prepar some attr before CreateInitRecordFile
+    HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareSystemAndRecorder] PreparePerfEvent finish");
+
     if (!perfEvents_.PrepareTracking()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(BLANK_PRINT);
             ChildResponseToMain(false);
             CloseClientThread();
         }
-        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to prepare tracking");
+        HIPERF_HILOGE(MODULE_DEFAULT, "[PrepareSystemAndRecorder] Fail to prepare tracking");
         HLOGE("Fail to prepare tracking");
         return HiperfError::PREPARE_TACKING_FAIL;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord perfEvents prepared");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareSystemAndRecorder] perfEvents prepared");
 
     if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
@@ -1729,10 +1745,16 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
             CloseClientThread();
         }
         HLOGE("Fail to create record file %s", outputFilename_.c_str());
-        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to create record file");
+        HIPERF_HILOGE(MODULE_DEFAULT, "[PrepareSystemAndRecorder] Fail to create record file");
         return HiperfError::CREATE_OUTPUT_FILE_FAIL;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CreateInitRecordFile finished");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareSystemAndRecorder] CreateInitRecordFile finished");
+
+    return HiperfError::NO_ERR;
+}
+
+HiperfError SubCommandRecord::PrepareRuntimeAndThreads()
+{
     if (!PrepareVirtualRuntime()) {
         if (controlCmd_ == CONTROL_CMD_PREPARE) {
             ChildResponseToMain(BLANK_PRINT);
@@ -1740,25 +1762,29 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
             CloseClientThread();
         }
         HLOGE("Fail to prepare virtualRuntime");
-        HIPERF_HILOGE(MODULE_DEFAULT, "[OnSubCommand] Fail to prepare virtualRuntime");
+        HIPERF_HILOGE(MODULE_DEFAULT, "[PrepareRuntimeAndThreads] Fail to prepare virtualRuntime");
         return HiperfError::PREPARE_VIRTUAL_RUNTIME_FAIL;
     }
-
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord virtualRuntime prepared");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareRuntimeAndThreads] virtualRuntime prepared");
 
     if (controlCmd_ == CONTROL_CMD_PREPARE || isHiperfClient_) {
-        HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] CreateReplyThread start");
+        HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareRuntimeAndThreads] CreateReplyThread start");
         CreateReplyThread();
     }
-
     if (isHiperfClient_) {
-        HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] isHiperfClient_ CreateClientThread start");
+        HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareRuntimeAndThreads] CreateClientThread start");
         CreateClientThread();
     }
+
+    return HiperfError::NO_ERR;
+}
+
+HiperfError SubCommandRecord::StartSamplingAndFile()
+{
     //write comm event
     WriteCommEventBeforeSampling();
     SetExcludeHiperf();
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord StartTracking");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[StartSamplingAndFile] SubCommandRecord StartTracking");
     // if mmap record size has been larger than limit, dont start sampling.
     if (!isDataSizeLimitStop_) {
         if (restart_ && controlCmd_ == CONTROL_CMD_PREPARE) {
@@ -1768,7 +1794,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
                       HiperfError::START_TRACKING_FAIL);
         }
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord perfEvents tracking finish");
+    HIPERF_HILOGI(MODULE_DEFAULT, "[StartSamplingAndFile] perfEvents tracking finish");
 
     if (isSpe_) {
         HLOGD("stop write spe record");
@@ -1788,6 +1814,38 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
         RecordCompleted();
     }
 
+    return HiperfError::NO_ERR;
+}
+
+HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
+{
+    HIPERF_HILOGI(MODULE_DEFAULT, "SubCommandRecord onSubCommand start");
+    if (!ProcessControl()) {
+        return HiperfError::PROCESS_CONTROL_FAIL;
+    } else if (isFifoClient_) {
+        return HiperfError::NO_ERR;
+    }
+    HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] ProcessControl finish");
+    HiperfError err = CheckTargetAndApp();
+    if (err != HiperfError::NO_ERR) {
+        return err;
+    }
+
+    err = PrepareSystemAndRecorder();
+    if (err != HiperfError::NO_ERR) {
+        return err;
+    }
+
+    err = PrepareRuntimeAndThreads();
+    if (err != HiperfError::NO_ERR) {
+        return err;
+    }
+
+    err = StartSamplingAndFile();
+    if (err != HiperfError::NO_ERR) {
+        return err;
+    }
+
     HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord final report");
     // finial report
     RecoverSavedCmdlinesSize();
@@ -1797,6 +1855,7 @@ HiperfError SubCommandRecord::OnSubCommand(std::vector<std::string>& args)
     RemoveVdsoTmpFile();
     AgeHiperflogFiles();
     HIPERF_HILOGI(MODULE_DEFAULT, "[OnSubCommand] SubCommandRecord finish");
+
     return HiperfError::NO_ERR;
 }
 
@@ -2284,49 +2343,80 @@ void SubCommandRecord::CollectSymbol(PerfRecordSample *sample)
     }
 }
 
-// finish writing data file, then close file
 bool SubCommandRecord::FinishWriteRecordFile()
 {
 #ifdef HIPERF_DEBUG_TIME
     const auto startTime = steady_clock::now();
 #endif
+    ProcessSymbolsIfNeeded();
+    CHECK_TRUE(!dedupStack_ || fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable()), false, 0, "");
+    CleanupForBacktrack();
+    CHECK_TRUE(fileWriter_->Close(), false, 1, "Fail to close record file %s", outputFilename_.c_str());
+#ifdef HIPERF_DEBUG_TIME
+    saveFeatureTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
+#endif
+    return true;
+}
+
+bool SubCommandRecord::ProcessSymbolsIfNeeded()
+{
 #if !HIDEBUG_SKIP_PROCESS_SYMBOLS
     if (!delayUnwind_) {
-#if !HIDEBUG_SKIP_LOAD_KERNEL_SYMBOLS
-        if (!callChainUserOnly_) {
-            virtualRuntime_.UpdateKernelSymbols();
-            virtualRuntime_.UpdateKernelModulesSymbols();
-            if (isHM_) {
-                virtualRuntime_.UpdateServiceSymbols();
-            }
+        UpdateKernelRelatedSymbols();
+        if (!ProcessUserSymbols()) {
+            return false;
         }
-        if (isHM_) {
-            virtualRuntime_.UpdateDevhostSymbols();
-        }
-#endif
-        HLOGD("Load user symbols");
-        if (dedupStack_) {
-            virtualRuntime_.CollectDedupSymbol(kernelSymbolsHits_, userSymbolsHits_);
-        } else {
-            fileWriter_->ReadDataSection(
-                [this] (PerfEventRecord& record) -> bool {
-                    return this->CollectionSymbol(record);
-                });
-        }
-#if USE_COLLECT_SYMBOLIC
-        SymbolicHits();
-#endif
-#if HIDEBUG_SKIP_MATCH_SYMBOLS
-        disableUnwind_ = true;
-#endif
-#if !HIDEBUG_SKIP_SAVE_SYMBOLS
-        CHECK_TRUE(fileWriter_->AddSymbolsFeature(virtualRuntime_.GetSymbolsFiles()),
-                   false, 1, "Fail to AddSymbolsFeature");
-#endif
     }
 #endif
-    CHECK_TRUE(!dedupStack_ || fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable()), false, 0, "");
+    return true;
+}
 
+void SubCommandRecord::UpdateKernelRelatedSymbols()
+{
+#if !HIDEBUG_SKIP_LOAD_KERNEL_SYMBOLS
+    if (!callChainUserOnly_) {
+        virtualRuntime_.UpdateKernelSymbols();
+        virtualRuntime_.UpdateKernelModulesSymbols();
+        if (isHM_) {
+            virtualRuntime_.UpdateServiceSymbols();
+        }
+    }
+    if (isHM_) {
+        virtualRuntime_.UpdateDevhostSymbols();
+    }
+#endif
+}
+
+bool SubCommandRecord::ProcessUserSymbols()
+{
+    HLOGD("Load user symbols");
+    if (dedupStack_) {
+        virtualRuntime_.CollectDedupSymbol(kernelSymbolsHits_, userSymbolsHits_);
+    } else {
+        fileWriter_->ReadDataSection(
+            [this](PerfEventRecord& record) -> bool {
+                return this->CollectionSymbol(record);
+            });
+    }
+
+#if USE_COLLECT_SYMBOLIC
+    SymbolicHits();
+#endif
+
+#if HIDEBUG_SKIP_MATCH_SYMBOLS
+    disableUnwind_ = true;
+#endif
+
+#if !HIDEBUG_SKIP_SAVE_SYMBOLS
+    CHECK_TRUE(fileWriter_->AddSymbolsFeature(virtualRuntime_.GetSymbolsFiles()),
+               false, 1, "Fail to AddSymbolsFeature");
+#endif
+
+    return true;
+}
+
+void SubCommandRecord::CleanupForBacktrack()
+{
     if (backtrack_) {
         virtualRuntime_.ClearSymbolCache();
 #if USE_COLLECT_SYMBOLIC
@@ -2335,12 +2425,6 @@ bool SubCommandRecord::FinishWriteRecordFile()
         userSymbolsHits_.clear();
 #endif
     }
-
-    CHECK_TRUE(fileWriter_->Close(), false, 1, "Fail to close record file %s", outputFilename_.c_str());
-#ifdef HIPERF_DEBUG_TIME
-    saveFeatureTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
-#endif
-    return true;
 }
 
 #ifdef HIPERF_DEBUG_TIME

@@ -2710,6 +2710,59 @@ HWTEST_F(SubCommandRecordTest, HandleFinalResult_Success_Case, TestSize.Level1)
     bool result = cmd.HandleFinalResult(isSuccess, testPid, shouldPrintReply);
     EXPECT_TRUE(result);
 }
+
+/**
+ * @tc.name: HandleArmSpeEvent
+ * @tc.desc: Test HandleArmSpeEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, HandleArmSpeEvent, TestSize.Level2)
+{
+    SubCommandRecord command;
+    command.selectEvents_ = {};
+    EXPECT_EQ(command.HandleArmSpeEvent(), true);
+    command.selectEvents_ = {"arm_spe_1"};
+    EXPECT_EQ(command.HandleArmSpeEvent(), true);
+    command.selectEvents_ = {"arm_spe_0"};
+    EXPECT_EQ(command.HandleArmSpeEvent(), true);
+}
+
+/**
+ * @tc.name: AddEventsAndHandleOffCpu
+ * @tc.desc: Test AddEventsAndHandleOffCpu
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, TestAddEventsAndHandleOffCpuSuccess, TestSize.Level2)
+{
+    SubCommandRecord recordCmd;
+    recordCmd.selectEvents_ = {"hw-cpu-cycles"};
+    recordCmd.selectGroups_ = {{"hw-instructions", "hw-cache-misses"}};
+    recordCmd.offCPU_ = false;
+    EXPECT_TRUE(recordCmd.AddEventsAndHandleOffCpu());
+}
+
+HWTEST_F(SubCommandRecordTest, TestAddEventsFail, TestSize.Level2)
+{
+    SubCommandRecord recordCmd;
+    recordCmd.selectEvents_ = {"invalid-event"};
+    recordCmd.selectGroups_ = {};
+    recordCmd.offCPU_ = false;
+    EXPECT_FALSE(recordCmd.AddEventsAndHandleOffCpu());
+}
+
+/**
+ * @tc.name: ProcessUserSymbols
+ * @tc.desc: Test ProcessUserSymbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, ProcessUserSymbols, TestSize.Level2)
+{
+    SubCommandRecord recordCmd;
+    recordCmd.dedupStack_ = true;
+    recordCmd.fileWriter_ = std::make_unique<PerfFileWriter>();
+    bool result = recordCmd.ProcessUserSymbols();
+    EXPECT_TRUE(result);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
