@@ -43,7 +43,7 @@ namespace Developtools {
 namespace HiPerf {
 bool PerfEvents::updateTimeThreadRunning_ = true;
 std::atomic<uint64_t> PerfEvents::currentTimeSecond_ = 0;
-static std::atomic_bool g_trackRunning = false;
+static std::atomic_bool g_trackRunning(false);
 static constexpr int32_t UPDATE_TIME_INTERVAL = 10;    // 10ms
 static constexpr uint64_t NANO_SECONDS_PER_SECOND = 1000000000;
 static constexpr uint32_t POLL_FAIL_COUNT_THRESHOLD = 10;
@@ -279,6 +279,42 @@ bool PerfEvents::AddEvents(const std::vector<std::string> &eventStrings, const b
     return true;
 }
 
+bool PerfEvents::HandleTokensTracePoint(const std::vector<std::string>& eventTokens, std::string& name,
+                                        bool& excludeUser, bool& excludeKernel, bool& isTracePoint)
+{
+    if (eventTokens.back() == "k") {
+        excludeUser = true;
+        HLOGV("kernelOnly event");
+    } else if (eventTokens.back() == "u") {
+        excludeKernel = true;
+        HLOGV("userOnly event");
+    } else {
+        HLOGV("unknown event name %s", name.c_str());
+        return false;
+    }
+    name = eventTokens[0] + ":" + eventTokens[1];
+    isTracePoint = true;
+    return true;
+}
+
+void PerfEvents::HandleTokensNoTracePoint(const std::vector<std::string>& eventTokens, std::string& name,
+                                          bool& excludeUser, bool& excludeKernel, bool& isTracePoint)
+{
+    std::string oldName = name;
+    name = eventTokens[0];
+    if (eventTokens.back() == "k") {
+        excludeUser = true;
+        HLOGV("kernelOnly event");
+    } else if (eventTokens.back() == "u") {
+        excludeKernel = true;
+        HLOGV("userOnly event");
+    } else {
+        name = oldName;
+        isTracePoint = true;
+        HLOGV("tracepoint event is in form of xx:xxx");
+    }
+}
+
 // event name can have :k or :u suffix
 // tracepoint event name is like sched:sched_switch
 // clang-format off
@@ -295,32 +331,11 @@ bool PerfEvents::ParseEventName(const std::string &nameStr,
         static constexpr size_t maxNumberTokensTracePoint = 3;
         std::vector<std::string> eventTokens = StringSplit(nameStr, ":");
         if (eventTokens.size() == maxNumberTokensTracePoint) {
-            // tracepoint event with :u or :k
-            if (eventTokens.back() == "k") {
-                excludeUser = true;
-                HLOGV("kernelOnly event");
-            } else if (eventTokens.back() == "u") {
-                excludeKernel = true;
-                HLOGV("userOnly event");
-            } else {
-                HLOGV("unknown event name %s", nameStr.c_str());
+            if (!HandleTokensTracePoint(eventTokens, name, excludeUser, excludeKernel, isTracePoint)) {
                 return false;
             }
-            name = eventTokens[0] + ":" + eventTokens[1];
-            isTracePoint = true;
         } else if (eventTokens.size() == maxNumberTokensNoTracePoint) {
-            name = eventTokens[0];
-            if (eventTokens.back() == "k") {
-                excludeUser = true;
-                HLOGV("kernelOnly event");
-            } else if (eventTokens.back() == "u") {
-                excludeKernel = true;
-                HLOGV("userOnly event");
-            } else {
-                name = nameStr;
-                isTracePoint = true;
-                HLOGV("tracepoint event is in form of xx:xxx");
-            }
+            HandleTokensNoTracePoint(eventTokens, name, excludeUser, excludeKernel, isTracePoint);
         } else {
             printf("unknown ':' format:'%s'\n", nameStr.c_str());
             return false;
@@ -572,7 +587,7 @@ static bool CaptureSig()
 
     sig.sa_handler = [](int sig) {
         printf("\n Ctrl + C detected.\n");
-        g_trackRunning = false;
+        g_trackRunning.store(false);
     };
 
     sig.sa_flags = 0;
@@ -674,18 +689,43 @@ void PerfEvents::WaitRecordThread()
 #endif
 }
 
+bool PerfEvents::SetupTrackingState()
+{
+    g_trackRunning.store(true);
+    if (!CaptureSig()) {
+        HLOGE("captureSig() failed");
+        g_trackRunning.store(false);
+        ExitReadRecordBufThread();
+        return false;
+    }
+    return true;
+}
+
+void PerfEvents::DisableTrackingStep()
+{
+    HLOGD("step: 3. disable event");
+    HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 3. disable event");
+    if (!PerfEventsEnable(false)) {
+        HLOGE("PerfEvents::PerfEventsEnable() failed");
+    }
+    if (recordCallBack_) {
+        // 禁用事件后读取剩余样本
+        ReadRecordsFromMmaps();
+    }
+    trackingEndTime_ = steady_clock::now();
+    RecoverCaptureSig();
+}
+
 bool PerfEvents::StartTracking(const bool immediately)
 {
     if (!prepared_) {
         HLOGD("do not prepared_");
         return false;
     }
-
     if (recordCallBack_ && !PrepareRecordThread()) {
         HLOGW("PrepareRecordThread failed.");
         return false;
     }
-
     HLOGD("step: 1. enable event");
     HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 1. enable event");
     trackingStartTime_ = steady_clock::now();
@@ -697,15 +737,10 @@ bool PerfEvents::StartTracking(const bool immediately)
         printf("Profiling duration is %.3f seconds.\n", float(timeOut_.count()) / THOUSANDS);
         printf("Start Profiling...\n");
     }
-
-    g_trackRunning = true;
-    if (!CaptureSig()) {
-        HLOGE("captureSig() failed");
-        g_trackRunning = false;
-        ExitReadRecordBufThread();
+    if (!SetupTrackingState()) {
+        HLOGE("SetupTrackingState failed.");
         return false;
     }
-
     HLOGD("step: 2. thread loop");
     HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 2. thread loop");
     if (recordCallBack_) {
@@ -713,26 +748,12 @@ bool PerfEvents::StartTracking(const bool immediately)
     } else {
         StatLoop();
     }
-
-    HLOGD("step: 3. disable event");
-    HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 3. disable event");
-    if (!PerfEventsEnable(false)) {
-        HLOGE("PerfEvents::PerfEventsEnable() failed");
-    }
-    if (recordCallBack_) {
-        // read left samples after disable events
-        ReadRecordsFromMmaps();
-    }
-    trackingEndTime_ = steady_clock::now();
-
-    RecoverCaptureSig();
-
+    DisableTrackingStep();
     HLOGD("step: 4. wait record thread");
     HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 4. wait record thread");
     if (recordCallBack_) {
         WaitRecordThread();
     }
-
     HLOGD("step: 5. exit");
     HIPERF_HILOGI(MODULE_DEFAULT, "StartTracking step: 5. exit");
     return true;
@@ -740,11 +761,11 @@ bool PerfEvents::StartTracking(const bool immediately)
 
 bool PerfEvents::StopTracking(void)
 {
-    if (g_trackRunning) {
+    if (g_trackRunning.load()) {
         printf("some one called StopTracking\n");
         HLOGI("some one called StopTracking");
         HIPERF_HILOGI(MODULE_DEFAULT, "some one called StopTracking");
-        g_trackRunning = false;
+        g_trackRunning.store(false);
         if (trackedCommand_) {
             if (trackedCommand_->GetState() == TrackedCommand::State::COMMAND_STARTED) {
                 trackedCommand_->Stop();
@@ -813,7 +834,7 @@ bool PerfEvents::EnableTracking()
 
 bool PerfEvents::IsTrackRunning()
 {
-    return g_trackRunning;
+    return g_trackRunning.load();
 }
 
 bool PerfEvents::IsOutputTracking()
@@ -1237,15 +1258,10 @@ bool PerfEvents::CreateFdEvents(void)
     return true;
 }
 
-bool PerfEvents::StatReport(const __u64 &durationInSec)
+void PerfEvents::ProcessEventGroupItems(__u64 durationInSec)
 {
     read_format_no_group readNoGroupValue;
-
-    // only need read when need report
-    HLOGM("eventGroupItem_:%zu", eventGroupItem_.size());
     __u64 groupId = 0;
-    // clear countEvents data
-    countEvents_.clear();
     for (const auto &eventGroupItem : eventGroupItem_) {
         HLOGM("eventItems:%zu", eventGroupItem.eventItems.size());
         groupId++;
@@ -1291,9 +1307,18 @@ bool PerfEvents::StatReport(const __u64 &durationInSec)
             }
         }
     }
+}
 
+bool PerfEvents::StatReport(const __u64 &durationInSec)
+{
+    // only need read when need report
+    HLOGM("eventGroupItem_:%zu", eventGroupItem_.size());
+
+    // clear countEvents data
+    countEvents_.clear();
+
+    ProcessEventGroupItems(durationInSec);
     reportCallBack_(countEvents_, reportPtr_);
-
     return true;
 }
 
@@ -1841,7 +1866,7 @@ void PerfEvents::RecordLoop()
     milliseconds usedTimeMsTick {};
     int count = 1;
 
-    while (g_trackRunning) {
+    while (g_trackRunning.load()) {
         // time check point
         const auto thisTime = steady_clock::now();
         usedTimeMsTick = duration_cast<milliseconds>(thisTime - startTime);
@@ -1866,7 +1891,7 @@ void PerfEvents::RecordLoop()
         }
     }
 
-    if (!g_trackRunning) {
+    if (!g_trackRunning.load()) {
         // for user interrupt situation, print time statistic
         usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
         printf("User interrupt exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
@@ -1937,13 +1962,13 @@ void PerfEvents::StatLoop()
     __u64 durationInSec = 0;
     int64_t thresholdTimeInMs = 2 * HUNDREDS;
 
-    while (g_trackRunning) {
+    while (g_trackRunning.load()) {
         if (GetStat(startTime, nextReportTime, usedTimeMsTick, durationInSec, thresholdTimeInMs)) {
             break;
         }
     }
 
-    if (!g_trackRunning) {
+    if (!g_trackRunning.load()) {
         // for user interrupt situation, print time statistic
         usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
         printf("User interrupt exit (total %" PRIu64 " ms)\n", static_cast<uint64_t>(usedTimeMsTick.count()));

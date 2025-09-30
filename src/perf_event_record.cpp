@@ -650,6 +650,67 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     return true;
 }
 
+void PerfRecordSample::DumpCallchain(const int indent) const
+{
+    if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
+        bool userContext = false;
+        PRINT_INDENT(indent, "callchain nr=%lld\n", data_.nr);
+        for (uint64_t i = 0; i < data_.nr; ++i) {
+            std::string_view supplement = "";
+            if ((sampleType_ & PERF_SAMPLE_STACK_USER) == 0 || data_.ips[i] != PERF_CONTEXT_USER) {
+                PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
+                continue;
+            }
+            // is PERF_SAMPLE_STACK_USER type and is PERF_CONTEXT_USER
+            if (!userContext) {
+                userContext = true;
+                supplement = " <unwind callstack>";
+            } else {
+                supplement = " <expand callstack>";
+            }
+            PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
+        }
+    }
+}
+
+void PerfRecordSample::DumpRaw(const int indent) const
+{
+    if (sampleType_ & PERF_SAMPLE_RAW) {
+        PRINT_INDENT(indent, "raw size=%u\n", data_.raw_size);
+        const uint32_t *data = reinterpret_cast<const uint32_t *>(data_.raw_data);
+        size_t size = data_.raw_size / sizeof(uint32_t);
+        for (size_t i = 0; i < size; ++i) {
+            PRINT_INDENT(indent + 1, "0x%08x (%x)\n", data[i], data[i]);
+        }
+    }
+}
+
+void PerfRecordSample::DumpBranchStack(const int indent) const
+{
+    if (sampleType_ & PERF_SAMPLE_BRANCH_STACK) {
+        PRINT_INDENT(indent, "branch_stack nr=%lld\n", data_.bnr);
+        for (uint64_t i = 0; i < data_.bnr; ++i) {
+            auto &item = data_.lbr[i];
+            PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx, flags 0x%llx\n", item.from, item.to, item.flags);
+        }
+    }
+}
+
+void PerfRecordSample::DumpRegsUser(const int indent) const
+{
+    if (sampleType_ & PERF_SAMPLE_REGS_USER) {
+        PRINT_INDENT(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
+#if defined(is_ohos) && is_ohos
+        if (IsRoot()) {
+            for (uint64_t i = 0; i < data_.reg_nr; ++i) {
+                PRINT_INDENT(indent + 1, "0x%llx\n", data_.user_regs[i]);
+            }
+        }
+#endif
+    }
+}
+
+
 void PerfRecordSample::DumpData(const int indent) const
 {
     PRINT_INDENT(indent, "sample_type: 0x%" PRIx64 "\n", sampleType_);
@@ -683,50 +744,10 @@ void PerfRecordSample::DumpData(const int indent) const
     if (stackId_.section.id > 0) {
         PRINT_INDENT(indent, "stackid %" PRIu64 "\n", static_cast<uint64_t>(stackId_.section.id));
     }
-    if (sampleType_ & PERF_SAMPLE_CALLCHAIN) {
-        bool userContext = false;
-        PRINT_INDENT(indent, "callchain nr=%lld\n", data_.nr);
-        for (uint64_t i = 0; i < data_.nr; ++i) {
-            std::string_view supplement = "";
-            if ((sampleType_ & PERF_SAMPLE_STACK_USER) == 0 || data_.ips[i] != PERF_CONTEXT_USER) {
-                PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
-                continue;
-            }
-            // is PERF_SAMPLE_STACK_USER type and is PERF_CONTEXT_USER
-            if (!userContext) {
-                userContext = true;
-                supplement = " <unwind callstack>";
-            } else {
-                supplement = " <expand callstack>";
-            }
-            PRINT_INDENT(indent + 1, "0x%llx%s\n", data_.ips[i], supplement.data());
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_RAW) {
-        PRINT_INDENT(indent, "raw size=%u\n", data_.raw_size);
-        const uint32_t *data = reinterpret_cast<const uint32_t *>(data_.raw_data);
-        size_t size = data_.raw_size / sizeof(uint32_t);
-        for (size_t i = 0; i < size; ++i) {
-            PRINT_INDENT(indent + 1, "0x%08x (%x)\n", data[i], data[i]);
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_BRANCH_STACK) {
-        PRINT_INDENT(indent, "branch_stack nr=%lld\n", data_.bnr);
-        for (uint64_t i = 0; i < data_.bnr; ++i) {
-            auto &item = data_.lbr[i];
-            PRINT_INDENT(indent + 1, "from 0x%llx, to 0x%llx, flags 0x%llx\n", item.from, item.to, item.flags);
-        }
-    }
-    if (sampleType_ & PERF_SAMPLE_REGS_USER) {
-        PRINT_INDENT(indent, "user regs: abi=%lld, reg_nr=%lld\n", data_.user_abi, data_.reg_nr);
-#if defined(is_ohos) && is_ohos
-        if (IsRoot()) {
-            for (uint64_t i = 0; i < data_.reg_nr; ++i) {
-                PRINT_INDENT(indent + 1, "0x%llx\n", data_.user_regs[i]);
-            }
-        }
-#endif
-    }
+    DumpCallchain(indent);
+    DumpRaw(indent);
+    DumpBranchStack(indent);
+    DumpRegsUser(indent);
     if (sampleType_ & PERF_SAMPLE_SERVER_PID) {
         PRINT_INDENT(indent, "server nr=%lld\n", data_.server_nr);
         for (uint64_t i = 0; i < data_.server_nr; ++i) {

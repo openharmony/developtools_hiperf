@@ -295,8 +295,11 @@ public:
     static bool IsDumpRemoveStack();
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     void DumpData(const int indent = 0) const override;
+    void DumpCallchain(const int indent) const;
+    void DumpRaw(const int indent) const;
+    void DumpBranchStack(const int indent) const;
+    void DumpRegsUser(const int indent) const;
     void DumpLog(const std::string &prefix) const override;
-
     void RecoverCallStack();
     // originalSize is use for expand callstack
     void ReplaceWithCallStack(const size_t originalSize = 0);

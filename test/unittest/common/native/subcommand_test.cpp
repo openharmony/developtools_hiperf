@@ -18,6 +18,17 @@
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 
+#include "option_debug.h"
+#include "subcommand_help.h"
+#include "utilities.h"
+#if SUPPORT_PERF_EVENT
+#include "subcommand_list.h"
+#include "subcommand_record.h"
+#include "subcommand_stat.h"
+#endif
+#include "subcommand_dump.h"
+#include "subcommand_report.h"
+
 using namespace testing::ext;
 namespace OHOS {
 namespace Developtools {
@@ -28,6 +39,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    bool RegisterCommandComponent();
 };
 
 class SubcommandObj : public SubCommand {
@@ -55,6 +67,34 @@ void HiPerfSubcommandTest::TearDown()
 {
     SubCommand::ClearSubCommands();
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
+}
+
+bool HiPerfSubcommandTest::RegisterCommandComponent()
+{
+    // register all the main command
+#ifdef HIPERF_DEBUG
+    RegisterMainCommandDebug();
+#endif
+
+    // register all the sub command
+    SubCommandHelp::RegisterSubCommandHelp();
+#if SUPPORT_PERF_EVENT
+    if (!RegisterSubCommandStat()) {
+        return false;
+    }
+    SubCommandList::RegisterSubCommandList();
+    if (!SubCommandRecord::RegisterSubCommandRecord()) {
+        return false;
+    }
+#endif
+
+    if (!SubCommandDump::RegisterSubCommandDump()) {
+        return false;
+    }
+    if (!SubCommandReport::RegisterSubCommandReport()) {
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -192,6 +232,16 @@ HWTEST_F(HiPerfSubcommandTest, TestRegisterSubCommand2, TestSize.Level1)
     EXPECT_EQ(SubCommand::RegisterSubCommand("-abc", func), false);
     EXPECT_EQ(SubCommand::RegisterSubCommand("null", func), true);
     EXPECT_EQ(SubCommand::RegisterSubCommand("null", func), false);
+}
+
+/**
+ * @tc.name: RegisterCommandComponent
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, RegisterCommandComponent, TestSize.Level1)
+{
+    EXPECT_TRUE(RegisterCommandComponent());
 }
 } // namespace HiPerf
 } // namespace Developtools

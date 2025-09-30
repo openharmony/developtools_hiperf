@@ -722,6 +722,13 @@ private:
     uint64_t backtrackTime_ = 0;
     uint64_t outputEndTime_ = 0;
     bool IsSkipRecordForBacktrack(const PerfRecordSample& sample);
+    void ProcessEventGroupItems(__u64 durationInSec);
+    bool HandleTokensTracePoint(const std::vector<std::string>& eventTokens, std::string& name,
+                                bool& excludeUser, bool& excludeKernel, bool& isTracePoint);
+    void HandleTokensNoTracePoint(const std::vector<std::string>& eventTokens, std::string& name,
+                                  bool& excludeUser, bool& excludeKernel, bool& isTracePoint);
+    bool SetupTrackingState();
+    void DisableTrackingStep();
 };
 } // namespace HiPerf
 } // namespace Developtools
