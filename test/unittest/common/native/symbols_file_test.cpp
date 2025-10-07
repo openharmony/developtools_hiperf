@@ -986,7 +986,7 @@ HWTEST_F(SymbolsFileTest, CreateCJSymbolsFile2, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols, TestSize.Level1)
 {
-    SymbolsFile::needParseJsFunc_ = false;
+    SymbolsFile::needJsvm_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsV8(), true);
@@ -1009,7 +1009,7 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols2, TestSize.Level1)
 {
-    SymbolsFile::needParseJsFunc_ = false;
+    SymbolsFile::needJsvm_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsV8(), true);
@@ -1032,7 +1032,7 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols2, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
 {
-    SymbolsFile::needParseJsFunc_ = true;
+    SymbolsFile::needJsvm_ = true;
     const std::string filename = "[anon:ARKWEB_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsV8(), false);
@@ -1055,7 +1055,7 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
 {
-    SymbolsFile::needParseJsFunc_ = false;
+    SymbolsFile::needJsvm_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsV8(), true);

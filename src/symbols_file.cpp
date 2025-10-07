@@ -49,7 +49,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 bool SymbolsFile::onRecording_ = true;
-bool SymbolsFile::needParseJsFunc_ = false;
+bool SymbolsFile::needJsvm_ = false;
 uint32_t SymbolsFile::offsetNum_ = 0;
 
 const std::string SymbolsFile::GetBuildId() const
@@ -986,11 +986,9 @@ public:
         }
         hapExtracted_ = true;
         HLOGD("the symbol file is %s, pid is %d.", filePath_.c_str(), pid_);
-        if (IsRoot()) {
-            if (IsApplicationEncryped(pid_)) {
-                HLOGD("no need to parse js symbols");
-                return false;
-            }
+        if (IsApplicationEncryped(pid_)) {
+            HLOGD("no need to parse js symbols");
+            return false;
         }
 
         CHECK_TRUE(!StringEndsWith(filePath_, ".hap") || !map_->IsMapExec(), false, 1,
@@ -1086,7 +1084,7 @@ public:
         HLOGD("map name:%s", map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
-        if (IsAbc() && needParseJsFunc_) {
+        if (IsAbc()) {
             JsFunction jsFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
@@ -1150,7 +1148,7 @@ public:
     bool IsV8() override
     {
 #if defined(is_ohos) && is_ohos
-        if (!needParseJsFunc_) {
+        if (!needJsvm_) {
             return true;
         }
         if (v8Extracted_) {
@@ -1219,7 +1217,7 @@ public:
         HLOGD("map name:%s", map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
-        if (IsV8() && needParseJsFunc_) {
+        if (IsV8() && needJsvm_) {
             JsvmFunction jsvmFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
