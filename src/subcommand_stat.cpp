@@ -757,75 +757,92 @@ void SubCommandStat::SetPerfEvent()
 
 bool SubCommandStat::CreateFifoServer()
 {
-    char errInfo[ERRINFOLEN] = { 0 };
     if (!perfPipe_.CreateFifoFile()) {
         return false;
     }
     CheckIpcBeforeFork();
+    
     pid_t pid = fork();
     allowIpc_ = true;
-
     if (pid == -1) {
+        char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("fork failed. %d:%s", errno, errInfo);
         return false;
-    } else if (pid == 0) { // child process
-        close(STDIN_FILENO);
-        close(STDERR_FILENO);
-        isFifoServer_ = true;
-        clientPipeOutput_ = open(fifoFileS2C_.c_str(), O_WRONLY);
-        if (clientPipeOutput_ == -1) {
-            strerror_r(errno, errInfo, ERRINFOLEN);
-            HLOGE("open fifo file(%s) failed. %d:%s", fifoFileS2C_.c_str(), errno, errInfo);
-            HIPERF_HILOGE(MODULE_DEFAULT, "open fifo file(%{public}s) failed. %d:%s",
-                fifoFileS2C_.c_str(), errno, errInfo);
-            return false;
-        }
-        nullFd_ = open("/dev/null", O_WRONLY);
-        (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
-         std::string err = OHOS::Developtools::HiPerf::HandleAppInfo(appPackage_, inputPidTidArgs_);
-        if (!err.empty()) {
-            ClientCommandResponse(err);
-            return false;
-        }
-    } else {            // parent process
-        isFifoClient_ = true;
-        int fd = open(fifoFileS2C_.c_str(), O_RDONLY | O_NONBLOCK);
-        std::string reply = "";
-        if (fd != -1) {
-            perfPipe_.WaitFifoReply(fd, CONTROL_WAITREPY_TIMEOUT, reply);
-        }
-        if (fd == -1 || reply != HiperfClient::ReplyOK) {
-            if (reply != HiperfClient::ReplyOK) {
-                printf("%s", reply.c_str());
-                HLOGE("reply is %s", reply.c_str());
-                HIPERF_HILOGE(MODULE_DEFAULT, "reply is %{public}s", reply.c_str());
-            }
-            HLOGI("fd is %d", fd);
-            HIPERF_HILOGI(MODULE_DEFAULT, "fd is %{public}d", fd);
-            close(fd);
-            if (kill(pid, SIGTERM) != 0) {
-                HLOGE("Failed to send SIGTERM: %d", pid);
-                HIPERF_HILOGE(MODULE_DEFAULT, "Failed to send SIGTERM to pid: %{public}d", pid);
-            }
-            // wait for process exit
-            if (waitpid(pid, nullptr, 0) == -1) {
-                HLOGE("Failed to wait for pid: %d", pid);
-                HIPERF_HILOGE(MODULE_DEFAULT, "Failed to wait for pid: %{public}d", pid);
-            }
-            remove(fifoFileC2S_.c_str());
-            remove(fifoFileS2C_.c_str());
-            strerror_r(errno, errInfo, ERRINFOLEN);
-            printf("create control hiperf counting failed.\n");
-            HLOGI("errno is %d:%s", errno, errInfo);
-            HIPERF_HILOGI(MODULE_DEFAULT, "errno is %{public}d:%{public}s", errno, errInfo);
-            return false;
-        }
-        close(fd);
-        printf("%s control hiperf counting success.\n", restart_ ? "start" : "create");
-        printf("stat result will saved in %s.\n", outputFilename_ .c_str());
     }
+    return (pid == 0) ? HandleChildProcess() : HandleParentProcess(pid);
+}
+
+bool SubCommandStat::HandleChildProcess()
+{
+    close(STDIN_FILENO);
+    close(STDERR_FILENO);
+    isFifoServer_ = true;
+
+    clientPipeOutput_ = open(fifoFileS2C_.c_str(), O_WRONLY);
+    if (clientPipeOutput_ == -1) {
+        char errInfo[ERRINFOLEN] = {0};
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HLOGE("open fifo file(%s) failed. %d:%s", fifoFileS2C_.c_str(), errno, errInfo);
+        HIPERF_HILOGE(MODULE_DEFAULT, "open fifo file(%{public}s) failed. %{public}d:%{public}s",
+            fifoFileS2C_.c_str(), errno, errInfo);
+        return false;
+    }
+
+    nullFd_ = open("/dev/null", O_WRONLY);
+    (void)dup2(nullFd_, STDOUT_FILENO); // redirect stdout to /dev/null
+
+    std::string err = OHOS::Developtools::HiPerf::HandleAppInfo(appPackage_, inputPidTidArgs_);
+    if (!err.empty()) {
+        ClientCommandResponse(err);
+        return false;
+    }
+
     return true;
+}
+
+bool SubCommandStat::HandleParentProcess(const pid_t& pid)
+{
+    isFifoClient_ = true;
+    int fd = open(fifoFileS2C_.c_str(), O_RDONLY | O_NONBLOCK);
+    if (fd == -1) {
+        HandleCommunicationError(fd, pid, "");
+        return false;
+    }
+    std::string reply = "";
+    perfPipe_.WaitFifoReply(fd, CONTROL_WAITREPY_TIMEOUT, reply);
+
+    if (reply != HiperfClient::ReplyOK) {
+        HandleCommunicationError(fd, pid, reply);
+        close(fd);
+        return false;
+    }
+
+    close(fd);
+    printf("%s control hiperf counting success.\n", restart_ ? "start" : "create");
+    printf("stat result will saved in %s.\n", outputFilename_.c_str());
+    return true;
+}
+
+void SubCommandStat::HandleCommunicationError(const int& fd, const pid_t& pid, const std::string& reply)
+{
+    if (reply != HiperfClient::ReplyOK) {
+        printf("%s", reply.c_str());
+        HLOGE("reply is %s", reply.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "reply is %{public}s", reply.c_str());
+    }
+    HLOGI("fd is %d", fd);
+    HIPERF_HILOGI(MODULE_DEFAULT, "fd is %{public}d", fd);
+    if (kill(pid, SIGTERM) != 0) {
+        HLOGE("Failed to send SIGTERM to %d", pid);
+        HIPERF_HILOGE(MODULE_DEFAULT, "Failed to send SIGTERM to %{public}d", pid);
+    }
+    if (waitpid(pid, nullptr, 0) == -1) {
+        HLOGE("Failed to wait for pid %d", pid);
+        HIPERF_HILOGE(MODULE_DEFAULT, "Failed to wait for pid %{public}d", pid);
+    }
+    perfPipe_.RemoveFifoFile();
+    printf("create control hiperf counting failed.\n");
 }
 
 bool SubCommandStat::ClientCommandResponse(const bool response)
@@ -1141,7 +1158,7 @@ bool SubCommandStat::CheckSelectCpuPidOption()
     return true;
 }
 
-bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
+bool SubCommandStat::CheckSystemWideConflicts(const std::vector<pid_t>& pids)
 {
     if (targetSystemWide_) {
         if (!pids.empty() || !selectTids_.empty()) {
@@ -1153,20 +1170,35 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
             return false;
         }
     }
+    return true;
+}
+
+bool SubCommandStat::CheckAppConflicts(const std::vector<pid_t>& pids)
+{
     if (!appPackage_.empty() && (!pids.empty() || !selectTids_.empty())) {
         printf("You cannot specify --app and -t/-p at the same time\n");
         return false;
     }
+    return true;
+}
+
+bool SubCommandStat::CheckRequiredOptions(const std::vector<pid_t>& pids)
+{
     if (!targetSystemWide_ && trackedCommand_.empty() && pids.empty() && appPackage_.empty()
         && selectTids_.empty()) {
         printf("You need to set the -p option or --app option.\n");
         return false;
     }
-    if (targetSystemWide_ && !trackedCommand_.empty()) {
-        printf("You cannot specify -a and a cmd at the same time\n");
-        return false;
-    }
+    return true;
+}
+
+bool SubCommandStat::CheckTrackedCommandConflicts(const std::vector<pid_t>& pids)
+{
     if (!trackedCommand_.empty()) {
+        if (targetSystemWide_) {
+            printf("You cannot specify -a and a cmd at the same time\n");
+            return false;
+        }
         if (!pids.empty() || !selectTids_.empty()) {
             printf("You cannot specify a cmd and -t/-p at the same time\n");
             return false;
@@ -1181,6 +1213,11 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
             return false;
         }
     }
+    return true;
+}
+
+bool SubCommandStat::CheckNumericConfigRanges()
+{
     if (checkAppMs_ < MIN_CHECK_APP_MS || checkAppMs_ > MAX_CHECK_APP_MS) {
         printf("Invalid --chkms value '%d', the milliseconds should be in %d~%d \n", checkAppMs_,
                MIN_CHECK_APP_MS, MAX_CHECK_APP_MS);
@@ -1195,6 +1232,12 @@ bool SubCommandStat::CheckOptions(const std::vector<pid_t> &pids)
         return false;
     }
     return true;
+}
+
+bool SubCommandStat::CheckOptions(const std::vector<pid_t>& pids)
+{
+    return CheckSystemWideConflicts(pids) && CheckAppConflicts(pids) &&
+           CheckRequiredOptions(pids) && CheckTrackedCommandConflicts(pids) && CheckNumericConfigRanges();
 }
 
 bool SubCommandStat::CheckOutPutFile()

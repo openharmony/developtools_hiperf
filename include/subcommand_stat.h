@@ -219,8 +219,16 @@ private:
     std::string controlCmd_ = {};
     bool ProcessControl();
     bool CreateFifoServer();
+    bool HandleParentProcess(const pid_t& pid);
+    bool HandleChildProcess();
     bool ParseControlCmd(const std::string& cmd);
+    bool CheckNumericConfigRanges();
+    bool CheckSystemWideConflicts(const std::vector<pid_t>& pids);
+    bool CheckAppConflicts(const std::vector<pid_t>& pids);
+    bool CheckRequiredOptions(const std::vector<pid_t>& pids);
+    bool CheckTrackedCommandConflicts(const std::vector<pid_t>& pids);
     void CloseClientThread();
+    void HandleCommunicationError(const int& fd, const pid_t& pid, const std::string& reply);
     static void GetHwCpuCyclesComments(const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
         std::map<std::string, std::string> &comments, std::string &configName,
         double scale, EventProcessingContext &eventProcessingContext);

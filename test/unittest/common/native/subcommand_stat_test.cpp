@@ -40,6 +40,7 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 static const std::string TEST_FILE = "/data/local/tmp/perf_stat.txt";
+static const int MIN_CHECK_APP_MS = 1;
 static std::atomic<bool> g_wait = false;
 class SubCommandStatTest : public testing::Test {
 public:
@@ -2531,6 +2532,86 @@ HWTEST_F(SubCommandStatTest, CheckStatDefaultPath, TestSize.Level1)
     std::string defaultName = "/data/local/tmp/perf_stat.txt";
     std::string outputPath = GetDefaultPathByEnv("perf_stat.txt");
     EXPECT_EQ(defaultName, outputPath);
+}
+
+HWTEST_F(SubCommandStatTest, HandleChildProcess_FifoOpenFail, TestSize.Level2)
+{
+    const std::string invalidFifo = "/data/local/tmp/this_fifo_should_never_exist_1234";
+    unlink(invalidFifo.c_str());
+    SubCommandStat statCmd;
+    statCmd.fifoFileS2C_ = invalidFifo;
+    statCmd.clientPipeOutput_ = -1;
+    statCmd.isFifoServer_ = false;
+    bool result = statCmd.HandleChildProcess();
+    EXPECT_FALSE(result);
+    EXPECT_EQ(statCmd.clientPipeOutput_, -1);
+    EXPECT_TRUE(statCmd.isFifoServer_);
+}
+
+HWTEST_F(SubCommandStatTest, HandleParentProcess_FifoOpenFail, TestSize.Level2)
+{
+    const std::string invalidPath = "/data/local/tmp/invalid_parent_fifo";
+    unlink(invalidPath.c_str());
+    SubCommandStat statCmd;
+    statCmd.fifoFileS2C_ = invalidPath;
+    statCmd.isFifoClient_ = false;
+    bool result = statCmd.HandleParentProcess(12345);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(statCmd.isFifoClient_);
+}
+
+/**
+ * @tc.name: Test CheckOptions function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckSystemWideConflicts, TestSize.Level2)
+{
+    SubCommandStat statCmd;
+    statCmd.targetSystemWide_ = true;
+    std::vector<pid_t> pids = {123};
+    EXPECT_FALSE(statCmd.CheckSystemWideConflicts(pids));
+}
+
+HWTEST_F(SubCommandStatTest, CheckAppConflicts, TestSize.Level2)
+{
+    SubCommandStat statCmd;
+    statCmd.appPackage_ = "com.example.test";
+    std::vector<pid_t> pids = {123};
+    EXPECT_FALSE(statCmd.CheckAppConflicts(pids));
+}
+
+HWTEST_F(SubCommandStatTest, CheckRequiredOptions, TestSize.Level2)
+{
+    SubCommandStat statCmd;
+    statCmd.targetSystemWide_ = false;
+    statCmd.trackedCommand_.clear();
+    statCmd.appPackage_.clear();
+    statCmd.selectTids_.clear();
+    std::vector<pid_t> pids;
+    EXPECT_FALSE(statCmd.CheckRequiredOptions(pids));
+}
+
+HWTEST_F(SubCommandStatTest, CheckTrackedCommandConflicts, TestSize.Level2)
+{
+    SubCommandStat statCmd;
+    statCmd.trackedCommand_ = {"test_cmd"};
+    statCmd.targetSystemWide_ = true;
+    std::vector<pid_t> pids;
+    EXPECT_FALSE(statCmd.CheckTrackedCommandConflicts(pids));
+}
+
+HWTEST_F(SubCommandStatTest, CheckNumericConfigRanges01, TestSize.Level2)
+{
+    SubCommandStat statCmd;
+    statCmd.checkAppMs_ = MIN_CHECK_APP_MS - 1;
+    EXPECT_FALSE(statCmd.CheckNumericConfigRanges());
+}
+
+HWTEST_F(SubCommandStatTest, CheckNumericConfigRanges02, TestSize.Level2)
+{
+    SubCommandStat statCmd;
+    statCmd.timeReportMs_ = -1;
+    EXPECT_FALSE(statCmd.CheckNumericConfigRanges());
 }
 } // namespace HiPerf
 } // namespace Developtools
