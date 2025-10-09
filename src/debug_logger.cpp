@@ -93,7 +93,8 @@ void DebugLogger::PrintHilog(std::string &buffer, const std::chrono::steady_cloc
         const auto startWriteTime = std::chrono::steady_clock::now();
 #endif
         auto timeStamp = startTime - timeStamp_;
-        fprintf(file_, "%05" PRId64 "ms %s", (int64_t)timeStamp.count(), buffer.data()); // to the file
+        fprintf(file_, "%05" PRId64 "ms %.*s", (int64_t)timeStamp.count(),
+            static_cast<int>(buffer.size()), buffer.data()); // to the file
 #ifdef HIPERF_DEBUG_TIME
         logWriteTimes_ += duration_cast<microseconds>(std::chrono::steady_clock::now() - startWriteTime);
 #endif

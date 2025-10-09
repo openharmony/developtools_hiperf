@@ -105,6 +105,32 @@ HWTEST_F(CommandTest, TestCommandDistribution, TestSize.Level0)
     args = TEST_OPTION_TRUE + " " + TEST_CMD_FALSE + " " + TEST_CMD_TRUE;
     EXPECT_EQ(Command::DispatchCommand(args), false);
 }
+
+/**
+ * @tc.name: DispatchSubCommands
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(CommandTest, DispatchSubCommands, TestSize.Level0)
+{
+    std::vector<std::string> args = {"stat", "-a", "-c", "-d", "3", "--dumpoptions"};
+    Command::fullArgument.clear();
+    for (std::string arg : args) {
+        Command::fullArgument.append(" ");
+        Command::fullArgument.append(arg);
+    }
+    CommandReporter reporter(Command::fullArgument);
+    auto commandOption = Option::FindMainOption(args.front());
+    if (commandOption != nullptr) {
+        // remove the arg name
+        args.erase(args.begin());
+
+        if (!commandOption->callBackFunction(args)) {
+            printf("unknown options: %s\nUse the help command to view help.\n", args.front().c_str());
+        }
+    }
+    EXPECT_EQ(Command::DispatchSubCommands(args, reporter), false);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

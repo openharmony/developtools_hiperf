@@ -22,6 +22,47 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 std::string Command::fullArgument = "";
+
+bool Command::DispatchSubCommands(std::vector<std::string> &arguments, CommandReporter &reporter)
+{
+    auto subCommand = SubCommand::FindSubCommand(arguments.front());
+    if (subCommand != nullptr) {
+        reporter.mainCommand_ = arguments.front();
+        // this is an sub command which we support
+
+        // remove the subcmd name
+        arguments.erase(arguments.begin());
+
+        // if we found the sub command , after it processed , we will exit
+        HLOGD("OnSubCommandOptions -> %s", subCommand->Name().c_str());
+        if (subCommand->OnSubCommandOptions(arguments)) {
+            subCommand->AddReportArgs(reporter);
+            // if some help cmd ?
+            if (subCommand->OnPreSubCommand()) {
+                return true;
+            }
+
+            HLOGD("OnSubCommand -> %s", subCommand->Name().c_str());
+            if (HiperfError err = subCommand->OnSubCommand(arguments); err != HiperfError::NO_ERR) {
+                printf("subcommand '%s' failed\n", subCommand->Name().c_str());
+                reporter.errorCode_ = err;
+                return false;
+            } else {
+                HLOGD("OnSubCommand successed");
+                return true;
+            }
+        } else {
+            reporter.errorCode_ = HiperfError::SUBCOMMAND_OPTIONS_ERROR;
+            HLOGD("OnSubCommandOptions interrupt the process.");
+            return false;
+        }
+    } else {
+        // we don't support this command
+        printf("unknown args: %s\n", arguments.front().c_str());
+        return false;
+    }
+}
+
 bool Command::DispatchCommands(std::vector<std::string> arguments)
 {
     fullArgument.clear();
@@ -48,42 +89,7 @@ bool Command::DispatchCommands(std::vector<std::string> arguments)
             continue;
         } else {
             // if it is an sub command
-            auto subCommand = SubCommand::FindSubCommand(arguments.front());
-            if (subCommand != nullptr) {
-                reporter.mainCommand_ = arguments.front();
-                // this is an sub command which we support
-
-                // remove the subcmd name
-                arguments.erase(arguments.begin());
-
-                // if we found the sub command , after it processed , we will exit
-                HLOGD("OnSubCommandOptions -> %s", subCommand->Name().c_str());
-                if (subCommand->OnSubCommandOptions(arguments)) {
-                    subCommand->AddReportArgs(reporter);
-                    // if some help cmd ?
-                    if (subCommand->OnPreSubCommand()) {
-                        return true;
-                    }
-
-                    HLOGD("OnSubCommand -> %s", subCommand->Name().c_str());
-                    if (HiperfError err = subCommand->OnSubCommand(arguments); err != HiperfError::NO_ERR) {
-                        printf("subcommand '%s' failed\n", subCommand->Name().c_str());
-                        reporter.errorCode_ = err;
-                        return false;
-                    } else {
-                        HLOGD("OnSubCommand successed");
-                        return true;
-                    }
-                } else {
-                    reporter.errorCode_ = HiperfError::SUBCOMMAND_OPTIONS_ERROR;
-                    HLOGD("OnSubCommandOptions interrupt the process.");
-                    return false;
-                }
-            } else {
-                // we don't support this command
-                printf("unknown args: %s\n", arguments.front().c_str());
-                return false;
-            }
+            return DispatchSubCommands(arguments, reporter);
         }
     }
     return false;

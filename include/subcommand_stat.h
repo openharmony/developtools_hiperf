@@ -112,6 +112,12 @@ public:
     static SubCommand& GetInstance();
 
 private:
+    struct EventProcessingContext {
+        bool findRunningTime;
+        __u64 group_id;
+        double running_time_in_sec;
+        double main_scale;
+    };
     PerfEvents perfEvents_;
     PerfPipe perfPipe_;
     bool targetSystemWide_ {false};
@@ -215,6 +221,20 @@ private:
     bool CreateFifoServer();
     bool ParseControlCmd(const std::string& cmd);
     void CloseClientThread();
+    static void GetHwCpuCyclesComments(const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+        std::map<std::string, std::string> &comments, std::string &configName,
+        double scale, EventProcessingContext &eventProcessingContext);
+    static bool GetHwInstructionsComments(const std::map<std::string,
+        std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
+        const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+        std::map<std::string, std::string> &comments, std::string &configName, double scale);
+    static bool GetHwBranchMissesComments(const std::map<std::string,
+        std::unique_ptr<PerfEvents::CountEvent>> &countEvents,
+        const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+        std::map<std::string, std::string> &comments, std::string &configName, double scale);
+    static bool GetRateComments(const std::unique_ptr<PerfEvents::CountEvent> &countEvent,
+        std::map<std::string, std::string> &comments, std::string &configName,
+        EventProcessingContext &eventProcessingContext, double scale);
 };
 
 bool RegisterSubCommandStat(void);

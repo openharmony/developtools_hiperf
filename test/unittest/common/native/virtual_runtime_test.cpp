@@ -434,6 +434,18 @@ HWTEST_F(VirtualRuntimeTest, UpdateHapSymbolsWithNull, TestSize.Level2)
 {
     EXPECT_FALSE(runtime_->UpdateHapSymbols(nullptr));
 }
+
+HWTEST_F(VirtualRuntimeTest, UpdateProcessSymbols, TestSize.Level2)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    pid_t pid = getpid();
+    VirtualThread thread(pid, files);
+    thread.ParseMap();
+    EXPECT_EQ(runtime_->IsKernelThread(0), false);
+    auto callBack = std::bind(&VirtualRuntimeTest::RecordCallBack, this, std::placeholders::_1);
+    runtime_->SetRecordMode(callBack);
+    runtime_->UpdateProcessSymbols(thread, pid);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

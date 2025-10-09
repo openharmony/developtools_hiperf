@@ -233,6 +233,9 @@ private:
     bool CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2);
     void ProcessKernelCallChain(PerfRecordSample &sample);
     void AdjustCallChain(PerfRecordSample &sample);
+    void UpdateProcessSymbols(VirtualThread &thread, const pid_t pid);
+    void UpdateSandBoxThreadMaps(std::unique_ptr<SymbolsFile> &symFile, std::shared_ptr<DfxMap> &curMap,
+                                 std::shared_ptr<DfxMap> &prevMap, PerfRecordMmap2 &recordMmap2);
 };
 } // namespace HiPerf
 } // namespace Developtools

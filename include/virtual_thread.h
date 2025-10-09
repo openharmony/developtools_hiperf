@@ -90,9 +90,9 @@ public:
 #ifdef HIPERF_DEBUG
     void ReportVaddrMapMiss(const uint64_t vaddr) const;
 #endif
-
 private:
     void SortMemMaps();
+    void ParseDevhostMapEachLine(std::string &filename, std::istringstream &iStringstream, std::string &line);
     VirtualThread& GetParent()
     {
         return parent_;

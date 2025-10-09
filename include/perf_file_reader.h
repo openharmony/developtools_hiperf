@@ -51,7 +51,7 @@ public:
 
     const std::string GetFeatureString(const FEATURE feature) const;
 
-    bool IsFeatrureStringSection(const FEATURE featureId) const
+    bool IsFeatureStringSection(const FEATURE featureId) const
     {
         return find(FeatureStrings.begin(), FeatureStrings.end(), featureId) !=
                FeatureStrings.end();
@@ -67,12 +67,15 @@ protected:
 
 private:
     bool ReadRecord(ProcessRecordCB &callback);
+    bool ReadRecordByAttr(ProcessRecordCB &callback, uint8_t *buf,
+                          uint64_t &remainingSize, size_t &recordNumber, const perf_event_attr *attr);
     bool IsValidDataFile();
     bool IsGzipFile();
 
     // file header must be read first
 
     bool ReadIdsForAttr(const perf_file_attr &attr, std::vector<uint64_t> *ids);
+    void ReadSpeRecord(perf_event_header *header, uint8_t *buf, size_t &speSize);
 
     const perf_event_attr *GetDefaultAttr();
 

@@ -48,6 +48,7 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+using namespace std::chrono;
 bool SymbolsFile::onRecording_ = true;
 bool SymbolsFile::needParseJsFunc_ = false;
 uint32_t SymbolsFile::offsetNum_ = 0;
@@ -214,20 +215,8 @@ public:
     }
 
 protected:
-    bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
+    bool CreateElfFile(std::shared_ptr<DfxMap> map, std::string &elfPath)
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (debugInfoLoadResult_) {
-            return true; // it must have been loaded
-        } else if (debugInfoLoaded_) {
-            return debugInfoLoadResult_; // return the result of loaded
-        }
-        debugInfoLoaded_ = true;
-        std::string elfPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
-        if (elfPath.empty()) {
-            HLOGW("elf found failed (belong to %s)", filePath_.c_str());
-            return false;
-        }
         if (elfFile_ == nullptr) {
             if (StringEndsWith(elfPath, ".hap") && StringStartsWith(elfPath, "/proc")) {
                 if (map == nullptr) {
@@ -247,11 +236,28 @@ protected:
                 elfFile_ = elfFactory.Create();
             }
         }
-
         CHECK_TRUE(elfFile_ != nullptr, false, 1, "Failed to create elf file for %s.", elfPath.c_str());
-
         CHECK_TRUE(elfFile_->IsValid(), false, 1, "parser elf file failed.");
+        return true;
+    }
 
+    bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (debugInfoLoadResult_) {
+            return true; // it must have been loaded
+        } else if (debugInfoLoaded_) {
+            return debugInfoLoadResult_; // return the result of loaded
+        }
+        debugInfoLoaded_ = true;
+        std::string elfPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
+        if (elfPath.empty()) {
+            HLOGW("elf found failed (belong to %s)", filePath_.c_str());
+            return false;
+        }
+        if (!CreateElfFile(map, elfPath)) {
+            return false;
+        }
         HLOGD("loaded elf %s", elfPath.c_str());
         // update path for so in hap
         if (StringEndsWith(elfPath, ".hap")) {
@@ -530,14 +536,133 @@ public:
     static constexpr const int KSYM_DEFAULT_LINE = 35000;
     static constexpr const int KSYM_DEFAULT_SIZE = 1024 * 1024 * 1; // 1MB
 
-    bool ParseKallsymsLine(const std::string &kallsymsPath)
-    {
-#ifdef HIPERF_DEBUG_SYMBOLS_TIME
-        const auto startTime = steady_clock::now();
+    struct ParseTime {
         std::chrono::microseconds parseLineTime = std::chrono::microseconds::zero();
         std::chrono::microseconds sscanfTime = std::chrono::microseconds::zero();
         std::chrono::microseconds newTime = std::chrono::microseconds::zero();
         std::chrono::microseconds readFileTime = std::chrono::microseconds::zero();
+    };
+
+    void ParseKsymsLine(char **lineBegin, char **dataEnd, size_t &lines, ParseTime &parseTime)
+    {
+        char *lineEnd = strchr(*lineBegin, '\n');
+        if (lineEnd != nullptr) {
+            *lineEnd = '\0';
+        } else {
+            lineEnd = *dataEnd;
+        }
+        size_t lineSize = (lineEnd != nullptr) ? (lineEnd - *lineBegin) : (*dataEnd - *lineBegin);
+
+        const auto eachLineStartTime = std::chrono::steady_clock::now();
+        lines++;
+        uint64_t addr = 0;
+        char type = '\0';
+
+        char nameRaw[lineSize];
+        char moduleRaw[lineSize];
+        int ret = sscanf_s(*lineBegin, "%" PRIx64 " %c %s%s", &addr, &type, sizeof(type),
+                           nameRaw, (unsigned)(sizeof(nameRaw) - 1),
+                           moduleRaw, (unsigned)(sizeof(moduleRaw) - 1));
+
+        // any way we finish the line scan
+        parseTime.sscanfTime += duration_cast<milliseconds>(steady_clock::now() - eachLineStartTime);
+
+        if (ret >= KSYM_MIN_TOKENS) {
+            if (ret == KSYM_MIN_TOKENS) {
+                moduleRaw[0] = '\0';
+            }
+            HLOGM(" 0x%016" PRIx64 " %c '%s' '%s'", addr, type, nameRaw, moduleRaw);
+        } else {
+            HLOGW("unknown line %d: '%s'", ret, *lineBegin);
+            *lineBegin = lineEnd + 1;
+            return;
+        }
+        *lineBegin = lineEnd + 1;
+        std::string name = nameRaw;
+        std::string module = moduleRaw;
+
+        /*
+        T
+        The symbol is in the text (code) section.
+
+        W
+        The symbol is a weak symbol that has not been specifically
+        tagged as a weak object symbol. When a weak defined symbol is
+        linked with a normal defined symbol, the normal defined symbol
+        is used with no error. When a weak undefined symbol is linked
+        and the symbol is not defined, the value of the weak symbol
+        becomes zero with no error.
+        */
+        if (addr != 0 && strchr("TtWw", type)) {
+            const auto eachNewSymbolTime = steady_clock::now();
+            // we only need text symbols
+            symbols_.emplace_back(addr, name, module.empty() ? filePath_ : module);
+            parseTime.newTime += duration_cast<milliseconds>(steady_clock::now() - eachNewSymbolTime);
+        }
+        parseTime.parseLineTime += duration_cast<milliseconds>(steady_clock::now() - eachLineStartTime);
+    }
+
+    void ParseKsymsLine(char **lineBegin, char **dataEnd, size_t &lines)
+    {
+        char *lineEnd = strchr(*lineBegin, '\n');
+        if (lineEnd != nullptr) {
+            *lineEnd = '\0';
+        } else {
+            lineEnd = *dataEnd;
+        }
+        size_t lineSize = (lineEnd != nullptr) ? (lineEnd - *lineBegin) : (*dataEnd - *lineBegin);
+
+        lines++;
+        uint64_t addr = 0;
+        char type = '\0';
+
+        char nameRaw[lineSize];
+        char moduleRaw[lineSize];
+        int ret = sscanf_s(*lineBegin, "%" PRIx64 " %c %s%s", &addr, &type, sizeof(type),
+                            nameRaw, (unsigned)(sizeof(nameRaw) - 1),
+                            moduleRaw, (unsigned)(sizeof(moduleRaw) - 1));
+
+        if (ret >= KSYM_MIN_TOKENS) {
+            if (ret == KSYM_MIN_TOKENS) {
+                moduleRaw[0] = '\0';
+            }
+            HLOGM(" 0x%016" PRIx64 " %c '%s' '%s'", addr, type, nameRaw, moduleRaw);
+        } else {
+            HLOGW("unknown line %d: '%s'", ret, *lineBegin);
+            *lineBegin = lineEnd + 1;
+            return;
+        }
+        *lineBegin = lineEnd + 1;
+        std::string name = nameRaw;
+        std::string module = moduleRaw;
+
+        /*
+        T
+        The symbol is in the text (code) section.
+
+        W
+        The symbol is a weak symbol that has not been specifically
+        tagged as a weak object symbol. When a weak defined symbol is
+        linked with a normal defined symbol, the normal defined symbol
+        is used with no error. When a weak undefined symbol is linked
+        and the symbol is not defined, the value of the weak symbol
+        becomes zero with no error.
+        */
+        if (addr != 0 && strchr("TtWw", type)) {
+            // we only need text symbols
+            symbols_.emplace_back(addr, name, module.empty() ? filePath_ : module);
+        }
+    }
+
+    bool ParseKallsymsLine(const std::string &kallsymsPath)
+    {
+#ifdef HIPERF_DEBUG_SYMBOLS_TIME
+        const auto startTime = steady_clock::now();
+        ParseTime parseTime;
+        parseTime.parseLineTime = std::chrono::microseconds::zero();
+        parseTime.sscanfTime = std::chrono::microseconds::zero();
+        parseTime.newTime = std::chrono::microseconds::zero();
+        parseTime.readFileTime = std::chrono::microseconds::zero();
 #endif
         size_t lines = 0;
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
@@ -556,78 +681,20 @@ public:
         char *lineBegin = kallsym.data();
         char *dataEnd = lineBegin + kallsym.size();
         while (lineBegin < dataEnd) {
-            char *lineEnd = strchr(lineBegin, '\n');
-            if (lineEnd != nullptr) {
-                *lineEnd = '\0';
-            } else {
-                lineEnd = dataEnd;
-            }
-            size_t lineSize = (lineEnd != nullptr) ? (lineEnd - lineBegin) : (dataEnd - lineBegin);
-
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
-            const auto eachLineStartTime = steady_clock::now();
-#endif
-            lines++;
-            uint64_t addr = 0;
-            char type = '\0';
-
-            char nameRaw[lineSize];
-            char moduleRaw[lineSize];
-            int ret = sscanf_s(lineBegin, "%" PRIx64 " %c %s%s", &addr, &type, sizeof(type),
-                               nameRaw, sizeof(nameRaw), moduleRaw, sizeof(moduleRaw));
-
-#ifdef HIPERF_DEBUG_SYMBOLS_TIME
-            // any way we finish the line scan
-            sscanfTime += duration_cast<milliseconds>(steady_clock::now() - eachLineStartTime);
-#endif
-            if (ret >= KSYM_MIN_TOKENS) {
-                if (ret == KSYM_MIN_TOKENS) {
-                    moduleRaw[0] = '\0';
-                }
-                HLOGM(" 0x%016" PRIx64 " %c '%s' '%s'", addr, type, nameRaw, moduleRaw);
-            } else {
-                HLOGW("unknown line %d: '%s'", ret, lineBegin);
-                lineBegin = lineEnd + 1;
-                continue;
-            }
-            lineBegin = lineEnd + 1;
-            std::string name = nameRaw;
-            std::string module = moduleRaw;
-
-            /*
-            T
-            The symbol is in the text (code) section.
-
-            W
-            The symbol is a weak symbol that has not been specifically
-            tagged as a weak object symbol. When a weak defined symbol is
-            linked with a normal defined symbol, the normal defined symbol
-            is used with no error. When a weak undefined symbol is linked
-            and the symbol is not defined, the value of the weak symbol
-            becomes zero with no error.
-            */
-            if (addr != 0 && strchr("TtWw", type)) {
-#ifdef HIPERF_DEBUG_SYMBOLS_TIME
-                const auto eachNewSymbolTime = steady_clock::now();
-#endif
-                // we only need text symbols
-                symbols_.emplace_back(addr, name, module.empty() ? filePath_ : module);
-#ifdef HIPERF_DEBUG_SYMBOLS_TIME
-                newTime += duration_cast<milliseconds>(steady_clock::now() - eachNewSymbolTime);
-#endif
-            }
-#ifdef HIPERF_DEBUG_SYMBOLS_TIME
-            parseLineTime += duration_cast<milliseconds>(steady_clock::now() - eachLineStartTime);
+            ParseKsymsLine(&lineBegin, &dataEnd, lines, parseTime);
+#else
+            ParseKsymsLine(&lineBegin, &dataEnd, lines);
 #endif
         }
 #ifdef HIPERF_DEBUG_SYMBOLS_TIME
         std::chrono::microseconds usedTime =
             duration_cast<milliseconds>(steady_clock::now() - startTime);
         printf("parse kernel symbols use : %0.3f ms\n", usedTime.count() / MS_DURATION);
-        printf("parse line use : %0.3f ms\n", parseLineTime.count() / MS_DURATION);
-        printf("sscanf line use : %0.3f ms\n", sscanfTime.count() / MS_DURATION);
-        printf("new symbols use : %0.3f ms\n", newTime.count() / MS_DURATION);
-        printf("read file use : %0.3f ms\n", readFileTime.count() / MS_DURATION);
+        printf("parse line use : %0.3f ms\n", parseTime.parseLineTime.count() / MS_DURATION);
+        printf("sscanf line use : %0.3f ms\n", parseTime.sscanfTime.count() / MS_DURATION);
+        printf("new symbols use : %0.3f ms\n", parseTime.newTime.count() / MS_DURATION);
+        printf("read file use : %0.3f ms\n", parseTime.readFileTime.count() / MS_DURATION);
 #endif
         HLOGD("load %s: %zu line processed(%zu symbols)", kallsymsPath.c_str(), lines, symbols_.size());
         return true;

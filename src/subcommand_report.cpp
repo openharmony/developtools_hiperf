@@ -505,7 +505,7 @@ bool SubCommandReport::OutputStd()
     HLOGV("featureSections: %zu ", featureSections.size());
 
     for (auto &featureSection : featureSections) {
-        if (recordFileReader_->IsFeatrureStringSection(featureSection->featureId_)) {
+        if (recordFileReader_->IsFeatureStringSection(featureSection->featureId_)) {
             const PerfFileSectionString *sectionString =
                 static_cast<const PerfFileSectionString *>(featureSection.get());
 

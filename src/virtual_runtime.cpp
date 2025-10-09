@@ -114,6 +114,34 @@ VirtualThread &VirtualRuntime::UpdateThread(const pid_t pid, const pid_t tid, co
     return thread;
 }
 
+void VirtualRuntime::UpdateProcessSymbols(VirtualThread &thread, const pid_t pid)
+{
+    if (isHM_) {
+        thread.FixHMBundleMap();
+    }
+    std::shared_ptr<DfxMap> prevMap = nullptr;
+    for (auto &map : thread.GetMaps()) {
+        // so in hap is load before start perf record
+        // dynamic load library should be treat in the same way
+        bool updateNormalSymbol = true;
+        if (map->name.find(".hap") != std::string::npos && (map->prots & PROT_EXEC)) {
+            map->prevMap = prevMap;
+            updateNormalSymbol = !UpdateHapSymbols(map);
+            HLOGD("UpdateHapSymbols");
+        }
+        auto mmapRecord =
+            std::make_unique<PerfRecordMmap2>(false, thread.pid_, thread.tid_, map);
+        HLOGD("make PerfRecordMmap2 %d:%d:%s:%s(0x%" PRIx64 "-0x%" PRIx64 ")@%" PRIx64 " ",
+              thread.pid_, thread.tid_, thread.name_.c_str(), map->name.c_str(),
+              map->begin, map->end, map->offset);
+        recordCallBack_(*mmapRecord);
+        if (updateNormalSymbol) {
+            UpdateSymbols(map, pid);
+        }
+        prevMap = map;
+    }
+}
+
 VirtualThread &VirtualRuntime::CreateThread(const pid_t pid, const pid_t tid, const std::string name)
 {
     // make a new one
@@ -149,32 +177,8 @@ VirtualThread &VirtualRuntime::CreateThread(const pid_t pid, const pid_t tid, co
         // we need make a PerfRecordComm
         auto commRecord = std::make_unique<PerfRecordComm>(IsKernelThread(pid), pid, tid, thread.name_);
         recordCallBack_(*commRecord);
-        // only work for pid
         if (pid == tid) {
-            if (isHM_) {
-                thread.FixHMBundleMap();
-            }
-            std::shared_ptr<DfxMap> prevMap = nullptr;
-            for (auto &map : thread.GetMaps()) {
-                // so in hap is load before start perf record
-                // dynamic load library should be treat in the same way
-                bool updateNormalSymbol = true;
-                if (map->name.find(".hap") != std::string::npos && (map->prots & PROT_EXEC)) {
-                    map->prevMap = prevMap;
-                    updateNormalSymbol = !UpdateHapSymbols(map);
-                    HLOGD("UpdateHapSymbols");
-                }
-                auto mmapRecord =
-                    std::make_unique<PerfRecordMmap2>(false, thread.pid_, thread.tid_, map);
-                HLOGD("make PerfRecordMmap2 %d:%d:%s:%s(0x%" PRIx64 "-0x%" PRIx64 ")@%" PRIx64 " ",
-                      thread.pid_, thread.tid_, thread.name_.c_str(), map->name.c_str(),
-                      map->begin, map->end, map->offset);
-                recordCallBack_(*mmapRecord);
-                if (updateNormalSymbol) {
-                    UpdateSymbols(map, pid);
-                }
-                prevMap = map;
-            }
+            UpdateProcessSymbols(thread, pid);
         }
         HLOGV("thread created");
 #ifdef HIPERF_DEBUG_TIME
@@ -727,6 +731,46 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordMmap &recordMmap)
     }
 }
 
+void VirtualRuntime::UpdateSandBoxThreadMaps(std::unique_ptr<SymbolsFile> &symFile, std::shared_ptr<DfxMap> &curMap,
+                                             std::shared_ptr<DfxMap> &prevMap, PerfRecordMmap2 &recordMmap2)
+{
+    if (strstr(recordMmap2.data_.filename, ".hap") == nullptr) {
+        auto elfLoadInfoMap = symFile->GetPtLoads();
+        u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
+        u64 len = elfLoadInfoMap[0].mmapLen;
+        u64 pgoff = elfLoadInfoMap[0].offset & (~(elfLoadInfoMap[0].align >= 1 ? elfLoadInfoMap[0].align - 1 : 0));
+        std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
+            std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+            begin, len, pgoff, 0, 0, 0, PROT_READ, 0, std::string(recordMmap2.data_.filename));
+        UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, mmap2FirstSeg->data_.filename,
+            mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
+        recordCallBack_(*mmap2FirstSeg);
+    } else {
+        auto elfLoadInfoMap = symFile->GetPtLoads();
+        u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
+        u64 len = elfLoadInfoMap[0].mmapLen;
+        u64 pgoff = elfLoadInfoMap[0].offset &
+                    (~(elfLoadInfoMap[0].align >= 1 ? elfLoadInfoMap[0].align - 1 : 0));
+        std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
+            std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+            begin, len, pgoff, 0, 0, 0, PROT_READ, 0, curMap->name);
+        UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, curMap->name,
+            mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
+        recordCallBack_(*mmap2FirstSeg);
+
+        std::unique_ptr<PerfRecordMmap2> mmap2SecondSegment =
+            std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
+            recordMmap2.data_.addr,
+            recordMmap2.data_.len,
+            recordMmap2.data_.pgoff - prevMap->offset, // minus load offset of hap
+            0, 0, 0, recordMmap2.data_.prot, 0, curMap->name);
+        UpdateThreadMaps(mmap2SecondSegment->data_.pid, mmap2SecondSegment->data_.tid, curMap->name,
+            mmap2SecondSegment->data_.addr, mmap2SecondSegment->data_.len, mmap2SecondSegment->data_.pgoff);
+        recordCallBack_(*mmap2SecondSegment);
+        recordMmap2.discard_ = true;
+    }
+}
+
 bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
 {
     static std::shared_ptr<DfxMap> prevMap;
@@ -752,42 +796,7 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
         if (!loadSymboleWhenNeeded_) {
             symFile->LoadSymbols(curMap);
         }
-
-        if (strstr(recordMmap2.data_.filename, ".hap") == nullptr) {
-            auto elfLoadInfoMap = symFile->GetPtLoads();
-            u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
-            u64 len = elfLoadInfoMap[0].mmapLen;
-            u64 pgoff = elfLoadInfoMap[0].offset & (~(elfLoadInfoMap[0].align >= 1 ? elfLoadInfoMap[0].align - 1 : 0));
-            std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
-                std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
-                begin, len, pgoff, 0, 0, 0, PROT_READ, 0, std::string(recordMmap2.data_.filename));
-            UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, mmap2FirstSeg->data_.filename,
-                mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
-            recordCallBack_(*mmap2FirstSeg);
-        } else {
-            auto elfLoadInfoMap = symFile->GetPtLoads();
-            u64 begin = recordMmap2.data_.addr - elfLoadInfoMap[0].mmapLen;
-            u64 len = elfLoadInfoMap[0].mmapLen;
-            u64 pgoff = elfLoadInfoMap[0].offset &
-                        (~(elfLoadInfoMap[0].align >= 1 ? elfLoadInfoMap[0].align - 1 : 0));
-            std::unique_ptr<PerfRecordMmap2> mmap2FirstSeg =
-                std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
-                begin, len, pgoff, 0, 0, 0, PROT_READ, 0, curMap->name);
-            UpdateThreadMaps(mmap2FirstSeg->data_.pid, mmap2FirstSeg->data_.tid, curMap->name,
-                mmap2FirstSeg->data_.addr, mmap2FirstSeg->data_.len, mmap2FirstSeg->data_.pgoff);
-            recordCallBack_(*mmap2FirstSeg);
-
-            std::unique_ptr<PerfRecordMmap2> mmap2SecondSegment =
-                std::make_unique<PerfRecordMmap2>(recordMmap2.InKernel(), recordMmap2.data_.pid, recordMmap2.data_.tid,
-                recordMmap2.data_.addr,
-                recordMmap2.data_.len,
-                recordMmap2.data_.pgoff - prevMap->offset, // minus load offset of hap
-                0, 0, 0, recordMmap2.data_.prot, 0, curMap->name);
-            UpdateThreadMaps(mmap2SecondSegment->data_.pid, mmap2SecondSegment->data_.tid, curMap->name,
-                mmap2SecondSegment->data_.addr, mmap2SecondSegment->data_.len, mmap2SecondSegment->data_.pgoff);
-            recordCallBack_(*mmap2SecondSegment);
-            recordMmap2.discard_ = true;
-        }
+        UpdateSandBoxThreadMaps(symFile, curMap, prevMap, recordMmap2);
         symbolsFiles_.emplace_back(std::move(symFile));
         return true;
     } else if (recordMmap2.data_.pgoff == 0) {

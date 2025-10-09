@@ -323,6 +323,57 @@ static int SpePktDescEvent(const struct SpePkt *packet,
     return err;
 }
 
+static int SpePktDescStatAtomicOpType(char *buf, size_t bufLen, u64 payload)
+{
+    int err = 0;
+    SpePktOutString(&err, &buf, &bufLen,
+                    payload & 0x1 ? "ST" : "LD");
+    if (PERF_SPE_OP_PKT_IS_LDST_ATOMIC(payload)) {
+        if (payload & PERF_SPE_OP_PKT_AT)
+            SpePktOutString(&err, &buf, &bufLen, " AT");
+        if (payload & PERF_SPE_OP_PKT_EXCL)
+            SpePktOutString(&err, &buf, &bufLen, " EXCL");
+        if (payload & PERF_SPE_OP_PKT_AR)
+            SpePktOutString(&err, &buf, &bufLen, " AR");
+    }
+    switch (PERF_SPE_OP_PKT_LDST_SUBCLASS_GET(payload)) {
+        case PERF_SPE_OP_PKT_LDST_SUBCLASS_SIMD_FP:
+            SpePktOutString(&err, &buf, &bufLen, " SIMD-FP");
+            break;
+        case PERF_SPE_OP_PKT_LDST_SUBCLASS_GP_REG:
+            SpePktOutString(&err, &buf, &bufLen, " GP-REG");
+            break;
+        case PERF_SPE_OP_PKT_LDST_SUBCLASS_UNSPEC_REG:
+            SpePktOutString(&err, &buf, &bufLen, " UNSPEC-REG");
+            break;
+        case PERF_SPE_OP_PKT_LDST_SUBCLASS_NV_SYSREG:
+            SpePktOutString(&err, &buf, &bufLen, " NV-SYSREG");
+            break;
+        case PERF_SPE_OP_PKT_LDST_SUBCLASS_MTE_TAG:
+            SpePktOutString(&err, &buf, &bufLen, " MTE-TAG");
+            break;
+        case PERF_SPE_OP_PKT_LDST_SUBCLASS_MEMCPY:
+            SpePktOutString(&err, &buf, &bufLen, " MEMCPY");
+            break;
+        case PERF_SPE_OP_PKT_LDST_SUBCLASS_MEMSET:
+            SpePktOutString(&err, &buf, &bufLen, " MEMSET");
+            break;
+        default:
+            break;
+    }
+    if (PERF_SPE_OP_PKT_IS_LDST_SVE(payload)) {
+        /* SVE effective vector length */
+        SpePktOutString(&err, &buf, &bufLen, " EVLEN %d",
+                        PERF_SPE_OP_PKG_SVE_EVL(payload));
+
+        if (payload & PERF_SPE_OP_PKT_SVE_PRED)
+            SpePktOutString(&err, &buf, &bufLen, " PRED");
+        if (payload & PERF_SPE_OP_PKT_SVE_SG)
+            SpePktOutString(&err, &buf, &bufLen, " SG");
+    }
+    return err;
+}
+
 static int SpePktDescOpType(const struct SpePkt *packet,
                             char *buf, size_t bufLen)
 {
@@ -351,54 +402,7 @@ static int SpePktDescOpType(const struct SpePkt *packet,
             }
             break;
         case PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC:
-            SpePktOutString(&err, &buf, &bufLen,
-                            payload & 0x1 ? "ST" : "LD");
-
-            if (PERF_SPE_OP_PKT_IS_LDST_ATOMIC(payload)) {
-                if (payload & PERF_SPE_OP_PKT_AT)
-                    SpePktOutString(&err, &buf, &bufLen, " AT");
-                if (payload & PERF_SPE_OP_PKT_EXCL)
-                    SpePktOutString(&err, &buf, &bufLen, " EXCL");
-                if (payload & PERF_SPE_OP_PKT_AR)
-                    SpePktOutString(&err, &buf, &bufLen, " AR");
-            }
-
-            switch (PERF_SPE_OP_PKT_LDST_SUBCLASS_GET(payload)) {
-                case PERF_SPE_OP_PKT_LDST_SUBCLASS_SIMD_FP:
-                    SpePktOutString(&err, &buf, &bufLen, " SIMD-FP");
-                    break;
-                case PERF_SPE_OP_PKT_LDST_SUBCLASS_GP_REG:
-                    SpePktOutString(&err, &buf, &bufLen, " GP-REG");
-                    break;
-                case PERF_SPE_OP_PKT_LDST_SUBCLASS_UNSPEC_REG:
-                    SpePktOutString(&err, &buf, &bufLen, " UNSPEC-REG");
-                    break;
-                case PERF_SPE_OP_PKT_LDST_SUBCLASS_NV_SYSREG:
-                    SpePktOutString(&err, &buf, &bufLen, " NV-SYSREG");
-                    break;
-                case PERF_SPE_OP_PKT_LDST_SUBCLASS_MTE_TAG:
-                    SpePktOutString(&err, &buf, &bufLen, " MTE-TAG");
-                    break;
-                case PERF_SPE_OP_PKT_LDST_SUBCLASS_MEMCPY:
-                    SpePktOutString(&err, &buf, &bufLen, " MEMCPY");
-                    break;
-                case PERF_SPE_OP_PKT_LDST_SUBCLASS_MEMSET:
-                    SpePktOutString(&err, &buf, &bufLen, " MEMSET");
-                    break;
-                default:
-                    break;
-            }
-
-            if (PERF_SPE_OP_PKT_IS_LDST_SVE(payload)) {
-                /* SVE effective vector length */
-                SpePktOutString(&err, &buf, &bufLen, " EVLEN %d",
-                                PERF_SPE_OP_PKG_SVE_EVL(payload));
-
-                if (payload & PERF_SPE_OP_PKT_SVE_PRED)
-                    SpePktOutString(&err, &buf, &bufLen, " PRED");
-                if (payload & PERF_SPE_OP_PKT_SVE_SG)
-                    SpePktOutString(&err, &buf, &bufLen, " SG");
-            }
+            err = SpePktDescStatAtomicOpType(buf, bufLen, payload);
             break;
         case PERF_SPE_OP_PKT_HDR_CLASS_BR_ERET:
             SpePktOutString(&err, &buf, &bufLen, "B");
@@ -415,7 +419,6 @@ static int SpePktDescOpType(const struct SpePkt *packet,
             err = UN_PRMT;
             break;
     }
-
     return err;
 }
 
@@ -639,26 +642,97 @@ static int SpeGetNextPacket(struct SpeDecoder *decoder)
     return 1;
 }
 
+static void SpeReadRecordOpType(struct SpeDecoder *decoder, int idx, u64 payload)
+{
+    switch (idx) {
+        case PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC:
+            decoder->record.op |= PERF_SPE_OP_LDST;
+            if (payload & PERF_SPE_OP_PKT_ST) {
+                decoder->record.op |= PERF_SPE_OP_ST;
+            } else {
+                decoder->record.op |= PERF_SPE_OP_LD;
+            }
+
+            if (PERF_SPE_OP_PKT_IS_LDST_SVE(payload)) {
+                decoder->record.op |= PERF_SPE_OP_SVE_LDST;
+            }
+            break;
+        case PERF_SPE_OP_PKT_HDR_CLASS_OTHER:
+            decoder->record.op |= PERF_SPE_OP_OTHER;
+            if (PERF_SPE_OP_PKT_IS_OTHER_SVE_OP(payload)) {
+                decoder->record.op |= PERF_SPE_OP_SVE_OTHER;
+            }
+            break;
+        case PERF_SPE_OP_PKT_HDR_CLASS_BR_ERET:
+            decoder->record.op |= PERF_SPE_OP_BRANCH_ERET;
+            break;
+        default:
+            HLOGV("Get packet error!");
+    }
+}
+
+static void SpeReadRecordEvents(struct SpeDecoder *decoder, u64 payload)
+{
+    if (payload & BIT(EVENT_L1D_REFILL)) {
+        decoder->record.type |= PERF_SPE_L1D_MISS;
+    }
+    if (payload & BIT(EVENT_L1D_ACCESS)) {
+        decoder->record.type |= PERF_SPE_L1D_ACCESS;
+    }
+    if (payload & BIT(EVENT_TLB_WALK)) {
+        decoder->record.type |= PERF_SPE_TLB_MISS;
+    }
+    if (payload & BIT(EVENT_TLB_ACCESS)) {
+        decoder->record.type |= PERF_SPE_TLB_ACCESS;
+    }
+    if (payload & BIT(EVENT_LLC_MISS)) {
+        decoder->record.type |= PERF_SPE_LLC_MISS;
+    }
+    if (payload & BIT(EVENT_LLC_ACCESS)) {
+        decoder->record.type |= PERF_SPE_LLC_ACCESS;
+    }
+    if (payload & BIT(EVENT_REMOTE_ACCESS)) {
+        decoder->record.type |= PERF_SPE_REMOTE_ACCESS;
+    }
+    if (payload & BIT(EVENT_MISPRED)) {
+        decoder->record.type |= PERF_SPE_BRANCH_MISS;
+    }
+    if (payload & BIT(EVENT_PARTIAL_PREDICATE)) {
+        decoder->record.type |= PERF_SPE_SVE_PARTIAL_PRED;
+    }
+    if (payload & BIT(EVENT_EMPTY_PREDICATE)) {
+        decoder->record.type |= PERF_SPE_SVE_EMPTY_PRED;
+    }
+}
+
+static void SpeReadRecordAddress(struct SpeDecoder *decoder, int idx, u64 payload)
+{
+    u64 ip = SpeCalcIp(idx, payload);
+    if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_INS) {
+        decoder->record.from_ip = ip;
+    } else if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_BRANCH) {
+        decoder->record.to_ip = ip;
+    } else if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_DATA_VIRT) {
+        decoder->record.virt_addr = ip;
+    } else if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_DATA_PHYS) {
+        decoder->record.phys_addr = ip;
+    }
+}
+
 static int SpeReadRecord(struct SpeDecoder *decoder)
 {
     u64 payload;
-    u64 ip;
     CHECK_TRUE(decoder != nullptr, -1, 1, "Invalid pointer!");
     if (memset_s(&decoder->record, sizeof(decoder->record), 0, sizeof(decoder->record)) != EOK) {
         HLOGE("memset_s failed in SpeReadRecord.");
         return -1;
     }
     decoder->record.context_id = (u64)-1;
-
     while (true) {
         int err = SpeGetNextPacket(decoder);
-        if (err <= 0) {
-            return err;
-        }
-
+        CHECK_TRUE(err > 0, err, 1, "SpeGetNextPacket failed!");
         int idx = decoder->packet.index;
         payload = decoder->packet.payload;
-
         switch (decoder->packet.type) {
             case PERF_SPE_TIMESTAMP:
                 decoder->record.timestamp = payload;
@@ -666,16 +740,7 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
             case PERF_SPE_END:
                 return 1;
             case PERF_SPE_ADDRESS:
-                ip = SpeCalcIp(idx, payload);
-                if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_INS) {
-                    decoder->record.from_ip = ip;
-                } else if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_BRANCH) {
-                    decoder->record.to_ip = ip;
-                } else if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_DATA_VIRT) {
-                    decoder->record.virt_addr = ip;
-                } else if (idx == PERF_SPE_ADDR_PKT_HDR_INDEX_DATA_PHYS) {
-                    decoder->record.phys_addr = ip;
-                }
+                SpeReadRecordAddress(decoder, idx, payload);
                 break;
             case PERF_SPE_COUNTER:
                 if (idx == PERF_SPE_CNT_PKT_HDR_INDEX_TOTAL_LAT) {
@@ -686,72 +751,10 @@ static int SpeReadRecord(struct SpeDecoder *decoder)
                 decoder->record.context_id = payload;
                 break;
             case PERF_SPE_OP_TYPE:
-                switch (idx) {
-                    case PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC:
-                        decoder->record.op |= PERF_SPE_OP_LDST;
-                        if (payload & PERF_SPE_OP_PKT_ST) {
-                            decoder->record.op |= PERF_SPE_OP_ST;
-                        } else {
-                            decoder->record.op |= PERF_SPE_OP_LD;
-                        }
-
-                        if (PERF_SPE_OP_PKT_IS_LDST_SVE(payload)) {
-                            decoder->record.op |= PERF_SPE_OP_SVE_LDST;
-                        }
-                        break;
-                    case PERF_SPE_OP_PKT_HDR_CLASS_OTHER:
-                        decoder->record.op |= PERF_SPE_OP_OTHER;
-                        if (PERF_SPE_OP_PKT_IS_OTHER_SVE_OP(payload)) {
-                            decoder->record.op |= PERF_SPE_OP_SVE_OTHER;
-                        }
-                        break;
-                    case PERF_SPE_OP_PKT_HDR_CLASS_BR_ERET:
-                        decoder->record.op |= PERF_SPE_OP_BRANCH_ERET;
-                        break;
-                    default:
-                        HLOGV("Get packet error!");
-                }
+                SpeReadRecordOpType(decoder, idx, payload);
                 break;
             case PERF_SPE_EVENTS:
-                if (payload & BIT(EVENT_L1D_REFILL)) {
-                    decoder->record.type |= PERF_SPE_L1D_MISS;
-                }
-
-                if (payload & BIT(EVENT_L1D_ACCESS)) {
-                    decoder->record.type |= PERF_SPE_L1D_ACCESS;
-                }
-
-                if (payload & BIT(EVENT_TLB_WALK)) {
-                    decoder->record.type |= PERF_SPE_TLB_MISS;
-                }
-
-                if (payload & BIT(EVENT_TLB_ACCESS)) {
-                    decoder->record.type |= PERF_SPE_TLB_ACCESS;
-                }
-
-                if (payload & BIT(EVENT_LLC_MISS)) {
-                    decoder->record.type |= PERF_SPE_LLC_MISS;
-                }
-
-                if (payload & BIT(EVENT_LLC_ACCESS)) {
-                    decoder->record.type |= PERF_SPE_LLC_ACCESS;
-                }
-
-                if (payload & BIT(EVENT_REMOTE_ACCESS)) {
-                    decoder->record.type |= PERF_SPE_REMOTE_ACCESS;
-                }
-
-                if (payload & BIT(EVENT_MISPRED)) {
-                    decoder->record.type |= PERF_SPE_BRANCH_MISS;
-                }
-
-                if (payload & BIT(EVENT_PARTIAL_PREDICATE)) {
-                    decoder->record.type |= PERF_SPE_SVE_PARTIAL_PRED;
-                }
-
-                if (payload & BIT(EVENT_EMPTY_PREDICATE)) {
-                    decoder->record.type |= PERF_SPE_SVE_EMPTY_PRED;
-                }
+                SpeReadRecordEvents(decoder, payload);
                 break;
             case PERF_SPE_DATA_SOURCE:
                 decoder->record.source = payload;
