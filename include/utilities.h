@@ -423,6 +423,7 @@ bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value);
 #endif
 
 std::string GetDefaultPathByEnv(const std::string fileType);
+bool IsHiShellLabel();
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
