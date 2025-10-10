@@ -1947,13 +1947,13 @@ bool SubCommandRecord::ProcessRecord(PerfEventRecord& record)
 
     // May create some simulated events
     // it will call ProcessRecord before next line
-#if !HIDEBUG_RECORD_NOT_PROCESS_VM
-    virtualRuntime_.UpdateFromRecord(record);
-#endif
+    UpdateDevHostMapsAndIPs(record);
 #ifdef HIPERF_DEBUG_TIME
     prcessRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
 #endif
-    UpdateDevHostMapsAndIPs(record);
+#if !HIDEBUG_RECORD_NOT_PROCESS_VM
+    virtualRuntime_.UpdateFromRecord(record);
+#endif
     return SaveRecord(record);
 #endif
 }
@@ -2534,7 +2534,7 @@ void SubCommandRecord::CollectRootPids()
         }
 
         pid_t pid = std::stoll(subDir);
-        if (IsRootThread(pid)) {
+        if (pid != SYSMGR_PID && IsRootThread(pid)) {
             HandleRootProcess(pid);
         }
     }
