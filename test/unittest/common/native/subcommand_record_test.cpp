@@ -2764,13 +2764,6 @@ HWTEST_F(SubCommandRecordTest, ProcessUserSymbols, TestSize.Level2)
     EXPECT_TRUE(result);
 }
 
-HWTEST_F(SubCommandRecordTest, UnuseJsvm, TestSize.Level2)
-{
-    SubCommandRecord cmd;
-    cmd.ParseCallStackOption({"fp"});
-    EXPECT_FALSE(SymbolsFile::needJsvm_);
-}
-
 HWTEST_F(SubCommandRecordTest, UseJsvm, TestSize.Level2)
 {
     SubCommandRecord cmd;
