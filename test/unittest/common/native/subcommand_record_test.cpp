@@ -2628,14 +2628,14 @@ HWTEST_F(SubCommandRecordTest, HandleReply_Success_OK, TestSize.Level1)
 {
     SubCommandRecord cmd;
     cmd.restart_ = false;
-    
+
     bool recvSuccess = true;
     std::string reply = "OK";
     bool isSuccess = false;
     bool shouldPrintReply = false;
-    
+
     bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
-    
+
     EXPECT_TRUE(result);
     EXPECT_TRUE(isSuccess);
     EXPECT_FALSE(shouldPrintReply);
@@ -2647,14 +2647,14 @@ HWTEST_F(SubCommandRecordTest, HandleReply_Success_OK, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, HandleReply_Success_NotRunning, TestSize.Level1)
 {
     SubCommandRecord cmd;
-    
+
     bool recvSuccess = true;
     std::string reply = "app not running";
     bool isSuccess = false;
     bool shouldPrintReply = true;
-    
+
     bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
-    
+
     EXPECT_FALSE(result);
     EXPECT_FALSE(isSuccess);
     EXPECT_FALSE(shouldPrintReply);
@@ -2666,14 +2666,14 @@ HWTEST_F(SubCommandRecordTest, HandleReply_Success_NotRunning, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, HandleReply_Success_CallStop, TestSize.Level1)
 {
     SubCommandRecord cmd;
-    
+
     bool recvSuccess = true;
     std::string reply = "called stop\n";
     bool isSuccess = false;
     bool shouldPrintReply = true;
-    
+
     bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
-    
+
     EXPECT_FALSE(result);
     EXPECT_FALSE(isSuccess);
     EXPECT_FALSE(shouldPrintReply);
@@ -2685,14 +2685,14 @@ HWTEST_F(SubCommandRecordTest, HandleReply_Success_CallStop, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, HandleReply_Fail_WithFAIL, TestSize.Level1)
 {
     SubCommandRecord cmd;
-    
+
     bool recvSuccess = true;
     std::string reply = "Operation FAIL";
     bool isSuccess = false;
     bool shouldPrintReply = false;
-    
+
     bool result = cmd.HandleReply(recvSuccess, reply, isSuccess, shouldPrintReply);
-    
+
     EXPECT_TRUE(result);
     EXPECT_FALSE(isSuccess);
     EXPECT_FALSE(shouldPrintReply);
@@ -2762,6 +2762,13 @@ HWTEST_F(SubCommandRecordTest, ProcessUserSymbols, TestSize.Level2)
     recordCmd.fileWriter_ = std::make_unique<PerfFileWriter>();
     bool result = recordCmd.ProcessUserSymbols();
     EXPECT_TRUE(result);
+}
+
+HWTEST_F(SubCommandRecordTest, UseJsvm, TestSize.Level2)
+{
+    SubCommandRecord cmd;
+    cmd.ParseCallStackOption({"dwarf"});
+    EXPECT_TRUE(SymbolsFile::needJsvm_);
 }
 } // namespace HiPerf
 } // namespace Developtools
