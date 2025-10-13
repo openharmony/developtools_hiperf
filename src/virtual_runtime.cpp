@@ -155,6 +155,7 @@ VirtualThread &VirtualRuntime::CreateThread(const pid_t pid, const pid_t tid, co
             std::forward_as_tuple(pid, tid, GetThread(pid, pid), symbolsFiles_));
     }
     VirtualThread &thread = userSpaceThreadMap_.at(tid);
+    thread.SetCollectSymbol(IsRoot() || dedupStack_);
     if (recordCallBack_) {
         if (pid == tid && !IsKernelThread(pid)) {
 #ifdef HIPERF_DEBUG_TIME
@@ -887,6 +888,47 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace)
     }
 }
 
+void VirtualRuntime::UpdateMapsByRecord(PerfRecordMmap &recordMmap)
+{
+    if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(recordMmap.data_.filename)) {
+        return;
+    }
+
+    VirtualThread &thread = GetThread(recordMmap.data_.pid, recordMmap.data_.tid);
+    if (!thread.IsExistRepeatMaps()) {
+        return;
+    }
+    std::shared_ptr<DfxMap> map = thread.CreateMapItem(recordMmap.data_.filename, recordMmap.data_.addr,
+                                                       recordMmap.data_.len, recordMmap.data_.pgoff);
+    for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
+        if (symbolsFiles_[i]->filePath_ == map->name) {
+            map->symbolFileIndex = static_cast<int32_t>(i);
+            break;
+        }
+    }
+}
+
+void VirtualRuntime::UpdateMapsByRecord(PerfRecordMmap2 &recordMmap2)
+{
+    if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(recordMmap2.data_.filename)) {
+        return;
+    }
+
+    VirtualThread &thread = GetThread(recordMmap2.data_.pid, recordMmap2.data_.tid);
+    if (!thread.IsExistRepeatMaps()) {
+        return;
+    }
+    std::shared_ptr<DfxMap> map = thread.CreateMapItem(recordMmap2.data_.filename, recordMmap2.data_.addr,
+                                                       recordMmap2.data_.len,
+                                                       recordMmap2.data_.pgoff, recordMmap2.data_.prot);
+    for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
+        if (symbolsFiles_[i]->filePath_ == map->name) {
+            map->symbolFileIndex = static_cast<int32_t>(i);
+            break;
+        }
+    }
+}
+
 void VirtualRuntime::SymbolSpeRecord(PerfRecordAuxtrace &recordAuxTrace)
 {
 #if defined(is_ohos) && is_ohos
@@ -1153,7 +1195,7 @@ bool VirtualRuntime::GetSymbolCache(const uint64_t fileVaddr, DfxSymbol &symbol,
 DfxSymbol VirtualRuntime::GetSymbol(const uint64_t ip, const pid_t pid, const pid_t tid,
                                     const perf_callchain_context &context)
 {
-    HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles\n", tid, ip, symbolsFiles_.size());
+    HLOGV("try find tid %u ip 0x%" PRIx64 " in %zu symbolsFiles", tid, ip, symbolsFiles_.size());
     DfxSymbol symbol;
 
     if (IsKernelThread(pid)) {
@@ -1455,6 +1497,21 @@ void VirtualRuntime::ClearSymbolCache()
 #if defined(is_ohos) && is_ohos
     callstack_.ClearCache();
 #endif
+}
+
+void VirtualRuntime::ClearRepeatThreadsMaps()
+{
+    // only process repeat maps in user
+    if (IsRoot() || dedupStack_) {
+        return;
+    }
+    HLOGD("ClearRepeatThreadsMaps enter");
+    for (auto it = userSpaceThreadMap_.begin(); it != userSpaceThreadMap_.end(); ++it) {
+        HLOGD("ClearRepeatThreadsMaps pid or tid is %d", it->first);
+        if (it->second.IsExistRepeatMaps()) {
+            it->second.ClearMaps();
+        }
+    }
 }
 
 } // namespace HiPerf

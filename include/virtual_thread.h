@@ -51,6 +51,8 @@ public:
           memMaps_(processMemMaps_),
           vaddr4kPageCache_(vaddr4kPageCacheOfProc_),
           memMapsIndexs_(processMemMapsIndexs_),
+          isRepeat_(),
+          hasRepeat_(isRepeat_),
           parent_(*this) {}
 
     VirtualThread(const pid_t pid, const pid_t tid, VirtualThread &thread,
@@ -62,6 +64,8 @@ public:
           memMaps_(thread.processMemMaps_),
           vaddr4kPageCache_(thread.vaddr4kPageCacheOfProc_),
           memMapsIndexs_(thread.processMemMapsIndexs_),
+          isRepeat_(),
+          hasRepeat_(thread.isRepeat_),
           parent_(thread)
     {
         HLOG_ASSERT(pid != tid);
@@ -90,8 +94,25 @@ public:
 #ifdef HIPERF_DEBUG
     void ReportVaddrMapMiss(const uint64_t vaddr) const;
 #endif
+    void SetCollectSymbol(bool collecSymbol)
+    {
+        collectSymbol_ = collecSymbol;
+    }
+    bool IsCollectSymbol() const
+    {
+        return collectSymbol_;
+    }
+    bool IsExistRepeatMaps() const
+    {
+        return hasRepeat_;
+    }
+    void ClearMaps();
 private:
     void SortMemMaps();
+    bool IsRepeatMap(int mapIndex, uint64_t begin, uint64_t end) const;
+    std::vector<int> FindRepeatMapIndexs(uint64_t begin, uint64_t end) const;
+    void DeleteRepeatMapsByIndex(int index);
+    void DeleteRepeatMaps(uint64_t begin, uint64_t end, const std::string filename);
     void ParseDevhostMapEachLine(std::string &filename, std::istringstream &iStringstream, std::string &line);
     VirtualThread& GetParent()
     {
@@ -112,6 +133,9 @@ private:
     std::unordered_map<uint64_t, uint64_t> &vaddr4kPageCache_;
     std::vector<int> processMemMapsIndexs_;
     std::vector<int> &memMapsIndexs_;
+    bool collectSymbol_ = true;
+    bool isRepeat_ = false;
+    bool &hasRepeat_;
     VirtualThread &parent_;
 #ifdef HIPERF_DEBUG
     mutable std::unordered_set<uint64_t> missedRuntimeVaddr_;

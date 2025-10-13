@@ -1803,6 +1803,7 @@ HiperfError SubCommandRecord::StartSamplingAndFile()
         fileWriter_->SetWriteRecordStat(false);
     }
     startSaveFileTimes_ = steady_clock::now();
+    virtualRuntime_.ClearRepeatThreadsMaps();
     if (!backtrack_) {
         if (!FinishWriteRecordFile()) {
             HLOGE("Fail to finish record file %s", outputFilename_.c_str());
@@ -2277,6 +2278,11 @@ void SubCommandRecord::SymbolicHits()
         }
     }
 }
+
+bool SubCommandRecord::IsCollectSymbol()
+{
+    return IsRoot() || dedupStack_;
+}
 #endif
 
 bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
@@ -2285,7 +2291,11 @@ bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
     if (record.GetType() == PERF_RECORD_SAMPLE) {
         PerfRecordSample* sample = static_cast<PerfRecordSample*>(&record);
 #if USE_COLLECT_SYMBOLIC
-        CollectSymbol(sample);
+        if (IsCollectSymbol()) {
+            CollectSymbol(sample);
+        } else {
+            virtualRuntime_.SymbolicRecord(*sample);
+        }
 #else
         virtualRuntime_.SymbolicRecord(*sample);
 #endif
@@ -2294,6 +2304,16 @@ bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
     if (isSpe_ && record.GetType() == PERF_RECORD_AUXTRACE) {
         PerfRecordAuxtrace* sample = static_cast<PerfRecordAuxtrace*>(&record);
         virtualRuntime_.SymbolSpeRecord(*sample);
+    }
+
+    if (!IsCollectSymbol() && record.GetType() == PERF_RECORD_MMAP) {
+        PerfRecordMmap* recordMmap = static_cast<PerfRecordMmap*>(&record);
+        virtualRuntime_.UpdateMapsByRecord(*recordMmap);
+    }
+
+    if (!IsCollectSymbol() && record.GetType() == PERF_RECORD_MMAP2) {
+        PerfRecordMmap2* recordMmap2 = static_cast<PerfRecordMmap2*>(&record);
+        virtualRuntime_.UpdateMapsByRecord(*recordMmap2);
     }
 
     return true;
@@ -2402,7 +2422,9 @@ bool SubCommandRecord::ProcessUserSymbols()
     }
 
 #if USE_COLLECT_SYMBOLIC
-    SymbolicHits();
+    if (IsCollectSymbol()) {
+        SymbolicHits();
+    }
 #endif
 
 #if HIDEBUG_SKIP_MATCH_SYMBOLS

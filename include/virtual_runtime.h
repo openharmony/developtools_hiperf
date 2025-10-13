@@ -149,6 +149,9 @@ public:
     bool IsKernelThread(const pid_t pid);
     void CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
                             uSymbolsHits &userSymbolsHits);
+    void ClearRepeatThreadsMaps();
+    void UpdateMapsByRecord(PerfRecordMmap &recordMmap);
+    void UpdateMapsByRecord(PerfRecordMmap2 &recordMmap2);
     // debug time
 #ifdef HIPERF_DEBUG_TIME
     std::chrono::microseconds updateSymbolsTimes_ = std::chrono::microseconds::zero();
