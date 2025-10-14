@@ -121,19 +121,14 @@ static inline std::string StringFormat(const char* fmt, ...)
 
 #define NO_RETVAL /* retval */
 #define LOG_TYPE_PRINTF 2
-#define LOG_TYPE_WITH_HILOG 3
 #define CHECK_TRUE(expr, retval, log, fmt, ...)                                                    \
     do {                                                                                           \
         if (!(expr)) {                                                                             \
             if (log == 1) {                                                                        \
                 std::string str = StringFormat(fmt, ##__VA_ARGS__);                                \
                 HLOGE("%s", str.c_str());                                                          \
-            } else if (log == LOG_TYPE_PRINTF) {                                                   \
+            } else {                                                                               \
                 printf("%s", StringFormat(fmt, ##__VA_ARGS__).c_str());                            \
-            } else if (log == LOG_TYPE_WITH_HILOG) {                                               \
-                std::string str = StringFormat(fmt, ##__VA_ARGS__);                                \
-                HLOGE("%s", str.c_str());                                                          \
-                HIPERF_HILOGE(MODULE_DEFAULT, "%{public}s", str.c_str());                          \
             }                                                                                      \
             return retval;                                                                         \
         }                                                                                          \

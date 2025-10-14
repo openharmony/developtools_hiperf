@@ -17,7 +17,11 @@
 #define HIPERF_REGISTER_H
 
 #include <map>
+#if defined(is_ohos) && is_ohos
 #include <linux/perf_event.h>
+#else
+#include "linux/perf_event_host.h"
+#endif
 
 #include "utilities.h"
 #include "unwind_define.h"

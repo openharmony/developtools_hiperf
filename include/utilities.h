@@ -32,13 +32,13 @@
 
 #include <dirent.h>
 #include <fcntl.h>
-#include <file_ex.h>
 #include <stddef.h>
 #include <sys/stat.h>
-#include <unique_fd.h>
 #include <unistd.h>
 #if !is_mingw
+#include <file_ex.h>
 #include <sys/syscall.h>
+#include <unique_fd.h>
 #endif
 #include <linux/types.h>
 
@@ -316,7 +316,9 @@ public:
     std::string Stop();
 
 private:
+#if defined(is_ohos) && is_ohos
     OHOS::UniqueFd stdoutFile_;       // back and restore stdout
+#endif
     std::FILE *recordFile_ = nullptr; // save the output
     bool stop_ = true;
     std::string content_ = EMPTY_STRING;
@@ -346,8 +348,8 @@ bool IsDirectoryExists(const std::string& fileName);
 bool CreateDirectory(const std::string& path, const mode_t mode);
 bool IsValidOutPath(const std::string& path);
 bool IsRootThread(const pid_t& pid);
-bool GetUidFromPid(const pid_t& pid, uid_t& ruid);
-bool GetStatusLineId(const std::string& line, uid_t& target);
+bool GetUidFromPid(const pid_t& pid, uint32_t& ruid);
+bool GetStatusLineId(const std::string& line, uint32_t& target);
 void AgeHiperflogFiles();
 
 const std::string HMKERNEL = "HongMeng";

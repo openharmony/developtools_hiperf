@@ -1288,8 +1288,9 @@ void VirtualRuntime::LoadVdso()
             std::string tempPath("/data/log/hiperflog/");
             if (!IsDirectoryExists(tempPath)) {
                 HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s not exist.", tempPath.c_str());
-                CHECK_TRUE(CreateDirectory(tempPath, HIPERF_FILE_PERM_770), NO_RETVAL,
-                           LOG_TYPE_WITH_HILOG, "Create hiperflog path failed");
+                if (!CreateDirectory(tempPath, HIPERF_FILE_PERM_770)) {
+                    HIPERF_HILOGI(MODULE_DEFAULT, "Create hiperflog path failed.");
+                }
             }
             std::string tempFileName = tempPath + map->name;
             if (!WriteStringToFile(tempFileName, memory)) {

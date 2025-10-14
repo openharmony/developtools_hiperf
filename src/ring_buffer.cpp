@@ -14,7 +14,11 @@
  */
 #define HILOG_TAG "RingBuffer"
 
+#if defined(is_ohos) && is_ohos
 #include <linux/perf_event.h>
+#else
+#include "linux/perf_event_host.h"
+#endif
 #include "ring_buffer.h"
 #include "perf_event_record.h"
 #if defined(is_ohos) && is_ohos

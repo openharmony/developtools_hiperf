@@ -27,7 +27,6 @@
 #endif
 
 #include "hiperf_hilog.h"
-#include "perf_events.h"
 #include "register.h"
 #include "utilities.h"
 
@@ -210,7 +209,7 @@ void SubCommandReport::ProcessSample(std::unique_ptr<PerfRecordSample> &sample)
                                                sample->data_.tid, sample->data_.period,
                                                sample->callFrames_);
     } else if (protobufFormat_) {
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
         // make some cook
         // redesgin here
         protobufOutputFileWriter_->ProcessSampleRecord(
@@ -266,7 +265,7 @@ bool SubCommandReport::RecordCallBack(PerfEventRecord& record)
             ProcessSample(sample);
         }
     } else {
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
         if (protobufFormat_) {
             protobufOutputFileWriter_->ProcessRecord(record);
         }
@@ -296,7 +295,7 @@ void SubCommandReport::ProcessSymbolsData()
             static_cast<const PerfFileSectionSymbolsFiles *>(featureSection);
         GetReport().virtualRuntime_.UpdateFromPerfData(sectionSymbolsFiles->symbolFileStructs_);
     }
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
     // we have load the elf
     // write it to proto first
     if (protobufFormat_) {
@@ -320,6 +319,7 @@ void SubCommandReport::ProcessUniStackTableData()
     }
 }
 
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
 void SubCommandReport::UpdateReportInfo()
 {
     // get some meta info for protobuf
@@ -339,6 +339,7 @@ void SubCommandReport::UpdateReportInfo()
         protobufOutputFileWriter_->ProcessReportInfo(configNames_, workloader);
     }
 }
+#endif
 
 void SubCommandReport::LoadEventConfigData()
 {
@@ -404,6 +405,7 @@ void SubCommandReport::LoadEventDesc()
 
 void SubCommandReport::LoadAttrSection()
 {
+#if defined(is_ohso) && is_ohos
     std::vector<AttrWithId> attrIds = recordFileReader_->GetAttrSection();
     for (size_t i = 0; i < attrIds.size(); ++i) {
         const AttrWithId &fileAttr = attrIds[i];
@@ -425,6 +427,7 @@ void SubCommandReport::LoadAttrSection()
         HLOGV("event name[%zu]: %s ids: %s", i, name_.c_str(),
               VectorToString(fileAttr.ids).c_str());
     }
+#endif
 }
 
 void SubCommandReport::ProcessFeaturesData()
@@ -547,7 +550,7 @@ bool SubCommandReport::OutputReport()
 bool SubCommandReport::PrepareOutput()
 {
     if (protobufFormat_) {
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
         // check if file exist
         if (access(recordFile_[index_].c_str(), F_OK) != 0) {
             printf("Can not access data file %s\n", recordFile_[index_].c_str());
@@ -578,7 +581,7 @@ bool SubCommandReport::PrepareOutput()
 
 SubCommandReport::~SubCommandReport()
 {
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
     if (protobufOutputFileWriter_ != nullptr) {
         protobufOutputFileWriter_->Close();
     }

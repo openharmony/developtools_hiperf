@@ -18,7 +18,11 @@
 
 #include <fstream>
 #include <stdint.h>
+#if defined(is_ohos) && is_ohos
 #include <linux/perf_event.h>
+#else
+#include "linux/perf_event_host.h"
+#endif
 
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"

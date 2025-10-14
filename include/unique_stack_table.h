@@ -16,7 +16,11 @@
 #define HIEPRF_UNIQUE_STACK_TABLE_H
 #include "utilities.h"
 #include <cinttypes>
+#if defined(is_ohos) && is_ohos
 #include <linux/perf_event.h>
+#else
+#include "linux/perf_event_host.h"
+#endif
 #include <string>
 namespace OHOS {
 namespace Developtools {

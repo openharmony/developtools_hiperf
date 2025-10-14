@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
 #include "report_protobuf_file.h"
 #endif
 #include "subcommand.h"
@@ -50,7 +50,7 @@ public:
         "       perf data file to dump, default is perf.data\n"
         "   --elf <elf file name>\n"
         "       dump elf not perf data.\n"
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
         "   --proto <protobuf file name>\n"
         "       dump perf data from protobuf file.\n"
 #endif
@@ -88,7 +88,7 @@ private:
     std::string outputFilename_ = "";
     std::string protobufDumpFileName_;
     int indent_ = 0;
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
     std::unique_ptr<ReportProtobufFileReader> protobufInputFileReader_ = nullptr;
 #endif
 
@@ -103,7 +103,7 @@ private:
 
     bool CheckInputFile();
     bool DumpElfFile();
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
     bool DumpProtoFile();
 #endif
     void DumpPrintFileHeader(const int indent = 0);

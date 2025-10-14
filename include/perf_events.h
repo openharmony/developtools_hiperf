@@ -33,7 +33,11 @@
 
 #include <sys/types.h>
 #include <unique_fd.h>
+#if defined(is_ohos) && is_ohos
 #include <linux/perf_event.h>
+#else
+#include "linux/perf_event_host.h"
+#endif
 
 #include "debug_logger.h"
 #include "perf_event_record.h"

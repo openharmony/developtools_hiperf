@@ -25,8 +25,6 @@
 #include "debug_logger.h"
 #include "hiperf_hilog.h"
 #include "option.h"
-#include "perf_event_record.h"
-#include "perf_events.h"
 #include "register.h"
 #include "spe_decoder.h"
 #include "symbols_file.h"
@@ -105,7 +103,7 @@ bool SubCommandDump::ParseOption(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "-i", dumpFileName_)) {
         return false;
     }
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
     if (!Option::GetOptionValue(args, "--proto", protobufDumpFileName_)) {
         HLOGD("get option --proto failed");
         return false;
@@ -161,7 +159,7 @@ HiperfError SubCommandDump::OnSubCommand(std::vector<std::string>& args)
         return DumpElfFile() ? HiperfError::NO_ERR : HiperfError::DUMP_ELF_FILE_ERROR;
     }
 
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
     if (!protobufDumpFileName_.empty()) {
         return DumpProtoFile() ? HiperfError::NO_ERR : HiperfError::DUMP_PROTO_FILE_ERROR;
     }
@@ -223,7 +221,7 @@ bool SubCommandDump::DumpElfFile()
     }
     return true;
 }
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
 bool SubCommandDump::DumpProtoFile()
 {
     printf("dump protobuf file: '%s'\n", protobufDumpFileName_.c_str());

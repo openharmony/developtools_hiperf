@@ -24,10 +24,14 @@
 #include <optional>
 #include <set>
 #include <tuple>
+#if defined(is_ohos) && is_ohos
 #include <linux/perf_event.h>
+#else
+#include "linux/perf_event_host.h"
+#endif
 
 #include "perf_file_reader.h"
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
 #include "report_protobuf_file.h"
 #endif
 #include "debug_logger.h"
@@ -176,7 +180,7 @@ private:
     std::unique_ptr<ReportJsonFile> reportJsonFile_ = nullptr;
 
     bool protobufFormat_ = false;
-#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF
+#if defined(HAVE_PROTOBUF) && HAVE_PROTOBUF && defined(is_ohos) && is_ohos
     std::unique_ptr<ReportProtobufFileWriter> protobufOutputFileWriter_ = nullptr;
     void UpdateReportInfo();
 #endif
