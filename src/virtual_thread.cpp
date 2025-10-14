@@ -298,10 +298,10 @@ void VirtualThread::ParseServiceMap(const std::string &filename)
             if (addrRanges.size() < mmapAddrRangeToken) {
                 continue;
             }
-            if (!StringToUint64(addrRanges[0], begin)) {
+            if (!StringToUint64(addrRanges[0], begin, NUMBER_FORMAT_HEX_BASE)) {
                 HLOGE("StringToUint64 fail %s", addrRanges[0].c_str());
             }
-            if (!StringToUint64(addrRanges[1], end)) {
+            if (!StringToUint64(addrRanges[1], end, NUMBER_FORMAT_HEX_BASE)) {
                 HLOGE("StringToUint64 fail %s", addrRanges[1].c_str());
             }
             break;
@@ -330,10 +330,11 @@ void VirtualThread::ParseDevhostMapEachLine(std::string &filename, std::istrings
     uint64_t end = 0;
     uint64_t offset = 0;
     // 2fe40000 / 311e1000
-    begin = std::stoull(addrRanges[0], nullptr, NUMBER_FORMAT_HEX_BASE);
-    end = std::stoull(addrRanges[1], nullptr, NUMBER_FORMAT_HEX_BASE);
-    offset = std::stoull(mapTokens[MMAP_LINE_TOKEN_INDEX_OFFSET],
-                         nullptr, NUMBER_FORMAT_HEX_BASE);
+    if (!StringToUint64(addrRanges[0], begin, NUMBER_FORMAT_HEX_BASE) ||
+        !StringToUint64(addrRanges[1], end, NUMBER_FORMAT_HEX_BASE) ||
+        !StringToUint64(mapTokens[MMAP_LINE_TOKEN_INDEX_OFFSET], offset, NUMBER_FORMAT_HEX_BASE)) {
+        return;
+    }
 
     // --x-
     if (mapTokens[MMAP_LINE_TOKEN_INDEX_FLAG].size() != MMAP_PROT_CHARS ||
@@ -348,7 +349,7 @@ void VirtualThread::ParseDevhostMapEachLine(std::string &filename, std::istrings
     }
     if (filename.find(anonPrefix) != std::string::npos) {
         // '[anon:[liblinux/devhost.ko]]' to '/liblinux/devhost.ko'
-        if (filename.size() < anonPrefix.size() + anonPostfix.size()) {
+        if (filename.size() <= anonPrefix.size() + anonPostfix.size()) {
             return;
         }
         filename = filename.substr(anonPrefix.size(),

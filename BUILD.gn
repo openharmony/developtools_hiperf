@@ -441,6 +441,7 @@ ohos_executable("hiperf") {
 }
 
 ohos_executable("hiperf_host") {
+  install_enable = false
   sources = [ "./src/main.cpp" ]
 
   deps = [ ":hiperf_platform_common" ]
@@ -517,8 +518,10 @@ ohos_source_set("hiperf_platform_host") {
 }
 
 ohos_shared_library("hiperf_host_lib") {
-  deps = [ ":hiperf_platform_host" ]
-  ldflags = [ "-static-libstdc++" ]
+  install_enable = false
+  if (!is_ohos) {
+    deps = [ ":hiperf_platform_host" ]
+  }
   
   output_name = "hiperf_report"
 
@@ -527,6 +530,7 @@ ohos_shared_library("hiperf_host_lib") {
 }
 
 ohos_executable("hiperf_host_lib_demo") {
+  install_enable = false
   sources = [ "./src/hiperf_libreport_demo.cpp" ]
 
   if (!hiperf_independent_compilation) {

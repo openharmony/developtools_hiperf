@@ -388,11 +388,11 @@ bool IsStringToIntSuccess(const std::string &str, int &val)
     return true;
 }
 
-bool StringToUint64(const std::string &str, uint64_t &val)
+bool StringToUint64(const std::string &str, uint64_t &val, int base)
 {
     char *endPtr = nullptr;
     errno = 0;
-    uint64_t num = std::strtoull(str.c_str(), &endPtr, 10); // 10 : decimal scale
+    uint64_t num = std::strtoull(str.c_str(), &endPtr, base);
     if (endPtr == str.c_str() || *endPtr != '\0' || errno != 0 || num > ULLONG_MAX || str.c_str()[0] == '-') {
         HIPERF_HILOGE(MODULE_DEFAULT, "get uint64 failed");
         return false;
