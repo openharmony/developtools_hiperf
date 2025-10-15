@@ -189,7 +189,7 @@ bool PerfFileReader::ReadAttrSection()
 bool PerfFileReader::ReadIdsForAttr(const perf_file_attr &attr, std::vector<uint64_t> *ids)
 {
     if (attr.ids.size > 0) {
-        size_t count = attr.ids.size / sizeof(uint64_t) + 1;
+        size_t count = (attr.ids.size + sizeof(uint64_t) - 1) / sizeof(uint64_t);
         if (count > MAX_VECTOR_RESIZE_COUNT) {
             HLOGE("count(%zu) out of range", count);
             return false;
