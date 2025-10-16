@@ -343,7 +343,7 @@ bool PowerOfTwo(const uint64_t n);
 bool IsNumeric(const std::string& str);
 bool IscontainDigits(const std::string& str);
 bool IsStringToIntSuccess(const std::string &str, int &num);
-bool StringToUint64(const std::string &str, uint64_t &val);
+bool StringToUint64(const std::string &str, uint64_t &val, int base = 10); // 10 : decimal
 bool IsDirectoryExists(const std::string& fileName);
 bool CreateDirectory(const std::string& path, const mode_t mode);
 bool IsValidOutPath(const std::string& path);

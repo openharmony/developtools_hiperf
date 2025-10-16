@@ -29,6 +29,7 @@ ohos_shared_library("hiperf_client_napi") {
   deps = [ "${innerkits_path}/native/hiperf_client:hiperf_client" ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "napi:ace_napi",
   ]

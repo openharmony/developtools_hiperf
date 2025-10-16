@@ -589,9 +589,9 @@ bool SubCommandStat::GetHwBranchMissesComments(
                                 branchInstructionsCount, otherScale);
     if ((other || (IsMonitoredAtAllTime(otherScale) && IsMonitoredAtAllTime(scale))) &&
         branchInstructionsCount != 0) {
-        double miss_rate =
+        double missRate =
             static_cast<double>(countEvent->eventCount) / branchInstructionsCount;
-        comments[configName] = StringPrintf("%lf miss rate", miss_rate * ONE_HUNDRED);
+        comments[configName] = StringPrintf("%lf miss rate", missRate * ONE_HUNDRED);
         return true;
     }
     return false;

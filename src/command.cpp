@@ -66,7 +66,7 @@ bool Command::DispatchSubCommands(std::vector<std::string> &arguments, CommandRe
 bool Command::DispatchCommands(std::vector<std::string> arguments)
 {
     fullArgument.clear();
-    for (std::string arg : arguments) {
+    for (std::string &arg : arguments) {
         fullArgument.append(" ");
         fullArgument.append(arg);
     }
