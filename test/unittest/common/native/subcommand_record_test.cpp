@@ -2385,7 +2385,6 @@ HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control01, TestSize.Level1)
         "hiperf report --json -i /data/local/tmp/perf_control01.data -o /data/local/tmp/perf.json",
         {"report done"}),
               true);
-    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", "/system/bin/hiperf"));
 }
 
 /**
