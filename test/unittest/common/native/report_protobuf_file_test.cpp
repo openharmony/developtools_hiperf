@@ -365,7 +365,7 @@ HWTEST_F(ReportProtobufFileTest, ReadCallBackWithNull, TestSize.Level2)
     std::vector<std::string> configNames = {"config1", "config2", "config3"};
     std::string workloadCmd = "workcommand";
 
-    EXPECT_TRUE(protobufOutputFileWriter_->Create(fileName));
+    ASSERT_EQ(protobufOutputFileWriter_->Create(fileName), true);
     protobufOutputFileWriter_->ProcessReportInfo(configNames, workloadCmd);
     protobufOutputFileWriter_->Close();
 
