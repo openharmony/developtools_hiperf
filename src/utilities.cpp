@@ -347,15 +347,19 @@ bool WriteStringToFile(const std::string &fileName, const std::string &value)
     return output.good();
 }
 
-bool IsRoot()
+bool GetRootMode()
 {
 #if defined(is_ohos) && is_ohos
-    std::string debugMode = "0";
-    debugMode = OHOS::system::GetParameter("const.debuggable", debugMode);
-    return debugMode == "1";
+    return OHOS::system::GetBoolParameter("const.debuggable", false);
 #else
     return true;
 #endif
+}
+
+bool IsRoot()
+{
+    const static bool isRoot = GetRootMode();
+    return isRoot;
 }
 
 bool PowerOfTwo(const uint64_t n)

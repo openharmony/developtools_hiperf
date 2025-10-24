@@ -67,9 +67,9 @@ int64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
     if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() >= 1 ? memMapsIndexs_.size() -  1 : 0]]->end <= addr) {
         return illegal;
     }
-    constexpr int divisorNum {2};
-    std::size_t left {0};
-    std::size_t right {memMapsIndexs_.size()};
+    constexpr int divisorNum = 2;
+    std::size_t left = 0;
+    std::size_t right = memMapsIndexs_.size();
     std::size_t mid = (right - left) / divisorNum + left;
     while (left < right) {
         if (addr < memMaps_[memMapsIndexs_[mid]]->end) {
@@ -104,9 +104,9 @@ std::shared_ptr<DfxMap> VirtualThread::FindMapByAddr(uint64_t addr) const
     if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() >= 1 ? memMapsIndexs_.size() - 1 : 0]]->end <= addr) {
         return nullptr;
     }
-    constexpr int divisorNum {2};
-    std::size_t left {0};
-    std::size_t right {memMapsIndexs_.size()};
+    constexpr int divisorNum = 2;
+    std::size_t left = 0;
+    std::size_t right = memMapsIndexs_.size();
     std::size_t mid = (right - left) / divisorNum + left;
     while (left < right) {
         if (addr < memMaps_[memMapsIndexs_[mid]]->end) {
@@ -378,6 +378,112 @@ void VirtualThread::ParseDevhostMap(const pid_t devhost)
     SortMemMaps();
 }
 
+bool VirtualThread::IsRepeatMap(int mapIndex, uint64_t begin, uint64_t end) const
+{
+    return (memMaps_[mapIndex]->begin < end) && (memMaps_[mapIndex]->end > begin);
+}
+
+std::vector<int> VirtualThread::FindRepeatMapIndexs(uint64_t begin, uint64_t end) const
+{
+    std::vector<int> result = {};
+    if (memMaps_.size() == 0) {
+        return result;
+    }
+    if (memMaps_[memMapsIndexs_[0]]->begin >= end) {
+        return result;
+    }
+    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() >= 1 ? memMapsIndexs_.size() -  1 : 0]]->end <= begin) {
+        return result;
+    }
+
+    constexpr int divisorNum {2};
+    int left {0};
+    int right {memMapsIndexs_.size()};
+    int mid = (right - left) / divisorNum + left;
+    while (left < right) {
+        if (begin < memMaps_[memMapsIndexs_[mid]]->end) {
+            right = mid;
+            mid = (right - left) / divisorNum + left;
+            continue;
+        }
+        if (begin >= memMaps_[memMapsIndexs_[mid]]->end) {
+            left = mid + 1;
+            mid = (right - left) / divisorNum + left;
+            continue;
+        }
+    }
+    right = left + 1;
+    while (left >= 0) {
+        if (IsRepeatMap(memMapsIndexs_[left], begin, end)) {
+            result.push_back(memMapsIndexs_[left]);
+        } else {
+            break;
+        }
+        left--;
+    }
+    while (static_cast<size_t>(right) < memMaps_.size()) {
+        if (IsRepeatMap(memMapsIndexs_[right], begin, end)) {
+            result.push_back(memMapsIndexs_[right]);
+        } else {
+            break;
+        }
+        right++;
+    }
+
+    return result;
+}
+
+void VirtualThread::DeleteRepeatMapsByIndex(int index)
+{
+    auto pos = memMapsIndexs_.begin();
+    while (pos != memMapsIndexs_.end()) {
+        if (index == *pos) {
+            pos = memMapsIndexs_.erase(pos);
+            memMaps_.erase(memMaps_.begin() + index);
+            hasRepeat_ = true;
+            break;
+        }
+        ++pos;
+    }
+    auto pos1 = memMapsIndexs_.begin();
+    while (pos1 != memMapsIndexs_.end()) {
+        if (index < *pos1) {
+            *pos1 -= 1;
+        }
+        ++pos1;
+    }
+}
+
+void VirtualThread::DeleteRepeatMaps(uint64_t begin, uint64_t end, const std::string filename)
+{
+    auto repeatMaps = FindRepeatMapIndexs(begin, end);
+    if (repeatMaps.empty()) {
+        return;
+    }
+
+    HLOGD("new map: %s, 0x%" PRIx64 "-0x%" PRIx64 "", filename.c_str(), begin, end);
+    for (auto mapIndex : repeatMaps) {
+        HLOGD("repeat map: %s", memMaps_[mapIndex]->ToString().c_str());
+    }
+    std::sort(repeatMaps.begin(), repeatMaps.end(), std::greater<int>());
+    HLOGD("repeat maps size is %zd", repeatMaps.size());
+    for (auto index : repeatMaps) {
+        DeleteRepeatMapsByIndex(index);
+    }
+    vaddr4kPageCache_.clear();
+}
+
+void VirtualThread::ClearMaps()
+{
+    HLOGD("clear map");
+    if (!memMapsIndexs_.empty()) {
+        memMapsIndexs_.clear();
+    }
+    if (!memMaps_.empty()) {
+        memMaps_.clear();
+    }
+}
+
 void VirtualThread::SortMemMaps()
 {
     for (int currPos = 1; currPos < static_cast<int>(memMaps_.size()); ++currPos) {
@@ -402,6 +508,10 @@ std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string &filename
     if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(filename)) {
         return nullptr; // skip some memmap
     }
+    if (!IsCollectSymbol()) {
+        DeleteRepeatMaps(begin, begin + len, filename);
+    }
+
     std::shared_ptr<DfxMap> map = memMaps_.emplace_back(std::make_shared<DfxMap>(begin, begin + len, offset,
         prot, filename));
     memMapsIndexs_.emplace_back(memMaps_.size() >= 1 ? memMaps_.size() - 1 : 0);
