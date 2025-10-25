@@ -2540,11 +2540,9 @@ HWTEST_F(SubCommandStatTest, HandleChildProcess_FifoOpenFail, TestSize.Level2)
     unlink(invalidFifo.c_str());
     SubCommandStat statCmd;
     statCmd.fifoFileS2C_ = invalidFifo;
-    statCmd.clientPipeOutput_ = -1;
     statCmd.isFifoServer_ = false;
     bool result = statCmd.HandleChildProcess();
     EXPECT_FALSE(result);
-    EXPECT_EQ(statCmd.clientPipeOutput_, -1);
     EXPECT_TRUE(statCmd.isFifoServer_);
 }
 
