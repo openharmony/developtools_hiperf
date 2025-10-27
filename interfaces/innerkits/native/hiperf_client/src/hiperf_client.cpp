@@ -441,7 +441,8 @@ void Client::GetExecCmd(std::vector<std::string> &cmd,
     cmd.insert(cmd.end(), args.begin(), args.end());
 }
 
-void Client::ChildProcessHandle(const std::vector<std::string> &args, int *clientToServerFd, int *serverToClientFd)
+void Client::ChildProcessHandle(const std::vector<std::string> &args, int (&clientToServerFd)[2],
+                                int (&serverToClientFd)[2])
 {
     close(clientToServerFd[PIPE_WRITE]);
     close(serverToClientFd[PIPE_READ]);
@@ -451,7 +452,7 @@ void Client::ChildProcessHandle(const std::vector<std::string> &args, int *clien
     ChildRunExecv(cmd);
 }
 
-void Client::ParentHandleProcess(int *clientToServerFd, int *serverToClientFd)
+void Client::ParentHandleProcess(int (&clientToServerFd)[2], int (&serverToClientFd)[2])
 {
     close(clientToServerFd[PIPE_READ]);
     close(serverToClientFd[PIPE_WRITE]);
