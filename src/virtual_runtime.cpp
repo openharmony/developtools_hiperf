@@ -900,6 +900,7 @@ void VirtualRuntime::UpdateMapsByRecord(PerfRecordMmap &recordMmap)
     }
     std::shared_ptr<DfxMap> map = thread.CreateMapItem(recordMmap.data_.filename, recordMmap.data_.addr,
                                                        recordMmap.data_.len, recordMmap.data_.pgoff);
+    CHECK_TRUE(map != nullptr && map->symbolFileIndex == -1, NO_RETVAL, 0, "");
     for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
         if (symbolsFiles_[i]->filePath_ == map->name) {
             map->symbolFileIndex = static_cast<int32_t>(i);
@@ -921,6 +922,7 @@ void VirtualRuntime::UpdateMapsByRecord(PerfRecordMmap2 &recordMmap2)
     std::shared_ptr<DfxMap> map = thread.CreateMapItem(recordMmap2.data_.filename, recordMmap2.data_.addr,
                                                        recordMmap2.data_.len,
                                                        recordMmap2.data_.pgoff, recordMmap2.data_.prot);
+    CHECK_TRUE(map != nullptr && map->symbolFileIndex == -1, NO_RETVAL, 0, "");
     for (size_t i = 0; i < symbolsFiles_.size(); ++i) {
         if (symbolsFiles_[i]->filePath_ == map->name) {
             map->symbolFileIndex = static_cast<int32_t>(i);

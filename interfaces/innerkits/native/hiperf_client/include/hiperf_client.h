@@ -336,8 +336,9 @@ private:
 
     void GetExecCmd(std::vector<std::string> &cmd,
                     const std::vector<std::string> &args);
-    void ChildProcessHandle(const std::vector<std::string> &args, int *clientToServerFd, int *serverToClientFd);
-    void ParentHandleProcess(int *clientToServerFd, int *serverToClientFd);
+    void ChildProcessHandle(const std::vector<std::string> &args, int (&clientToServerFd)[2],
+                            int (&serverToClientFd)[2]);
+    void ParentHandleProcess(int (&clientToServerFd)[2], int (&serverToClientFd)[2]);
     std::string outputDir_ = "";
     std::string outputFileName_ = "";
     std::string executeCommandPath_ = "";
