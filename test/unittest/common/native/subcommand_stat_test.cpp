@@ -2285,30 +2285,25 @@ HWTEST_F(SubCommandStatTest, CheckPidAndApp, TestSize.Level1)
 {
     std::string cmd = "stat -p " + std::to_string(INT_MAX) + " -d 2";
     EXPECT_EQ(Command::DispatchCommand(cmd), false);
-    pid_t existPid = -1;
+    pid_t existPid = 1;
     const std::string basePath {"/proc/"};
-    std::vector<std::string> subDirs = GetSubDirs(basePath);
-    for (int i = subDirs.size() - 1; i >= 0; i--) {
-        std::string subDir = subDirs[i];
-        if (!IsDigits(subDir)) {
-            continue;
+    std::string procPath = basePath + std::to_string(existPid);
+    if (access(procPath.c_str(), F_OK) == 0) {
+        std::string statusPath = procPath + "/status";
+        if (access(statusPath.c_str(), R_OK) == 0) {
+            StdoutRecord stdoutRecord;
+            stdoutRecord.Start();
+            const auto startTime = std::chrono::steady_clock::now();
+            std::string existCmd = "stat -p " + std::to_string(existPid) + " -d 2";
+            EXPECT_EQ(Command::DispatchCommand(existCmd), true);
+            const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - startTime);
+            EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
+            std::string stringOut = stdoutRecord.Stop();
+            if (HasFailure()) {
+                printf("output:\n%s", stringOut.c_str());
+            }
         }
-        existPid = std::stoll(subDir);
-        break;
-    }
-
-    StdoutRecord stdoutRecord;
-    stdoutRecord.Start();
-    const auto startTime = std::chrono::steady_clock::now();
-    std::string existCmd = "stat -p " + std::to_string(existPid) + " -d 2";
-    EXPECT_EQ(Command::DispatchCommand(existCmd), true);
-    const auto costMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - startTime);
-    EXPECT_LE(costMs.count(), defaultRunTimeoutMs);
-
-    std::string stringOut = stdoutRecord.Stop();
-    if (HasFailure()) {
-        printf("output:\n%s", stringOut.c_str());
     }
 }
 
