@@ -613,6 +613,25 @@ HWTEST_F(PerfEventsTest, HandleTokensNoTracePoint, TestSize.Level2)
     EXPECT_FALSE(isTracePoint);
     EXPECT_EQ(name, "hw-instructions");
 }
+
+HWTEST_F(PerfEventsTest, HandleTracePoint_NonExistingEvent, TestSize.Level2)
+{
+    PerfEvents event;
+    event.traceConfigTable.clear();
+    bool isPrint = false;
+    bool result = event.HandleTracePoint("test:non_existing", false, false, false, isPrint);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(event.eventGroupItem_.empty());
+}
+
+HWTEST_F(PerfEventsTest, HandleNonTracePoint_InvalidHexEvent, TestSize.Level2)
+{
+    PerfEvents event;
+    bool isPrint = false;
+    bool result = event.HandleNonTracePoint("0xg3", false, false, false, isPrint);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(event.eventGroupItem_.empty());
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

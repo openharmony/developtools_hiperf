@@ -681,6 +681,10 @@ private:
 
     void LoadTracepointEventTypesFromSystem();
     bool PerfEventsEnable(const bool);
+    bool HandleTracePoint(const std::string& eventName, bool excludeUser,
+                          bool excludeKernel, bool followGroup, bool& isPrint);
+    bool HandleNonTracePoint(const std::string& eventName, bool excludeUser,
+                             bool excludeKernel, bool followGroup, bool& isPrint);
     bool AddEvent(const perf_type_id type, const __u64 config, const bool excludeUser = false,
                   const bool excludeKernel = false, const bool followGroup = false);
     bool AddEvent(const std::string &eventString, const bool followGroup = false);

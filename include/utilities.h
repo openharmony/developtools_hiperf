@@ -343,7 +343,9 @@ bool PowerOfTwo(const uint64_t n);
 bool IsNumeric(const std::string& str);
 bool IscontainDigits(const std::string& str);
 bool IsStringToIntSuccess(const std::string &str, int &num);
-bool StringToUint64(const std::string &str, uint64_t &val, int base = 10); // 10 : decimal
+bool StringToUint64(const std::string &str, uint64_t &val, const int base = 0);
+bool StringToUnsignedLong(const std::string &str, unsigned long &val, const int base = 0);
+bool StringToLongLong(const std::string &str, long long &val, const int base = 0);
 bool IsDirectoryExists(const std::string& fileName);
 bool CreateDirectory(const std::string& path, const mode_t mode);
 bool IsValidOutPath(const std::string& path);
@@ -371,6 +373,8 @@ const std::string HMKERNEL = "HongMeng";
 #ifndef MAP_FAILED
 #define MAP_FAILED MMAP_FAILED
 #endif
+pid_t FindMatchingPidInProc(const std::string& basePath, const std::string& cmdlineSuffix,
+                            const std::string& appPackage);
 pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
                        const uint64_t waitAppTimeOut);
 bool IsRestarted(const std::string &appPackage);
@@ -387,7 +391,12 @@ void CollectPidsByAppname(std::set<pid_t> &pids, const Container& appPackage)
         }
         std::string fileName {basePath + subDir + cmdline};
         if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
-            pids.emplace(std::stoul(subDir, nullptr));
+            unsigned long tempPid = 0;
+            if (!StringToUnsignedLong(subDir, tempPid)) {
+                HLOGE("[CollectPidsByAppname] Invalid subDir: %s", subDir.c_str());
+                continue;
+            }
+            pids.emplace(static_cast<pid_t>(tempPid));
         }
     }
 }
@@ -425,6 +434,7 @@ bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value);
 #endif
 
 std::string GetDefaultPathByEnv(const std::string fileType);
+std::string ExtractNumericPrefix(const std::string& str);
 bool IsHiShellLabel();
 } // namespace HiPerf
 } // namespace Developtools

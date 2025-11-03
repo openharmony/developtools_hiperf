@@ -20,6 +20,7 @@
 #include "hiperf_client.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "utilities.h"
 
 namespace OHOS {
 namespace Developtools {
@@ -58,14 +59,29 @@ static bool IsNumeric(const std::string& str)
     return true;
 }
 
+static bool IsStringToIntSuccess(const std::string &str, int &val)
+{
+    char *endPtr = nullptr;
+    errno = 0;
+    long num = 0;
+    num = std::strtol(str.c_str(), &endPtr, 10);  // 10 : decimal scale
+    if (endPtr == str.c_str() || errno != 0 || num > INT_MAX || num < INT_MIN) {
+        HLOGE("get int failed, str: %s", str.c_str());
+        return false;
+    }
+    val = static_cast<int>(num);
+    return true;
+}
+
 static std::vector<int> StringSplitToInt(const std::string& text, char delimiter = ',')
 {
     std::vector<int> tokens;
     std::string token;
     std::istringstream tokenStream(text);
     while (std::getline(tokenStream, token, delimiter)) {
-        if (IsNumeric(token)) {
-            tokens.push_back(std::stoi(token));
+        int num = 0;
+        if (IsNumeric(token) && IsStringToIntSuccess(token, num)) {
+            tokens.push_back(num);
         }
     }
     return tokens;

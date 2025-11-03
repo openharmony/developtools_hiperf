@@ -392,13 +392,45 @@ bool IsStringToIntSuccess(const std::string &str, int &val)
     return true;
 }
 
-bool StringToUint64(const std::string &str, uint64_t &val, int base)
+bool StringToUint64(const std::string &str, uint64_t &val, const int base)
 {
+    if (!str.empty() && str[0] == '-') {
+        return false;
+    }
     char *endPtr = nullptr;
     errno = 0;
     uint64_t num = std::strtoull(str.c_str(), &endPtr, base);
     if (endPtr == str.c_str() || *endPtr != '\0' || errno != 0 || num > ULLONG_MAX || str.c_str()[0] == '-') {
         HIPERF_HILOGE(MODULE_DEFAULT, "get uint64 failed");
+        return false;
+    }
+    val = num;
+    return true;
+}
+
+bool StringToUnsignedLong(const std::string &str, unsigned long &val, const int base)
+{
+    if (!str.empty() && str[0] == '-') {
+        return false;
+    }
+    char *endPtr = nullptr;
+    errno = 0;
+    unsigned long num = std::strtoul(str.c_str(), &endPtr, base);
+    if (endPtr == str.c_str() || *endPtr != '\0' || errno != 0) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "string to unsigned long failed");
+        return false;
+    }
+    val = num;
+    return true;
+}
+
+bool StringToLongLong(const std::string &str, long long &val, const int base)
+{
+    char *endPtr = nullptr;
+    errno = 0;
+    long long num = std::strtoll(str.c_str(), &endPtr, base);
+    if (endPtr == str.c_str() || *endPtr != '\0' || errno != 0) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "string to long long failed");
         return false;
     }
     val = num;
@@ -695,6 +727,35 @@ bool IsRestarted(const std::string &appPackage)
     return false;
 }
 
+pid_t FindMatchingPidInProc(const std::string& basePath, const std::string& cmdlineSuffix,
+                            const std::string& appPackage)
+{
+    std::vector<std::string> subDirs = GetSubDirs(basePath);
+    for (const auto& subDir : subDirs) {
+        if (!IsDigits(subDir)) {
+            continue;
+        }
+        std::string fileName {basePath + subDir + cmdlineSuffix};
+        if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
+            unsigned long tempPid = 0;
+            if (!StringToUnsignedLong(subDir, tempPid)) {
+                HLOGE("[FindMatchingPidInProc] Invalid subDir: %s", subDir.c_str());
+#if defined(is_ohos) && is_ohos
+                HIPERF_HILOGE(MODULE_DEFAULT, "[FindMatchingPidInProc] Invalid subDir: %{public}s", subDir.c_str());
+#endif
+                continue;
+            }
+            HLOGD("[FindMatchingPidInProc]: get appid %d", static_cast<pid_t>(tempPid));
+#if defined(is_ohos) && is_ohos
+            HIPERF_HILOGD(MODULE_DEFAULT, "[FindMatchingPidInProc]: get appid %{public}d",
+                static_cast<pid_t>(tempPid));
+#endif
+            return static_cast<pid_t>(tempPid);
+        }
+    }
+    return -1;
+}
+
 pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const int checkAppMs,
                        const uint64_t waitAppTimeOut)
 {
@@ -704,17 +765,10 @@ pid_t GetAppPackagePid(const std::string &appPackage, const pid_t oldPid, const 
     const auto startTime = steady_clock::now();
     const auto endTime = startTime + std::chrono::seconds(waitAppTimeOut);
     do {
-        std::vector<std::string> subDirs = GetSubDirs(basePath);
-        for (const auto &subDir : subDirs) {
-            if (!IsDigits(subDir)) {
-                continue;
-            }
-            std::string fileName {basePath + subDir + cmdline};
-            if (IsSameCommand(ReadFileToString(fileName), appPackage)) {
-                res = std::stoul(subDir, nullptr);
-                HLOGD("[GetAppPackagePid]: get appid for %s is %d", appPackage.c_str(), res);
-                return res;
-            }
+        res = FindMatchingPidInProc(basePath, cmdline, appPackage);
+        if (res != -1) {
+            HLOGD("[GetAppPackagePid]: get appid %d", res);
+            return res;
         }
         std::this_thread::sleep_for(milliseconds(checkAppMs));
     } while (steady_clock::now() < endTime);
@@ -837,7 +891,13 @@ bool LittleMemory()
     std::string line;
     while (getline(file, line)) {
         if (line.find("MemTotal:") != std::string::npos) {
-            int memSize = stoi(line.substr(line.find(":") + 1));
+            int memSize = 0;
+            std::string memStr = line.substr(line.find(":") + 1);
+            std::string numericStr = ExtractNumericPrefix(memStr);
+            if (!IsStringToIntSuccess(numericStr, memSize)) {
+                HLOGE("[LittleMemory] get memSize failed");
+                return false;
+            }
             CHECK_TRUE(memSize >= (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE), true, 0, "");
         }
     }
@@ -1177,7 +1237,7 @@ bool GetStatusLineId(const std::string& line, uint32_t& target)
 
 bool GetUidFromPid(const pid_t& pid, uint32_t& ruid)
 {
-#if defined(is_ohso) && is_ohos || defined(HIPERF_UNITTEST)
+#if defined(is_ohos) && is_ohos
     std::string line;
     std::string procStatusPath = "/proc/" + std::to_string(pid) + "/status";
     std::ifstream fileStream(procStatusPath);
@@ -1206,7 +1266,7 @@ bool GetUidFromPid(const pid_t& pid, uint32_t& ruid)
 
 bool IsRootThread(const pid_t& pid)
 {
-#if defined(is_ohso) && is_ohos || defined(HIPERF_UNITTEST)
+#if defined(is_ohos) && is_ohos
     uint32_t ruid = UID_MAX;
     if (GetUidFromPid(pid, ruid)) {
         if (ruid == 0) {
@@ -1215,6 +1275,20 @@ bool IsRootThread(const pid_t& pid)
     }
 #endif
     return false;
+}
+
+std::string ExtractNumericPrefix(const std::string& str)
+{
+    size_t start = str.find_first_not_of(" \t");
+    if (start == std::string::npos) {
+        return "";
+    }
+    std::string trimmed = str.substr(start);
+    size_t end = trimmed.find_first_not_of("0123456789");
+    if (end != std::string::npos) {
+        trimmed = trimmed.substr(0, end);
+    }
+    return trimmed;
 }
 } // namespace HiPerf
 } // namespace Developtools

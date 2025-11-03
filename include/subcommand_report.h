@@ -36,6 +36,9 @@
 #endif
 #include "debug_logger.h"
 #include "option.h"
+#if defined(is_ohos) && is_ohos
+#include <perf_events.h>
+#endif
 #include "perf_event_record.h"
 #include "report.h"
 #include "report_json_file.h"

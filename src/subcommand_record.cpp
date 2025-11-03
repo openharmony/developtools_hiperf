@@ -802,19 +802,11 @@ pid_t SubCommandRecord::GetPidFromAppPackage(const pid_t oldPid, const uint64_t 
     const auto startTime = steady_clock::now();
     const auto endTime = startTime + std::chrono::seconds(waitAppTimeOut);
     do {
-        std::vector<std::string> subDirs = GetSubDirs(basePath);
-        for (const auto &subDir : subDirs) {
-            if (!IsDigits(subDir)) {
-                continue;
-            }
-            std::string fileName {basePath + subDir + cmdline};
-            if (IsSameCommand(ReadFileToString(fileName), appPackage_)) {
-                res = static_cast<pid_t>(std::stoul(subDir, nullptr));
-                HLOGD("[GetAppPackagePid]: get appPid for %s is %d", appPackage_.c_str(), res);
-                HIPERF_HILOGD(MODULE_DEFAULT, "[GetAppPackagePid] get appPid %{public}d for app",
-                    res);
-                return res;
-            }
+        res = FindMatchingPidInProc(basePath, cmdline, appPackage_);
+        if (res != -1) {
+            HLOGD("[GetAppPackagePid]: get appid %d", res);
+            HIPERF_HILOGD(MODULE_DEFAULT, "[GetAppPackagePid] get appid %{public}d", res);
+            return res;
         }
         std::this_thread::sleep_for(milliseconds(checkAppMs_));
     } while (steady_clock::now() < endTime && !g_callStop.load());
@@ -2555,7 +2547,12 @@ void SubCommandRecord::CollectRootPids()
             continue;
         }
 
-        pid_t pid = std::stoll(subDir);
+        long long val = 0;
+        if (!StringToLongLong(subDir, val)) {
+            HLOGE("[SetHM] Invalid subDir: %s", subDir.c_str());
+            continue;
+        }
+        pid_t pid = static_cast<pid_t>(val);
         if (pid != SYSMGR_PID && IsRootThread(pid)) {
             HandleRootProcess(pid);
         }

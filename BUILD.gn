@@ -380,11 +380,11 @@ config("proto_file_cpp_config") {
   include_dirs = [ proto_out_dir ]
   if ("$proto_out_dir" == "*src_test*") {
     include_dirs +=
-        [ "../../out/default/src_test/gen/developtools/hiperf/proto" ]
+        [ "../../out/standard/src_test/gen/developtools/hiperf/proto" ]
   } else if ("$proto_out_dir" == "*test*") {
-    include_dirs += [ "../../out/default/test/gen/developtools/hiperf/proto" ]
+    include_dirs += [ "../../out/standard/test/gen/developtools/hiperf/proto" ]
   } else {
-    include_dirs += [ "../../out/default/src/gen/developtools/hiperf/proto" ]
+    include_dirs += [ "../../out/standard/src/gen/developtools/hiperf/proto" ]
   }
 }
 
@@ -395,8 +395,8 @@ ohos_source_set("proto_file_cpp") {
 
   deps = [ ":hiperf_host_build_proto" ]
   external_deps = [
-    "protobuf:protobuf_lite_static",
     "c_utils:utils",
+    "protobuf:protobuf_lite_static",
   ]
   sources = proto_file_codegen
   public_configs = [ ":proto_file_cpp_config" ]
@@ -522,7 +522,7 @@ ohos_shared_library("hiperf_host_lib") {
   if (!is_ohos) {
     deps = [ ":hiperf_platform_host" ]
   }
-  
+
   output_name = "hiperf_report"
 
   subsystem_name = "developtools"
@@ -583,7 +583,8 @@ group("hiperf_target_all") {
     } else {
       deps = []
       if (!use_libfuzzer) {
-        if (!hiperf_independent_compilation && !ohos_indep_compiler_enable && !use_clang_coverage) {
+        if (!hiperf_independent_compilation && !ohos_indep_compiler_enable &&
+            !use_clang_coverage) {
           deps += [
             ":hiperf_host(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
             ":hiperf_host_lib(//build/toolchain/linux:clang_${host_cpu})",  # host_linux
