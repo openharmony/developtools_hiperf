@@ -614,8 +614,13 @@ void SubCommandDump::SetHM()
     if (isHM_) {
         pid_t devhost = -1;
         std::string str = reader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
-        if (IsNumeric(str)) {
-            devhost = std::stoll(str);
+        if (str != EMPTY_STRING && IsNumeric(str)) {
+            long long val = 0;
+            if (!StringToLongLong(str, val)) {
+                HLOGE("[SetHM] str %s has invalid characters", str.c_str());
+                return;
+            }
+            devhost = static_cast<pid_t>(val);
         }
         vr_.SetDevhostPid(devhost);
     }

@@ -1104,6 +1104,100 @@ HWTEST_F(UtilitiesTest, IsRootThread_InitProcess, TestSize.Level2)
     pid_t initPid = 1;
     EXPECT_TRUE(IsRootThread(initPid));
 }
+
+/**
+ * @tc.name: StringToUnsignedLong_AllCases
+ * @tc.desc: Test various cases for StringToUnsignedLong, covering valid and invalid scenarios
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringToUnsignedLong_AllCases, TestSize.Level2)
+{
+    unsigned long val;
+    // Valid cases (5)
+    EXPECT_TRUE(StringToUnsignedLong("0", val));
+    EXPECT_EQ(val, 0UL);
+
+    EXPECT_TRUE(StringToUnsignedLong("+12345", val));
+    EXPECT_EQ(val, 12345UL);
+
+    EXPECT_TRUE(StringToUnsignedLong("0x1a", val, 16));
+    EXPECT_EQ(val, 26UL);
+
+    EXPECT_TRUE(StringToUnsignedLong("1010", val, 2));
+    EXPECT_EQ(val, 10UL);
+
+    // Invalid cases (5)
+    EXPECT_FALSE(StringToUnsignedLong("", val));
+
+    EXPECT_FALSE(StringToUnsignedLong("123 ", val));
+
+    EXPECT_FALSE(StringToUnsignedLong("-456", val));
+
+    EXPECT_FALSE(StringToUnsignedLong("102", val, 2));
+}
+
+/**
+ * @tc.name: StringToLongLong_AllCases
+ * @tc.desc: Test various cases for StringToLongLong, covering valid and invalid scenarios
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringToLongLong_AllCases, TestSize.Level2)
+{
+    long long val;
+    // Valid cases (6)
+    EXPECT_TRUE(StringToLongLong("0", val));
+    EXPECT_EQ(val, 0LL);
+
+    EXPECT_TRUE(StringToLongLong("123456789012", val));
+    EXPECT_EQ(val, 123456789012LL);
+
+    EXPECT_TRUE(StringToLongLong("-9876543210", val));
+    EXPECT_EQ(val, -9876543210LL);
+
+    EXPECT_TRUE(StringToLongLong("0x1a3f", val, 16));
+    EXPECT_EQ(val, 6719LL);
+
+    EXPECT_TRUE(StringToLongLong("-10110", val, 2));
+    EXPECT_EQ(val, -22LL);
+
+    // Invalid cases (4)
+    EXPECT_FALSE(StringToLongLong("", val));
+
+    EXPECT_FALSE(StringToLongLong("123xyz", val));
+
+    EXPECT_FALSE(StringToLongLong("103", val, 2));
+}
+
+/**
+ * @tc.name: ExtractNumericPrefix_AllCases
+ * @tc.desc: Test various cases for ExtractNumericPrefix, covering valid and invalid scenarios
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ExtractNumericPrefix_AllCases, TestSize.Level2)
+{
+    EXPECT_EQ(ExtractNumericPrefix(""), "");
+
+    EXPECT_EQ(ExtractNumericPrefix(" 123456"), "123456");
+
+    EXPECT_EQ(ExtractNumericPrefix("123456 "), "123456");
+
+    EXPECT_EQ(ExtractNumericPrefix("123456  000"), "123456");
+
+    EXPECT_EQ(ExtractNumericPrefix("123456abc"), "123456");
+}
+
+/**
+ * @tc.name: FindMatchingPidInProc
+ * @tc.desc: Test cases for FindMatchingPidInProc to get init process pid
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, FindMatchingPidInProc, TestSize.Level2)
+{
+    std::string basePath {"/proc/"};
+    std::string cmdline {"/cmdline"};
+    std::string appPackageName {"init"};
+    EXPECT_EQ(FindMatchingPidInProc(basePath, cmdline, appPackageName), 1);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

@@ -353,6 +353,52 @@ bool PerfEvents::ParseEventName(const std::string &nameStr,
     return true;
 }
 
+bool PerfEvents::HandleTracePoint(const std::string& eventName, bool excludeUser,
+                                  bool excludeKernel, bool followGroup, bool& isPrint)
+{
+    if (traceConfigTable.empty()) {
+        LoadTracepointEventTypesFromSystem();
+    }
+    for (const auto& traceType : traceConfigTable) {
+        if (traceType.second == eventName) {
+            return AddEvent(PERF_TYPE_TRACEPOINT, traceType.first,
+                            excludeUser, excludeKernel, followGroup);
+        }
+    }
+    isPrint = true;
+    return false;
+}
+
+bool PerfEvents::HandleNonTracePoint(const std::string& eventName, bool excludeUser,
+                                     bool excludeKernel, bool followGroup, bool& isPrint)
+{
+    if (eventName == "arm_spe_0") {
+        u32 speType = GetSpeType();
+        if (speType == UINT_MAX) {
+            HLOGE("Failed to get SPE type.");
+            return false;
+        }
+        return AddSpeEvent(speType);
+    }
+
+    if (StringStartsWith(eventName, "0x") && eventName.length() <= MAX_HEX_EVENT_NAME_LENGTH &&
+        IsHexDigits(eventName)) {
+        uint64_t config = 0;
+        if (!StringToUint64(eventName, config, NUMBER_FORMAT_HEX_BASE)) {
+            HLOGE("[AddEvent] eventName %s has invalid characters", eventName.c_str());
+            return false;
+        }
+        return AddEvent(PERF_TYPE_RAW, config, excludeUser, excludeKernel, followGroup);
+    }
+
+    auto [find, typeId, configId] = GetStaticConfigId(eventName);
+    if (find) {
+        return AddEvent(typeId, configId, excludeUser, excludeKernel, followGroup);
+    }
+    isPrint = true;
+    return false;
+}
+
 bool PerfEvents::AddEvent(const std::string &eventString, const bool followGroup)
 {
     std::string eventName;
@@ -371,38 +417,20 @@ bool PerfEvents::AddEvent(const std::string &eventString, const bool followGroup
     }
 
     // find if
+    bool isPrint = false;
     if (isTracePointEvent) {
-        if (traceConfigTable.empty()) {
-            LoadTracepointEventTypesFromSystem();
-        }
-        for (auto traceType : traceConfigTable) {
-            if (traceType.second == eventName) {
-                return AddEvent(PERF_TYPE_TRACEPOINT, traceType.first, excludeUser, excludeKernel,
-                                followGroup);
-            }
+        if (HandleTracePoint(eventName, excludeUser, excludeKernel, followGroup, isPrint)) {
+            return true;
         }
     } else {
-        if (eventName == "arm_spe_0") {
-            u32 speType = GetSpeType();
-            if (speType == UINT_MAX) {
-                HLOGE("Failed to get SPE type.");
-                return false;
-            }
-            return AddSpeEvent(speType);
-        }
-        if (StringStartsWith(eventName, "0x")
-            && eventName.length() <= MAX_HEX_EVENT_NAME_LENGTH && IsHexDigits(eventName)) {
-            return AddEvent(PERF_TYPE_RAW, std::stoull(eventName, nullptr, NUMBER_FORMAT_HEX_BASE),
-                            excludeUser, excludeKernel, followGroup);
-        } else {
-            auto [find, typeId, configId] = GetStaticConfigId(eventName);
-            if (find) {
-                return AddEvent(typeId, configId, excludeUser, excludeKernel, followGroup);
-            }
+        if (HandleNonTracePoint(eventName, excludeUser, excludeKernel, followGroup, isPrint)) {
+            return true;
         }
     }
 
-    printf("%s event is not supported by the kernel.\n", eventName.c_str());
+    if (isPrint) {
+        printf("%s event is not supported by the kernel.\n", eventName.c_str());
+    }
     return false;
 }
 
@@ -922,11 +950,11 @@ void PerfEvents::LoadTracepointEventTypesFromSystem()
                     };
                     // clang-format on
                     __u64 id {0};
-                    try {
-                        id = std::stoul(idStr, nullptr);
-                    } catch (...) {
+                    uint64_t num = 0;
+                    if (!StringToUint64(idStr, num)) {
                         continue;
                     }
+                    id = num;
                     if (isHM_ && id < MIN_HM_TRACEPOINT_EVENT_ID) {
                         continue;
                     }

@@ -35,11 +35,11 @@ PROTO_PATH="../../../binarys/third_party/protobuf/innerapis/protoc/clang_x64/lib
 echo PROTO_PATH $PROTO_PATH
 if [ -e "$PROTO_PATH" ]; then
     if [[ $(pwd) == *src_test* ]]; then
-        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/default/src_test/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
+        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/standard/src_test/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
     elif [[ $(pwd) == *test* ]]; then
-        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/default/test/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
+        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/standard/test/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
     else
-        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/default/src/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
+        cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/standard/src/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
     fi
     echo $cmd
     $cmd

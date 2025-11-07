@@ -405,7 +405,7 @@ void SubCommandReport::LoadEventDesc()
 
 void SubCommandReport::LoadAttrSection()
 {
-#if defined(is_ohso) && is_ohos
+#if defined(is_ohos) && is_ohos
     std::vector<AttrWithId> attrIds = recordFileReader_->GetAttrSection();
     for (size_t i = 0; i < attrIds.size(); ++i) {
         const AttrWithId &fileAttr = attrIds[i];
@@ -640,7 +640,12 @@ void SubCommandReport::SetHM()
         pid_t devhost = -1;
         std::string str = recordFileReader_->GetFeatureString(FEATURE::HIPERF_HM_DEVHOST);
         if (str != EMPTY_STRING && IsNumeric(str)) {
-            devhost = std::stoll(str);
+            long long val = 0;
+            if (!StringToLongLong(str, val)) {
+                HLOGE("[SetHM] str %s has invalid characters", str.c_str());
+                return;
+            }
+            devhost = static_cast<pid_t>(val);
         }
         GetReport().virtualRuntime_.SetDevhostPid(devhost);
     }
