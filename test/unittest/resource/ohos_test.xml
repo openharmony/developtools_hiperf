@@ -16,6 +16,7 @@
 <configuration ver="2.0">
     <target name="hiperf_unittest">
         <preparer>
+            <option name="push" value="developtools/hiperf/hiperf_test_demo -> /data/test/" src="out"/>
             <option name="push" value="testdata/dummpfile -> /data/test/resource/testdata/" src="res"/>
             <option name="push" value="testdata/empytfile -> /data/test/resource/testdata/" src="res"/>
 

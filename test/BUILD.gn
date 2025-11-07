@@ -95,11 +95,19 @@ config("hiperf_test_config") {
   include_dirs = [ "${hiperf_path}/test/unittest/common/native/include" ]
 }
 
+ohos_executable("hiperf_test_demo") {
+  cflags = [ "-O0" ]
+  sources = [ "unittest/common/native/hiperf_test_demo.cpp" ]
+  subsystem_name = "developtools"
+  part_name = "hiperf"
+}
+
 ohos_unittest("hiperf_unittest") {
   configs = [ ":hiperf_test_config" ]
   module_out_path = module_output_path
   resource_config_file = "unittest/resource/ohos_test.xml"
   deps = [
+    ":hiperf_test_demo",
     "${hiperf_path}/interfaces/innerkits/native/hiperf_client:hiperf_client_static",
     "${hiperf_path}/interfaces/innerkits/native/hiperf_local:hiperf_local",
   ]

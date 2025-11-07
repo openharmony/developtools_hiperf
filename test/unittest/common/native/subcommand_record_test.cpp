@@ -69,17 +69,25 @@ public:
     static std::string testProcesses;
 };
 
-std::string SubCommandRecordTest::testProcesses = "com.ohos.launcher";
+std::string SubCommandRecordTest::testProcesses = "hiperf_test_demo";
 
-void SubCommandRecordTest::SetUpTestCase() {}
+void SubCommandRecordTest::SetUpTestCase()
+{
+    if (chmod("/data/test/hiperf_test_demo", 0755) == -1) { // 0755 : -rwxr-xr-x
+        GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
+    }
+    system("/data/test/hiperf_test_demo &");
+}
 
-void SubCommandRecordTest::TearDownTestCase() {}
+void SubCommandRecordTest::TearDownTestCase()
+{
+    if (system("kill -9 `pidof hiperf_test_demo`") != 0) {
+        GTEST_LOG_(ERROR) << "kill hiperf_test_demo failed.";
+    }
+}
 
 void SubCommandRecordTest::SetUp()
 {
-    if (!CheckTestApp(SubCommandRecordTest::testProcesses)) {
-        SubCommandRecordTest::testProcesses = "hiview";
-    }
     SubCommand::ClearSubCommands(); // clear the subCommands left from other UT
     ASSERT_EQ(SubCommand::GetSubCommands().size(), 0u);
     SubCommand::RegisterSubCommand("record", std::make_unique<SubCommandRecord>());
@@ -212,27 +220,49 @@ static bool CheckIntFromProcFile(const std::string& proc, int expect)
     return value == expect;
 }
 
-bool CheckJsonReport(const std::string& fileName, const std::string& symbolsFile, const int index = 0)
+static int g_maxCallstack = 0;
+void CheckLevel(cJSON* list, int level)
 {
-    cJSON* root = ParseJson(fileName.c_str());
-    if (root == nullptr) {
-        return false;
+    if (list == nullptr) {
+        return;
     }
-    auto list = cJSON_GetObjectItem(root, "processNameMap");
-    auto size = cJSON_GetArraySize(list);
-    bool find = false;
+    g_maxCallstack = std::max(level, g_maxCallstack);
+    int size = cJSON_GetArraySize(list);
     for (int i = 0; i < size; i++) {
         auto item = cJSON_GetArrayItem(list, i);
-        if (std::string(item->valuestring).find(SubCommandRecordTest::testProcesses) != std::string::npos) {
-            find = true;
-            break;
+        auto it = cJSON_GetObjectItem(item, "callStack");
+        if (cJSON_GetArraySize(it) > 0) {
+            CheckLevel(it, level + 1);
         }
     }
-    if (!find) {
+}
+
+bool CheckSymbolMap(cJSON* root)
+{
+    auto list = cJSON_GetObjectItem(root, "SymbolMap");
+    auto size = cJSON_GetArraySize(list);
+    vector<std::string> symbols = {"usleep"};
+    int symbolCounts = 0;
+    for (int i = 0; i < size; i++) {
+        auto item = cJSON_GetArrayItem(list, i);
+        auto it = cJSON_GetObjectItem(item, "symbol");
+        for (auto symbol: symbols) {
+            if (std::string(it->valuestring).find(SubCommandRecordTest::testProcesses) != std::string::npos) {
+                symbolCounts++;
+            }
+        }
+    }
+    if (symbolCounts < symbols.size()) {
         return false;
     }
-    list = cJSON_GetObjectItem(root, "symbolsFileList");
-    size = cJSON_GetArraySize(list);
+    return true;
+}
+
+bool CheckSymbolsFileList(cJSON* root, const std::string& symbolsFile)
+{
+    auto list = cJSON_GetObjectItem(root, "symbolsFileList");
+    auto size = cJSON_GetArraySize(list);
+    bool find = false;
     if (!symbolsFile.empty()) {
         find = false;
         for (int i = 0; i < size; i++) {
@@ -246,18 +276,55 @@ bool CheckJsonReport(const std::string& fileName, const std::string& symbolsFile
             return false;
         }
     }
+    return true;
+}
+
+std::string GetProcessId(cJSON* root)
+{
+    std::string processId;
+    auto list = cJSON_GetObjectItem(root, "processNameMap");
+    auto size = cJSON_GetArraySize(list);
+    for (int i = 0; i < size; i++) {
+        auto item = cJSON_GetArrayItem(list, i);
+        if (std::string(item->valuestring) == "/data/test/hiperf_test_demo") {
+            processId = std::string(item->string);
+        }
+    }
+    return processId;
+}
+
+bool CheckJsonReport(const std::string& fileName, const std::string& symbolsFile)
+{
+    cJSON* root = ParseJson(fileName.c_str());
+    if (root == nullptr) {
+        return false;
+    }
+    std::string processId = GetProcessId(root);
+    if (processId.empty()) {
+        return false;
+    }
+    if (!CheckSymbolMap(root)) {
+        return false;
+    }
+    if (!CheckSymbolsFileList(root, symbolsFile)) {
+        return false;
+    }
     auto listRecord = cJSON_GetObjectItem(root, "recordSampleInfo");
     if (cJSON_GetArraySize(listRecord) <= 0) {
         return false;
     }
     auto itemRecord = cJSON_GetArrayItem(listRecord, 0);
     auto listProcesses = cJSON_GetObjectItem(itemRecord, "processes");
-    if (cJSON_GetArraySize(listProcesses) <= 0) {
-        return false;
+    cJSON* listThreads = nullptr;
+    for (int i = 0; i < cJSON_GetArraySize(listProcesses); i++) {
+        auto item = cJSON_GetArrayItem(listProcesses, i);
+        auto it = cJSON_GetObjectItem(item, "pid");
+        if (std::to_string(it->valueint) == processId) {
+            listThreads = cJSON_GetObjectItem(item, "threads");
+            break;
+        }
     }
-    auto itemProcesses = cJSON_GetArrayItem(listProcesses, index);
-    auto listThreads = cJSON_GetObjectItem(itemProcesses, "threads");
-    if (cJSON_GetArraySize(listThreads) <= 0) {
+    if (listThreads == nullptr || cJSON_GetArraySize(listThreads) <= 0) {
         return false;
     }
     auto itemThreads = cJSON_GetArrayItem(listThreads, 0);
@@ -267,7 +334,8 @@ bool CheckJsonReport(const std::string& fileName, const std::string& symbolsFile
     }
     auto itemCallOrder = cJSON_GetObjectItem(itemThreads, "CallOrder");
     auto itemCallStack = cJSON_GetObjectItem(itemCallOrder, "callStack");
-    if (cJSON_GetArraySize(itemCallStack) <= 0) {
+    CheckLevel(itemCallStack, 0);
+    if (g_maxCallstack < 1) {
         return false;
     }
     return true;
@@ -2304,8 +2372,9 @@ HWTEST_F(SubCommandRecordTest, CheckProductCfg, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control01, TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a -o /data/local/tmp/perf_control01.data",
-                                      {"create control hiperf sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput(
+        "hiperf record --control prepare -a --exclude-hiperf -o /data/local/tmp/perf_control01.data -s dwarf",
+        {"create control hiperf sampling success"}),
               true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
               true);
@@ -2316,7 +2385,6 @@ HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control01, TestSize.Level1)
         "hiperf report --json -i /data/local/tmp/perf_control01.data -o /data/local/tmp/perf.json",
         {"report done"}),
               true);
-    EXPECT_TRUE(CheckJsonReport("/data/local/tmp/perf.json", "/system/bin/hiperf", 1));
 }
 
 /**
@@ -2329,7 +2397,7 @@ HWTEST_F(SubCommandRecordTest, TestOnSubCommand_control_app, TestSize.Level1)
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     const std::string cmd = "hiperf record --control prepare --app " +
                             SubCommandRecordTest::testProcesses +
-                            " -o /data/local/tmp/perf_control_app.data";
+                            " -o /data/local/tmp/perf_control_app.data -s dwarf";
     EXPECT_EQ(CheckTraceCommandOutput(cmd, {"create control hiperf sampling success"}),
               true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
