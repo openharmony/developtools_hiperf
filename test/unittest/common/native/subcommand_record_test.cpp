@@ -2769,6 +2769,15 @@ HWTEST_F(SubCommandRecordTest, UseJsvm, TestSize.Level2)
     cmd.ParseCallStackOption({"dwarf"});
     EXPECT_TRUE(SymbolsFile::needJsvm_);
 }
+/**
+ * @tc.name: SetSelectGroups
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandRecordTest, SetSelectGroups, TestSize.Level2)
+{
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 2 -a -g hw-cpu-cycles,hw-instructions --dumpoptions",
+        {"hw-cpu-cycles,hw-instructions"}), true);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

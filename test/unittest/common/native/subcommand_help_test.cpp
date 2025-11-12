@@ -147,6 +147,30 @@ HWTEST_F(SubCommandHelpTest, RegisterSubCommandHelp, TestSize.Level1)
     std::string help = "help";
     EXPECT_TRUE(SubCommand::FindSubCommand(help) != nullptr);
 }
+/**
+ * @tc.name: TestOnHelpWithMainOptions
+ * @tc.desc: Test that main options are printed correctly in help
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandHelpTest, TestOnHelpWithMainOptions, TestSize.Level1)
+{
+    const std::string testOption = "--test-option";
+    const std::string testHelp = "Test help message";
+    Option::RegisterMainOption(testOption, testHelp, [](const std::vector<std::string>&) { return true; });
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+
+    std::vector<std::string> args;
+    subCommandHelp.OnHelp(args);
+
+    std::string output = stdoutRecord.Stop();
+
+    EXPECT_NE(output.find(testOption), std::string::npos);
+    EXPECT_NE(output.find(testHelp), std::string::npos);
+
+    Option::ClearMainOptions();
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
