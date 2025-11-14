@@ -361,7 +361,13 @@ bool PerfFileReader::Read(char *buf, const uint64_t offset, const size_t len)
         return false;
     }
 
+#if defined(is_ohos) && is_ohos
+    char errInfo[ERRINFOLEN] = { 0 };
+    strerror_r(errno, errInfo, ERRINFOLEN);
+    CHECK_TRUE(fread(buf, len, 1, fp_) == 1, false, LOG_TYPE_PRINTF, "failed to read file: %d:%s", errno, errInfo);
+#else
     CHECK_TRUE(fread(buf, len, 1, fp_) == 1, false, LOG_TYPE_PRINTF, "failed to read file: %d", errno);
+#endif
     HLOGM("offset %" PRIx64 " len %zu buf %x %x %x %x", offset, len, buf[0], buf[1], buf[2],
           buf[3]);
     return true;

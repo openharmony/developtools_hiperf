@@ -138,7 +138,13 @@ bool SubCommandDump::PrepareDumpOutput()
     std::string resolvedPath = CanonicalizeSpecPath(outputFilename_.c_str());
     g_outputDump = fopen(resolvedPath.c_str(), "w");
     if (g_outputDump == nullptr) {
+#if defined(is_ohos) && is_ohos
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        printf("unable open file to '%s' because '%d:%s'\n", outputFilename_.c_str(), errno, errInfo);
+#else
         printf("unable open file to '%s' because '%d'\n", outputFilename_.c_str(), errno);
+#endif
         return false;
     }
     printf("dump result will save at '%s'\n", outputFilename_.c_str());

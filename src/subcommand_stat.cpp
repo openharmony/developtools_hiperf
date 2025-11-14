@@ -761,7 +761,7 @@ bool SubCommandStat::CreateFifoServer()
         return false;
     }
     CheckIpcBeforeFork();
-    
+
     pid_t pid = fork();
     allowIpc_ = true;
     if (pid == -1) {
@@ -1260,7 +1260,9 @@ bool SubCommandStat::CheckOutPutFile()
     std::string resolvedPath = CanonicalizeSpecPath(outputFilename_.c_str());
     filePtr_ = fopen(resolvedPath.c_str(), "w");
     if (filePtr_ == nullptr) {
-        printf("unable open file to '%s' because '%d'\n", outputFilename_.c_str(), errno);
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        printf("unable open file to '%s' because '%d:%s'\n", outputFilename_.c_str(), errno, errInfo);
         return false;
     }
     return true;
