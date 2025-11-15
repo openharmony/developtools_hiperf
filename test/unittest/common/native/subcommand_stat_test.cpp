@@ -2634,7 +2634,7 @@ HWTEST_F(SubCommandStatTest, CheckPathErrInfo, TestSize.Level2)
         sleep(1);
     } else {
         struct stat fileInfo;
-        if(stat(invalidFilePath.c_str(), &fileInfo) != 0) {
+        if (stat(invalidFilePath.c_str(), &fileInfo) != 0) {
             string headString = "because '";
             size_t becausePos = stringOut.find(headString);
             EXPECT_NE(becausePos, std::string::npos);
