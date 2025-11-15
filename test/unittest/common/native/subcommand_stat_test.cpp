@@ -2613,6 +2613,43 @@ HWTEST_F(SubCommandStatTest, CheckNumericConfigRanges02, TestSize.Level2)
     statCmd.timeReportMs_ = -1;
     EXPECT_FALSE(statCmd.CheckNumericConfigRanges());
 }
+
+HWTEST_F(SubCommandStatTest, CheckPathErrInfo, TestSize.Level2)
+{
+    ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
+    const std::string invalidFilePath = "/data/invalid_stat_path/stat.txt";
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    std::string cmdString = "stat -a --control prepare -o " + invalidFilePath;
+    bool ret = Command::DispatchCommand(cmdString);
+    sleep(1);
+    std::string stringOut = stdoutRecord.Stop();
+
+    if (ret) {
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
+            {"start counting success"}), true);
+        sleep(1);
+        EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
+            {"stop counting success"}), true);
+        sleep(1);
+    } else {
+        struct stat fileInfo;
+        if(stat(invalidFilePath.c_str(), &fileInfo) != 0) {
+            string headString = "because '";
+            size_t becausePos = stringOut.find(headString);
+            EXPECT_NE(becausePos, std::string::npos);
+            std::string errString= stringOut.substr(becausePos + headString.size());
+
+            std::stringstream ss(errString);
+            int errNumber = 0;
+            ss >> errNumber;
+            EXPECT_NE(errNumber, 0);
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errNumber, errInfo, ERRINFOLEN);
+            EXPECT_TRUE(errString.find(errInfo) != std::string::npos);
+        }
+    }
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
