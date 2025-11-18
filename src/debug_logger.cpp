@@ -274,7 +274,13 @@ bool DebugLogger::OpenLog(const std::string &tempLogPath, const std::string &fla
         file_ = fopen(resolvedPath.c_str(), "w");
     }
     if (file_ == nullptr) {
+#if defined(is_ohos) && is_ohos
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        fprintf(stdout, "unable save log file to '%s' because '%d:%s'\n", logPath_.c_str(), errno, errInfo);
+#else
         fprintf(stdout, "unable save log file to '%s' because '%d'\n", logPath_.c_str(), errno);
+#endif
         return false;
     } else {
         fseek(file_, 0, SEEK_SET);

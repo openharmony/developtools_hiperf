@@ -567,7 +567,13 @@ bool SubCommandReport::PrepareOutput()
         std::string resolvedPath = CanonicalizeSpecPath(reportFile_.c_str());
         output_ = fopen(resolvedPath.c_str(), "w");
         if (output_ == nullptr) {
+#if defined(is_ohos) && is_ohos
+            char errInfo[ERRINFOLEN] = { 0 };
+            strerror_r(errno, errInfo, ERRINFOLEN);
+            printf("unable open file to '%s' because '%d:%s'\n", reportFile_.c_str(), errno, errInfo);
+#else
             printf("unable open file to '%s' because '%d'\n", reportFile_.c_str(), errno);
+#endif
             return false;
         } else {
             printf("report will save at '%s'\n", reportFile_.c_str());
