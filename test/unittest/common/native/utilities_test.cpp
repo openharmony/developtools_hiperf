@@ -932,7 +932,7 @@ HWTEST_F(UtilitiesTest, IsValidOutPathErr, TestSize.Level2)
  * @tc.desc:
  * @tc.type: FUNC
  */
-HWTEST_F(SubCommandRecordTest, CheckHiperflogGroup, TestSize.Level2)
+HWTEST_F(UtilitiesTest, CheckHiperflogGroup, TestSize.Level2)
 {
     std::string filePath = "/data/log/hiperflog";
     struct stat statbuf;
