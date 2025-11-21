@@ -928,6 +928,20 @@ HWTEST_F(UtilitiesTest, IsValidOutPathErr, TestSize.Level2)
 }
 
 /**
+ * @tc.name: CheckHiperflogGroup
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CheckHiperflogGroup, TestSize.Level2)
+{
+    std::string filePath = "/data/log/hiperflog";
+    struct stat statbuf;
+    EXPECT_EQ(stat(filePath.c_str(), &statbuf), 0);
+    gid_t logGid = 1007;
+    EXPECT_EQ(statbuf.st_gid, logGid);
+}
+
+/**
  * @tc.name: StringToIntTest
  * @tc.desc: Test StringToUint64 function.
  * @tc.type: FUNC
@@ -1009,13 +1023,13 @@ HWTEST_F(UtilitiesTest, IsExistDebugByPidInvalidPidNegative, TestSize.Level2)
 {
     std::vector<pid_t> pids = {-1};
     std::string err;
-    
+
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    
+
     bool result = IsExistDebugByPid(pids, err);
     std::string output = stdoutRecord.Stop();
-    
+
     EXPECT_FALSE(result);
     EXPECT_EQ(err, "Invalid -p value '-1', the pid should be larger than 0\n");
     EXPECT_NE(output.find("Invalid -p value '-1', the pid should be larger than 0"), std::string::npos);
