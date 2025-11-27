@@ -145,7 +145,7 @@ bool PerfFileReader::ReadAttrSection()
     }
     CHECK_TRUE(header_.attrSize != 0, false, 0, "");
     CHECK_TRUE(header_.attrSize <= THOUSANDS, false, 1, "attr size exceeds 1000");
-    int attrCount = header_.attrs.size / header_.attrSize;
+    size_t attrCount = header_.attrs.size / header_.attrSize;
     CHECK_TRUE(attrCount != 0, false, 1, "no attr in file");
     if (fseek(fp_, header_.attrs.offset, SEEK_SET) != 0) {
         HLOGE("fseek() failed");
