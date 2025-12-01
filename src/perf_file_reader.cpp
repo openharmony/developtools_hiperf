@@ -151,7 +151,7 @@ bool PerfFileReader::ReadAttrSection()
         HLOGE("fseek() failed");
         return false;
     }
-    for (int i = 0; i < attrCount; ++i) {
+    for (size_t i = 0; i < attrCount; ++i) {
         std::vector<char> buf(header_.attrSize);
         CHECK_TRUE(Read(buf.data(), buf.size()), false, 0, "");
         // size of perf_event_attr change between different linux kernel versions.
