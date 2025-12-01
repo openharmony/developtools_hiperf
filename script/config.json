@@ -1,0 +1,10 @@
+{
+    "filter_rules": [
+        {
+            "filter_str": ["v8::", "Builtins_"],
+            "new_lib_name": "/system/lib64/libarkweb_v8.so",
+            "source_lib_name": "libarkweb_engine.so"
+        }
+    ],
+    "merge_pref_list": ["OS_FFRT"]
+}
