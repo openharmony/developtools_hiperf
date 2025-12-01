@@ -722,7 +722,7 @@ bool Client::SendCommandAndWait(const std::string &cmd)
     HIPERF_HILOGI(MODULE_CPP_API,
                   "Client:%" HILOG_PUBLIC "s -> %" HILOG_PUBLIC "d : %" HILOG_PUBLIC "zd\n",
                   cmd.c_str(), clientToServerFd_, size);
-    if (size >=0 && static_cast<size_t>(size) == cmd.size()) {
+    if (size >= 0 && static_cast<size_t>(size) == cmd.size()) {
         return WaitCommandReply();
     } else {
         return false;
