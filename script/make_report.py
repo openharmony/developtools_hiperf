@@ -35,7 +35,7 @@ def filter_and_move_symbols(data, config_file):
     for rule in filter_rules:
         filter_str_list = rule['filter_str']
         new_lib_name = rule['new_lib_name']
-        source_lib_name = rule['soure_lib_name']
+        source_lib_name = rule['source_lib_name']
 
         # 获取新库的索引
         new_index = new_lib_indices[new_lib_name]
