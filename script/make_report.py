@@ -21,6 +21,21 @@ from hiperf_utils import get_lib
 from hiperf_utils import dir_check
 from hiperf_utils import file_check
 
+"""
+配置项说明：
+filter_rules: 过滤规则，包含：
+    filter_str: 表示需要迁移函数包含的字段
+    new_lib_name: 新库名称
+    source_lib_name: 要拆分的源库名称
+示例：
+"filter_rules": [
+    {
+        "filter_str": ["v8::", "Builtins_"],
+        "new_lib_name": "/system/lib64/libarkweb_v8.so",
+        "source_lib_name": "libarkweb_engine.so"
+    }
+],
+"""
 def filter_and_move_symbols(data, config_file):
     # 读取规则
     filter_rules = config_file['filter_rules']
@@ -132,9 +147,12 @@ def get_used_binaries(perf_data, report_file, local_lib_dir, html_template):
 
     with open('json.txt', 'r') as f:
         data = json.load(f)
-    with open('config.json', encoding="utf8") as f:
-        config_file = json.load(f)
-    data = filter_and_move_symbols(data, config_file)
+    if os.path.exists("config.json"):
+        with open('config.json', encoding="utf8") as f:
+            config_file = json.load(f)
+            data = filter_and_move_symbols(data, config_file)
+    else:
+        print(f"config.json文件不存在")
 
     with open('json.txt', 'r', errors='ignore') as json_file:
         all_json = json_file.read()
