@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import json
 import os
 import sys
 import time
@@ -34,7 +35,7 @@ filter_rules: 过滤规则，包含：
         "new_lib_name": "/system/lib64/libarkweb_v8.so",
         "source_lib_name": "libarkweb_engine.so"
     }
-],
+]
 """
 def filter_and_move_symbols(data, config_file):
     # 读取规则
@@ -145,12 +146,14 @@ def get_used_binaries(perf_data, report_file, local_lib_dir, html_template):
                              'json.txt'.encode("utf-8"))
     time.sleep(2)
 
-    with open('json.txt', 'r') as f:
-        data = json.load(f)
     if os.path.exists("config.json"):
+        with open('json.txt', 'r') as f:
+            data = json.load(f)
         with open('config.json', encoding="utf8") as f:
             config_file = json.load(f)
             data = filter_and_move_symbols(data, config_file)
+        with open('json.txt', 'w') as f:
+            json.dump(data, f)
     else:
         print(f"config.json文件不存在")
 
