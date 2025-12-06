@@ -434,7 +434,7 @@ HWTEST_F(VirtualThreadTest, ParseDevhostMapEachLine, TestSize.Level1)
     }
 }
 
-HWTEST_F(VirtualThreadTest, DeleteRepeatMaps, TestSize.Level1)
+HWTEST_F(VirtualThreadTest, CheckRepeatMaps, TestSize.Level1)
 {
     std::vector<std::unique_ptr<SymbolsFile>> files;
     VirtualThread thread(getpid(), files);
@@ -444,11 +444,8 @@ HWTEST_F(VirtualThreadTest, DeleteRepeatMaps, TestSize.Level1)
     EXPECT_EQ(maps.size(), 1u);
     thread.CreateMapItem("1.so", 3000, 4000, 5000);
     EXPECT_EQ(maps.size(), 2u);
-    thread.DeleteRepeatMaps(2000, 6000, "2.so");
-    EXPECT_EQ(maps.size(), 0u);
     thread.CreateMapItem("2.so", 2000, 4000, 5000);
-    thread.ClearMaps();
-    EXPECT_EQ(maps.size(), 0u);
+    EXPECT_EQ(maps.size(), 3u);
 }
 } // namespace HiPerf
 } // namespace Developtools

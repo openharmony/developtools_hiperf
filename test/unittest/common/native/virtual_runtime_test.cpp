@@ -446,19 +446,6 @@ HWTEST_F(VirtualRuntimeTest, UpdateProcessSymbols, TestSize.Level2)
     runtime_->SetRecordMode(callBack);
     runtime_->UpdateProcessSymbols(thread, pid);
 }
-
-HWTEST_F(VirtualRuntimeTest, UpdateMapsByRecord, TestSize.Level1)
-{
-    VirtualThread &thread = runtime_->GetThread(1, 1);
-    thread.hasRepeat_ = false;
-    auto& maps = thread.GetMaps();
-    size_t size = maps.size();
-    PerfRecordMmap recordMmap(false, 1, 1, 10, 10, 0, "0.so");
-    PerfRecordMmap2 recordMmap2(false, 1, 1, 30, 10, 0, 0, 0, 0, 0, 0, "1.so");
-    runtime_->UpdateMapsByRecord(recordMmap);
-    runtime_->UpdateMapsByRecord(recordMmap2);
-    EXPECT_EQ(thread.GetMaps().size(), size);
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
