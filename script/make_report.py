@@ -52,6 +52,9 @@ def filter_and_move_symbols(data, config_file):
         filter_str_list = rule['filter_str']
         new_lib_name = rule['new_lib_name']
         source_lib_name = rule['source_lib_name']
+        if len(filter_str_list) == 0 or new_lib_name == '' or source_lib_name == '':
+            print(f"过滤规则不符合要求，存在空内容")
+            return data
 
         # 获取新库的索引
         new_index = new_lib_indices[new_lib_name]
