@@ -22,22 +22,23 @@ from hiperf_utils import get_lib
 from hiperf_utils import dir_check
 from hiperf_utils import file_check
 
-"""
-配置项说明：
-filter_rules: 过滤规则，包含：
+
+def filter_and_move_symbols(data, config_file):
+    """
+    配置项说明：
+    filter_rules: 过滤规则，包含：
     filter_str: 表示需要迁移函数包含的字段
     new_lib_name: 新库名称
     source_lib_name: 要拆分的源库名称
-示例：
-"filter_rules": [
-    {
-        "filter_str": ["v8::", "Builtins_"],
-        "new_lib_name": "/system/lib64/libarkweb_v8.so",
-        "source_lib_name": "libarkweb_engine.so"
-    }
-]
-"""
-def filter_and_move_symbols(data, config_file):
+    示例：
+    "filter_rules": [
+        {
+            "filter_str": ["v8::", "Builtins_"],
+            "new_lib_name": "/system/lib64/libarkweb_v8.so",
+            "source_lib_name": "libarkweb_engine.so"
+        }
+    ]
+    """
     # 读取规则
     filter_rules = config_file['filter_rules']
     new_lib_indices = {}
@@ -138,6 +139,7 @@ def filter_and_move_symbols(data, config_file):
                         if new_lib_obj['functions']:
                             libs.append(new_lib_obj)
     return data
+
 
 def get_used_binaries(perf_data, report_file, local_lib_dir, html_template):
     if local_lib_dir:
