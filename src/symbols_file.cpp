@@ -1632,6 +1632,11 @@ uint64_t SymbolsFile::GetVaddrInSymbols(uint64_t ip, uint64_t mapStart, uint64_t
     return ip;
 }
 
+uint64_t SymbolsFile::GetVaddrByLoadBase(uint64_t ip, uint64_t loadBase) const
+{
+    return ip - loadBase;
+}
+
 void SymbolsFile::AddSymbol(DfxSymbol symbol)
 {
     symbolsLoaded_ = true;

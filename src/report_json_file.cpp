@@ -49,8 +49,10 @@ void ReportJsonFile::OutputJsonFunctionMap(FILE *output)
 
         for (const auto& [libId, funcMap] : functionMap_) {
             for (const auto& [_, reportFuncMapItem] : funcMap) {
-                OutputJsonPair(output, reportFuncMapItem.reportFuncId_, reportFuncMapItem, first);
-                first = false;
+                if (!reportFuncMapItem.hiddenFlag) {
+                    OutputJsonPair(output, reportFuncMapItem.reportFuncId_, reportFuncMapItem, first);
+                    first = false;
+                }
             }
         }
 
@@ -73,6 +75,18 @@ void ReportJsonFile::ProcessSymbolsFiles(
         }
         symbolsFileIt++;
     }
+}
+
+void ReportJsonFile::SupplementSymbolsFiles(
+    const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
+{
+    HLOGE("libsize old %zu", libList_.size());
+    for (size_t i = libList_.size(); i < symbolsFiles.size(); ++i) {
+        size_t libId = libList_.size();
+        libList_.emplace_back(symbolsFiles[i]->filePath_);
+        HLOGE("add new id success %zu, path:%s", libId, libList_[libId].data());
+    }
+    HLOGE("libsize new %zu", libList_.size());
 }
 
 void ReportJsonFile::UpdateCallNodeEventCount()
@@ -117,6 +131,20 @@ int ReportJsonFile::GetFunctionID(const int libId, const std::string &function)
     return funcMapIt->second.reportFuncId_;
 }
 
+void ReportJsonFile::HiddenFunctionInLib(const int libId, const std::string &function)
+{
+    auto functionMapIt = functionMap_.find(libId);
+    if (functionMapIt == functionMap_.end()) {
+        return;
+    }
+    auto funcMapIt = functionMapIt->second.find(function);
+    if (funcMapIt == functionMapIt->second.end()) {
+        return;
+    }
+    funcMapIt->second.hiddenFlag = true;
+    HLOGW("hidden func'%s' in lib %d", function.c_str(), libId);
+}
+
 void ReportJsonFile::UpdateReportSample(const uint64_t id, const pid_t pid,
                                         const pid_t tid, const uint64_t eventCount)
 {
@@ -137,7 +165,7 @@ void ReportJsonFile::AddReportCallStack(const uint64_t eventCount, ReportCallNod
     std::map<int, ReportCallNodeItem> *child = &callNode.childrenMap;
     auto it = frames.begin();
     while (it != frames.end()) {
-        int libId = GetLibID(it->mapName);
+        int libId = GetLibID(it->mapName, it->originSoName, it->funcName);
         if (libId >= 0) {
             int funcId = GetFunctionID(libId, it->funcName);
             // new children funid
@@ -169,7 +197,7 @@ void ReportJsonFile::AddReportCallStackReverse(const uint64_t eventCount, Report
     std::map<int, ReportCallNodeItem> *child = &callNode.childrenMap;
     auto it = frames.rbegin();
     while (it != frames.rend()) {
-        int libId = GetLibID(it->mapName);
+        int libId = GetLibID(it->mapName, it->originSoName, it->funcName);
         if (libId >= 0) {
             int funcId = GetFunctionID(libId, it->funcName);
             // new children funid
@@ -206,13 +234,27 @@ std::string ReportJsonFile::GetConfigName(const uint64_t id)
     return config.eventName_;
 }
 
-int ReportJsonFile::GetLibID(const std::string_view filepath)
+int ReportJsonFile::GetLibID(const std::string filepath, const std::string originSoName, const std::string funcName)
 {
-    auto it = find(libList_.begin(), libList_.end(), filepath);
+    std::string newFilePath = filepath;
+    if (filepath.find("libadlt") != std::string::npos && EndsWith(filepath.data(), ".so")) {
+        HLOGW("extendName: %s", originSoName.c_str());
+        if (!originSoName.empty()) {
+            newFilePath = filepath + ":" + originSoName;
+            auto oldIt = std::find(libList_.begin(), libList_.end(), std::string_view(filepath));
+            if (oldIt != libList_.end()) {
+                int oldLibId = oldIt - libList_.begin();
+                HiddenFunctionInLib(oldLibId, funcName);
+            }
+        } else {
+            HLOGW("Get extendName fail for nullptr");
+        }
+    }
+    auto it = std::find(libList_.begin(), libList_.end(), std::string_view(newFilePath));
     if (it != libList_.end()) {
         return it - libList_.begin();
     } else {
-        HLOGE("'%s' not found in lib list", filepath.data());
+        HLOGE("'%s' not found in lib list, liblist size: %zu", filepath.data(), libList_.size());
         return -1;
     }
 }
@@ -229,12 +271,13 @@ void ReportJsonFile::UpdateReportCallStack(const uint64_t id, const pid_t pid, c
     bool jsFrame = StringEndsWith(it->mapName, "stub.an");
     size_t skipFrame = 0;
     while (it != frames.end()) {
-        int libId = GetLibID(it->mapName);
+        int libId = GetLibID(it->mapName, it->originSoName, it->funcName);
         if (libId < 0) {
             HLOGW("not found lib path %s", it->mapName.data());
             it++;
             continue;
         }
+        
         ReportLibItem &lib = thread.libs_[libId];
         lib.libId_ = libId;
         int funcId = GetFunctionID(libId, it->funcName);

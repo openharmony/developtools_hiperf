@@ -15,8 +15,11 @@
 #define HILOG_TAG "PerfRecord"
 
 #include "perf_event_record.h"
-#include "spe_decoder.h"
 #include <cinttypes>
+#include "perf_record_format.h"
+#include "dfx_elf_define.h"
+#include "dfx_elf.h"
+#include "spe_decoder.h"
 
 #include "utilities.h"
 
@@ -71,6 +74,8 @@ static PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
             return new PerfRecordSwitch();
         case PERF_RECORD_SWITCH_CPU_WIDE:
             return new PerfRecordSwitchCpuWide();
+        case PERF_RECORD_TYPE_SMO_NUM:
+            return new PerfRecordSmoDetachingEvent();
         default:
             HLOGE("unknown record type %d\n", type);
             return new PerfRecordNull();
@@ -1049,6 +1054,52 @@ void PerfRecordAux::DumpData(const int indent) const
     PRINT_INDENT(indent, "aux_offset 0x%llx aux_size 0x%llx flags 0x%llx pid %u tid %u time %llu",
                  data_.aux_offset, data_.aux_size, data_.flags, data_.sample_id.pid, data_.sample_id.tid,
                  data_.sample_id.time);
+}
+
+PerfRecordSmoDetachingEvent::PerfRecordSmoDetachingEvent(std::vector<uint8_t> binary, uint16_t all_num, uint16_t f_num)
+{
+    header_.type = PERF_RECORD_TYPE_SMO_NUM;
+    header_.size = binary.size() + sizeof(header_) + sizeof(fragment_num) + + sizeof(all_fragment_num);
+    binaryData = binary;
+    fragment_num = f_num;
+    all_fragment_num = all_num;
+}
+
+bool PerfRecordSmoDetachingEvent::GetBinary(std::vector<uint8_t> &buf) const
+{
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+    PushToBinary(true, p, fragment_num);
+    PushToBinary(true, p, all_fragment_num);
+    std::copy(binaryData.begin(), binaryData.end(), p);
+    p += binaryData.size();
+    return true;
+}
+
+size_t PerfRecordSmoDetachingEvent::GetSize() const
+{
+    return header_.size;
+}
+
+void PerfRecordSmoDetachingEvent::DumpData(const int indent) const
+{
+    return;
+}
+
+void PerfRecordSmoDetachingEvent::Init(uint8_t* p, const perf_event_attr&)
+{
+    InitHeader(p);
+    if (p == nullptr) {
+        return;
+    }
+    uint8_t* data = p + sizeof(header_);
+    fragment_num = *(uint16_t*)(data);
+    all_fragment_num = *(uint16_t*)(data + sizeof(fragment_num));
+    binaryData.resize(header_.size - sizeof(header_) - sizeof(fragment_num) - sizeof(all_fragment_num));
+    std::copy(data + sizeof(fragment_num) + sizeof(all_fragment_num), p + header_.size, binaryData.begin());
 }
 
 bool PerfRecordAuxTraceInfo::GetBinary(std::vector<uint8_t> &buf) const

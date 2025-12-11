@@ -70,6 +70,7 @@ static constexpr char PERF_RECORD_TYPE_SWITCHCPUWIDE[] = "switchCpuWide";
 static constexpr char PERF_RECORD_TYPE_AUXTRACEINFO[] = "auxtraceinfo";
 static constexpr char PERF_RECORD_TYPE_TIMECONV[] = "timeconv";
 static constexpr char PERF_RECORD_TYPE_CPUMAP[] = "cpumap";
+static constexpr char PERF_RECORD_TYPE_SMO[] = "smoRecord";
 static constexpr char* PERF_RECORD_TYPE_NULL = nullptr;
 
 enum perf_event_hiperf_ext_type {
@@ -78,6 +79,7 @@ enum perf_event_hiperf_ext_type {
     PERF_RECORD_CPU_MAP = 74,
     PERF_RECORD_TIME_CONV = 79,
     PERF_RECORD_HIPERF_CALLSTACK = UINT32_MAX / 2,
+    PERF_RECORD_TYPE_SMO_NUM = 82
 };
 
 struct AttrWithId {
@@ -403,6 +405,20 @@ public:
 
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     void DumpData(const int indent) const override;
+};
+
+class PerfRecordSmoDetachingEvent :  public PerfEventRecordTemplate<PerfRecordSmoDataFragment, PERF_RECORD_TYPE_SMO> {
+public:
+    PerfRecordSmoDetachingEvent() = default;
+    const static uint16_t fragment_length = 10000;
+    PerfRecordSmoDetachingEvent(std::vector<uint8_t> binaryData, uint16_t all_num, uint16_t f_num);
+    bool GetBinary(std::vector<uint8_t> &buf) const override;
+    void DumpData(const int indent) const override;
+    size_t GetSize() const override;
+    void Init(uint8_t* p, const perf_event_attr& = {}) override;
+    std::vector<uint8_t> binaryData;
+    uint16_t fragment_num;
+    uint16_t all_fragment_num;
 };
 
 /*

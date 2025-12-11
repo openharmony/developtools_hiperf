@@ -335,6 +335,10 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--call-stack", callStackType)) {
         return false;
     }
+    if (!Option::GetOptionValue(args, "--append-smo-data", appendSmoData_)) {
+        appendSmoData_ = true;
+        return false;
+    }
     if (!callStackType_.empty()) {
         if (!callStackType.empty()) {
             printf("'-s %s --call-stack %s' option usage error, please check usage.\n",
@@ -1190,6 +1194,7 @@ bool SubCommandRecord::PrepareVirtualRuntime()
         return this->SaveRecord(record);
     };
     virtualRuntime_.SetRecordMode(saveRecord);
+    virtualRuntime_.SetSmoFlag(isRoot_ || appendSmoData_);
 
     // do some config for virtualRuntime_
     virtualRuntime_.SetCallStackExpend(disableCallstackExpend_ ? 0 : 1);

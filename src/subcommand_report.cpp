@@ -229,7 +229,10 @@ bool SubCommandReport::RecordCallBack(PerfEventRecord& record)
 {
     // tell process tree what happend for rebuild symbols
     GetReport().virtualRuntime_.UpdateFromRecord(record);
-
+    if (jsonFormat_ && record.GetType() == PERF_RECORD_TYPE_SMO_NUM) {
+        reportJsonFile_->SupplementSymbolsFiles(GetReport().virtualRuntime_.GetSymbolsFiles());
+    }
+    
     if (record.GetType() == PERF_RECORD_SAMPLE) {
         std::unique_ptr<PerfRecordSample> sample
             = std::make_unique<PerfRecordSample>(static_cast<PerfRecordSample&>(record));

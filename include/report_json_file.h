@@ -187,6 +187,7 @@ struct ReportFuncMapItem {
     int libId_ = -1;
     std::string funcName_;
     int reportFuncId_ = -1;
+    bool hiddenFlag = false;
     void OutputJson(FILE *output) const
     {
         if (fprintf(output, "{") < 0) {
@@ -374,7 +375,7 @@ public:
                                const std::vector<DfxFrame> &frames);
     void UpdateCallNodeEventCount();
     void ProcessSymbolsFiles(const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles);
-
+    void SupplementSymbolsFiles(const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles);
     // json
     bool OutputJson(FILE *output = nullptr);
 
@@ -394,7 +395,8 @@ private:
     uint32_t GetConfigIndex(const uint64_t id);
 
     int GetFunctionID(const int libId, const std::string &function);
-    int GetLibID(const std::string_view filepath);
+    void HiddenFunctionInLib(const int libId, const std::string &function);
+    int GetLibID(const std::string filepath, const std::string originSoName = "", const std::string funcName = "");
 
     void OutputJsonFeatureString();
     void OutputJsonRuntimeInfo();

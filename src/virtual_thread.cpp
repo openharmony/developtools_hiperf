@@ -23,6 +23,7 @@
 #include <sys/mman.h>
 #endif
 
+#include "string_util.h"
 #include "symbols_file.h"
 #include "utilities.h"
 #include "virtual_runtime.h"
@@ -515,6 +516,17 @@ std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string &filename
     std::shared_ptr<DfxMap> map = memMaps_.emplace_back(std::make_shared<DfxMap>(begin, begin + len, offset,
         prot, filename));
     memMapsIndexs_.emplace_back(memMaps_.size() >= 1 ? memMaps_.size() - 1 : 0);
+    if (map->name.find("libadlt") != std::string::npos && EndsWith(map->name, ".so")) {
+        if (!getLoadBaseFlag && offset == 0 && ((prot & PROT_EXEC) == 0)) {
+            HLOGD("Get adltloadbase 0x%" PRIx64, map->begin);
+            adltLoadBase = map->begin;
+            getLoadBaseFlag = true;
+        }
+        // update the loadbase
+        if (getLoadBaseFlag) {
+            map->SetAdltLoadBase(adltLoadBase);
+        }
+    }
     HLOGD(" %u:%u create a new map(total %zu) at '%s' (0x%" PRIx64 "-0x%" PRIx64 ")@0x%" PRIx64 " ",
           pid_, tid_, memMaps_.size(), map->name.c_str(), map->begin, map->end, map->offset);
     SortMemMaps();
