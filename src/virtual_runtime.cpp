@@ -594,7 +594,7 @@ void VirtualRuntime::MakeCallFrame(const uint64_t ip, DfxSymbol &symbol, DfxFram
     if (callFrame.map != nullptr &&
         callFrame.map->name.find("libadlt") != std::string::npos && EndsWith(callFrame.map->name, ".so")) {
         callFrame.relPc = ip - callFrame.map->GetAdltLoadBase();
-        HLOGV("Get relPc: 0x%" PRIx64 " mapBegin:0x%" PRIx64 " pc:0x%08" PRIx64 "", 
+        HLOGV("Get relPc: 0x%" PRIx64 " mapBegin:0x%" PRIx64 " pc:0x%08" PRIx64 "",
             callFrame.relPc, callFrame.map->begin, callFrame.pc);
     }
     if (callFrame.funcName.empty()) {
