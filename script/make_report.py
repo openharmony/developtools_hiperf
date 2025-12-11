@@ -54,7 +54,7 @@ def merge_threads(data, merge_prefix):
                     merged_threads = []
                     for thread in threads:
                         tid = thread.get('tid')
-                        thread_name = data['threadNameMap'][str[tid]]
+                        thread_name = data['threadNameMap'][str(tid)]
                         if thread_name.startswith(merge_prefix):
                             merged_threads.append(thread)
                     if len(merged_threads) == 0:
