@@ -16,12 +16,10 @@
 
 #include "perf_event_record.h"
 #include <cinttypes>
-#include "perf_record_format.h"
-#include "dfx_elf_define.h"
-#include "dfx_elf.h"
 #include "spe_decoder.h"
 
 #include "utilities.h"
+
 
 namespace OHOS {
 namespace Developtools {
