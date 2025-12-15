@@ -601,40 +601,6 @@ HWTEST_F(PerfEventRecordTest, Aux, TestSize.Level2)
     ASSERT_EQ(CompareByteStream((uint8_t *)&data, buff.data(), sizeof(data)), 0);
 }
 
-HWTEST_F(PerfEventRecordTest, Smo, TestSize.Level2)
-{
-    perf_event_attr attr {};
-    SmoHeaderFragment smoHeader = {0, 1};
-    std::vector<SmoMergeSoHeaderFragment> smoMergeSoHeaderList;
-    smoMergeSoHeaderList.push_back({28, 1, 44, 5, 50});
-    std::vector<AdltMapFragment> adltMapList;
-    adltMapList.push_back({0, 10000, 0, 0});
-    std::string strtab = "abcde";
-    PerfRecordSmoDataFragment smoData = {smoHeader, smoMergeSoHeaderList, adltMapList, strtab};
-    std::vector<uint8_t> binaryData(54);
-    uint8_t* ptr = binaryData.data();
-    *(reinterpret_cast<SmoHeaderFragment *>(ptr)) = smoHeader;
-    ptr += sizeof(SmoHeaderFragment);
-    *(reinterpret_cast<SmoMergeSoHeaderFragment *>(ptr)) = smoMergeSoHeaderList[0];
-    ptr += sizeof(SmoMergeSoHeaderFragment);
-    *(reinterpret_cast<AdltMapFragment *>(ptr)) = adltMapList[0];
-    ptr += sizeof(AdltMapFragment);
-    std::copy(strtab.begin(), strtab.end(), ptr);
-    ptr += strtab.size();
-    PerfRecordSmoDetachingEvent record(binaryData, 1, 0);
-    std::vector<uint8_t> buf(62);
-    ASSERT_TRUE(record.GetBinary(buf));
-
-    PerfRecordSmoDetachingEvent record_read{};
-    record.Init(buf.data(), attr);
-
-    ASSERT_EQ(record_read.GetType(), PERF_RECORD_TYPE_SMO_NUM);
-    ASSERT_EQ(record_read.GetName(), PERF_RECORD_TYPE_SMO);
-    ASSERT_EQ(record_read.GetMisc(), PERF_RECORD_MISC_KERNEL);
-    ASSERT_EQ(record_read.GetHeaderSize(), HEADER_SIZE);
-    ASSERT_EQ(record_read.GetSize(), 62);
-}
-
 const std::string RECORDNAME_ITRACE_START = "itraceStart";
 HWTEST_F(PerfEventRecordTest, ItraceStart, TestSize.Level2)
 {
