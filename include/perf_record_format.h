@@ -307,10 +307,10 @@ struct SmoMergeSoHeaderFragment {
 };
  
 struct AdltMapFragment {
-    u32 pcBegin;
-    u32 pcEnd;
-    u32 psodIndex;
-    u32 nameOffset;
+    u32 pcBegin = 0;
+    u32 pcEnd = 0;
+    u32 psodIndex = 0;
+    u32 nameOffset = 0;
 };
  
 struct PerfRecordSmoDataFragment {
@@ -321,9 +321,9 @@ struct PerfRecordSmoDataFragment {
 };
  
 struct AdltMapDataFragment {
-    u32 pcBegin;
-    u32 pcEnd;
-    u32 psodIndex;
+    u32 pcBegin = 0;
+    u32 pcEnd = 0;
+    u32 psodIndex = 0;
     std::string originalSoName;
 };
 

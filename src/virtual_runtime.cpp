@@ -42,6 +42,8 @@ static const std::unordered_set<std::string> MERGED_SO_NAMES = {
 namespace {
 // if ip is 0 , 1 both not useful
 const uint64_t BAD_IP_ADDRESS = 2;
+const uint16_t RECORD_HEADER_SIZE = 8;
+const uint16_t ADLTMAP_SIZE = 20;
 }
 // we unable to access 'swapper' from /proc/0/
 VirtualRuntime::VirtualRuntime(const bool onDevice)
@@ -145,9 +147,9 @@ void VirtualRuntime::UpdateProcessSmoInfo(VirtualThread &thread)
     std::vector<AdltMapFragment> adltMapList;
     std::vector<std::string> strtabList;
     std::vector<std::string> soNameList;
-    u32 map_offset = 8 + elf_list.size()*20;
+    u32 map_offset = RECORD_HEADER_SIZE + elf_list.size() * ADLTMAP_SIZE;
     std::string strtab = "";
-    for (size_t i = 0 ; i < elf_list.size();i++) {
+    for (size_t i = 0; i < elf_list.size(); i++) {
         std::vector<AdltMapInfo> adltMap = elf_list[i]->GetAdltMap();
         std::string adltStrtab = elf_list[i]->GetAdltStrtab();
         if (!std::is_sorted(adltMap.begin(), adltMap.end(),
@@ -162,12 +164,12 @@ void VirtualRuntime::UpdateProcessSmoInfo(VirtualThread &thread)
         soNameList.push_back(filePathList[i]);
         map_offset += adltMap.size() * sizeof(AdltMapFragment);
     }
-    for (int i = 0;i < (int)(strtabList.size()); i++) {
+    for (auto i = 0; i < strtabList.size(); i++) {
         strtab += strtabList[i];
         smoMergeSoHeaderList[i].strtabOffset = map_offset;
         map_offset += strtabList[i].size();
     }
-    for (int i = 0;i < (int)(soNameList.size()); i++) {
+    for (auto i = 0; i < soNameList.size(); i++) {
         strtab += (soNameList[i] + "\0");
         smoMergeSoHeaderList[i].soOffset = map_offset;
         map_offset += (soNameList[i].size() + 1);
@@ -192,15 +194,15 @@ void VirtualRuntime::PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmo
     }
     std::copy(perfRecordSmoDataFragment.strtab.begin(), perfRecordSmoDataFragment.strtab.end(), ptr);
     ptr += perfRecordSmoDataFragment.strtab.size();
-    uint16_t fragment_length = PerfRecordSmoDetachingEvent::fragment_length;
-    uint16_t fragment_num = (map_offset + fragment_length - 1) / fragment_length;
-    for (uint16_t i = 0 ; i < fragment_num; i++) {
-        std::vector<uint8_t> subData(i == (fragment_num-1) ? map_offset % fragment_length : fragment_length);
-        std::copy(binaryData.begin() + i*fragment_length,
-            ((i == (fragment_num-1)) ? binaryData.end() : (binaryData.begin() + (i+1)*fragment_length)),
+    uint16_t fragmentLength_ = PerfRecordSmoDetachingEvent::fragmentLength_;
+    uint16_t fragmentNum_ = (map_offset + fragmentLength_ - 1) / fragmentLength_;
+    for (uint16_t i = 0; i < fragmentNum_; i++) {
+        std::vector<uint8_t> subData(i == (fragmentNum_-1) ? map_offset % fragmentLength_ : fragmentLength_);
+        std::copy(binaryData.begin() + i*fragmentLength_,
+            ((i == (fragmentNum_-1)) ? binaryData.end() : (binaryData.begin() + (i+1)*fragment_length)),
             subData.begin());
         std::shared_ptr<PerfRecordSmoDetachingEvent> perfRecordSmo =
-            std::make_shared<PerfRecordSmoDetachingEvent>(subData, fragment_num, i);
+            std::make_shared<PerfRecordSmoDetachingEvent>(subData, fragmentNum_, i);
         recordCallBack_(*perfRecordSmo);
     }
 }
@@ -575,9 +577,6 @@ void VirtualRuntime::UpdateFromRecord(PerfEventRecord &record)
     } else if (record.GetType() == PERF_RECORD_TYPE_SMO_NUM) {
         auto perfRecordSmo = static_cast<PerfRecordSmoDetachingEvent *>(&record);
         UpdateFromRecord(*perfRecordSmo);
-#ifdef HIPERF_DEBUG_TIME
-        processCommRecordTimes_ += duration_cast<microseconds>(steady_clock::now() - startTime);
-#endif
     } else {
         HLOGW("skip record type %d", record.GetType());
     }
@@ -957,8 +956,8 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordComm &recordComm)
 
 void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
 {
-    binaryDataMap.emplace(record.fragment_num, record.binaryData);
-    if (binaryDataMap.size() != record.all_fragment_num) {
+    binaryDataMap.emplace(record.fragmentNum_, record.binaryData);
+    if (binaryDataMap.size() != record.allFragmentNum_) {
         return;
     }
     std::vector<uint8_t> binaryData;
@@ -991,12 +990,12 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
     UpdateFilesFromSmoRecordData();
 }
 
-std::map<std::string, std::vector<AdltMapDataFragment>> VirtualRuntime::getSoMappingMap()
+std::map<std::string, std::vector<AdltMapDataFragment>> VirtualRuntime::GetSoMappingMap()
 {
     return soMappingMap;
 }
 
-std::string VirtualRuntime::getSoNameFromPc(uint64_t pc, std::string fileName)
+std::string VirtualRuntime::GetSoNameFromPc(uint64_t pc, std::string fileName)
 {
     if (soMappingMap.empty()) {
         return "";
@@ -1338,7 +1337,7 @@ std::string VirtualRuntime::GetOriginSoName(const uint64_t ip, const VirtualThre
     std::string originSoName = "";
     if (map->name.find("libadlt") != std::string::npos && EndsWith(map->name, ".so")) {
         vaddrSymbol.fileVaddr_ = symbolsFile->GetVaddrByLoadBase(ip, map->GetAdltLoadBase());
-        originSoName = getSoNameFromPc(vaddrSymbol.fileVaddr_, map->name);
+        originSoName = GetSoNameFromPc(vaddrSymbol.fileVaddr_, map->name);
         auto elf = map->GetElfLongLong(0);
         if (originSoName.empty() && elf != nullptr && elf->IsAdlt()) {
             originSoName = elf->GetAdltOriginSoNameByRelPc(vaddrSymbol.fileVaddr_);

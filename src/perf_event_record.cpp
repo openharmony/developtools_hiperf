@@ -1054,13 +1054,13 @@ void PerfRecordAux::DumpData(const int indent) const
                  data_.sample_id.time);
 }
 
-PerfRecordSmoDetachingEvent::PerfRecordSmoDetachingEvent(std::vector<uint8_t> binary, uint16_t all_num, uint16_t f_num)
+PerfRecordSmoDetachingEvent::PerfRecordSmoDetachingEvent(std::vector<uint8_t> binary, uint16_t allNum, uint16_t fNum)
 {
     header_.type = PERF_RECORD_TYPE_SMO_NUM;
-    header_.size = binary.size() + sizeof(header_) + sizeof(fragment_num) + + sizeof(all_fragment_num);
+    header_.size = binary.size() + sizeof(header_) + sizeof(fragmentNum_) + + sizeof(allFragmentNum_);
     binaryData = binary;
-    fragment_num = f_num;
-    all_fragment_num = all_num;
+    fragmentNum_ = fNum;
+    allFragmentNum_ = allNum;
 }
 
 bool PerfRecordSmoDetachingEvent::GetBinary(std::vector<uint8_t> &buf) const
@@ -1070,8 +1070,8 @@ bool PerfRecordSmoDetachingEvent::GetBinary(std::vector<uint8_t> &buf) const
     if (buf.size() < GetSize()) {
         buf.resize(GetSize());
     }
-    PushToBinary(true, p, fragment_num);
-    PushToBinary(true, p, all_fragment_num);
+    PushToBinary(true, p, fragmentNum_);
+    PushToBinary(true, p, allFragmentNum_);
     std::copy(binaryData.begin(), binaryData.end(), p);
     p += binaryData.size();
     return true;
@@ -1093,11 +1093,14 @@ void PerfRecordSmoDetachingEvent::Init(uint8_t* p, const perf_event_attr&)
     if (p == nullptr) {
         return;
     }
+    if (header_.size < (sizeof(header_) + sizeof(fragmentNum_) + sizeof(allFragmentNum_))) {
+        return;
+    }
     uint8_t* data = p + sizeof(header_);
-    fragment_num = *(uint16_t*)(data);
-    all_fragment_num = *(uint16_t*)(data + sizeof(fragment_num));
-    binaryData.resize(header_.size - sizeof(header_) - sizeof(fragment_num) - sizeof(all_fragment_num));
-    std::copy(data + sizeof(fragment_num) + sizeof(all_fragment_num), p + header_.size, binaryData.begin());
+    fragmentNum_ = static_cast<uint16_t>(data);
+    allFragmentNum_ = static_cast<uint16_t>(data + sizeof(fragmentNum_));
+    binaryData.resize(header_.size - sizeof(header_) - sizeof(fragmentNum_) - sizeof(allFragmentNum_));
+    std::copy(data + sizeof(fragmentNum_) + sizeof(allFragmentNum_), p + header_.size, binaryData.begin());
 }
 
 bool PerfRecordAuxTraceInfo::GetBinary(std::vector<uint8_t> &buf) const

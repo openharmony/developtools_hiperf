@@ -410,15 +410,15 @@ public:
 class PerfRecordSmoDetachingEvent :  public PerfEventRecordTemplate<PerfRecordSmoDataFragment, PERF_RECORD_TYPE_SMO> {
 public:
     PerfRecordSmoDetachingEvent() = default;
-    const static uint16_t fragment_length = 10000;
-    PerfRecordSmoDetachingEvent(std::vector<uint8_t> binaryData, uint16_t all_num, uint16_t f_num);
+    const static uint16_t fragmentLength_ = 10000;
+    PerfRecordSmoDetachingEvent(std::vector<uint8_t> binaryData, uint16_t allNum, uint16_t fNum);
     bool GetBinary(std::vector<uint8_t> &buf) const override;
     void DumpData(const int indent) const override;
     size_t GetSize() const override;
     void Init(uint8_t* p, const perf_event_attr& = {}) override;
     std::vector<uint8_t> binaryData;
-    uint16_t fragment_num;
-    uint16_t all_fragment_num;
+    uint16_t fragmentNum_;
+    uint16_t allFragmentNum_;
 };
 
 /*

@@ -142,7 +142,7 @@ void ReportJsonFile::HiddenFunctionInLib(const int libId, const std::string &fun
         return;
     }
     funcMapIt->second.hiddenFlag = true;
-    HLOGW("hidden func'%s' in lib %d", function.c_str(), libId);
+    HLOGV("hidden func'%s' in lib %d", function.c_str(), libId);
 }
 
 void ReportJsonFile::UpdateReportSample(const uint64_t id, const pid_t pid,

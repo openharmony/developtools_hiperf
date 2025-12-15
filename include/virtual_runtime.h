@@ -87,8 +87,8 @@ public:
 
     // any mode
     static_assert(sizeof(pid_t) == sizeof(int));
-    std::string getSoNameFromPc(uint64_t pc, std::string fileName);
-    std::map<std::string, std::vector<AdltMapDataFragment>> getSoMappingMap();
+    std::string GetSoNameFromPc(uint64_t pc, std::string fileName);
+    std::map<std::string, std::vector<AdltMapDataFragment>> GetSoMappingMap();
 
     const std::vector<std::unique_ptr<SymbolsFile>> &GetSymbolsFiles() const
     {
