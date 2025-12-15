@@ -125,7 +125,7 @@ void VirtualRuntime::UpdateSmoList(VirtualThread &thread, std::vector<std::share
         if (MERGED_SO_NAMES.find(dfxMap->name.substr(dfxMap->name.rfind('/') + 1)) != MERGED_SO_NAMES.end() &&
             savedSmoPathList.find(dfxMap->name) == savedSmoPathList.end()) {
                 filePathList.push_back(dfxMap->name);
-                elf_list.push_back(dfxMap->GetElf());
+                elf_list.push_back(dfxMap->GetElfLongLong(0));
                 savedSmoPathList.insert(dfxMap->name);
         }
     }
@@ -1339,7 +1339,7 @@ std::string VirtualRuntime::GetOriginSoName(const uint64_t ip, const VirtualThre
     if (map->name.find("libadlt") != std::string::npos && EndsWith(map->name, ".so")) {
         vaddrSymbol.fileVaddr_ = symbolsFile->GetVaddrByLoadBase(ip, map->GetAdltLoadBase());
         originSoName = getSoNameFromPc(vaddrSymbol.fileVaddr_, map->name);
-        auto elf = map->GetElf();
+        auto elf = map->GetElfLongLong(0);
         if (originSoName.empty() && elf != nullptr && elf->IsAdlt()) {
             originSoName = elf->GetAdltOriginSoNameByRelPc(vaddrSymbol.fileVaddr_);
         }
