@@ -79,7 +79,7 @@ void ReportJsonFile::ProcessSymbolsFiles(
 
 void ReportJsonFile::SupplementSymbolsFiles(
     const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
-{S
+{
     HLOGV("libsize old %zu", libList_.size());
     for (size_t i = libList_.size(); i < symbolsFiles.size(); ++i) {
         size_t libId = libList_.size();

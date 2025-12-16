@@ -182,7 +182,8 @@ void VirtualRuntime::PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmo
 {
     std::vector<uint8_t> binaryData(mapOffset);
     uint8_t* ptr = binaryData.data();
-    if (memcpy_s(ptr, sizeof(perfRecordSmoDataFragment.smoHeader), perfRecordSmoDataFragment.smoHeader, sizeof(perfRecordSmoDataFragment.smoHeader)) != 0) {
+    if (memcpy_s(ptr, sizeof(perfRecordSmoDataFragment.smoHeader), perfRecordSmoDataFragment.smoHeader,
+        sizeof(perfRecordSmoDataFragment.smoHeader)) != 0) {
         HLOGE("memcpy_s return failed in PutSmoDataToRecord with smoHeader");
         return;
     }
@@ -978,7 +979,8 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
     for (uint32_t i = 0; i < smoHeaderPtr->soNumber; i++) {
         std::vector<AdltMapDataFragment> adltMapDataList;
         std::unordered_set<std::string> soNames;
-        SmoMergeSoHeaderFragment* smoMergeSoHeaderPtr = reinterpret_cast<SmoMergeSoHeaderFragment*>(data + RECORD_HEADER_SIZE + i * ADLTMAP_SIZE);
+        SmoMergeSoHeaderFragment* smoMergeSoHeaderPtr =
+            reinterpret_cast<SmoMergeSoHeaderFragment*>(data + RECORD_HEADER_SIZE + i * ADLTMAP_SIZE);
         AdltMapFragment* adltMapListPtr = reinterpret_cast<AdltMapFragment*>(data + smoMergeSoHeaderPtr->mapOffset);
         for (uint32_t j = 0; j < smoMergeSoHeaderPtr->mapSize / sizeof(AdltMapFragment); j++) {
             std::string soName = std::string(reinterpret_cast<char *>(data) +
@@ -989,8 +991,8 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
         }
         if (!std::is_sorted(adltMapDataList.begin(), adltMapDataList.end(),
             [](AdltMapDataFragment a, AdltMapDataFragment b) {
-                    return a.pcBegin < b.pcBegin;
-                })) {
+                return a.pcBegin < b.pcBegin;
+            })) {
             std::sort(adltMapDataList.begin(), adltMapDataList.end(),
                 [](AdltMapDataFragment a, AdltMapDataFragment b) {
                     return a.pcBegin < b.pcBegin;
