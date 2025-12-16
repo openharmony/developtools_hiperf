@@ -972,6 +972,9 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
     }
     std::vector<uint8_t> binaryData;
     for (uint16_t i = 0; i < binaryDataMap.size(); i++) {
+        if (binaryDataMap[i].empty()) {
+            return;
+        }
         binaryData.insert(binaryData.end(), binaryDataMap[i].begin(), binaryDataMap[i].end());
     }
     uint8_t* data = binaryData.data();
@@ -979,25 +982,31 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
     for (uint32_t i = 0; i < smoHeaderPtr->soNumber; i++) {
         std::vector<AdltMapDataFragment> adltMapDataList;
         std::unordered_set<std::string> soNames;
+        if (RECORD_HEADER_SIZE + i * SMO_MERGE_SO_HEADER_SIZE > record.allFragmentNum_ * record.fragmentLength_) {
+            return;
+        }
         SmoMergeSoHeaderFragment* smoMergeSoHeaderPtr =
             reinterpret_cast<SmoMergeSoHeaderFragment*>(data + RECORD_HEADER_SIZE + i * SMO_MERGE_SO_HEADER_SIZE);
+        if (smoMergeSoHeaderPtr->mapOffset > record.allFragmentNum_ * record.fragmentLength_ ||
+            smoMergeSoHeaderPtr->soOffset > record.allFragmentNum_ * record.fragmentLength_) {
+            return;
+        }
         AdltMapFragment* adltMapListPtr = reinterpret_cast<AdltMapFragment*>(data + smoMergeSoHeaderPtr->mapOffset);
         for (uint32_t j = 0; j < smoMergeSoHeaderPtr->mapSize / sizeof(AdltMapFragment); j++) {
+            if (smoMergeSoHeaderPtr->strtabOffset + adltMapListPtr[j].nameOffset >
+                record.allFragmentNum_ * record.fragmentLength_) {
+                return;
+            }
             std::string soName = std::string(reinterpret_cast<char *>(data) +
                 smoMergeSoHeaderPtr->strtabOffset + adltMapListPtr[j].nameOffset);
             adltMapDataList.push_back({adltMapListPtr[j].pcBegin, adltMapListPtr[j].
                 pcEnd, adltMapListPtr[j].psodIndex, soName});
             soNames.insert(soName);
         }
-        if (!std::is_sorted(adltMapDataList.begin(), adltMapDataList.end(),
+        std::sort(adltMapDataList.begin(), adltMapDataList.end(),
             [](AdltMapDataFragment a, AdltMapDataFragment b) {
                 return a.pcBegin < b.pcBegin;
-            })) {
-            std::sort(adltMapDataList.begin(), adltMapDataList.end(),
-                [](AdltMapDataFragment a, AdltMapDataFragment b) {
-                    return a.pcBegin < b.pcBegin;
-                });
-        }
+            });
         std::string filePath = std::string(reinterpret_cast<char *>(data) + smoMergeSoHeaderPtr->soOffset);
         soMappingMap.emplace(filePath, adltMapDataList);
         originSoMap.emplace(filePath, soNames);

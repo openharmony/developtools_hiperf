@@ -1097,8 +1097,12 @@ void PerfRecordSmoDetachingEvent::Init(uint8_t* p, const perf_event_attr&)
         return;
     }
     uint8_t* data = p + sizeof(header_);
-    fragmentNum_ = static_cast<uint16_t>(*data);
-    allFragmentNum_ = static_cast<uint16_t>(*(data + sizeof(fragmentNum_)));
+    if (memcpy_s(&fragmentNum_, sizeof(fragmentNum_), data, sizeof(uint16_t)) != 0) {
+        return;
+    }
+    if (memcpy_s(&allFragmentNum_, sizeof(allFragmentNum_), data + sizeof(fragmentNum_), sizeof(uint16_t)) != 0) {
+        return;
+    }
     binaryData.resize(header_.size - sizeof(header_) - sizeof(fragmentNum_) - sizeof(allFragmentNum_));
     std::copy(data + sizeof(fragmentNum_) + sizeof(allFragmentNum_), p + header_.size, binaryData.begin());
 }
