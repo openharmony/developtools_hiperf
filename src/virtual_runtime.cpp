@@ -164,12 +164,12 @@ void VirtualRuntime::UpdateProcessSmoInfo(VirtualThread &thread)
         soNameList.push_back(filePathList[i]);
         mapOffset += adltMap.size() * sizeof(AdltMapFragment);
     }
-    for (auto i = 0; i < strtabList.size(); i++) {
+    for (auto i = 0u; i < strtabList.size(); i++) {
         strtab += strtabList[i];
         smoMergeSoHeaderList[i].strtabOffset = mapOffset;
         mapOffset += strtabList[i].size();
     }
-    for (auto i = 0; i < soNameList.size(); i++) {
+    for (auto i = 0u; i < soNameList.size(); i++) {
         strtab += (soNameList[i] + "\0");
         smoMergeSoHeaderList[i].soOffset = mapOffset;
         mapOffset += (soNameList[i].size() + 1);
@@ -182,21 +182,21 @@ void VirtualRuntime::PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmo
 {
     std::vector<uint8_t> binaryData(mapOffset);
     uint8_t* ptr = binaryData.data();
-    if (memcpy_s(ptr, sizeof(perfRecordSmoDataFragment.smoHeader), perfRecordSmoDataFragment.smoHeader,
+    if (memcpy_s(ptr, sizeof(perfRecordSmoDataFragment.smoHeader), &(perfRecordSmoDataFragment.smoHeader),
         sizeof(perfRecordSmoDataFragment.smoHeader)) != 0) {
         HLOGE("memcpy_s return failed in PutSmoDataToRecord with smoHeader");
         return;
     }
     ptr += sizeof(SmoHeaderFragment);
     for (SmoMergeSoHeaderFragment smoMergeSoHeader : perfRecordSmoDataFragment.smoMergeSoHeaderList) {
-        if (memcpy_s(ptr, sizeof(smoMergeSoHeader), smoMergeSoHeader, sizeof(smoMergeSoHeader)) != 0) {
+        if (memcpy_s(ptr, sizeof(smoMergeSoHeader), &(smoMergeSoHeader), sizeof(smoMergeSoHeader)) != 0) {
             HLOGE("memcpy_s return failed in PutSmoDataToRecord with smoMergeSoHeader");
             return;
         }
         ptr += sizeof(smoMergeSoHeader);
     }
     for (AdltMapFragment adltMap : perfRecordSmoDataFragment.adltMapList) {
-        if (memcpy_s(ptr, sizeof(adltMap), adltMap, sizeof(adltMap)) != 0) {
+        if (memcpy_s(ptr, sizeof(adltMap), &(adltMap), sizeof(adltMap)) != 0) {
             HLOGE("memcpy_s return failed in PutSmoDataToRecord with adltMap");
             return;
         }
@@ -1305,7 +1305,7 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(const uint64_t ip, const VirtualTh
         return vaddrSymbol;
     }
     auto map = thread.GetMaps()[mapIndex];
-    std::shared_ptr<SymbolsFile> symbolsFile = std::make_shared<SymbolsFile>(thread.FindSymbolsFileByMap(map));
+    std::shared_ptr<SymbolsFile> symbolsFile(thread.FindSymbolsFileByMap(map));
     if (symbolsFile == nullptr) {
         HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip, map->name.c_str());
         return vaddrSymbol;
