@@ -79,14 +79,14 @@ void ReportJsonFile::ProcessSymbolsFiles(
 
 void ReportJsonFile::SupplementSymbolsFiles(
     const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
-{
-    HLOGE("libsize old %zu", libList_.size());
+{S
+    HLOGV("libsize old %zu", libList_.size());
     for (size_t i = libList_.size(); i < symbolsFiles.size(); ++i) {
         size_t libId = libList_.size();
         libList_.emplace_back(symbolsFiles[i]->filePath_);
-        HLOGE("add new id success %zu, path:%s", libId, libList_[libId].data());
+        HLOGV("add new id success %zu, path:%s", libId, libList_[libId].data());
     }
-    HLOGE("libsize new %zu", libList_.size());
+    HLOGV("libsize new %zu", libList_.size());
 }
 
 void ReportJsonFile::UpdateCallNodeEventCount()

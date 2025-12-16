@@ -417,8 +417,8 @@ public:
     size_t GetSize() const override;
     void Init(uint8_t* p, const perf_event_attr& = {}) override;
     std::vector<uint8_t> binaryData;
-    uint16_t fragmentNum_;
-    uint16_t allFragmentNum_;
+    uint16_t fragmentNum_ = 0;
+    uint16_t allFragmentNum_ = 0;
 };
 
 /*

@@ -218,7 +218,7 @@ private:
     VirtualThread &CreateThread(const pid_t pid, const pid_t tid, const std::string name = "");
 
     // maps
-    std::shared_ptr<DfxMap> UpdateThreadMaps(const pid_t pid, const pid_t tid, const std::string filename,
+    std::shared_ptr<DfxMap> UpdateThreadMaps(const pid_t pid, const pid_t tid, consSt std::string filename,
                                              const uint64_t begin, const uint64_t len, const uint64_t offset,
                                              const uint32_t prot = 0);
     void UpdatekernelMap(const uint64_t begin, const uint64_t end, const uint64_t offset, const std::string &filename);
@@ -227,7 +227,7 @@ private:
                                     const VirtualThread &thread);
     const DfxSymbol GetUserSymbol(const uint64_t ip, const VirtualThread &thread);
     std::string GetOriginSoName(const uint64_t ip, const VirtualThread &thread, DfxSymbol &vaddrSymbol,
-        std::shared_ptr<DfxMap> &map, SymbolsFile *symbolsFile);
+        std::shared_ptr<DfxMap> &map, std::shared_ptr<SymbolsFile> symbolsFile);
     const DfxSymbol GetKernelThreadSymbol(const uint64_t ip, const VirtualThread &thread);
 #ifdef HIPERF_DEBUG
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
@@ -245,9 +245,9 @@ private:
     void AdjustCallChain(PerfRecordSample &sample);
     void UpdateProcessSymbols(VirtualThread &thread, const pid_t pid);
     void UpdateProcessSmoInfo(VirtualThread &thread);
-    void UpdateSmoList(VirtualThread &thread, std::vector<std::shared_ptr<DfxElf>> &elf_list,
+    void UpdateSmoList(VirtualThread &thread, std::vector<std::shared_ptr<DfxElf>> &elfList,
         std::vector<std::string> &filePathList);
-    void PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmoDataFragment, u32 map_offset);
+    void PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmoDataFragment, u32 mapOffset);
     void UpdateSandBoxThreadMaps(std::unique_ptr<SymbolsFile> &symFile, std::shared_ptr<DfxMap> &curMap,
                                  std::shared_ptr<DfxMap> &prevMap, PerfRecordMmap2 &recordMmap2);
     std::map<std::string, std::vector<AdltMapDataFragment>> soMappingMap;
