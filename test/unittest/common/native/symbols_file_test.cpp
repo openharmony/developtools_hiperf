@@ -137,7 +137,7 @@ HWTEST_F(SymbolsFileTest, GetVaddrByLoadBase, TestSize.Level2)
     std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
     uint64_t ip = 100;
     uint64_t loadBase = 50;
-    uint64_t result = symbolsFile->GetVaddrByLoadBase(ip,loadBase);
+    uint64_t result = symbolsFile->GetVaddrByLoadBase(ip, loadBase);
     EXPECT_EQ(result, 50);
 }
 
