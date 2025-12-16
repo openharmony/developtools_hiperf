@@ -43,7 +43,7 @@ namespace {
 // if ip is 0 , 1 both not useful
 const uint64_t BAD_IP_ADDRESS = 2;
 const uint16_t RECORD_HEADER_SIZE = 8;
-const uint16_t ADLTMAP_SIZE = 20;
+const uint16_t SMO_MERGE_SO_HEADER_SIZE = 20;
 }
 // we unable to access 'swapper' from /proc/0/
 VirtualRuntime::VirtualRuntime(const bool onDevice)
@@ -147,7 +147,7 @@ void VirtualRuntime::UpdateProcessSmoInfo(VirtualThread &thread)
     std::vector<AdltMapFragment> adltMapList;
     std::vector<std::string> strtabList;
     std::vector<std::string> soNameList;
-    u32 mapOffset = RECORD_HEADER_SIZE + elfList.size() * ADLTMAP_SIZE;
+    u32 mapOffset = RECORD_HEADER_SIZE + elfList.size() * SMO_MERGE_SO_HEADER_SIZE;
     std::string strtab = "";
     for (size_t i = 0; i < elfList.size(); i++) {
         std::vector<AdltMapInfo> adltMap = elfList[i]->GetAdltMap();
@@ -980,7 +980,7 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
         std::vector<AdltMapDataFragment> adltMapDataList;
         std::unordered_set<std::string> soNames;
         SmoMergeSoHeaderFragment* smoMergeSoHeaderPtr =
-            reinterpret_cast<SmoMergeSoHeaderFragment*>(data + RECORD_HEADER_SIZE + i * ADLTMAP_SIZE);
+            reinterpret_cast<SmoMergeSoHeaderFragment*>(data + RECORD_HEADER_SIZE + i * SMO_MERGE_SO_HEADER_SIZE);
         AdltMapFragment* adltMapListPtr = reinterpret_cast<AdltMapFragment*>(data + smoMergeSoHeaderPtr->mapOffset);
         for (uint32_t j = 0; j < smoMergeSoHeaderPtr->mapSize / sizeof(AdltMapFragment); j++) {
             std::string soName = std::string(reinterpret_cast<char *>(data) +

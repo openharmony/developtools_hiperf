@@ -1057,7 +1057,7 @@ void PerfRecordAux::DumpData(const int indent) const
 PerfRecordSmoDetachingEvent::PerfRecordSmoDetachingEvent(std::vector<uint8_t> binary, uint16_t allNum, uint16_t fNum)
 {
     header_.type = PERF_RECORD_TYPE_SMO_NUM;
-    header_.size = binary.size() + sizeof(header_) + sizeof(fragmentNum_) + + sizeof(allFragmentNum_);
+    header_.size = binary.size() + sizeof(header_) + sizeof(fragmentNum_) + sizeof(allFragmentNum_);
     binaryData = binary;
     fragmentNum_ = fNum;
     allFragmentNum_ = allNum;
@@ -1065,11 +1065,11 @@ PerfRecordSmoDetachingEvent::PerfRecordSmoDetachingEvent(std::vector<uint8_t> bi
 
 bool PerfRecordSmoDetachingEvent::GetBinary(std::vector<uint8_t> &buf) const
 {
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
     if (buf.size() < GetSize()) {
         buf.resize(GetSize());
     }
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
     PushToBinary(true, p, fragmentNum_);
     PushToBinary(true, p, allFragmentNum_);
     std::copy(binaryData.begin(), binaryData.end(), p);
