@@ -218,7 +218,7 @@ private:
     VirtualThread &CreateThread(const pid_t pid, const pid_t tid, const std::string name = "");
 
     // maps
-    std::shared_ptr<DfxMap> UpdateThreadMaps(const pid_t pid, const pid_t tid, consSt std::string filename,
+    std::shared_ptr<DfxMap> UpdateThreadMaps(const pid_t pid, const pid_t tid, const std::string filename,
                                              const uint64_t begin, const uint64_t len, const uint64_t offset,
                                              const uint32_t prot = 0);
     void UpdatekernelMap(const uint64_t begin, const uint64_t end, const uint64_t offset, const std::string &filename);
