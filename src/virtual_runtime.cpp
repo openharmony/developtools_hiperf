@@ -1314,7 +1314,7 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(const uint64_t ip, const VirtualTh
         return vaddrSymbol;
     }
     auto map = thread.GetMaps()[mapIndex];
-    std::shared_ptr<SymbolsFile> symbolsFile(thread.FindSymbolsFileByMap(map));
+    SymbolsFile* symbolsFile = thread.FindSymbolsFileByMap(map);
     if (symbolsFile == nullptr) {
         HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip, map->name.c_str());
         return vaddrSymbol;
@@ -1353,7 +1353,7 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(const uint64_t ip, const VirtualTh
 }
 
 std::string VirtualRuntime::GetOriginSoName(const uint64_t ip, const VirtualThread &thread,
-    DfxSymbol &vaddrSymbol, std::shared_ptr<DfxMap> &map, std::shared_ptr<SymbolsFile> symbolsFile)
+    DfxSymbol &vaddrSymbol, std::shared_ptr<DfxMap> &map, SymbolsFile* symbolsFile)
 {
     vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
     vaddrSymbol.module_ = map->name;

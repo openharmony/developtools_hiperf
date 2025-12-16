@@ -227,7 +227,7 @@ private:
                                     const VirtualThread &thread);
     const DfxSymbol GetUserSymbol(const uint64_t ip, const VirtualThread &thread);
     std::string GetOriginSoName(const uint64_t ip, const VirtualThread &thread, DfxSymbol &vaddrSymbol,
-        std::shared_ptr<DfxMap> &map, std::shared_ptr<SymbolsFile> symbolsFile);
+        std::shared_ptr<DfxMap> &map, SymbolsFile* symbolsFile);
     const DfxSymbol GetKernelThreadSymbol(const uint64_t ip, const VirtualThread &thread);
 #ifdef HIPERF_DEBUG
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
