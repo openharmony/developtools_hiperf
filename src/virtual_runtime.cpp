@@ -1032,7 +1032,7 @@ std::string VirtualRuntime::GetSoNameFromPc(uint64_t pc, std::string fileName)
         pc, [](const AdltMapDataFragment& a, uint64_t pc) {
         return a.pcEnd <= pc;
     });
-    if (soPtr == soMapPairPtr->second.end() || pc >= soPtr.pcEnd || pc < soPtr.pcBegin ) {
+    if (soPtr == soMapPairPtr->second.end() || pc >= soPtr->pcEnd || pc < soPtr->pcBegin) {
         return "";
     }
     return soPtr->originalSoName;
