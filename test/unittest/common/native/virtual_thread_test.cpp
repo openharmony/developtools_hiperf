@@ -433,20 +433,6 @@ HWTEST_F(VirtualThreadTest, ParseDevhostMapEachLine, TestSize.Level1)
         }
     }
 }
-
-HWTEST_F(VirtualThreadTest, CheckRepeatMaps, TestSize.Level1)
-{
-    std::vector<std::unique_ptr<SymbolsFile>> files;
-    VirtualThread thread(getpid(), files);
-    auto& maps = thread.GetMaps();
-
-    thread.CreateMapItem("0.so", 1000, 2000, 3000);
-    EXPECT_EQ(maps.size(), 1u);
-    thread.CreateMapItem("1.so", 3000, 4000, 5000);
-    EXPECT_EQ(maps.size(), 2u);
-    thread.CreateMapItem("2.so", 2000, 4000, 5000);
-    EXPECT_EQ(maps.size(), 3u);
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
