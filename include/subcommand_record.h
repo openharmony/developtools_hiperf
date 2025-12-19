@@ -454,7 +454,6 @@ private:
     kSymbolsHits kernelSymbolsHits_;
     uSymbolsHits userSymbolsHits_;
     void SymbolicHits();
-    bool IsCollectSymbol();
 #endif
 
 #ifdef HIPERF_DEBUG_TIME
