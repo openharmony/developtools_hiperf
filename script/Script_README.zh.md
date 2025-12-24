@@ -7,9 +7,9 @@
 - **火焰图一键生成**</br>
   在脚本目录下执行命令Python main.py -app com.ohos.xxx -l lib.unstripped exe.unstripped
   注：-l 参数可以不带，unstripped符号表版本一定要和镜像版本一致，否则符号化失败
-- **生成report报告**</br>
- 执行命令 python 脚本路径/make_report.py
-- ## 功能介绍以及测试说明
+- **生成hiperf_report.html火焰图文件**</br>
+ python make_report.py -i perf.data -r hiperf_report.html
+- ## 功能使用介绍
 - ## 1、hiperf火焰图工具支持将指定函数拆分至目标so
 - **规格说明(配置文件说明)**</br>
  **配置项说明：**
