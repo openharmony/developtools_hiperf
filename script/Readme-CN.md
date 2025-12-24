@@ -20,9 +20,9 @@ filter_rules: 过滤规则，包含：</br>
     new_lib_name: 新库名称</br>
     source_lib_name: 要拆分的源库名称</br>
   
-   **默认情况下配置文件为空(根据需求配置)：**   
+   **默认情况下配置文件为空(根据需求配置)：**   </br>
  ![image.png](https://raw.gitcode.com/user-images/assets/8795508/01e5e06d-08c4-4db2-bedf-053b4a0ba792/image.png 'image.png')
- 
+ </br>
 - **测试验证**</br>
 **测试预制环境：**</br>
 拉取最新的代码，将make_report.py和配置文件config.json替换到本地测试工程</br>
@@ -32,8 +32,9 @@ filter_rules: 过滤规则，包含：</br>
 2、将测试测试的perfect.data与测试代码放在同一个路径下</br>
 3、执行make_report.py</br>
 **预期结果：**</br>
-打印“过滤规则不符合要求，存在空内容”如截图
+打印“过滤规则不符合要求，存在空内容”如截图</br>
 ![image.png](https://raw.gitcode.com/user-images/assets/8795508/3e48bf57-1701-4751-a0ef-954ad7d9ee40/image.png 'image.png')
+</br>
 **b、无配置文件场景(执行脚本会有如下日志打印)：**</br>
 **测试步骤：**</br>
 1、删除config.json配置文件</br>
@@ -59,6 +60,7 @@ filter_rules: 过滤规则，包含：</br>
 1、/system/lib64/chipset-pub-sdk/libutils.z.so中含有Parcel::Flush字符的函数，迁移到/system/lib64/libarkweb_v8.so</br>
 **执行前：**</br>
 ![image.png](https://raw.gitcode.com/user-images/assets/8795508/ce6eb0a7-c94b-4e31-9402-2a27ddcd2f44/image.png 'image.png')
+</br>
 **执行后：**</br>
 ![image.png](https://raw.gitcode.com/user-images/assets/8795508/935bdecf-265d-4184-9876-2c4e91851396/image.png 'image.png')
 </br>
@@ -83,10 +85,13 @@ filter_rules: 过滤规则，包含：</br>
 1、/system/lib64/chipset-pub-sdk/libutils.z.so中含有Parcel::Flush字符的函数，迁移到/system/lib64/libarkweb_v8.so</br>
 **执行前：**</br>
 ![image.png](https://raw.gitcode.com/user-images/assets/8795508/ce6eb0a7-c94b-4e31-9402-2a27ddcd2f44/image.png 'image.png')
+</br>
 **执行后：**</br>
 ![image.png](https://raw.gitcode.com/user-images/assets/8795508/935bdecf-265d-4184-9876-2c4e91851396/image.png 'image.png')
+</br>
 2、/system/lib64/chipset-pub-sdk/libipc_single.z.so中含有StartWork字符的函数，迁移到/system/lib64/libarkweb_v8.so</br>
 **执行前：**</br>
 ![image.png](https://raw.gitcode.com/user-images/assets/8795508/57f8bb54-6129-4e86-8e65-7a08ae4b08c8/image.png 'image.png')
+</br>
 **执行后：**</br>
 ![image.png](https://raw.gitcode.com/user-images/assets/8795508/abf00ff2-197f-4c23-897d-687cd9bdfad4/image.png 'image.png')
