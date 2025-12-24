@@ -1,4 +1,4 @@
-# hiperf火焰图工具Readme
+# hiperf火焰图工具
 
 - ## 基础介绍
 - **环境搭建**</br>
@@ -7,8 +7,8 @@
 - **火焰图一键生成**</br>
   在脚本目录下执行命令Python main.py -app com.ohos.xxx -l lib.unstripped exe.unstripped
   注：-l 参数可以不带，unstripped符号表版本一定要和镜像版本一致，否则符号化失败
-
-
+- **生成report报告**</br>
+ 执行命令 python 脚本路径/make_report.py
 - ## 功能介绍以及测试说明
 - ## 1、hiperf火焰图工具支持将指定函数拆分至目标so
 - **需求描述**</br>
@@ -32,8 +32,7 @@ filter_rules: 过滤规则，包含：</br>
 2、将测试测试的perfect.data与测试代码放在同一个路径下</br>
 3、执行make_report.py</br>
 **预期结果：**</br>
-打印“过滤规则不符合要求，存在空内容”如截图</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/3e48bf57-1701-4751-a0ef-954ad7d9ee40/image.png 'image.png')
+打印“过滤规则不符合要求，存在空内容”
 </br>
 **b、无配置文件场景(执行脚本会有如下日志打印)：**</br>
 **测试步骤：**</br>
@@ -42,56 +41,24 @@ filter_rules: 过滤规则，包含：</br>
 3、执行make_report.py</br>
 **预期结果：**</br>
 打印“config.json文件不存在”</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/7313cfa4-fff4-467f-a370-f47f116882b6/image.png 'image.png')
-</br>
-**c、配置一条规则**</br>
+**c、配置两条规则**</br>
 **测试步骤：**</br>
-1、配置config.json，配置内容：</br>
+1、配置config.json，配置示例内容：</br>
   "filter_rules":[</br>
     {</br>
         "filter_str": ["Parcel::Flush"],</br>
-        "new_lib_name": "/system/lib64/libarkweb_v8.so",</br>
-        "source_lib_name": "/system/lib64/chipset-pub-sdk/libutils.z.so"</br>
-    }</br>
-  ]</br>
-2、将测试测试的perfect.data与测试代码放在同一个路径下</br>
-3、执行make_report.py</br>
-**预期结果：**</br>
-1、/system/lib64/chipset-pub-sdk/libutils.z.so中含有Parcel::Flush字符的函数，迁移到/system/lib64/libarkweb_v8.so</br>
-**执行前：**</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/ce6eb0a7-c94b-4e31-9402-2a27ddcd2f44/image.png 'image.png')
-</br>
-**执行后：**</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/935bdecf-265d-4184-9876-2c4e91851396/image.png 'image.png')
-</br>
-**d、配置两条规则**</br>
-**测试步骤：**</br>
-1、配置config.json，配置内容：</br>
-  "filter_rules":[</br>
-    {</br>
-        "filter_str": ["Parcel::Flush"],</br>
-        "new_lib_name": "/system/lib64/libarkweb_v8.so",</br>
-        "source_lib_name": "/system/lib64/chipset-pub-sdk/libutils.z.so"</br>
+        "new_lib_name":"demo1.so",</br>
+        "source_lib_name":"demo"</br>
     },</br>
     {</br>
         "filter_str": ["StartWork"],</br>
-        "new_lib_name": "/system/lib64/libarkweb_v8.so",</br>
-        "source_lib_name": "/system/lib64/chipset-pub-sdk/libipc_single.z.so"</br>
+       "new_lib_name": "demo2",</br>
+      "source_lib_name":  "demo3"</br>
     }</br>
   ]</br>
+  注：其中demo1、demo2可以自定义名字，demo和demo3如果不存在会有错误日志打印。需要测试正常流程需要输入存在的so名字。其中filter_str字段需要自定义，当前配置只作为示例。
 2、将测试测试的perfect.data与测试代码放在同一个路径下</br>
 3、执行make_report.py</br>
 **预期结果：**</br>
-1、/system/lib64/chipset-pub-sdk/libutils.z.so中含有Parcel::Flush字符的函数，迁移到/system/lib64/libarkweb_v8.so</br>
-**执行前：**</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/ce6eb0a7-c94b-4e31-9402-2a27ddcd2f44/image.png 'image.png')
-</br>
-**执行后：**</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/935bdecf-265d-4184-9876-2c4e91851396/image.png 'image.png')
-</br>
-2、/system/lib64/chipset-pub-sdk/libipc_single.z.so中含有StartWork字符的函数，迁移到/system/lib64/libarkweb_v8.so</br>
-**执行前：**</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/57f8bb54-6129-4e86-8e65-7a08ae4b08c8/image.png 'image.png')
-</br>
-**执行后：**</br>
-![image.png](https://raw.gitcode.com/user-images/assets/8795508/abf00ff2-197f-4c23-897d-687cd9bdfad4/image.png 'image.png')
+1、demo.so中含有Parcel::Flush字符的函数，迁移到demo1.so</br>
+2、demo3.so中含有StartWork字符的函数，迁移到demo2.so</br>
