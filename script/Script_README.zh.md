@@ -20,7 +20,7 @@ filter_rules: 过滤规则，包含：</br>
  </br>
 - **测试验证**</br>
 **测试预制环境：**</br>
-1、本地组成完整脚本工程，参考hiperf readme</br>
+1、本地组成完整脚本工程，参考[hiperf readme](../README_zh.md)</br>
 2、拉取最新的代码，将make_report.py和配置文件config.json替换到本地测试工程</br>
 **配置规则**</br>
 **测试步骤：**</br>
