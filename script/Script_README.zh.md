@@ -16,14 +16,16 @@ filter_rules: 过滤规则，包含：</br>
     source_lib_name: 要拆分的源库名称</br>
   
    **默认情况下配置文件为空(根据需求配置)：**   </br>
- ![image.png](https://raw.gitcode.com/user-images/assets/8795508/01e5e06d-08c4-4db2-bedf-053b4a0ba792/image.png 'image.png')
- </br>
-- **测试验证**</br>
-**测试预制环境：**</br>
+ {</br>
+        "filter_str": [],</br>
+        "new_lib_name":"",</br>
+        "source_lib_name":""</br>
+    }</br>
+- **功能使用示例介绍**</br>
+**预制环境：**</br>
 1、本地组成完整脚本工程，参考[hiperf readme](../README_zh.md)</br>
-2、拉取最新的代码，将make_report.py和配置文件config.json替换到本地测试工程</br>
-**配置规则**</br>
-**测试步骤：**</br>
+2、拉取最新的代码，将make_report.py和配置文件config.json替换到本地脚本工程</br>
+**使用步骤：**</br>
 1、配置config.json，配置示例内容：</br>
   "filter_rules":[</br>
     {</br>
@@ -38,7 +40,7 @@ filter_rules: 过滤规则，包含：</br>
     }</br>
   ]</br>
   注：其中demo1、demo2可以自定义名字，demo和demo3如果不存在会有错误日志打印。需要测试正常流程需要输入存在的so名字。其中filter_str字段需要自定义，当前配置只作为示例。</br>
-2、将测试测试的perfect.data与测试代码放在同一个路径下</br>
+2、将perfect.data与代码放在同一个路径下</br>
 3、通过命令：python 脚本路径/make_report.py执行make_report.py</br>
 **预期结果：**</br>
 1、demo.so中含有Parcel::Flush字符的函数，迁移到demo1.so</br>
