@@ -1,12 +1,9 @@
 # hiperf火焰图工具
 
 - ## 基础介绍
+   hiperf 火焰图工具主要功能收集和整合性能分析数据，将分析结果转换为可视化性能分析报告
 - **环境搭建**</br>
-  a. 连接设备</br>
-  b. 安装python-3.8.3
-- **火焰图一键生成**</br>
-  在脚本目录下执行命令Python main.py -app com.ohos.xxx -l lib.unstripped exe.unstripped
-  注：-l 参数可以不带，unstripped符号表版本一定要和镜像版本一致，否则符号化失败
+  a. 安装python-3.8.3
 - **生成hiperf_report.html火焰图文件**</br>
  python make_report.py -i perf.data -r hiperf_report.html
 - ## 功能使用介绍
@@ -23,23 +20,9 @@ filter_rules: 过滤规则，包含：</br>
  </br>
 - **测试验证**</br>
 **测试预制环境：**</br>
-拉取最新的代码，将make_report.py和配置文件config.json替换到本地测试工程</br>
-**a、默认配置文件(空内容)测试场景**</br>
-**测试步骤：**</br>
-1、配置config.json，各项内容设置为空(默认)</br>
-2、将测试测试的perfect.data与测试代码放在同一个路径下</br>
-3、通过命令：python 脚本路径/make_report.py执行make_report.py</br>
-**预期结果：**</br>
-打印“过滤规则不符合要求，存在空内容”
-</br>
-**b、无配置文件场景(执行脚本会有如下日志打印)：**</br>
-**测试步骤：**</br>
-1、删除config.json配置文件</br>
-2、将测试测试的perfect.data与测试代码放在同一个路径下</br>
-3、通过命令：python 脚本路径/make_report.py执行make_report.py</br>
-**预期结果：**</br>
-打印“config.json文件不存在”</br>
-**c、配置两条规则**</br>
+1、本地组成完整脚本工程，参考hiperf readme</br>
+2、拉取最新的代码，将make_report.py和配置文件config.json替换到本地测试工程</br>
+**配置规则**</br>
 **测试步骤：**</br>
 1、配置config.json，配置示例内容：</br>
   "filter_rules":[</br>
