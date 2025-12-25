@@ -180,6 +180,11 @@ public:
         "         <millisec> is in range [1-200], default is 10.\n"
         "   --data-limit <SIZE[K|M|G]>\n"
         "         Stop recording after SIZE bytes of records. Default is unlimited.\n"
+        "   --append-smo-data\n"
+        "         Output information about the original shared libraries included in SOs\n"
+        "         that support the SMO(Shared library Merge Optimization) feature. \n"
+        "         The information mainly consists of a mapping table between the PC and\n"
+        "         the original shared library names.\n"
         "   -o <output_file_name>\n"
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
         "         Set output file name, default is " + GetDefaultPathByEnv("perf.data") + ".\n"
@@ -247,6 +252,7 @@ private:
     bool compressData_ = false;
     bool noInherit_ = false;
     bool excludeHiperf_ = false;
+    bool appendSmoData_ = false;
     bool offCPU_ = false;
     bool delayUnwind_ = false;
     bool disableUnwind_ = false;

@@ -132,6 +132,15 @@ HWTEST_F(SymbolsFileTest, setSymbolsFilePath, TestSize.Level2)
     EXPECT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA_NO_ENDPATH), true);
 }
 
+HWTEST_F(SymbolsFileTest, GetVaddrByLoadBase, TestSize.Level2)
+{
+    std::unique_ptr<SymbolsFile> symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    uint64_t ip = 100;
+    uint64_t loadBase = 50;
+    uint64_t result = symbolsFile->GetVaddrByLoadBase(ip, loadBase);
+    EXPECT_EQ(result, 50);
+}
+
 /**
  * @tc.name: setSymbolsFilePath
  * @tc.desc:

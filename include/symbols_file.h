@@ -165,7 +165,7 @@ public:
 
     // get vaddr(in symbol) from ip(real addr , after mmap reloc)
     virtual uint64_t GetVaddrInSymbols(const uint64_t ip, const uint64_t mapStart, const uint64_t mapOffset) const;
-
+    uint64_t GetVaddrByLoadBase(uint64_t ip, uint64_t loadBase) const;
     // get symbols from vaddr
     const DfxSymbol GetSymbolWithVaddr(uint64_t vaddrInFile);
 

@@ -293,6 +293,40 @@ struct PerfRecordAuxData {
     struct sample_id sample_id;
 };
 
+struct SmoHeaderFragment {
+    u32 version = 0;
+    u32 soNumber = 0;
+};
+ 
+struct SmoMergeSoHeaderFragment {
+    u32 mapOffset = 0;
+    u32 mapSize = 0;
+    u32 strtabOffset = 0;
+    u32 strtabSize = 0;
+    u32 soOffset = 0;  // offset of the merged SO name
+};
+ 
+struct AdltMapFragment {
+    u32 pcBegin = 0;
+    u32 pcEnd = 0;
+    u32 psodIndex = 0;
+    u32 nameOffset = 0;
+};
+ 
+struct PerfRecordSmoDataFragment {
+    SmoHeaderFragment smoHeader;
+    std::vector<SmoMergeSoHeaderFragment> smoMergeSoHeaderList;
+    std::vector<AdltMapFragment> adltMapList;
+    std::string strtab;
+};
+ 
+struct AdltMapDataFragment {
+    u32 pcBegin = 0;
+    u32 pcEnd = 0;
+    u32 psodIndex = 0;
+    std::string originalSoName;
+};
+
 /*
     This record indicates a read event.
 */

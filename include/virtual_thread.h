@@ -113,6 +113,8 @@ private:
     std::vector<int> processMemMapsIndexs_;
     std::vector<int> &memMapsIndexs_;
     VirtualThread &parent_;
+    uint64_t adltLoadBase = static_cast<uint64_t>(-1);
+    bool getLoadBaseFlag = false;
 #ifdef HIPERF_DEBUG
     mutable std::unordered_set<uint64_t> missedRuntimeVaddr_;
 #endif

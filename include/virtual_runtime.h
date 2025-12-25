@@ -56,6 +56,7 @@ public:
 
     void SetRecordMode(const RecordCallBack &recordCallBack);
     void SetCollectSymbolCallBack(const CollectSymbolCallBack &collectSymbolCallBack);
+    void SetSmoFlag(bool flag) { smoFlag_ = flag; }
 
     // this both used in report and record follow
     // it process the record, and rebuild the trhread maps
@@ -86,6 +87,8 @@ public:
 
     // any mode
     static_assert(sizeof(pid_t) == sizeof(int));
+    std::string GetSoNameFromPc(uint64_t pc, std::string fileName);
+    std::map<std::string, std::vector<AdltMapDataFragment>> GetSoMappingMap();
 
     const std::vector<std::unique_ptr<SymbolsFile>> &GetSymbolsFiles() const
     {
@@ -143,6 +146,7 @@ public:
 
     // report use
     void UpdateFromPerfData(const std::vector<SymbolFileStruct> &);
+    void UpdateFilesFromSmoRecordData();
     void UnwindFromRecord(PerfRecordSample &recordSample);
     std::string ReadThreadName(const pid_t tid, const bool isThread);
     std::string ReadFromSavedCmdLines(const pid_t tid);
@@ -194,7 +198,7 @@ private:
     bool GetSymbolCache(const uint64_t fileVaddr, DfxSymbol &symbol,
                         const perf_callchain_context &context);
     // find synbols function name
-    void MakeCallFrame(DfxSymbol &symbol, DfxFrame &callFrame);
+    void MakeCallFrame(const uint64_t ip, DfxSymbol &symbol, DfxFrame &callFrame);
     void UpdateSymbols(std::shared_ptr<DfxMap> map, const pid_t pid);
     // we don't know whether hap vma mapping is stand for a so
     // thus we need try to parse it first
@@ -205,6 +209,7 @@ private:
     void UpdateFromRecord(PerfRecordComm &recordComm);
     void DedupFromRecord(PerfRecordSample *recordSample);
     void UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace);
+    void UpdateFromRecord(PerfRecordSmoDetachingEvent &record);
     // threads
     VirtualThread &UpdateThread(const pid_t pid, const pid_t tid, const std::string name = "");
     VirtualThread &CreateThread(const pid_t pid, const pid_t tid, const std::string name = "");
@@ -218,6 +223,8 @@ private:
     const DfxSymbol GetKernelSymbol(const uint64_t ip, const std::vector<DfxMap> &memMaps,
                                     const VirtualThread &thread);
     const DfxSymbol GetUserSymbol(const uint64_t ip, const VirtualThread &thread);
+    std::string GetOriginSoName(const uint64_t ip, const VirtualThread &thread, DfxSymbol &vaddrSymbol,
+        std::shared_ptr<DfxMap> &map, SymbolsFile* symbolsFile);
     const DfxSymbol GetKernelThreadSymbol(const uint64_t ip, const VirtualThread &thread);
 #ifdef HIPERF_DEBUG
     std::unordered_set<uint64_t> missedRuntimeVaddr_;
@@ -234,8 +241,20 @@ private:
     void ProcessKernelCallChain(PerfRecordSample &sample);
     void AdjustCallChain(PerfRecordSample &sample);
     void UpdateProcessSymbols(VirtualThread &thread, const pid_t pid);
+    void UpdateProcessSmoInfo(VirtualThread &thread);
+    void UpdateSmoList(VirtualThread &thread, std::vector<std::shared_ptr<DfxElf>> &elfList,
+        std::vector<std::string> &filePathList);
+    void PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmoDataFragment, u32 mapOffset);
     void UpdateSandBoxThreadMaps(std::unique_ptr<SymbolsFile> &symFile, std::shared_ptr<DfxMap> &curMap,
                                  std::shared_ptr<DfxMap> &prevMap, PerfRecordMmap2 &recordMmap2);
+    std::map<std::string, std::vector<AdltMapDataFragment>> soMappingMap;
+    // root or --append-smo-data
+    bool smoFlag_ = false;
+    // mapping merged so and its corresponding so before merging
+    std::map<std::string, std::unordered_set<std::string>> originSoMap;
+    std::map<uint16_t, std::vector<uint8_t>> binaryDataMap;
+    // every merged so shuould only be stored once, save the stored merged so path here
+    std::unordered_set<std::string> savedSmoPathList;
 };
 } // namespace HiPerf
 } // namespace Developtools
