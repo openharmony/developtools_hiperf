@@ -23,7 +23,37 @@ filter_rules: 过滤规则，包含：</br>
     }</br>
 - **功能使用示例介绍**</br>
 **预制环境：**</br>
-1、本地组成完整脚本工程，参考[hiperf readme](../README_zh.md)</br>
+1、本地组成完整脚本工程</br>
+
+| 编译目标 | 编译参数 |
+|--|--|
+|x86_64 平台的工具  |-build-target hiperf_target_all  | 
+ 	    
+```
+/developtools/hiperf
+└── script			# 主脚本目录
+    ├── bin			# 二进制文件目录
+    │   └── windows		# Windows平台二进制
+    │       └── x86_64		# x86_64架构二进制
+    │           ├── hiperf_host.exe	# 主程序可执行文件
+    │           ├── libhiperf_report.dll	# 性能报告库
+    │           └── libsec_shared.dll	# 安全共享库
+    │
+    ├── report.html		# 主报告模板
+    ├── report-diff.html	# 差异报告模板
+    ├── config.json		# 配置文件
+    ├── package.sh		# 打包脚本
+    ├── make_report.py		# 报告生成脚本
+    ├── make_diff.py		# 差异报告生成脚本
+    ├── make_report_sample.py	# 报告样本生成脚本
+    ├── command_script.py	# 命令脚本
+    ├── record_control.py	# 记录控制脚本
+    ├── recv_binary_cache.py	# 二进制缓存接收脚本
+    ├── hiperf_utils.py		# 工具函数
+    ├── main.py			# 主入口脚本
+    └── loadlib_test.py		# 库加载测试脚本
+  ```
+    
 2、拉取最新的代码，将make_report.py和配置文件config.json替换到本地脚本工程</br>
 **使用步骤：**</br>
 1、配置config.json，配置示例内容：</br>
