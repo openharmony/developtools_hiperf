@@ -71,6 +71,7 @@ private:
                           uint64_t &remainingSize, size_t &recordNumber, const perf_event_attr *attr);
     bool SMOReadRecordByAttr(ProcessRecordCB &callback, uint8_t *buf,
         uint64_t &remainingSize, size_t &recordNumber, const perf_event_attr *attr);
+    bool ValidateSMOReadRecord(uint8_t *buf, perf_event_header *header, uint64_t &remainingSize);
     bool IsValidDataFile();
     bool IsGzipFile();
 
