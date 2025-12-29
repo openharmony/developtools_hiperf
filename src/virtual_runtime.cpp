@@ -120,7 +120,7 @@ VirtualThread &VirtualRuntime::UpdateThread(const pid_t pid, const pid_t tid, co
     return thread;
 }
 
-void VirtualRuntime::UpdateSmoList(VirtualThread &thread, std::vector<std::shared_ptr<DfxElf>> &elfList,
+void VirtualRuntime::UpdateSmoList(const VirtualThread &thread, std::vector<std::shared_ptr<DfxElf>> &elfList,
     std::vector<std::string> &filePathList)
 {
     for (auto &dfxMap : thread.GetMaps()) {
@@ -134,13 +134,13 @@ void VirtualRuntime::UpdateSmoList(VirtualThread &thread, std::vector<std::share
 }
 
 
-void VirtualRuntime::UpdateProcessSmoInfo(VirtualThread &thread)
+bool VirtualRuntime::UpdateProcessSmoInfo(const VirtualThread &thread)
 {
     std::vector<std::shared_ptr<DfxElf>> elfList;
     std::vector<std::string> filePathList;
     UpdateSmoList(thread, elfList, filePathList);
     if (elfList.size() == 0) {
-        return;
+        return false;
     }
     SmoHeaderFragment smoHeader = {0, elfList.size()};
     std::vector<SmoMergeSoHeaderFragment> smoMergeSoHeaderList;
@@ -176,6 +176,7 @@ void VirtualRuntime::UpdateProcessSmoInfo(VirtualThread &thread)
     }
     PerfRecordSmoDataFragment perfRecordSmoDataFragment = {smoHeader, smoMergeSoHeaderList, adltMapList, strtab};
     PutSmoDataToRecord(perfRecordSmoDataFragment, mapOffset);
+    return true;
 }
 
 void VirtualRuntime::PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmoDataFragment, u32 mapOffset)
@@ -282,9 +283,6 @@ VirtualThread &VirtualRuntime::CreateThread(const pid_t pid, const pid_t tid, co
         recordCallBack_(*commRecord);
         if (pid == tid) {
             UpdateProcessSymbols(thread, pid);
-        }
-        if (smoFlag_) {
-            UpdateProcessSmoInfo(thread);
         }
         HLOGV("thread created");
 #ifdef HIPERF_DEBUG_TIME
@@ -963,18 +961,31 @@ void VirtualRuntime::UpdateFromRecord(PerfRecordComm &recordComm)
     UpdateThread(recordComm.data_.pid, recordComm.data_.tid, recordComm.data_.comm);
 }
 
-void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
+std::vector<uint8_t> VirtualRuntime::UpdateBinaryDataFromRecord(PerfRecordSmoDetachingEvent &record)
 {
+    std::vector<uint8_t> binaryData;
+    if (binaryDataMap.size() == record.allFragmentNum_) {
+        return binaryData;
+    }
     binaryDataMap.emplace(record.fragmentNum_, record.binaryData);
     if (binaryDataMap.size() != record.allFragmentNum_) {
-        return;
+        return binaryData;
     }
-    std::vector<uint8_t> binaryData;
+
     for (uint16_t i = 0; i < binaryDataMap.size(); i++) {
         if (binaryDataMap[i].empty()) {
-            return;
+            return binaryData;
         }
         binaryData.insert(binaryData.end(), binaryDataMap[i].begin(), binaryDataMap[i].end());
+    }
+    return binaryData;
+}
+
+void VirtualRuntime::UpdateFromRecord(PerfRecordSmoDetachingEvent &record)
+{
+    std::vector<uint8_t> binaryData = UpdateBinaryDataFromRecord(record);
+    if (binaryData.empty()) {
+        return;
     }
     uint8_t* data = binaryData.data();
     SmoHeaderFragment* smoHeaderPtr = reinterpret_cast<SmoHeaderFragment*>(data);

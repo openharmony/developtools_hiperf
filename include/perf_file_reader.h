@@ -69,6 +69,8 @@ private:
     bool ReadRecord(ProcessRecordCB &callback);
     bool ReadRecordByAttr(ProcessRecordCB &callback, uint8_t *buf,
                           uint64_t &remainingSize, size_t &recordNumber, const perf_event_attr *attr);
+    bool SMOReadRecordByAttr(ProcessRecordCB &callback, uint8_t *buf,
+        uint64_t &remainingSize, size_t &recordNumber, const perf_event_attr *attr);
     bool IsValidDataFile();
     bool IsGzipFile();
 

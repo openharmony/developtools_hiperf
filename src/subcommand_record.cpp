@@ -2348,6 +2348,14 @@ bool SubCommandRecord::FinishWriteRecordFile()
     const auto startTime = steady_clock::now();
 #endif
     ProcessSymbolsIfNeeded();
+    if (virtualRuntime_.GetSmoFlag()) {
+        for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
+            const VirtualThread &thread = virtualRuntime_.GetThreads().at(it->first);
+            if (virtualRuntime_.UpdateProcessSmoInfo(thread)) {
+                break;
+            }
+        }
+    }
     CHECK_TRUE(!dedupStack_ || fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable()), false, 0, "");
     CleanupForBacktrack();
     CHECK_TRUE(fileWriter_->Close(), false, 1, "Fail to close record file %s", outputFilename_.c_str());

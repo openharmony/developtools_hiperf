@@ -57,6 +57,7 @@ public:
     void SetRecordMode(const RecordCallBack &recordCallBack);
     void SetCollectSymbolCallBack(const CollectSymbolCallBack &collectSymbolCallBack);
     void SetSmoFlag(bool flag) { smoFlag_ = flag; }
+    bool GetSmoFlag() { return smoFlag_; }
 
     // this both used in report and record follow
     // it process the record, and rebuild the trhread maps
@@ -153,6 +154,7 @@ public:
     bool IsKernelThread(const pid_t pid);
     void CollectDedupSymbol(kSymbolsHits &kernelSymbolsHits,
                             uSymbolsHits &userSymbolsHits);
+    bool UpdateProcessSmoInfo(const VirtualThread &thread);
     // debug time
 #ifdef HIPERF_DEBUG_TIME
     std::chrono::microseconds updateSymbolsTimes_ = std::chrono::microseconds::zero();
@@ -210,6 +212,7 @@ private:
     void DedupFromRecord(PerfRecordSample *recordSample);
     void UpdateFromRecord(PerfRecordAuxtrace &recordAuxTrace);
     void UpdateFromRecord(PerfRecordSmoDetachingEvent &record);
+    std::vector<uint8_t> UpdateBinaryDataFromRecord(PerfRecordSmoDetachingEvent &record);
     // threads
     VirtualThread &UpdateThread(const pid_t pid, const pid_t tid, const std::string name = "");
     VirtualThread &CreateThread(const pid_t pid, const pid_t tid, const std::string name = "");
@@ -241,8 +244,7 @@ private:
     void ProcessKernelCallChain(PerfRecordSample &sample);
     void AdjustCallChain(PerfRecordSample &sample);
     void UpdateProcessSymbols(VirtualThread &thread, const pid_t pid);
-    void UpdateProcessSmoInfo(VirtualThread &thread);
-    void UpdateSmoList(VirtualThread &thread, std::vector<std::shared_ptr<DfxElf>> &elfList,
+    void UpdateSmoList(const VirtualThread &thread, std::vector<std::shared_ptr<DfxElf>> &elfList,
         std::vector<std::string> &filePathList);
     void PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmoDataFragment, u32 mapOffset);
     void UpdateSandBoxThreadMaps(std::unique_ptr<SymbolsFile> &symFile, std::shared_ptr<DfxMap> &curMap,
