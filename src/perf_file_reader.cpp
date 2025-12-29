@@ -305,6 +305,78 @@ bool PerfFileReader::ReadRecordByAttr(ProcessRecordCB &callback, uint8_t *buf,
     return true;
 }
 
+bool PerfFileReader::ValidateSMOReadRecord(uint8_t *buf, perf_event_header *header,
+    uint64_t &remainingSize)
+{
+    if (header->size > RECORD_SIZE_LIMIT || header->size < sizeof(perf_event_header)) {
+        HLOGE("read record header size error %hu", header->size);
+        return false;
+    }
+    if (remainingSize < header->size) {
+        HLOGE("not enough header->size.");
+        return false;
+    }
+    size_t headerSize = sizeof(perf_event_header);
+    if (!Read(buf + headerSize, header->size - headerSize)) {
+        HLOGE("read record data size failed %zu", header->size - headerSize);
+        return false;
+    }
+    return true;
+}
+
+bool PerfFileReader::SMOReadRecordByAttr(ProcessRecordCB &callback, uint8_t *buf,
+    uint64_t &remainingSize, size_t &recordNumber, const perf_event_attr *attr)
+{
+    CHECK_TRUE(buf != nullptr && attr != nullptr, false, 0, "");
+    if (remainingSize < sizeof(perf_event_header)) {
+        HLOGW("not enough sizeof perf_event_header");
+        return false;
+    } else if (!Read(buf, sizeof(perf_event_header))) {
+        HLOGW("read perf_event_header failed.");
+        return false;
+    }
+    perf_event_header *header = reinterpret_cast<perf_event_header *>(buf);
+    if (!ValidateSMOReadRecord(buf, header, remainingSize)) {
+        return false;
+    }
+    size_t speSize = 0;
+    if (header->type == PERF_RECORD_AUXTRACE) {
+        ReadSpeRecord(header, buf, speSize);
+    }
+    uint8_t *data = buf;
+    if (header->type == PERF_RECORD_TYPE_SMO_NUM) {
+        PerfEventRecord& record = PerfEventRecordFactory::GetPerfEventRecord(
+            static_cast<perf_event_type>(header->type), data, *attr);
+        // unknown record , break the process
+        if (record.GetName() == nullptr) {
+            return false;
+        }
+        HLOGV("record type %u", record.GetType());
+        remainingSize = remainingSize - header->size - speSize;
+#ifdef HIPERF_DEBUG_TIME
+        const auto startCallbackTime = steady_clock::now();
+#endif
+        // call callback to process, then destroy record
+        callback(record);
+        recordNumber++;
+#ifdef HIPERF_DEBUG_TIME
+        readCallbackTime_ +=
+            duration_cast<microseconds>(steady_clock::now() - startCallbackTime);
+#endif
+        return true;
+    }
+    remainingSize = remainingSize - header->size - speSize;
+#ifdef HIPERF_DEBUG_TIME
+    const auto startCallbackTime = steady_clock::now();
+#endif
+    recordNumber++;
+#ifdef HIPERF_DEBUG_TIME
+    readCallbackTime_ +=
+        duration_cast<microseconds>(steady_clock::now() - startCallbackTime);
+#endif
+    return true;
+}
+
 bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
 {
 #ifdef HIPERF_DEBUG_TIME
@@ -317,6 +389,20 @@ bool PerfFileReader::ReadRecord(ProcessRecordCB &callback)
     size_t recordNumber = 0;
     const perf_event_attr *attr = GetDefaultAttr();
     CHECK_TRUE(attr != nullptr, false, 1, "attr is null");
+    uint64_t smoRemainingSize = header_.data.size;
+    size_t smoRecordNumber = 0;
+    HIPERF_BUF_ALIGN static uint8_t smoBuf[RECORD_SIZE_LIMIT_SPE];
+    const perf_event_attr *smoAttr = GetDefaultAttr();
+    CHECK_TRUE(smoAttr != nullptr, false, 1, "smoAttr is null");
+    long originalPosition = ftell(fp_);
+    while (smoRemainingSize > 0) {
+        if (!SMOReadRecordByAttr(callback, smoBuf, smoRemainingSize, smoRecordNumber, smoAttr)) {
+            return false;
+        }
+    }
+    if (fseek(fp_, originalPosition, SEEK_SET)) {
+        return false;
+    }
     while (remainingSize > 0) {
         if (!ReadRecordByAttr(callback, buf, remainingSize, recordNumber, attr)) {
             return false;
