@@ -16,11 +16,13 @@
     source_lib_name: 要拆分的源库名称</br>
   
    **默认情况下配置文件为空(根据需求配置)：**   </br>
- {</br>
-        "filter_str": [],</br>
+  ```
+    {
+        "filter_str": [],
         "new_lib_name":"",</br>
         "source_lib_name":""</br>
-    }</br>
+    }
+  ```
  **功能使用示例介绍**</br>
 **预制环境：**</br>
 1、本地组成完整脚本工程</br> 
@@ -48,8 +50,6 @@
     ├── main.py			# 主入口脚本
     └── loadlib_test.py		# 库加载测试脚本
   ```
-    
-2、拉取最新的代码，将make_report.py和配置文件config.json替换到本地脚本工程</br>
 **使用步骤：**</br>
 1、配置config.json，配置示例内容：</br>
 ```
