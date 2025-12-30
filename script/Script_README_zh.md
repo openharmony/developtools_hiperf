@@ -19,8 +19,8 @@
   ```
     {
         "filter_str": [],
-        "new_lib_name":"",</br>
-        "source_lib_name":""</br>
+        "new_lib_name":"",
+        "source_lib_name":""
     }
   ```
  **功能使用示例介绍**</br>
