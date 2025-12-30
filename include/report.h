@@ -532,6 +532,7 @@ private:
     bool MultiLevelSameAndUpdateCount(ReportItem &l, ReportItem &r);
     void MergeCallFrameCount(ReportItem &leftItem, ReportItem &rightItem);
     virtual int MultiLevelCompare(const ReportItem &a, const ReportItem &b);
+    std::string GetAdltExtendMapName(const std::string mapName, const std::string originSoName);
 
     void StatisticsRecords();
     void FilterDisplayRecords();
