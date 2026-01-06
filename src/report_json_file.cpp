@@ -246,8 +246,6 @@ int ReportJsonFile::GetLibID(const std::string filepath, const std::string origi
                 int oldLibId = oldIt - libList_.begin();
                 HiddenFunctionInLib(oldLibId, funcName);
             }
-        } else {
-            HLOGW("Get extendName fail for nullptr");
         }
     }
     auto it = std::find(libList_.begin(), libList_.end(), std::string_view(newFilePath));

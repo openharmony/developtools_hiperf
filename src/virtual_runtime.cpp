@@ -1328,9 +1328,12 @@ std::string VirtualRuntime::GetOriginSoName(const uint64_t ip, const VirtualThre
     std::string originSoName = "";
     if (map->name.find("libadlt") != std::string::npos && EndsWith(map->name, ".so")) {
         vaddrSymbol.fileVaddr_ = symbolsFile->GetVaddrByLoadBase(ip, map->GetAdltLoadBase());
+        // get originSoName from smo record in perf.data,
+        // no root && no --append-smo-data option, the return value will be ""
         originSoName = GetSoNameFromPc(vaddrSymbol.fileVaddr_, map->name);
         auto elf = map->GetElfLongLong(0);
-        if (originSoName.empty() && elf != nullptr && elf->IsAdlt()) {
+        // when there is no smo record in perf.data, only in root mode,try to get originSoName from elf
+        if (isRoot_ && originSoName.empty() && elf != nullptr && elf->IsAdlt()) {
             originSoName = elf->GetAdltOriginSoNameByRelPc(vaddrSymbol.fileVaddr_);
         }
         HLOGV("Get new fileVaddr:0x%" PRIx64 " loadbase: 0x%" PRIx64 " ip:0x%" PRIx64 " originSo:'%s'",

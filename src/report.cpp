@@ -33,6 +33,15 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 unsigned long long ReportItem::allIndex_ = 0;
+
+std::string Report::GetAdltExtendMapName(const std::string mapName, const std::string originSoName)
+{
+    if (!originSoName.empty()) {
+        return mapName + ":" + originSoName;
+    }
+    return mapName;
+}
+
 void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCallStack)
 {
     size_t configIndex = GetConfigIndex(sample.data_.id);
@@ -45,8 +54,9 @@ void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCal
     if (includeCallStack) {
         // we will use caller mode , from last to first
         auto frameIt = sample.callFrames_.rbegin();
+        auto mapName = GetAdltExtendMapName(frameIt->mapName, frameIt->originSoName);
         ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-            sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
+            sample.data_.pid, sample.data_.tid, thread.name_, mapName,
             frameIt->funcName, frameIt->funcOffset, sample.data_.period);
         HLOGD("ReportItem: %s", item.ToDebugString().c_str());
         HLOG_ASSERT(!item.func_.empty());
@@ -77,8 +87,9 @@ void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCal
                 HLOGV("stub.an frame, go to next, mapname %s", frameIt->mapName.c_str());
                 frameIt++;
             }
+            auto mapName = GetAdltExtendMapName(frameIt->mapName, frameIt->originSoName);
             ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-                sample.data_.pid, sample.data_.tid, thread.name_, frameIt->mapName,
+                sample.data_.pid, sample.data_.tid, thread.name_, mapName,
                 frameIt->funcName, frameIt->funcOffset, sample.data_.period);
             HLOGV("%s", item.ToDebugString().c_str());
             HLOG_ASSERT(!item.func_.empty());
