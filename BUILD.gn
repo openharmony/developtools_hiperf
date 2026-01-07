@@ -126,6 +126,8 @@ sources_platform_with_ts_common = [
   "./src/virtual_thread.cpp",
 ]
 
+source_adapt_mingw_data_type = [ "./src/mingw_adapter.cpp" ]
+
 if (hiperf_debug) {
   sources_platform_with_ts_common += [ "./src/debug_logger.cpp" ]
 }
@@ -187,6 +189,20 @@ if (hiperf_use_libunwinder) {
 
 if (is_ohos && hiperf_use_syspara) {
   common_configs += [ ":hiperf_syspara_config" ]
+}
+
+ohos_source_set("adapt_mingw_sourceset") {
+  part_name = "hiperf"
+  subsystem_name = "developtools"
+  include_dirs = [ "${hiperf_path}/include" ]
+
+  sources = source_adapt_mingw_data_type
+
+  if (is_ohos) {
+    external_deps = [ "faultloggerd:libunwinder" ]
+  } else {
+    external_deps = [ "faultloggerd:unwinder_host" ]
+  }
 }
 
 ohos_source_set("hiperf_platform_common") {
@@ -408,6 +424,7 @@ ohos_executable("hiperf") {
   install_enable = true
   sources = [ "./src/main.cpp" ]
   deps = [
+    ":adapt_mingw_sourceset",
     ":hiperf_etc",
     ":hiperf_platform_common",
     ":hiperf_platform_linux",
@@ -444,7 +461,10 @@ ohos_executable("hiperf_host") {
   install_enable = false
   sources = [ "./src/main.cpp" ]
 
-  deps = [ ":hiperf_platform_common" ]
+  deps = [
+    ":adapt_mingw_sourceset",
+    ":hiperf_platform_common",
+  ]
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
@@ -506,6 +526,7 @@ ohos_source_set("hiperf_platform_host") {
   part_name = "hiperf"
   subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
+  deps = [ ":adapt_mingw_sourceset" ]
   public_deps = [ ":hiperf_platform_common" ]
   external_deps = [
     "bounds_checking_function:libsec_shared",

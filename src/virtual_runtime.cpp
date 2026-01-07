@@ -26,6 +26,7 @@
 
 #include "dfx_map.h"
 #include "hiperf_hilog.h"
+#include "mingw_adapter.h"
 #include "register.h"
 #include "spe_decoder.h"
 #include "symbols_file.h"
@@ -127,7 +128,7 @@ void VirtualRuntime::UpdateSmoList(const VirtualThread &thread, std::vector<std:
         if (MERGED_SO_NAMES.find(dfxMap->name.substr(dfxMap->name.rfind('/') + 1)) != MERGED_SO_NAMES.end() &&
             savedSmoPathList.find(dfxMap->name) == savedSmoPathList.end()) {
                 filePathList.push_back(dfxMap->name);
-                elfList.push_back(dfxMap->GetElfLongLong(0));
+                elfList.push_back(GetElfByMap(dfxMap));
                 savedSmoPathList.insert(dfxMap->name);
         }
     }
@@ -1331,7 +1332,7 @@ std::string VirtualRuntime::GetOriginSoName(const uint64_t ip, const VirtualThre
         // get originSoName from smo record in perf.data,
         // no root && no --append-smo-data option, the return value will be ""
         originSoName = GetSoNameFromPc(vaddrSymbol.fileVaddr_, map->name);
-        auto elf = map->GetElfLongLong(0);
+        auto elf = GetElfByMap(map);
         // when there is no smo record in perf.data, only in root mode,try to get originSoName from elf
         if (isRoot_ && originSoName.empty() && elf != nullptr && elf->IsAdlt()) {
             originSoName = elf->GetAdltOriginSoNameByRelPc(vaddrSymbol.fileVaddr_);
