@@ -185,6 +185,7 @@ ohos_unittest("hiperf_unittest") {
     "./../src/utilities.cpp",
     "./../src/virtual_runtime.cpp",
     "./../src/virtual_thread.cpp",
+    "./../src/mingw_adapter.cpp",
   ]
 
   if (is_ohos) {

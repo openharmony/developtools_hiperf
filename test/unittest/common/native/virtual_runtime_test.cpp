@@ -22,7 +22,7 @@
 #include <sys/mman.h>
 
 #include <hilog/log.h>
-
+#include "mingw_adapter.h"
 #include "symbols_file_test.h"
 
 using namespace testing::ext;
@@ -445,6 +445,41 @@ HWTEST_F(VirtualRuntimeTest, UpdateProcessSymbols, TestSize.Level2)
     auto callBack = std::bind(&VirtualRuntimeTest::RecordCallBack, this, std::placeholders::_1);
     runtime_->SetRecordMode(callBack);
     runtime_->UpdateProcessSymbols(thread, pid);
+}
+
+/**
+ * @tc.name: CheckGetElfByMap
+ * @tc.desc: Test case for GetElfByMap to get elf
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, CheckGetElfByMap, TestSize.Level2)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    VirtualThread thread(getpid(), files);
+    thread.ParseMap();
+    auto& maps = thread.GetMaps();
+    for (const auto& map : maps) {
+        if (OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(map->name)) {
+            EXPECT_NE(GetElfByMap(map), nullptr);
+            break;
+        }
+    }
+}
+
+/**
+ * @tc.name: CheckGetElfByInvalidMap
+ * @tc.desc: Test case for GetElfByMap to get elf fail
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, CheckGetElfByInvalidMap, TestSize.Level2)
+{
+    std::string filename = "";
+    uint64_t begin = rnd_();
+    uint64_t len = rnd_();
+    uint64_t offset = rnd_();
+    uint32_t prot = rnd_();
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+    EXPECT_EQ(GetElfByMap(map), nullptr);
 }
 } // namespace HiPerf
 } // namespace Developtools
