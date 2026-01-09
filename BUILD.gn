@@ -192,6 +192,10 @@ if (is_ohos && hiperf_use_syspara) {
 }
 
 ohos_source_set("adapt_mingw_sourceset") {
+  visibility = [
+    ":*",
+    "./test/:*",
+  ]
   part_name = "hiperf"
   subsystem_name = "developtools"
   include_dirs = [ "${hiperf_path}/include" ]
