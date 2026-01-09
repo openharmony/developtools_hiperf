@@ -160,6 +160,7 @@ ohos_unittest("hiperf_unittest") {
     "./../src/dwarf_encoding.cpp",
     "./../src/hiperf_libreport.cpp",
     "./../src/ipc_utilities.cpp",
+    "./../src/mingw_adapter.cpp",
     "./../src/option.cpp",
     "./../src/perf_event_record.cpp",
     "./../src/perf_events.cpp",
@@ -185,7 +186,6 @@ ohos_unittest("hiperf_unittest") {
     "./../src/utilities.cpp",
     "./../src/virtual_runtime.cpp",
     "./../src/virtual_thread.cpp",
-    "./../src/mingw_adapter.cpp",
   ]
 
   if (is_ohos) {
@@ -235,6 +235,7 @@ ohos_fuzztest("CommandLineFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
+  deps += [ "${hiperf_path}/:adapt_mingw_sourceset" ]
   external_deps = [
     "abseil-cpp:absl_container",
     "abseil-cpp:absl_cord",
@@ -260,6 +261,7 @@ ohos_fuzztest("LibReportFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
+  deps += [ "${hiperf_path}/:adapt_mingw_sourceset" ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
@@ -277,6 +279,7 @@ ohos_fuzztest("ClientApiFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
+  deps += [ "${hiperf_path}/:adapt_mingw_sourceset" ]
   external_deps = [
     "abseil-cpp:absl_container",
     "abseil-cpp:absl_cord",
@@ -298,6 +301,7 @@ ohos_fuzztest("SpeDecoderFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
+  deps += [ "${hiperf_path}/:adapt_mingw_sourceset" ]
   external_deps = [
     "abseil-cpp:absl_container",
     "abseil-cpp:absl_cord",
@@ -320,6 +324,7 @@ ohos_fuzztest("PerfFileFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
+  deps += [ "${hiperf_path}/:adapt_mingw_sourceset" ]
   external_deps = [
     "abseil-cpp:absl_container",
     "abseil-cpp:absl_cord",
@@ -342,6 +347,7 @@ ohos_fuzztest("PerfFileFormatFuzzTest") {
   configs = [ ":hiperf_test_config" ]
   cflags = fuzz_cflags
   deps = common_deps
+  deps += [ "${hiperf_path}/:adapt_mingw_sourceset" ]
   external_deps = [
     "abseil-cpp:absl_container",
     "abseil-cpp:absl_cord",
