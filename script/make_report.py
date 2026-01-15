@@ -18,6 +18,7 @@ import os
 import sys
 import time
 import argparse
+import copy
 from hiperf_utils import get_lib
 from hiperf_utils import dir_check
 from hiperf_utils import file_check
@@ -118,7 +119,7 @@ def filter_and_move_symbols(data, config_file):
         # 查找源库的索引
         source_lib_indices = set()
         for idx, lib_path in enumerate(data['symbolsFileList']):
-            if source_lib_name in lib_path:
+            if source_lib_name == lib_path:
                 source_lib_indices.add(idx)
         
         if not source_lib_indices:
