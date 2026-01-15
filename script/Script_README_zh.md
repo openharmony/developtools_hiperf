@@ -67,7 +67,7 @@
   ]
 ``` 
   注：其中demo1、demo2可以自定义名字，demo和demo3如果不存在会有错误日志打印。需要测试正常流程需要输入存在的so名字。其中filter_str字段需要自定义，当前配置只作为示例。</br>
-2、将perfect.data与代码放在同一个路径下</br>
+2、将perf.data放工程目录下</br>
 3、执行命令：python make_report.py -i perf.data</br>
 注：在测试工程路径下执行</br>
 **预期结果：**</br>
