@@ -72,7 +72,8 @@ def merge_threads(data, merge_prefix):
                         'tid': merged_tid,
                         'eventCount': total_events,
                         'sampleCount': total_samples,
-                        'CallOrder': base_call_order
+                        'CallOrder': base_call_order,
+                        'isFinalMerged': "true"
                     }
 
                     threads.append(final_merged_thread)
@@ -110,7 +111,6 @@ def filter_and_move_symbols(data, config_file):
         new_lib_name = rule['new_lib_name']
         source_lib_name = rule['source_lib_name']
         if len(filter_str_list) == 0 or new_lib_name == '' or source_lib_name == '':
-            print(f"过滤规则不符合要求，存在空内容")
             return data
 
         # 获取新库的索引
