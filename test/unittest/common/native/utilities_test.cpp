@@ -221,6 +221,7 @@ HWTEST_F(UtilitiesTest, StringStartsWith, TestSize.Level3)
     EXPECT_EQ(StringStartsWith(testString, ""), true);
     EXPECT_EQ(StringStartsWith(testString, "1"), true);
     EXPECT_EQ(StringStartsWith(testString, ","), false);
+    EXPECT_EQ(StringStartsWith(testString, testString + "1"), false);
 
     EXPECT_EQ(StringStartsWith("", ""), true);
     EXPECT_EQ(StringStartsWith("", "1"), false);
