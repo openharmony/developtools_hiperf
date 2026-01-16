@@ -666,7 +666,11 @@ bool StringEndsWith(const std::string &string, const std::string &with)
             return false;
         }
     }
-    return string.rfind(with) == (string.length() - with.length());
+    auto pos = string.rfind(with);
+    if (pos == std::string::npos) {
+        return false;
+    }
+    return pos == (string.length() - with.length());
 }
 
 bool HexDump(const void *buf, const size_t size, const size_t maxSize)
