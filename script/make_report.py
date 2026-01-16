@@ -18,9 +18,66 @@ import os
 import sys
 import time
 import argparse
+import copy
 from hiperf_utils import get_lib
 from hiperf_utils import dir_check
 from hiperf_utils import file_check
+
+
+def merge_callstack(data1, data2):
+    def merge_nodes(d1, d2):
+        if not d1:
+            return d2
+        if not d2:
+            return d1
+        
+        d1['subEvents'] += d2['subEvents']
+        symbol_map = {}
+        for item in d1['callStack']:
+            symbol_map[item['symbol']] = item
+        for item1 in d2['callStack']:
+            if item1['symbol'] in symbol_map:
+                merge_nodes(symbol_map[item1['symbol']], item1)
+            else:
+                d1['callStack'].append(copy.deepcopy(item1))
+        return d1
+    return merge_nodes(data1, data2)
+
+
+def merge_threads(data, merge_prefix):
+    if 'recordSampleInfo' in data:
+        for event_info in data['recordSampleInfo']:
+            for process_info in event_info.get('processes', []):
+                threads = process_info.get('threads', [])
+                if not threads:
+                    print("no threads data found")
+                else:
+                    merged_threads = []
+                    for thread in threads:
+                        tid = thread.get('tid')
+                        thread_name = data['threadNameMap'][str(tid)]
+                        if thread_name.startswith(merge_prefix):
+                            merged_threads.append(thread)
+                    if len(merged_threads) == 0:
+                        continue
+                    merged_tid = f"{merge_prefix}*"
+                    total_events = sum(t.get('eventCount', 0) for t in merged_threads)
+                    total_samples = sum(t.get('sampleCount', 0) for t in merged_threads)
+
+                    base_call_order = copy.deepcopy(merged_threads[0]['CallOrder'])
+                    for merged_thread in merged_threads[1:]:
+                        base_call_order = merge_callstack(base_call_order, merged_thread['CallOrder'])
+
+                    final_merged_thread = {
+                        'tid': merged_tid,
+                        'eventCount': total_events,
+                        'sampleCount': total_samples,
+                        'CallOrder': base_call_order,
+                        'isMergedThread': "true"
+                    }
+
+                    threads.append(final_merged_thread)
+    return data
 
 
 def filter_and_move_symbols(data, config_file):
@@ -54,7 +111,6 @@ def filter_and_move_symbols(data, config_file):
         new_lib_name = rule['new_lib_name']
         source_lib_name = rule['source_lib_name']
         if len(filter_str_list) == 0 or new_lib_name == '' or source_lib_name == '':
-            print(f"过滤规则不符合要求，存在空内容")
             return data
 
         # 获取新库的索引
@@ -63,7 +119,7 @@ def filter_and_move_symbols(data, config_file):
         # 查找源库的索引
         source_lib_indices = set()
         for idx, lib_path in enumerate(data['symbolsFileList']):
-            if source_lib_name in lib_path:
+            if source_lib_name == lib_path:
                 source_lib_indices.add(idx)
         
         if not source_lib_indices:
@@ -157,6 +213,10 @@ def get_used_binaries(perf_data, report_file, local_lib_dir, html_template):
         with open('config.json', encoding="utf8") as f:
             config_file = json.load(f)
             data = filter_and_move_symbols(data, config_file)
+            # 合并线程
+            if len(config_file["merge_pref_list"]) != 0:
+                for merge_prefix in config_file["merge_pref_list"]:
+                    data = merge_threads(data, merge_prefix)
         with open('json.txt', 'w') as f:
             json.dump(data, f)
     else:
