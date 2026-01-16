@@ -4583,7 +4583,7 @@ input{
                     if (count >= this.chartMaxCount) {
                         break;
                     }
-                    if (item.isFinalMerged === "true") {
+                    if (item.isMergedThread === "true") {
                         continue;
                     }
                     chartSource.push({
@@ -5131,7 +5131,7 @@ input{
             this.source = [];
             this.eventInfo.processes.forEach(process => {
                 process.threads.forEach(thread => {
-                    if (thread.isFinalMerged === "true") {
+                    if (thread.isMergedThread === "true") {
                         return;
                     }
                     thread.libs.forEach(lib => {
