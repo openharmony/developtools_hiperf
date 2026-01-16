@@ -73,7 +73,7 @@ def merge_threads(data, merge_prefix):
                         'eventCount': total_events,
                         'sampleCount': total_samples,
                         'CallOrder': base_call_order,
-                        'isFinalMerged': "true"
+                        'isMergedThread': "true"
                     }
 
                     threads.append(final_merged_thread)
