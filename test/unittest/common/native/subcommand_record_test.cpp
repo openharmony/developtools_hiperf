@@ -432,7 +432,8 @@ HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
     std::shared_ptr<HiperfEventListener> eventListener = std::make_shared<HiperfEventListener>();
     std::vector<ListenerRule> sysRules;
     sysRules.emplace_back(OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE", RuleType::WHOLE_WORD);
-    HiSysEventManager::AddListener(eventListener, sysRules);
+    int32_t ret = HiSysEventManager::AddListener(eventListener, sysRules);
+ 	EXPECT_EQ(ret, 0) << "Failed to add HiperfEventListener: CPU limit configuration not taking effect";
 
     ForkAndRunTest("-d 2 -a ", true, false);
 
