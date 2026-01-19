@@ -73,3 +73,5 @@
 **预期结果：**</br>
 1、demo.so中含有Parcel::Flush字符的函数，迁移到demo1.so</br>
 2、demo3.so中含有StartWork字符的函数，迁移到demo2.so</br>
+
+## 2、hiperf火焰图工具支持将指定类似的线程合并
