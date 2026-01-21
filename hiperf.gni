@@ -35,6 +35,7 @@ declare_args() {
   bundle_framework_enable = false
   ability_base_enable = false
   hiperf_sandbox_log_path_mapping = false
+  hiperf_feature_support_usr_symlink = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.bundlemanager_bundle_framework)) {
     bundle_framework_enable = true

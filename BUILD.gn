@@ -457,6 +457,11 @@ ohos_executable("hiperf") {
   if (is_ohos) {
     external_deps += [ "protobuf:protobuf_lite" ]
   }
+  if (hiperf_feature_support_usr_symlink) {
+    symlink_target_name = [
+      "../usr/bin/hiperf",
+    ]
+  }
   subsystem_name = "developtools"
   part_name = "hiperf"
 }

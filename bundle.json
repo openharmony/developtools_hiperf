@@ -13,7 +13,8 @@
     "name": "hiperf",
     "subsystem": "developtools",
     "features": [
-      "hiperf_sandbox_log_path_mapping"
+      "hiperf_sandbox_log_path_mapping",
+      "hiperf_feature_support_usr_symlink"
     ],
     "adapted_system_type": [
       "standard"
