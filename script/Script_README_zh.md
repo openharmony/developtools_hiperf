@@ -73,3 +73,31 @@
 **预期结果：**</br>
 1、demo.so中含有Parcel::Flush字符的函数，迁移到demo1.so</br>
 2、demo3.so中含有StartWork字符的函数，迁移到demo2.so</br>
+
+## 2、hiperf火焰图增加近似名称线程及同名线程合并
+**规格说明(配置文件说明)**</br>
+ **配置项说明：**</br>
+merge_pref_list: 待合并线程的前缀字符串</br>
+默认情况下配置文件为空(根据需求配置)：
+```
+  {
+       "merge_pref_list": []
+  }
+ ```
+**功能使用示例介绍**</br>
+**使用步骤：**</br>
+1、配置config.json，配置示例内容：
+```
+  "filter_rules":[
+    {
+     "merge_pref_list": ["demo1"]
+    }
+  ]
+  ```
+注：其中demo1为待合并线程组前缀字符串，当前配置只作为示例。</br>
+2、将perf.data放工程目录下</br>
+3、执行命令：python make_report.py -i perf.data</br>
+注：在测试工程路径下执行</br>
+**预期结果：**</br>
+1、按进程维度，所有线程名以demo1字符串为前缀的线程进行合并为一个新线程(demo1*)，原线程数据不发生改变。</br>
+注：只涉及火焰图修改，不涉及饼图和表格页面的修改。
