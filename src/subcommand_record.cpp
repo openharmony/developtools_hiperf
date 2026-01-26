@@ -663,10 +663,7 @@ bool SubCommandRecord::CheckTargetPids()
             }
         }
     }
-    for (auto pid : selectPids_) {
-        originalPids_.push_back(pid);
-    }
-
+    originalPids_ = selectPids_;
     CollectExcludeThread();
     if (!SubCommand::HandleSubCommandExclude(excludeTidArgs_, excludeThreadNameArgs_, selectTids_)) {
         return false;

@@ -1277,14 +1277,15 @@ bool PerfEvents::CreateFdEvents(void)
         }
 
         uint eventIndex = 0;
-        for (auto &eventItem : eventGroupItem.eventItems) {
-            HLOGV(" - event %2u. eventName: '%s:%s'", eventIndex++, eventItem.typeName.c_str(),
-                  eventItem.configName.c_str());
-            for (size_t ipid = 0; ipid < pids_.size(); ipid++) { // each pid
-                for (size_t icpu = 0; icpu < cpus_.size(); icpu++) {     // each cpu
+
+        for (size_t ipid = 0; ipid < pids_.size(); ipid++) { // each pid
+            for (size_t icpu = 0; icpu < cpus_.size(); icpu++) {     // each cpu
+                for (auto &eventItem : eventGroupItem.eventItems) {
                     // one fd event group must match same cpu and same pid config (event can be
                     // different)
                     // clang-format off
+                    HLOGV(" - event %2u. eventName: '%s:%s'", eventIndex++, eventItem.typeName.c_str(),
+                          eventItem.configName.c_str());
                     int ret = CreateFdEventsForEachPid(eventItem, icpu, ipid,
                                                        fdNumber, groupFdCache[icpu][ipid]);
                     if (ret == -1) {
