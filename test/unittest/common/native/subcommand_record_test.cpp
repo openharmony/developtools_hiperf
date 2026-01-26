@@ -2771,7 +2771,7 @@ HWTEST_F(SubCommandRecordTest, UpdateMapPids, TestSize.Level2)
     std::vector<pid_t> testTids {2};
 
     recordCmd.originalPids_ = testPids;
-    recordCmd.perfEvents_.SetPid(testPids, testTids);
+    recordCmd.perfEvents_.SetPid(testPids);
     recordCmd.UpdateMapPids();
 
     std::vector<pid_t> selectPids = recordCmd.selectPids_;

@@ -1090,7 +1090,8 @@ bool SubCommandRecord::HandleArmSpeEvent()
 void SubCommandRecord::ConfigureBasicParams()
 {
     perfEvents_.SetCpu(selectCpus_);
-    perfEvents_.SetPid(selectPids_, originalPids_); // Tids has insert Pids in CheckTargetProcessOptions()
+    perfEvents_.SetPid(selectPids_); // Tids has insert Pids in CheckTargetProcessOptions()
+    perfEvents_.SetOriginPids(originalPids_);
     perfEvents_.SetSystemTarget(targetSystemWide_);
     perfEvents_.SetTimeOut(timeStopSec_);
     perfEvents_.SetVerboseReport(verboseReport_);
