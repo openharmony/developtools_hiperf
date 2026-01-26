@@ -2779,7 +2779,6 @@ HWTEST_F(SubCommandRecordTest, UpdateMapPids, TestSize.Level2)
     EXPECT_EQ(selectPids.size(), testPids.size());
 }
 
-
 HWTEST_F(SubCommandRecordTest, UseJsvm, TestSize.Level2)
 {
     SubCommandRecord cmd;
