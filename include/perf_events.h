@@ -701,27 +701,9 @@ private:
 
     std::map<std::string, std::unique_ptr<CountEvent>> countEvents_;
 
-    struct FdCreationItem {
-        size_t indexStart = 0;
-        size_t indexEnd = 0;
-
-        uint &fdNumber;
-        uint &eventNumber;
-        uint &groupNumber;
-
-        FdCreationItem(size_t start, size_t end, uint &fdNum, uint &eventNum, uint &groupNum)
-            : indexStart(start), indexEnd(end), fdNumber(fdNum), eventNumber(eventNum), groupNumber(groupNum)
-        {}
-    };
-
     void PutAllCpus();
     bool PrepareFdEvents();
     bool CreateFdEvents();
-    bool CreateFdEventsForCpuAndPid(FdCreationItem &fdCreationParams, EventItem &eventItem,
-                                    std::vector<std::vector<int>>& groupFdCache);
-    bool CreateFdEventsForGroup(FdCreationItem &fdCreationParams, EventGroupItem &eventGroupItem,
-                                std::vector<std::vector<int>>& groupFdCache);
-    bool CreateFdEventsForPids(FdCreationItem &fdCreationParams);
     int CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu, const size_t ipid,
                                  uint &fdNumber, int &groupFdCache);
     bool StatReport(const __u64 &durationInSec);
