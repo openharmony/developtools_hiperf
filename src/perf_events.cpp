@@ -902,6 +902,11 @@ void PerfEvents::SetPid(const std::vector<pid_t> pids, const std::vector<pid_t> 
     originalPids_ = originalPids;
 }
 
+std::vector<pid_t> PerfEvents::GetPid()
+{
+    return pids_;
+}
+
 void PerfEvents::SetTimeOut(const float timeOut)
 {
     if (timeOut > 0) {
