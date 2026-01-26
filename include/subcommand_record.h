@@ -284,6 +284,7 @@ private:
     std::vector<pid_t> selectCpus_ = {};
     std::vector<pid_t> selectPids_ = {};
     std::vector<pid_t> selectTids_ = {};
+    std::vector<pid_t> originalPids_ = {};
     std::vector<pid_t> inputPidTidArgs_ = {};
     bool restart_ = false;
     std::vector<std::string> selectEvents_ = {};
@@ -453,6 +454,7 @@ private:
     void WriteCommEventBeforeSampling();
     void RemoveVdsoTmpFile();
     void RemoveFifoFile();
+    void UpdateMapPids();
 
     VirtualRuntime virtualRuntime_;
 #if USE_COLLECT_SYMBOLIC

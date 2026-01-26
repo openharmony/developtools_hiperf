@@ -663,6 +663,9 @@ bool SubCommandRecord::CheckTargetPids()
             }
         }
     }
+    for (auto pid : selectPids_) {
+        originalPids_.push_back(pid);
+    }
 
     CollectExcludeThread();
     if (!SubCommand::HandleSubCommandExclude(excludeTidArgs_, excludeThreadNameArgs_, selectTids_)) {
@@ -1087,7 +1090,7 @@ bool SubCommandRecord::HandleArmSpeEvent()
 void SubCommandRecord::ConfigureBasicParams()
 {
     perfEvents_.SetCpu(selectCpus_);
-    perfEvents_.SetPid(selectPids_); // Tids has insert Pids in CheckTargetProcessOptions()
+    perfEvents_.SetPid(selectPids_, originalPids_); // Tids has insert Pids in CheckTargetProcessOptions()
     perfEvents_.SetSystemTarget(targetSystemWide_);
     perfEvents_.SetTimeOut(timeStopSec_);
     perfEvents_.SetVerboseReport(verboseReport_);
@@ -1735,6 +1738,7 @@ HiperfError SubCommandRecord::PrepareSystemAndRecorder()
         HLOGE("Fail to prepare tracking");
         return HiperfError::PREPARE_TACKING_FAIL;
     }
+    UpdateMapPids();
     HIPERF_HILOGI(MODULE_DEFAULT, "[PrepareSystemAndRecorder] perfEvents prepared");
 
     if (!backtrack_ && !CreateInitRecordFile(delayUnwind_ ? false : compressData_)) {
@@ -2392,6 +2396,17 @@ void SubCommandRecord::UpdateKernelRelatedSymbols()
         virtualRuntime_.UpdateDevhostSymbols();
     }
 #endif
+}
+
+void SubCommandRecord::UpdateMapPids()
+{
+    selectPids_ = perfEvents_.GetPid();
+    for (auto pid : originalPids_) {
+        auto tids = GetSubthreadIDs(pid);
+        if (!tids.empty()) {
+            mapPids_[pid] = tids;
+        }
+    }
 }
 
 bool SubCommandRecord::ProcessUserSymbols()

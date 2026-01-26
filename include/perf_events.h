@@ -374,11 +374,12 @@ public:
 
     void SetSystemTarget(const bool systemTarget);
     void SetCpu(const std::vector<pid_t> cpus); // cpu id must be [0~N]
-    void SetPid(const std::vector<pid_t> pids); // tis is same as pid in kernel
+    void SetPid(const std::vector<pid_t> pids, const std::vector<pid_t> originalPids); // tis is same as pid in kernel
     void SetTimeOut(const float timeOut);
     void SetTimeReport(int);
     void SetVerboseReport(const bool);
     bool AddOffCpuEvent();
+    std::vector<pid_t> GetPid();
 
     inline void SetTrackedCommand(const std::vector<std::string> &trackedCommand)
     {
@@ -602,6 +603,7 @@ private:
 
     bool inherit_ = false;
     std::vector<pid_t> pids_;
+    std::vector<pid_t> originalPids_;
     std::vector<pid_t> cpus_;
     std::vector<OHOS::UniqueFd> groups_;
     std::chrono::milliseconds timeOut_;    // milliseconds
@@ -699,9 +701,27 @@ private:
 
     std::map<std::string, std::unique_ptr<CountEvent>> countEvents_;
 
+    struct FdCreationItem {
+        size_t indexStart = 0;
+        size_t indexEnd = 0;
+
+        uint &fdNumber;
+        uint &eventNumber;
+        uint &groupNumber;
+
+        FdCreationItem(size_t start, size_t end, uint &fdNum, uint &eventNum, uint &groupNum)
+            : indexStart(start), indexEnd(end), fdNumber(fdNum), eventNumber(eventNum), groupNumber(groupNum)
+        {}
+    };
+
     void PutAllCpus();
     bool PrepareFdEvents();
     bool CreateFdEvents();
+    bool CreateFdEventsForCpuAndPid(FdCreationItem &fdCreationParams, EventItem &eventItem,
+                                    std::vector<std::vector<int>>& groupFdCache);
+    bool CreateFdEventsForGroup(FdCreationItem &fdCreationParams, EventGroupItem &eventGroupItem,
+                                std::vector<std::vector<int>>& groupFdCache);
+    bool CreateFdEventsForPids(FdCreationItem &fdCreationParams);
     int CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu, const size_t ipid,
                                  uint &fdNumber, int &groupFdCache);
     bool StatReport(const __u64 &durationInSec);

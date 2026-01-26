@@ -1012,7 +1012,7 @@ HiperfError SubCommandStat::CheckStatOption()
         }
     }
     pids.insert(pids.end(), selectTids_.begin(), selectTids_.end());
-    perfEvents_.SetPid(pids);
+    perfEvents_.SetPid(pids, pids);
     if (!CheckOptionPidAndApp(pids)) {
         HLOGV("CheckOptionPidAndApp() failed");
         return HiperfError::CHECK_OPTION_PID_APP_FAIL;

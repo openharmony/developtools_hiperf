@@ -125,7 +125,7 @@ void PerfEventsTest::SetAllConfig(PerfEvents &event)
     std::vector<pid_t> selectCpus_;
     event.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
-    event.SetPid(pids);
+    event.SetPid(pids, pids);
     event.SetSystemTarget(true);
     event.SetTimeOut(DEFAULT_TRACKING_TIME);
     event.SetInherit(false);
@@ -208,7 +208,7 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     std::vector<pid_t> selectCpus_;
     event.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
-    event.SetPid(pids);
+    event.SetPid(pids, pids);
     const unsigned int frequency = 1000;
     event.SetSampleFrequency(frequency);
     event.SetSystemTarget(true);
@@ -296,7 +296,7 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level0)
     std::vector<pid_t> selectCpus_;
     event.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
-    event.SetPid(pids);
+    event.SetPid(pids, pids);
     event.SetSystemTarget(true);
     event.SetTimeOut(DEFAULT_TRACKING_TIME);
     event.SetTimeReport(DEFAULT_STAT_REPORT_TIME);
@@ -575,7 +575,7 @@ HWTEST_F(PerfEventsTest, GetStat, TestSize.Level2)
     std::vector<pid_t> selectCpus_;
     event.SetCpu(selectCpus_);
     std::vector<pid_t> pids;
-    event.SetPid(pids);
+    event.SetPid(pids, pids);
     const unsigned int frequency = 1000;
     event.SetSampleFrequency(frequency);
     event.SetSystemTarget(true);

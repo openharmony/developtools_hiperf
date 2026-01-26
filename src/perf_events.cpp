@@ -640,7 +640,18 @@ bool PerfEvents::PrepareTracking(void)
     // 1. prepare cpu pid
     CHECK_TRUE(PrepareFdEvents(), false, 1, "PrepareFdEvents() failed");
 
-    // 2. create events
+    // 2. check new Pids
+    for (auto item : originalPids_) {
+        auto tids = GetSubthreadIDs(item);
+        for (auto tid : tids) {
+            if (std::find(pids_.begin(), pids_.end(), tid) == pids_.end()) {
+                HIPERF_HILOGI(MODULE_DEFAULT, "Get new tid %{public}d from pid %{public}d", tid, item);
+                pids_.push_back(tid);
+            }
+        }
+    }
+    
+    // 3. create events
     CHECK_TRUE(CreateFdEvents(), false, 1, "CreateFdEvents() failed");
 
     HLOGV("success");
@@ -885,9 +896,10 @@ void PerfEvents::SetCpu(const std::vector<pid_t> cpus)
     cpus_ = cpus;
 }
 
-void PerfEvents::SetPid(const std::vector<pid_t> pids)
+void PerfEvents::SetPid(const std::vector<pid_t> pids, const std::vector<pid_t> originalPids)
 {
     pids_ = pids;
+    originalPids_ = originalPids;
 }
 
 void PerfEvents::SetTimeOut(const float timeOut)
@@ -1259,9 +1271,8 @@ bool PerfEvents::CreateFdEvents(void)
         for (auto &eventItem : eventGroupItem.eventItems) {
             HLOGV(" - event %2u. eventName: '%s:%s'", eventIndex++, eventItem.typeName.c_str(),
                   eventItem.configName.c_str());
-
-            for (size_t icpu = 0; icpu < cpus_.size(); icpu++) {     // each cpu
-                for (size_t ipid = 0; ipid < pids_.size(); ipid++) { // each pid
+            for (size_t ipid = 0; ipid < pids_.size(); ipid++) { // each pid
+                for (size_t icpu = 0; icpu < cpus_.size(); icpu++) {     // each cpu
                     // one fd event group must match same cpu and same pid config (event can be
                     // different)
                     // clang-format off
