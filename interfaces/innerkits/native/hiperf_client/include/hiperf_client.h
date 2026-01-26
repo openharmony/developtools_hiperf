@@ -32,7 +32,7 @@ const std::string ReplyOutputCheck = "OUTPUT_CHECK\n";
 const std::string ReplyStop = "STOP\n";
 const std::string ReplyPause = "PAUSE\n";
 const std::string ReplyResume = "RESUME\n";
-const std::string ReplyCheck = "CHECK\n";
+inline const std::string ReplyCheck = "CHECK\n";
 #define HIPERF_EXIT_CODE 0
 
 class RecordOption {

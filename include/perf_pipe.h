@@ -32,7 +32,7 @@ const std::string CONTROL_CMD_PREPARE = "prepare";
 const std::string CONTROL_CMD_START = "start";
 const std::string CONTROL_CMD_PAUSE = "pause";
 const std::string CONTROL_CMD_RESUME = "resume";
-const std::string CONTROL_CMD_OUTPUT = "output";
+inline const std::string CONTROL_CMD_OUTPUT = "output";
 const std::string CONTROL_CMD_STOP = "stop";
 class PerfPipe {
 private:

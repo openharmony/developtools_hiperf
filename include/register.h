@@ -119,7 +119,7 @@ enum PerfEventArmRegs {
 };
 
 // context name
-static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
+inline static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
     {PERF_CONTEXT_HV, "PERF_CONTEXT_HV"},
     {PERF_CONTEXT_KERNEL, "PERF_CONTEXT_KERNEL"},
     {PERF_CONTEXT_USER, "PERF_CONTEXT_USER"},

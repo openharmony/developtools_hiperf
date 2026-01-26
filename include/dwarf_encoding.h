@@ -64,7 +64,7 @@ enum DW_EH_PE_A {
     DW_EH_PE_omit = 0xff,    // indicate that no value is present.
 };
 
-const std::map<dw_encode_t, size_t> DWFormatSizeMap = {
+inline const std::map<dw_encode_t, size_t> DWFormatSizeMap = {
 #ifdef ARM
     {DW_EH_PE_absptr, 4},
 #else

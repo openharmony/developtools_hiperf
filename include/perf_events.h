@@ -289,7 +289,7 @@ const std::map<perf_type_id, std::string> PERF_TYPES = {
     {PERF_TYPE_RAW, "raw"},
 };
 
-static std::map<perf_type_id, ConfigTable> TYPE_CONFIGS = {
+inline static std::map<perf_type_id, ConfigTable> TYPE_CONFIGS = {
     {PERF_TYPE_HARDWARE, (PERF_HW_CONFIGS)},           {PERF_TYPE_SOFTWARE, (PERF_SW_CONFIGS)},
     {PERF_TYPE_HW_CACHE, (PERF_HW_CACHE_CONFIGS)},     {PERF_TYPE_RAW, (PERF_RAW_CONFIGS)},
     {PERF_TYPE_TRACEPOINT, (PERF_TRACEPOINT_CONFIGS)},
@@ -311,7 +311,7 @@ const std::vector<__u64> DEFAULT_SW_CONFIGS = {
     PERF_COUNT_SW_CONTEXT_SWITCHES,
     PERF_COUNT_SW_PAGE_FAULTS,
 };
-const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
+inline const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
     {PERF_TYPE_HARDWARE, DEFAULT_HW_CONFIGS},
     {PERF_TYPE_SOFTWARE, DEFAULT_SW_CONFIGS},
 };

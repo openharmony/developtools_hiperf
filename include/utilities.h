@@ -354,7 +354,7 @@ bool GetUidFromPid(const pid_t& pid, uint32_t& ruid);
 bool GetStatusLineId(const std::string& line, uint32_t& target);
 void AgeHiperflogFiles();
 
-const std::string HMKERNEL = "HongMeng";
+inline const std::string HMKERNEL = "HongMeng";
 
 #define PRINT_INDENT(indent, format, ...)                                                          \
     if (indent >= 0) {                                                                             \
