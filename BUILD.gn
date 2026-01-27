@@ -628,9 +628,6 @@ group("hiperf_target_all") {
         ":hiperf_target",
         "interfaces/innerkits/native/hiperf_client:hiperf_client",  # c++ api
       ]
-      if (is_ohos) {
-        deps += [ "interfaces/kits/js/napi:hiperf_client_napi" ]  # js api
-      }
     }
   }
 }
