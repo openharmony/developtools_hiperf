@@ -896,7 +896,7 @@ void PerfEvents::SetCpu(const std::vector<pid_t> cpus)
     cpus_ = cpus;
 }
 
-void PerfEvents::SetPid(const std::vector<pid_t>& pids)
+void PerfEvents::SetPid(const std::vector<pid_t> pids)
 {
     pids_ = pids;
 }
