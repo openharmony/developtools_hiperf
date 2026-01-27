@@ -26,7 +26,7 @@ namespace HiperfClient {
 const std::string TempBinPath = "/data/local/tmp/";
 const std::string ReplyOK = "OK\n";
 const std::string ReplyFAIL = "FAIL\n";
-const std::string ReplyStart = "START\n";
+inline const std::string ReplyStart = "START\n";
 const std::string ReplyOutput = "OUTPUT\n";
 const std::string ReplyOutputCheck = "OUTPUT_CHECK\n";
 const std::string ReplyStop = "STOP\n";

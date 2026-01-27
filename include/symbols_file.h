@@ -57,7 +57,7 @@ const pid_t SYSMGR_PID = 2;
 const std::string SYSMGR_NAME = "sysmgr";
 const std::string SYSMGR_FILE_NAME = "sysmgr.elf";
 const std::string DEVHOST_FILE_NAME = "devhost.elf";
-const std::string DEVHOST_LINUX_FILE_NAME = "/lib/libdh-linux.so";
+inline const std::string DEVHOST_LINUX_FILE_NAME = "/lib/libdh-linux.so";
 const std::string DEVHOST_LINUX_PREFIX = "/liblinux/";
 
 class FileSymbol {

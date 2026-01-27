@@ -35,7 +35,7 @@ aff60000-aff96000 r--p 00000000 b3:05 923        /system/lib/libc++.so
 affeb000-affed000 rw-p 00000000 00:00 0
 b0023000-b0024000 r--p 00000000 b3:05 959        /system/lib/libdl.so
 */
-const std::string MMAP_NAME_HEAP = "[heap]";
+inline const std::string MMAP_NAME_HEAP = "[heap]";
 inline const std::string MMAP_NAME_ANON = "[anon]";
 
 class VirtualThread {

@@ -296,7 +296,7 @@ inline static std::map<perf_type_id, ConfigTable> TYPE_CONFIGS = {
 };
 
 // default config
-const std::vector<__u64> DEFAULT_HW_CONFIGS = {
+inline const std::vector<__u64> DEFAULT_HW_CONFIGS = {
     PERF_COUNT_HW_CPU_CYCLES,
 #if defined(__aarch64__)
     PERF_COUNT_HW_STALLED_CYCLES_FRONTEND,
