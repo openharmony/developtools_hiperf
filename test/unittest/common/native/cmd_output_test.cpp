@@ -295,7 +295,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationAppOutput_InsightTestApp
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithAppOutput_InsightTestApp_AppNotRunning_FailureCase,
  	     TestSize.Level1)
 {
-	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput(
  	          "hiperf record --control prepare --app hiperf_test_demo -o /data123/perf.data",
               {"app hiperf_test_demo not running"}), true);
