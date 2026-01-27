@@ -122,7 +122,7 @@ bool GetAppPids(const std::string& cmds, std::vector<std::string>& vec_pid)
     if (fp == nullptr) {
  	    perror("popen execute failed\n");
  	    return false;
- 	}
+    }
     const int bufLen = 1024;
  	char res[bufLen] = { '\0' };
     while (fgets(res, sizeof(res), fp) != nullptr) {
