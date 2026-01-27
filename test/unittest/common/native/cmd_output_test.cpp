@@ -168,7 +168,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithBacktrack_StartDuplicate
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_Stop_SuccessCase, TestSize.Level0)
 {
- 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare --app hiperf_test_demo",
  	                                 {"create control hiperf sampling success"}), true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}), true);
