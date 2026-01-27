@@ -33,7 +33,7 @@ public:
 void CmdOutputTest::SetUpTestCase()
 {
     if (chmod("/data/test/hiperf_test_demo", 0755) == -1) { // 0755 : -rwxr-xr-x
- 	    GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
+        GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
     }
     system("/data/test/hiperf_test_demo &");
 }
@@ -42,7 +42,7 @@ void CmdOutputTest::TearDownTestCase()
 {
     DebugLogger::GetInstance()->Reset();
     if (system("kill -9 `pidof hiperf_test_demo`") != 0) {
- 	    GTEST_LOG_(ERROR) << "kill hiperf_test_demo failed.";
+        GTEST_LOG_(ERROR) << "kill hiperf_test_demo failed.";
     }
 }
 
@@ -94,7 +94,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_DuplicateRun_ConflictCase, 
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateStart_SuccessCase, TestSize.Level1)
 {
- 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
@@ -107,8 +107,8 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateStart_Success
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_PauseResumeWithoutStart_FailureCase, TestSize.Level1)
 {
- 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling failed"}),
  	          true);
@@ -123,7 +123,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateResumePause_S
  	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
  	          true);
@@ -207,7 +207,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPidRestart_MissingAppOpt
     std::string pid = get_app_pids[0];
     ASSERT_FALSE(pid.empty()) << "The obtained PID is an empty string, test aborted";
     if (!pid.empty() && pid.back() == '\n') {
- 	    pid.pop_back();
+        pid.pop_back();
     }
     std::string cmd_str = "hiperf record --control prepare -p " + pid + " --restart";
     EXPECT_EQ(CheckTraceCommandOutput(cmd_str, {"to detect the performance of application startup,"
@@ -231,11 +231,11 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationApp_AppNotRunning_Failur
     std::vector<std::string> get_app_pids;
     GetAppPids("pidof hiperf_test_demo", get_app_pids);
     if (!get_app_pids.empty()) {
- 	    for (const auto& pid : get_app_pids) {
- 	        int kill_ret = RunCmd("kill -9 " + pid);
- 	        ASSERT_EQ(kill_ret, 0);
- 	        GTEST_LOG_(INFO) << "kill hiperf_test_demo failed." << "PID:" << pid << "）";
- 	    }
+        for (const auto& pid : get_app_pids) {
+            int kill_ret = RunCmd("kill -9 " + pid);
+            ASSERT_EQ(kill_ret, 0);
+            GTEST_LOG_(INFO) << "kill hiperf_test_demo failed." << "PID:" << pid << "）";
+        }
     }
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo",
                                      {"app hiperf_test_demo not running"}), true);
@@ -280,7 +280,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_BooksApp_AppNotRunni
     ASSERT_TRUE(get_app_pids.empty());
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare --app example.app.books",
                                      {"app example.app.books not running"}), true);
-	RunCmd("hiperf record --control stop");
+    RunCmd("hiperf record --control stop");
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationAppOutput_InsightTestApp_AppNotRunning_FailureCase,

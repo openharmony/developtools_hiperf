@@ -120,13 +120,13 @@ bool GetAppPids(const std::string& cmds, std::vector<std::string>& vec_pid)
     FILE *fp = nullptr;
     fp = popen(cmds.c_str(), "r");
     if (fp == nullptr) {
- 	    perror("popen execute failed\n");
- 	    return false;
+        perror("popen execute failed\n");
+        return false;
     }
     const int bufLen = 1024;
  	char res[bufLen] = { '\0' };
     while (fgets(res, sizeof(res), fp) != nullptr) {
- 	    vec_pid.push_back(std::string(res));
+        vec_pid.push_back(std::string(res));
     }
     pclose(fp);
     return true;
