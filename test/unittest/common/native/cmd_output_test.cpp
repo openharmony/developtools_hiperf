@@ -201,7 +201,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPid_HuksService_SuccessC
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPidRestart_MissingAppOption_FailureCase, TestSize.Level1)
 {
     std::vector<std::string> get_app_pids;
- 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     GetAppPids("pidof hiperf_test_demo", get_app_pids);
     ASSERT_FALSE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
     std::string pid = get_app_pids[0];
