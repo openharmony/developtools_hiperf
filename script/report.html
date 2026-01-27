@@ -4115,6 +4115,7 @@ input{
                 heatColor = {r: 0x66, g: 0xad, b: 0xff};
             } else {
                 heatColor = funName.includes("url:") ? this.getJsHeatColor(percent2) : this.getHeatColor(percent2);
+                heatColor = funName.includes("JS:") ? this.getV8HeatColor(percent2) : this.getHeatColor(percent2);
             }
             return heatColor;
         }
@@ -4332,6 +4333,13 @@ input{
                 r: Math.floor(20 + 120 * (1 - widthPercentage * 0.01)),
                 g: 200,
                 b: Math.floor(0 + 120 * (1 - widthPercentage * 0.01)),
+            };
+        }
+        getV8HeatColor(widthPercentage) {
+            return {
+                r: Math.floor(20 + 160 * (1 - widthPercentage * 0.01)),
+                g: 200,
+                b: Math.floor(0 + 160 * (1 - widthPercentage * 0.01)),
             };
         }
         attributeChangedCallback(name, oldValue, newValue) {

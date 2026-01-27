@@ -4340,6 +4340,13 @@ input{
                 b: Math.floor(0 + 120 * (1 - widthPercentage * 0.01)),
             };
         }
+        getV8HeatColor(widthPercentage) {
+            return {
+                r: Math.floor(20 + 160 * (1 - widthPercentage * 0.01)),
+                g: 200,
+                b: Math.floor(0 + 160 * (1 - widthPercentage * 0.01)),
+            };
+        }
         attributeChangedCallback(name, oldValue, newValue) {
         }
     }

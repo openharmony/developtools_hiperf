@@ -375,7 +375,7 @@ public:
     void SetSystemTarget(const bool systemTarget);
     void SetCpu(const std::vector<pid_t> cpus); // cpu id must be [0~N]
     void SetPid(const std::vector<pid_t> pids); // tis is same as pid in kernel
-    void SetOriginPids(const std::vector<pid_t> originalPids);
+    void SetOriginPids(const std::vector<pid_t>& originalPids);
     void SetTimeOut(const float timeOut);
     void SetTimeReport(int);
     void SetVerboseReport(const bool);
