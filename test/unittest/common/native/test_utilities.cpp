@@ -114,7 +114,7 @@ bool GetAppPids(const std::string& cmds, std::vector<std::string>& vec_pid)
 {
     if (cmds.empty()) {
  	        return false;
- 	}
+    }
  	 
     vec_pid.clear();
     FILE *fp = nullptr;

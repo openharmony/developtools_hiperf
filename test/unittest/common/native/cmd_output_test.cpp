@@ -83,7 +83,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlAllActions_SuccessCase, TestSize.Le
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_DuplicateRun_ConflictCase, TestSize.Level1)
 {
- 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"another sampling service is running"}),
@@ -95,9 +95,9 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_DuplicateRun_ConflictCase, 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateStart_SuccessCase, TestSize.Level1)
 {
  	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
  	          true);
@@ -121,15 +121,15 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_PauseResumeWithoutStart_Fai
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateResumePause_SuccessCase, TestSize.Level1)
 {
  	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
  	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
  	          true);
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
  	          true);
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}),
  	          true);
@@ -221,7 +221,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationApp_SuccessCase, TestSiz
 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo",
                                      {"Profiling duration is 3.000 seconds"}), true);
-	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
  	          true);
 }
 
@@ -248,7 +248,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCo
 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     std::vector<std::string> get_app_pids;
     GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -p " + get_app_pids[0], 
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -p " + get_app_pids[0],
 		     {"Profiling duration is 3.000 seconds"}), true);
     RunCmd("hiperf record --control stop");
 }
@@ -259,7 +259,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPidRestart_HuksService_M
 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     std::vector<std::string> get_app_pids;
     GetAppPids("pidof hiperf_test_demo", get_app_pids);
- 	ASSERT_FALSE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
+    ASSERT_FALSE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
     std::string pid = get_app_pids[0];
     ASSERT_FALSE(pid.empty()) << "The obtained PID is an empty string, test aborted";
     if (!pid.empty() && pid.back() == '\n') {
@@ -268,7 +268,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPidRestart_HuksService_M
     std::string cmd_str = "hiperf record -d 3 -p " + pid + " --restart";
     EXPECT_EQ(CheckTraceCommandOutput(cmd_str, {"to detect the performance of application startup,"
  	                                             " --app option must be given"}), true);
-	RunCmd("hiperf record --control stop");
+    RunCmd("hiperf record --control stop");
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_BooksApp_AppNotRunning_FailureCase, TestSize.Level1)
