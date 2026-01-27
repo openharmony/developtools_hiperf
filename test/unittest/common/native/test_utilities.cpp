@@ -110,6 +110,27 @@ bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::stri
     }
     return checkIdx == keywords.size();
 }
+bool GetAppPids(const std::string& cmds, std::vector<std::string>& vec_pid)
+{
+    if (cmds.empty()) {
+ 	        return false;
+ 	}
+ 	 
+ 	vec_pid.clear();
+ 	FILE *fp = nullptr;
+ 	fp = popen(cmds.c_str(), "r");
+ 	if (fp == nullptr) {
+ 	    perror("popen execute failed\n");
+ 	    return false;
+ 	}
+ 	const int bufLen = 1024;
+ 	char res[bufLen] = { '\0' };
+ 	while (fgets(res, sizeof(res), fp) != nullptr) {
+ 	    vec_pid.push_back(std::string(res));
+ 	}
+ 	pclose(fp);
+ 	return true;
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
