@@ -113,7 +113,7 @@ bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::stri
 bool GetAppPids(const std::string& cmds, std::vector<std::string>& vec_pid)
 {
     if (cmds.empty()) {
- 	        return false;
+ 	    return false;
     }
  	 
     vec_pid.clear();

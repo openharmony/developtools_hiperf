@@ -120,7 +120,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_PauseResumeWithoutStart_Fai
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateResumePause_SuccessCase, TestSize.Level1)
 {
- 	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
@@ -142,7 +142,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStartStop_DuplicateStop_Fail
  	ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
  	          true);
- 	EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
  	          true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
  	          true);
@@ -263,7 +263,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPidRestart_HuksService_M
     std::string pid = get_app_pids[0];
     ASSERT_FALSE(pid.empty()) << "The obtained PID is an empty string, test aborted";
     if (!pid.empty() && pid.back() == '\n') {
- 	    pid.pop_back();
+        pid.pop_back();
     }
     std::string cmd_str = "hiperf record -d 3 -p " + pid + " --restart";
     EXPECT_EQ(CheckTraceCommandOutput(cmd_str, {"to detect the performance of application startup,"
@@ -299,7 +299,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithAppOutput_InsightTestApp
     EXPECT_EQ(CheckTraceCommandOutput(
  	          "hiperf record --control prepare --app hiperf_test_demo -o /data123/perf.data",
               {"app hiperf_test_demo not running"}), true);
-	RunCmd("hiperf record --control stop");
+    RunCmd("hiperf record --control stop");
 }
 } // namespace HiPerf
 } // namespace Developtools
