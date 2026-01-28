@@ -24,6 +24,16 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+// context name
+static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
+    {PERF_CONTEXT_HV, "PERF_CONTEXT_HV"},
+    {PERF_CONTEXT_KERNEL, "PERF_CONTEXT_KERNEL"},
+    {PERF_CONTEXT_USER, "PERF_CONTEXT_USER"},
+    {PERF_CONTEXT_GUEST, "PERF_CONTEXT_GUEST"},
+    {PERF_CONTEXT_GUEST_KERNEL, "PERF_CONTEXT_GUEST_KERNEL"},
+    {PERF_CONTEXT_GUEST_USER, "PERF_CONTEXT_GUEST_USER"},
+    {PERF_CONTEXT_MAX, "PERF_CONTEXT_MAX"},
+};
 static ArchType g_deviceArchType = ArchType::ARCH_UNKNOWN;
 // order is IP , SP for ut
 static const std::map<size_t, const std::string> PERF_REG_NAME_MAP = {

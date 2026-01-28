@@ -24,6 +24,10 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+const std::map<DebugLevel, const std::string> DebugLevelMap = {
+    {LEVEL_MUCH, "M"},    {LEVEL_VERBOSE, "V"}, {LEVEL_DEBUG, "D"}, {LEVEL_INFO, "I"},
+    {LEVEL_WARNING, "W"}, {LEVEL_ERROR, "E"},   {LEVEL_FATAL, "F"},
+};
 DebugLogger::DebugLogger() : timeStamp_(std::chrono::steady_clock::now())
 {
 #if defined(is_sandbox_mapping) && is_sandbox_mapping

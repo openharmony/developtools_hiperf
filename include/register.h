@@ -118,17 +118,6 @@ enum PerfEventArmRegs {
     PERF_REG_ARM_MAX,
 };
 
-// context name
-inline static const std::map<uint64_t, const std::string> PERF_CONTEXT_NAME = {
-    {PERF_CONTEXT_HV, "PERF_CONTEXT_HV"},
-    {PERF_CONTEXT_KERNEL, "PERF_CONTEXT_KERNEL"},
-    {PERF_CONTEXT_USER, "PERF_CONTEXT_USER"},
-    {PERF_CONTEXT_GUEST, "PERF_CONTEXT_GUEST"},
-    {PERF_CONTEXT_GUEST_KERNEL, "PERF_CONTEXT_GUEST_KERNEL"},
-    {PERF_CONTEXT_GUEST_USER, "PERF_CONTEXT_GUEST_USER"},
-    {PERF_CONTEXT_MAX, "PERF_CONTEXT_MAX"},
-};
-
 #if defined(target_cpu_x86_64)
 constexpr ArchType BUILD_ARCH_TYPE = ArchType::ARCH_X86_64;
 #elif defined(target_cpu_arm64)

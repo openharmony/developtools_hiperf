@@ -75,10 +75,6 @@ const std::string DEFAULT_LOG_PATH = "hiperf_log.txt";
 #define HILOG_TAG_NAME HILOG_BASE_TAG "_" HILOG_TAG
 #endif
 
-inline const std::map<DebugLevel, const std::string> DebugLevelMap = {
-    {LEVEL_MUCH, "M"},    {LEVEL_VERBOSE, "V"}, {LEVEL_DEBUG, "D"}, {LEVEL_INFO, "I"},
-    {LEVEL_WARNING, "W"}, {LEVEL_ERROR, "E"},   {LEVEL_FATAL, "F"},
-};
 constexpr const int LOG_BUFFER_SIZE = 4 * 1024 * 1024;
 
 class DebugLogger {

@@ -311,7 +311,7 @@ const std::vector<__u64> DEFAULT_SW_CONFIGS = {
     PERF_COUNT_SW_CONTEXT_SWITCHES,
     PERF_COUNT_SW_PAGE_FAULTS,
 };
-inline const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
+const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
     {PERF_TYPE_HARDWARE, DEFAULT_HW_CONFIGS},
     {PERF_TYPE_SOFTWARE, DEFAULT_SW_CONFIGS},
 };
