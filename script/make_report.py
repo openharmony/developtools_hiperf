@@ -55,6 +55,8 @@ def merge_threads(data, merge_prefix):
                     merged_threads = []
                     for thread in threads:
                         tid = thread.get('tid')
+                        if not isinstance(tid, int):
+                            continue
                         thread_name = data['threadNameMap'][str(tid)]
                         if thread_name.startswith(merge_prefix):
                             merged_threads.append(thread)
@@ -214,8 +216,8 @@ def get_used_binaries(perf_data, report_file, local_lib_dir, html_template):
             config_file = json.load(f)
             data = filter_and_move_symbols(data, config_file)
             # 合并线程
-            if len(config_file["merge_pref_list"]) != 0:
-                for merge_prefix in config_file["merge_pref_list"]:
+            if len(config_file["merge_prefix_list"]) != 0:
+                for merge_prefix in config_file["merge_prefix_list"]:
                     data = merge_threads(data, merge_prefix)
         with open('json.txt', 'w') as f:
             json.dump(data, f)
