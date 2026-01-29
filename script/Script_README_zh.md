@@ -77,11 +77,11 @@
 ## 2、hiperf火焰图增加近似名称线程及同名线程合并
 **规格说明(配置文件说明)**</br>
  **配置项说明：**</br>
-merge_pref_list: 待合并线程的前缀字符串</br>
+merge_prefix_list: 待合并线程的前缀字符串</br>
 默认情况下配置文件为空(根据需求配置)：
 ```
   {
-       "merge_pref_list": []
+       "merge_prefix_list": []
   }
  ```
 **功能使用示例介绍**</br>
@@ -90,7 +90,7 @@ merge_pref_list: 待合并线程的前缀字符串</br>
 ```
   "filter_rules":[
     {
-     "merge_pref_list": ["demo1"]
+     "merge_prefix_list": ["demo1"]
     }
   ]
   ```
