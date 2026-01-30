@@ -23,16 +23,16 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 namespace HiperfClient {
-inline const std::string TempBinPath = "/data/local/tmp/";
-inline const std::string ReplyOK = "OK\n";
-inline const std::string ReplyFAIL = "FAIL\n";
-inline const std::string ReplyStart = "START\n";
-inline const std::string ReplyOutput = "OUTPUT\n";
-inline const std::string ReplyOutputCheck = "OUTPUT_CHECK\n";
-inline const std::string ReplyStop = "STOP\n";
-inline const std::string ReplyPause = "PAUSE\n";
-inline const std::string ReplyResume = "RESUME\n";
-inline const std::string ReplyCheck = "CHECK\n";
+inline const std::string TEMP_BIN_PATH = "/data/local/tmp/";
+inline const std::string REPLY_OK = "OK\n";
+inline const std::string REPLY_FAIL = "FAIL\n";
+inline const std::string REPLY_START = "START\n";
+inline const std::string REPLY_OUTPUT = "OUTPUT\n";
+inline const std::string REPLY_OUTPUT_CHECK = "OUTPUT_CHECK\n";
+inline const std::string REPLY_STOP = "STOP\n";
+inline const std::string REPLY_PAUSE = "PAUSE\n";
+inline const std::string REPLY_RESUME = "RESUME\n";
+inline const std::string REPLY_CHECK = "CHECK\n";
 #define HIPERF_EXIT_CODE 0
 
 class RecordOption {
@@ -237,7 +237,7 @@ public:
     /**
      * Set output dir and constuct
      */
-    explicit Client(const std::string &outputDir = TempBinPath);
+    explicit Client(const std::string &outputDir = TEMP_BIN_PATH);
     ~Client();
     /**
      * Start record with default options

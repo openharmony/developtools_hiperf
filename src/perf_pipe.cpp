@@ -138,7 +138,7 @@ bool PerfPipe::WaitFifoReply(const int fd, const std::chrono::milliseconds &time
     std::string reply;
     WaitFifoReply(fd, timeOut, reply);
     HIPERF_HILOGI(MODULE_DEFAULT, "[WaitFifoReply] WaitFifoReply reply:(%{public}s)", reply.c_str());
-    return reply == HiperfClient::ReplyOK;
+    return reply == HiperfClient::REPLY_OK;
 }
 
 void PerfPipe::WaitFifoReply(const int fd, const std::chrono::milliseconds &timeOut, std::string& reply)
@@ -184,7 +184,7 @@ void PerfPipe::ProcessStopCommand(const bool ret)
         // wait sampling process exit really
         static constexpr uint64_t waitCheckSleepMs = 200;
         std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
-        while (SendFifoAndWaitReply(HiperfClient::ReplyCheck, CONTROL_WAITREPY_TIMEOUT_CHECK)) {
+        while (SendFifoAndWaitReply(HiperfClient::REPLY_CHECK, CONTROL_WAITREPY_TIMEOUT_CHECK)) {
             std::this_thread::sleep_for(milliseconds(waitCheckSleepMs));
         }
         HLOGI("wait reply check end.");
@@ -204,7 +204,7 @@ void PerfPipe::ProcessOutputCommand(bool ret)
     std::this_thread::sleep_for(milliseconds(CHECK_WAIT_TIME_MS));
     uint32_t outputFailCount = 0;
     while (!outputEnd_) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutputCheck, CONTROL_WAITREPY_TIMEOUT_CHECK);
+        ret = SendFifoAndWaitReply(HiperfClient::REPLY_OUTPUT_CHECK, CONTROL_WAITREPY_TIMEOUT_CHECK);
         if (outputFailCount++ > MAX_CLIENT_OUTPUT_WAIT_COUNT || ret) {
             break;
         }
@@ -216,19 +216,19 @@ bool PerfPipe::ProcessControlCmd()
 {
     bool ret = false;
     if (controlCmd_ == CONTROL_CMD_START) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStart, CONTROL_WAITREPY_TIMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::REPLY_START, CONTROL_WAITREPY_TIMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_RESUME) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyResume, CONTROL_WAITREPY_TIMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::REPLY_RESUME, CONTROL_WAITREPY_TIMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_PAUSE) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyPause, CONTROL_WAITREPY_TIMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::REPLY_PAUSE, CONTROL_WAITREPY_TIMEOUT);
     } else if (controlCmd_ == CONTROL_CMD_STOP) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TIMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::REPLY_STOP, CONTROL_WAITREPY_TIMEOUT);
         if (!ret) {
-            ret = SendFifoAndWaitReply(HiperfClient::ReplyStop, CONTROL_WAITREPY_TIMEOUT);
+            ret = SendFifoAndWaitReply(HiperfClient::REPLY_STOP, CONTROL_WAITREPY_TIMEOUT);
         }
         ProcessStopCommand(ret);
     } else if (controlCmd_ == CONTROL_CMD_OUTPUT) {
-        ret = SendFifoAndWaitReply(HiperfClient::ReplyOutput, CONTROL_WAITREPY_TIMEOUT);
+        ret = SendFifoAndWaitReply(HiperfClient::REPLY_OUTPUT, CONTROL_WAITREPY_TIMEOUT);
         ProcessOutputCommand(ret);
     }
     if (ret) {

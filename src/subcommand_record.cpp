@@ -1238,7 +1238,7 @@ void SubCommandRecord::WriteCommEventBeforeSampling()
 
 bool SubCommandRecord::ClientCommandResponse(const bool response)
 {
-    return ClientCommandResponse(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
+    return ClientCommandResponse(response ? HiperfClient::REPLY_OK : HiperfClient::REPLY_FAIL);
 }
 
 bool SubCommandRecord::ClientCommandResponse(const std::string& str)
@@ -1268,7 +1268,7 @@ bool SubCommandRecord::ClientCommandResponse(const std::string& str)
 
 bool SubCommandRecord::ChildResponseToMain(const bool response)
 {
-    return ChildResponseToMain(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
+    return ChildResponseToMain(response ? HiperfClient::REPLY_OK : HiperfClient::REPLY_FAIL);
 }
 
 bool SubCommandRecord::ChildResponseToMain(const std::string& str)
@@ -1394,32 +1394,32 @@ bool SubCommandRecord::PostOutputRecordFile(const bool output)
 void SubCommandRecord::InitControlCommandHandlerMap()
 {
     controlCommandHandlerMap_.clear();
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyStart, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_START, ControlCommandHandler{
         std::bind(&PerfEvents::EnableTracking, &perfEvents_)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyCheck, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_CHECK, ControlCommandHandler{
         std::bind(&SubCommandRecord::clientRunning_, this)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyStop, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_STOP, ControlCommandHandler{
         std::bind(&PerfEvents::StopTracking, &perfEvents_)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyPause, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_PAUSE, ControlCommandHandler{
         std::bind(&PerfEvents::PauseTracking, &perfEvents_)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyResume, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_RESUME, ControlCommandHandler{
         std::bind(&PerfEvents::ResumeTracking, &perfEvents_)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyOutput, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_OUTPUT, ControlCommandHandler{
         std::bind(&SubCommandRecord::PreOutputRecordFile, this),
         std::bind(&SubCommandRecord::PostOutputRecordFile, this, std::placeholders::_1)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyOutputCheck, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_OUTPUT_CHECK, ControlCommandHandler{
         std::bind(&SubCommandRecord::outputEnd_, this)
     });
 }
