@@ -56,13 +56,13 @@ enum DebugLevel {
 
 #ifdef HIPERF_DEBUG
 #if is_ohos || is_double_framework
-const std::string DEFAULT_UT_LOG_DIR = "/data/local/tmp/";
-const std::string DEFAULT_LOG_PATH = "/data/local/tmp/hiperf_log.txt";
+inline const std::string DEFAULT_UT_LOG_DIR = "/data/local/tmp/";
+inline const std::string DEFAULT_LOG_PATH = "/data/local/tmp/hiperf_log.txt";
 #elif is_mingw
-const std::string DEFAULT_LOG_PATH = ".\\hiperf_log.txt";
+inline const std::string DEFAULT_LOG_PATH = ".\\hiperf_log.txt";
 #elif is_linux || is_mac
-const std::string DEFAULT_UT_LOG_DIR = "./";
-const std::string DEFAULT_LOG_PATH = "hiperf_log.txt";
+inline const std::string DEFAULT_UT_LOG_DIR = "./";
+inline const std::string DEFAULT_LOG_PATH = "hiperf_log.txt";
 #else
 #error unkow os
 #endif
@@ -75,11 +75,7 @@ const std::string DEFAULT_LOG_PATH = "hiperf_log.txt";
 #define HILOG_TAG_NAME HILOG_BASE_TAG "_" HILOG_TAG
 #endif
 
-const std::map<DebugLevel, const std::string> DebugLevelMap = {
-    {LEVEL_MUCH, "M"},    {LEVEL_VERBOSE, "V"}, {LEVEL_DEBUG, "D"}, {LEVEL_INFO, "I"},
-    {LEVEL_WARNING, "W"}, {LEVEL_ERROR, "E"},   {LEVEL_FATAL, "F"},
-};
-constexpr const int LOG_BUFFER_SIZE = 4 * 1024 * 1024;
+inline const int LOG_BUFFER_SIZE = 4 * 1024 * 1024;
 
 class DebugLogger {
 public:

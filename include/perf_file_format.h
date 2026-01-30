@@ -66,7 +66,7 @@ enum class FEATURE {
     FEATURE_MAX_BITS = 256,
 };
 
-const static std::vector<FEATURE> FeatureStrings = {
+inline const static std::vector<FEATURE> FeatureStrings = {
     FEATURE::HOSTNAME,
     FEATURE::OSRELEASE,
     FEATURE::VERSION,

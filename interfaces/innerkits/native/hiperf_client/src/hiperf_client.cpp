@@ -682,7 +682,7 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
         HIPERF_HILOGI(MODULE_CPP_API, "Client:command poll failed.\n");
     }
     HIPERF_HILOGI(MODULE_CPP_API, "Client:new reply:%" HILOG_PUBLIC "s\n", reply.c_str());
-    if (reply == ReplyOK) {
+    if (reply == REPLY_OK) {
         return true;
     } else {
         return false;
@@ -736,7 +736,7 @@ bool Client::StartRun()
         return false;
     }
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
-    if (SendCommandAndWait(ReplyStart)) {
+    if (SendCommandAndWait(REPLY_START)) {
         return true;
     }
     return false;
@@ -749,7 +749,7 @@ bool Client::Pause()
         return false;
     }
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
-    if (SendCommandAndWait(ReplyPause)) {
+    if (SendCommandAndWait(REPLY_PAUSE)) {
         return true;
     }
     return false;
@@ -762,7 +762,7 @@ bool Client::Resume()
         return false;
     }
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
-    if (SendCommandAndWait(ReplyResume)) {
+    if (SendCommandAndWait(REPLY_RESUME)) {
         return true;
     }
     return false;
@@ -775,9 +775,9 @@ bool Client::Output()
         return false;
     }
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
-    if (SendCommandAndWait(ReplyOutput)) {
+    if (SendCommandAndWait(REPLY_OUTPUT)) {
         // wait output process exit really
-        while (SendCommandAndWait(ReplyOutputCheck)) {
+        while (SendCommandAndWait(REPLY_OUTPUT_CHECK)) {
             std::this_thread::sleep_for(1s);
         }
         return true;
@@ -792,9 +792,9 @@ bool Client::Stop()
         return false;
     }
     HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
-    if (SendCommandAndWait(ReplyStop)) {
+    if (SendCommandAndWait(REPLY_STOP)) {
         // wait sampling process exit really
-        while (SendCommandAndWait(ReplyCheck)) {
+        while (SendCommandAndWait(REPLY_CHECK)) {
             std::this_thread::sleep_for(1s);
         }
         return true;

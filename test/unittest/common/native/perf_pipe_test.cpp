@@ -71,7 +71,7 @@ HWTEST_F(PerfPipeTest, SendFifoAndWaitReply, TestSize.Level1)
     std::string fifoFileC2S;
     std::string fifoFileS2C;
     perfPipe.SetFifoFileName(CommandType::RECORD, controlCmd, fifoFileC2S, fifoFileS2C);
-    EXPECT_EQ(perfPipe.SendFifoAndWaitReply(HiperfClient::ReplyStart, CONTROL_WAITREPY_TIMEOUT), false);
+    EXPECT_EQ(perfPipe.SendFifoAndWaitReply(HiperfClient::REPLY_START, CONTROL_WAITREPY_TIMEOUT), false);
 }
 
 /**

@@ -812,7 +812,7 @@ bool SubCommandStat::HandleParentProcess(const pid_t& pid)
     std::string reply = "";
     perfPipe_.WaitFifoReply(fd, CONTROL_WAITREPY_TIMEOUT, reply);
 
-    if (reply != HiperfClient::ReplyOK) {
+    if (reply != HiperfClient::REPLY_OK) {
         HandleCommunicationError(fd, pid, reply);
         close(fd);
         return false;
@@ -826,7 +826,7 @@ bool SubCommandStat::HandleParentProcess(const pid_t& pid)
 
 void SubCommandStat::HandleCommunicationError(const int& fd, const pid_t& pid, const std::string& reply)
 {
-    if (reply != HiperfClient::ReplyOK) {
+    if (reply != HiperfClient::REPLY_OK) {
         printf("%s", reply.c_str());
         HLOGE("reply is %s", reply.c_str());
         HIPERF_HILOGE(MODULE_DEFAULT, "reply is %{public}s", reply.c_str());
@@ -847,7 +847,7 @@ void SubCommandStat::HandleCommunicationError(const int& fd, const pid_t& pid, c
 
 bool SubCommandStat::ClientCommandResponse(const bool response)
 {
-    return ClientCommandResponse(response ? HiperfClient::ReplyOK : HiperfClient::ReplyFAIL);
+    return ClientCommandResponse(response ? HiperfClient::REPLY_OK : HiperfClient::REPLY_FAIL);
 }
 
 bool SubCommandStat::ClientCommandResponse(const std::string& str)
@@ -880,15 +880,15 @@ bool SubCommandStat::IsSamplingRunning()
 void SubCommandStat::InitControlCommandHandlerMap()
 {
     controlCommandHandlerMap_.clear();
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyStart, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_START, ControlCommandHandler{
         std::bind(&PerfEvents::EnableTracking, &perfEvents_)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyCheck, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_CHECK, ControlCommandHandler{
         std::bind(&SubCommandStat::clientRunning_, this)
     });
 
-    controlCommandHandlerMap_.emplace(HiperfClient::ReplyStop, ControlCommandHandler{
+    controlCommandHandlerMap_.emplace(HiperfClient::REPLY_STOP, ControlCommandHandler{
         std::bind(&PerfEvents::StopTracking, &perfEvents_)
     });
 }
