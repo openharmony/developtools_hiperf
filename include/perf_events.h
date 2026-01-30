@@ -67,7 +67,7 @@ namespace HiPerf {
 using ConfigTable = std::map<__u64, const std::string>;
 using SharedConfigTable = std::unique_ptr<ConfigTable>;
 
-const std::string PERF_DISABLE_PARAM = "security.perf_harden";
+inline const std::string PERF_DISABLE_PARAM = "security.perf_harden";
 
 // define convert from linux/perf_event.h
 // description from https://man7.org/linux/man-pages/man2/perf_event_open.2.html
@@ -281,7 +281,7 @@ static ConfigTable PERF_TRACEPOINT_CONFIGS = {
 
 };
 
-const std::map<perf_type_id, std::string> PERF_TYPES = {
+inline const std::map<perf_type_id, std::string> PERF_TYPES = {
     {PERF_TYPE_HARDWARE, "hardware"},
     {PERF_TYPE_SOFTWARE, "software"},
     {PERF_TYPE_TRACEPOINT, "tracepoint"},
@@ -306,12 +306,12 @@ inline const std::vector<__u64> DEFAULT_HW_CONFIGS = {
     PERF_COUNT_HW_BRANCH_INSTRUCTIONS,
     PERF_COUNT_HW_BRANCH_MISSES,
 };
-const std::vector<__u64> DEFAULT_SW_CONFIGS = {
+inline const std::vector<__u64> DEFAULT_SW_CONFIGS = {
     PERF_COUNT_SW_TASK_CLOCK,
     PERF_COUNT_SW_CONTEXT_SWITCHES,
     PERF_COUNT_SW_PAGE_FAULTS,
 };
-const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
+inline const std::map<perf_type_id, std::vector<__u64>> DEFAULT_TYPE_CONFIGS = {
     {PERF_TYPE_HARDWARE, DEFAULT_HW_CONFIGS},
     {PERF_TYPE_SOFTWARE, DEFAULT_SW_CONFIGS},
 };

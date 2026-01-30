@@ -23,15 +23,15 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 namespace HiperfClient {
-const std::string TempBinPath = "/data/local/tmp/";
-const std::string ReplyOK = "OK\n";
-const std::string ReplyFAIL = "FAIL\n";
+inline const std::string TempBinPath = "/data/local/tmp/";
+inline const std::string ReplyOK = "OK\n";
+inline const std::string ReplyFAIL = "FAIL\n";
 inline const std::string ReplyStart = "START\n";
-const std::string ReplyOutput = "OUTPUT\n";
-const std::string ReplyOutputCheck = "OUTPUT_CHECK\n";
-const std::string ReplyStop = "STOP\n";
-const std::string ReplyPause = "PAUSE\n";
-const std::string ReplyResume = "RESUME\n";
+inline const std::string ReplyOutput = "OUTPUT\n";
+inline const std::string ReplyOutputCheck = "OUTPUT_CHECK\n";
+inline const std::string ReplyStop = "STOP\n";
+inline const std::string ReplyPause = "PAUSE\n";
+inline const std::string ReplyResume = "RESUME\n";
 inline const std::string ReplyCheck = "CHECK\n";
 #define HIPERF_EXIT_CODE 0
 
