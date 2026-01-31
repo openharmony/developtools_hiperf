@@ -23,6 +23,9 @@
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
 #include "application_info.h"
 #include "bundle_mgr_proxy.h"
+using BundleMgrProxy = OHOS::sptr<OHOS::AppExecFwk::IBundleMgr>;
+#else
+using BundleMgrProxy = void*;
 #endif
 #if defined(is_ohos) && is_ohos
 #include "iservice_registry.h"
@@ -33,53 +36,63 @@ namespace OHOS::Developtools::HiPerf {
 
 static std::atomic<bool> g_haveIpc = false;
 
+BundleMgrProxy GetBundleMgrProxy(std::string& err)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    err.clear();
+    sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sam == nullptr) {
+        err = "GetSystemAbilityManager failed!";
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        err = "Get BundleMgr SA failed!";
+        return nullptr;
+    }
+
+    sptr<AppExecFwk::IBundleMgr> proxy = iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
+    if (proxy == nullptr) {
+        err = "iface_cast failed!";
+        return nullptr;
+    }
+
+    return proxy;
+#else
+    err = "Not support bundle framework!";
+    return nullptr;
+#endif
+}
+
 bool IsDebugableApp(const std::string& bundleName)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     g_haveIpc.store(true);
     std::string err = "";
-    do {
-        if (bundleName.empty()) {
-            err = "bundleName is empty!";
-            break;
-        }
+    if (bundleName.empty()) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: [bundleName is empty!]");
+        return false;
+    }
+    sptr<AppExecFwk::IBundleMgr> proxy = GetBundleMgrProxy(err);
+    if (proxy == nullptr) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: [%{public}s]", err.c_str());
+        return false;
+    }
 
-        sptr<ISystemAbilityManager> sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (sam == nullptr) {
-            err = "GetSystemAbilityManager failed!";
-            break;
-        }
+    bool isDebugApp = false;
+    auto ret = proxy->IsDebuggableApplication(bundleName, isDebugApp);
+    if (ret != ERR_OK) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: IsDebuggableApplication failed!");
+        return false;
+    }
 
-        sptr<IRemoteObject> remoteObject = sam->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        if (remoteObject == nullptr) {
-            err = "Get BundleMgr SA failed!";
-            break;
-        }
-
-        sptr<AppExecFwk::IBundleMgr> proxy = iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
-        if (proxy == nullptr) {
-            err = "iface_cast failed!";
-            break;
-        }
-
-        bool isDebugApp = false;
-        auto ret = proxy->IsDebuggableApplication(bundleName, isDebugApp);
-        if (ret != ERR_OK) {
-            err = "IsDebuggableApplication failed!";
-            break;
-        }
-
-        if (!isDebugApp) {
-            err = "app is not debuggable";
-            break;
-        }
-        HIPERF_HILOGI(MODULE_DEFAULT, "app is debuggable");
-        return true;
-    } while (0);
-
-    HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: [%{public}s]",
-                  err.c_str());
-    return false;
+    if (!isDebugApp) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: app is not debuggable");
+        return false;
+    }
+    HIPERF_HILOGI(MODULE_DEFAULT, "app is debuggable");
+    return true;
 #else
     return false;
 #endif
@@ -111,6 +124,42 @@ bool IsApplicationEncryped(const int pid)
                         static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
     HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);
     return isEncrypted;
+#else
+    return false;
+#endif
+}
+
+bool IsThirdPartyApp(const std::string& bundleName)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    g_haveIpc.store(true);
+    std::string err = "";
+    if (bundleName.empty()) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsThirdPartyApp error, err: [bundleName is empty!]");
+        return false;
+    }
+
+    sptr<AppExecFwk::IBundleMgr> proxy = GetBundleMgrProxy(err);
+    if (proxy == nullptr) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsThirdPartyApp error, err: [%{public}s: %{public}s]", bundleName.c_str(),
+                      err.c_str());
+        return false;
+    }
+
+    AppExecFwk::ApplicationInfo appInfo;
+    bool ret = proxy->GetApplicationInfo(bundleName, AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO,
+                                         AppExecFwk::Constants::ANY_USERID, appInfo);
+    if (!ret) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsThirdPartyApp error, err: GetApplicationInfo failed!");
+        return false;
+    }
+    bool isSystemApp = appInfo.isSystemApp;
+    if (isSystemApp) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsThirdPartyApp error, err: app is system app");
+        return false;
+    }
+    HIPERF_HILOGI(MODULE_DEFAULT, "app is third party app");
+    return true;
 #else
     return false;
 #endif
