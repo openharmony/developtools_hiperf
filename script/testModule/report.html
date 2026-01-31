@@ -4116,6 +4116,7 @@ input{
                 heatColor = {r: 0x66, g: 0xad, b: 0xff};
             } else {
                 heatColor = funName.includes("url:") ? this.getJsHeatColor(percent2) : this.getHeatColor(percent2);
+                heatColor = funName.includes("JS:") ? this.getV8HeatColor(percent2) : this.getHeatColor(percent2);
             }
             return heatColor;
         }
