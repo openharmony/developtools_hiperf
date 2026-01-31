@@ -4336,10 +4336,11 @@ input{
             };
         }
         getV8HeatColor(widthPercentage) {
+            const clampedWidth = Math.min(Math.max(widthPercentage, 0), 100);
             return {
-                r: Math.floor(20 + 160 * (1 - widthPercentage * 0.01)),
+                r: Math.floor(20 + 160 * (1 - clampedWidth * 0.01)),
                 g: 200,
-                b: Math.floor(0 + 160 * (1 - widthPercentage * 0.01)),
+                b: Math.floor(0 + 160 * (1 - clampedWidth * 0.01)),
             };
         }
         attributeChangedCallback(name, oldValue, newValue) {
