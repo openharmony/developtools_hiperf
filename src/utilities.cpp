@@ -808,7 +808,7 @@ bool IsAllowReleaseApp(const std::string& appPackage)
     const std::string cmdline {"/cmdline"};
     appPid = FindMatchingPidInProc(basePath, cmdline, appPackage);
     if (appPid <= 0) {
-        HIPERF_HILOGE("MODULE_DEFAULT, IsAllowReleaseApp: app %{public}s not running\n", appPackage.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running\n", appPackage.c_str());
         return false;
     }
 
