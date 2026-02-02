@@ -433,7 +433,7 @@ HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
     std::vector<ListenerRule> sysRules;
     sysRules.emplace_back(OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE", RuleType::WHOLE_WORD);
     bool checkListener = HiSysEventManager::AddListener(eventListener, sysRules);
-    if (checkListener != 0) {
+    if (!checkListener) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
