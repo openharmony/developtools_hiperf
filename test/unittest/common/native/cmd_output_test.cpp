@@ -228,6 +228,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPidRestart_HuksService_M
  	     TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    RunCmd("am force-stop hiperf_test_demo");
     std::vector<std::string> get_app_pids;
     GetAppPids("pidof hiperf_test_demo", get_app_pids);
     ASSERT_FALSE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
@@ -246,6 +247,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationAppOutput_InsightTestApp
  	     TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    RunCmd("am force-stop hiperf_test_demo");
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo -o /data123/perf.data",
                                      {"app hiperf_test_demo not running"}), true);
     RunCmd("hiperf record --control stop");
@@ -255,6 +257,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithAppOutput_InsightTestApp
  	     TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    RunCmd("am force-stop hiperf_test_demo");
     EXPECT_EQ(CheckTraceCommandOutput(
  	          "hiperf record --control prepare --app hiperf_test_demo -o /data123/perf.data",
               {"app hiperf_test_demo not running"}), true);
