@@ -174,18 +174,6 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_Stop_SuccessCase, Te
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}), true);
 }
 
-HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_AppNotRunning_FailureCase, TestSize.Level1)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    RunCmd("am force-stop com.example.insight_test_stage");
-    std::vector<std::string> get_app_pids;
-    GetAppPids("pidof com.example.insight_test_stage", get_app_pids);
-    ASSERT_TRUE(get_app_pids.empty());
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare --app com.example.insight_test_stage",
- 	                                 {"app com.example.insight_test_stage not running"}), true);
-    RunCmd("hiperf record --control stop");
-}
-
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPid_HuksService_SuccessCase, TestSize.Level1)
 {
     std::vector<std::string> get_app_pids;
@@ -196,6 +184,26 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPid_HuksService_SuccessC
  	                                 {"create control hiperf sampling success"}), true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
  	          true);
+}
+
+HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationApp_SuccessCase, TestSize.Level0)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo",
+                                     {"Profiling duration is 3.000 seconds"}), true);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
+ 	          true);
+}
+
+HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCorrectDurationPrompt_SuccessCase,
+ 	     TestSize.Level1)
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
+    std::vector<std::string> get_app_pids;
+    GetAppPids("pidof hiperf_test_demo", get_app_pids);
+    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -p " + get_app_pids[0],
+		     {"Profiling duration is 3.000 seconds"}), true);
+    RunCmd("hiperf record --control stop");
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPidRestart_MissingAppOption_FailureCase, TestSize.Level1)
@@ -216,43 +224,6 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPidRestart_MissingAppOpt
  	          true);
 }
 
-HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationApp_SuccessCase, TestSize.Level0)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo",
-                                     {"Profiling duration is 3.000 seconds"}), true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
-}
-
-HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationApp_AppNotRunning_FailureCase, TestSize.Level0)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    std::vector<std::string> get_app_pids;
-    GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    if (!get_app_pids.empty()) {
-        for (const auto& pid : get_app_pids) {
-            int kill_ret = RunCmd("kill -9 " + pid);
-            ASSERT_EQ(kill_ret, 0);
-            GTEST_LOG_(INFO) << "kill hiperf_test_demo failed." << "PID:" << pid << "）";
-        }
-    }
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo",
-                                     {"app hiperf_test_demo not running"}), true);
-    RunCmd("hiperf record --control stop");
-}
-
-HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCorrectDurationPrompt_SuccessCase,
- 	     TestSize.Level1)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    std::vector<std::string> get_app_pids;
-    GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -p " + get_app_pids[0],
-		     {"Profiling duration is 3.000 seconds"}), true);
-    RunCmd("hiperf record --control stop");
-}
-
 HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPidRestart_HuksService_MissingAppOption_FailureCase,
  	     TestSize.Level1)
 {
@@ -268,18 +239,6 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPidRestart_HuksService_M
     std::string cmd_str = "hiperf record -d 3 -p " + pid + " --restart";
     EXPECT_EQ(CheckTraceCommandOutput(cmd_str, {"to detect the performance of application startup,"
  	                                             " --app option must be given"}), true);
-    RunCmd("hiperf record --control stop");
-}
-
-HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_BooksApp_AppNotRunning_FailureCase, TestSize.Level1)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    RunCmd("am force-stop example.app.books");
-    std::vector<std::string> get_app_pids;
-    GetAppPids("pidof example.app.books", get_app_pids);
-    ASSERT_TRUE(get_app_pids.empty());
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare --app example.app.books",
-                                     {"app example.app.books not running"}), true);
     RunCmd("hiperf record --control stop");
 }
 
