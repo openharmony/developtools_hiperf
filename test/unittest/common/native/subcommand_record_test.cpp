@@ -436,20 +436,14 @@ HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
 
     ForkAndRunTest("-d 2 -a ", true, false);
 
-    int checkCount = 0;
+    constexpr int checkCount = 0;
     std::shared_ptr<HiviewDFX::HiSysEventRecord> eventRecord = eventListener->GetLastEvent();
-    while (eventRecord == nullptr) {
-        if (checkCount >= 6) {
-            break;
-        }
-        eventRecord = eventListener->GetLastEvent();
-        if (eventRecord != nullptr) {
-            break;
-        }
-        checkCount++;
+    while (eventRecord == nullptr && checkCount < checkCountLimit) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
+        eventRecord = eventListener->GetLastEvent();
+        checkCount++;
     }
-    HiSysEventManager::RemoveListener(eventListener);
+    EXPECT_EQ(HiSysEventManager::RemoveListener(eventListener), true);
     ASSERT_NE(eventRecord, nullptr);
     std::string value = "";
     EXPECT_EQ(eventRecord->GetParamValue("MAIN_CMD", value), VALUE_PARSED_SUCCEED);
