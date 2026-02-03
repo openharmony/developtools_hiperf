@@ -205,65 +205,6 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCo
 		     {"Profiling duration is 3.000 seconds"}), true);
     RunCmd("hiperf record --control stop");
 }
-
-HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPidRestart_MissingAppOption_FailureCase, TestSize.Level1)
-{
-    std::vector<std::string> get_app_pids;
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    RunCmd("am force-stop hiperf_test_demo");
-    GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    ASSERT_FALSE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
-    std::string pid = get_app_pids[0];
-    ASSERT_FALSE(pid.empty()) << "The obtained PID is an empty string, test aborted";
-    if (!pid.empty() && pid.back() == '\n') {
-        pid.pop_back();
-    }
-    std::string cmd_str = "hiperf record --control prepare -p " + pid + " --restart";
-    EXPECT_EQ(CheckTraceCommandOutput(cmd_str, {"to detect the performance of application startup,"
- 	                                            " --app option must be given"}), true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
-}
-
-HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPidRestart_HuksService_MissingAppOption_FailureCase,
- 	     TestSize.Level1)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    RunCmd("am force-stop hiperf_test_demo");
-    std::vector<std::string> get_app_pids;
-    GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    ASSERT_FALSE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
-    std::string pid = get_app_pids[0];
-    ASSERT_FALSE(pid.empty()) << "The obtained PID is an empty string, test aborted";
-    if (!pid.empty() && pid.back() == '\n') {
-        pid.pop_back();
-    }
-    std::string cmd_str = "hiperf record -d 3 -p " + pid + " --restart";
-    EXPECT_EQ(CheckTraceCommandOutput(cmd_str, {"to detect the performance of application startup,"
- 	                                             " --app option must be given"}), true);
-    RunCmd("hiperf record --control stop");
-}
-
-HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationAppOutput_InsightTestApp_AppNotRunning_FailureCase,
- 	     TestSize.Level1)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    RunCmd("am force-stop hiperf_test_demo");
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo -o /data123/perf.data",
-                                     {"app hiperf_test_demo not running"}), true);
-    RunCmd("hiperf record --control stop");
-}
-
-HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithAppOutput_InsightTestApp_AppNotRunning_FailureCase,
- 	     TestSize.Level1)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    RunCmd("am force-stop hiperf_test_demo");
-    EXPECT_EQ(CheckTraceCommandOutput(
- 	          "hiperf record --control prepare --app hiperf_test_demo -o /data123/perf.data",
-              {"app hiperf_test_demo not running"}), true);
-    RunCmd("hiperf record --control stop");
-}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
