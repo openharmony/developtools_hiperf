@@ -436,7 +436,8 @@ HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
 
     ForkAndRunTest("-d 2 -a ", true, false);
 
-    constexpr int checkCount = 0;
+    int checkCount = 0;
+    constexpr int checkCountLimit = 6;
     std::shared_ptr<HiviewDFX::HiSysEventRecord> eventRecord = eventListener->GetLastEvent();
     while (eventRecord == nullptr && checkCount < checkCountLimit) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
