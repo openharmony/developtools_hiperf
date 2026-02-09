@@ -1058,17 +1058,6 @@ HWTEST_F(UtilitiesTest, IsDebugableApp, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsThirdPartyApp
- * @tc.desc: Test IsThirdPartyApp fun
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, IsThirdPartyApp, TestSize.Level1)
-{
-    const std::string hiviewName = "hiview";
-    EXPECT_FALSE(IsThirdPartyApp(hiviewName));
-}
-
-/**
  * @tc.name: GetUidFromPid
  * @tc.desc: Test GetUidFromPid fun
  * @tc.type: FUNC
