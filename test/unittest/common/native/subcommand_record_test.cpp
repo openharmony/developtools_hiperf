@@ -432,7 +432,7 @@ HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
     std::shared_ptr<HiperfEventListener> eventListener = std::make_shared<HiperfEventListener>();
     std::vector<ListenerRule> sysRules;
     sysRules.emplace_back(OHOS::HiviewDFX::HiSysEvent::Domain::PROFILER, "HIPERF_USAGE", RuleType::WHOLE_WORD);
-    EXPECT_EQ(HiSysEventManager::AddListener(eventListener, sysRules), true);
+    EXPECT_EQ(HiSysEventManager::AddListener(eventListener, sysRules), 0);
 
     ForkAndRunTest("-d 2 -a ", true, false);
 
@@ -444,7 +444,7 @@ HWTEST_F(SubCommandRecordTest, ReportCommand, TestSize.Level1)
         eventRecord = eventListener->GetLastEvent();
         checkCount++;
     }
-    EXPECT_EQ(HiSysEventManager::RemoveListener(eventListener), true);
+    EXPECT_EQ(HiSysEventManager::RemoveListener(eventListener), 0);
     ASSERT_NE(eventRecord, nullptr);
     std::string value = "";
     EXPECT_EQ(eventRecord->GetParamValue("MAIN_CMD", value), VALUE_PARSED_SUCCEED);
