@@ -891,17 +891,17 @@ void PerfEvents::SetSystemTarget(const bool systemTarget)
     systemTarget_ = systemTarget;
 }
 
-void PerfEvents::SetCpu(const std::vector<pid_t> cpus)
+void PerfEvents::SetCpu(const std::vector<pid_t>& cpus)
 {
     cpus_ = cpus;
 }
 
-void PerfEvents::SetPid(const std::vector<pid_t> pids)
+void PerfEvents::SetPid(const std::vector<pid_t>& pids)
 {
     pids_ = pids;
 }
 
-void PerfEvents::SetOriginPids(const std::vector<pid_t> originalPids)
+void PerfEvents::SetOriginPids(const std::vector<pid_t>& originalPids)
 {
     originalPids_ = originalPids;
 }
@@ -1276,16 +1276,12 @@ bool PerfEvents::CreateFdEvents(void)
             }
         }
 
-        uint eventIndex = 0;
-
         for (size_t ipid = 0; ipid < pids_.size(); ipid++) { // each pid
             for (size_t icpu = 0; icpu < cpus_.size(); icpu++) {     // each cpu
                 for (auto &eventItem : eventGroupItem.eventItems) {
                     // one fd event group must match same cpu and same pid config (event can be
                     // different)
                     // clang-format off
-                    HLOGV(" - event %2u. eventName: '%s:%s'", eventIndex++, eventItem.typeName.c_str(),
-                          eventItem.configName.c_str());
                     int ret = CreateFdEventsForEachPid(eventItem, icpu, ipid,
                                                        fdNumber, groupFdCache[icpu][ipid]);
                     if (ret == -1) {

@@ -54,12 +54,6 @@ static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";
 static const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
 const std::string UID_TAG = "Uid:";
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-const uint32_t TASK_MANAGER_UID = 7005;
-const uint32_t ALLOW_RELEASE_UID = 20000;
-const std::string HISHELL_LABEL = "u:r:hishell_hap:s0";
-const std::string TASK_MANAGER_LABEL = "u:r:task_manager_service:s0";
-#endif
 
 std::string CanonicalizeSpecPath(const char* src)
 {
@@ -800,47 +794,6 @@ bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPac
     return true;
 }
 
-bool IsAllowReleaseApp(const std::string& appPackage)
-{
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-    pid_t appPid = -1;
-    const std::string basePath {"/proc/"};
-    const std::string cmdline {"/cmdline"};
-    appPid = FindMatchingPidInProc(basePath, cmdline, appPackage);
-    if (appPid <= 0) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running\n", appPackage.c_str());
-        return false;
-    }
-
-    return IsAllowRelease(appPid, appPackage);
-#else
-    return false;
-#endif
-}
-
-bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
-{
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-    if (!IsTaskManagerLabel() || !IsTaskManagerUid()) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: not task manager");
-        return false;
-    }
-    if (!IsThirdPartyApp(appPackage)) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: non third party app %{public}s", appPackage.c_str());
-        return false;
-    }
-
-    uint32_t appUid = 0;
-    if (GetUidFromPid(appPid, appUid)) {
-        return appUid >= ALLOW_RELEASE_UID;
-    }
-    HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: get app uid failed for %{public}s", appPackage.c_str());
-    return false;
-#else
-    return false;
-#endif
-}
-
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
 {
     std::string bundleNameTmp = bundleName;
@@ -848,8 +801,7 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
     if (pos != std::string::npos) {
         bundleNameTmp = bundleNameTmp.substr(0, pos);
     }
-    if (!IsSupportNonDebuggableApp() && !bundleNameTmp.empty()
-        && !IsDebugableApp(bundleNameTmp) && !IsAllowReleaseApp(bundleNameTmp)) {
+    if (!IsSupportNonDebuggableApp() && !bundleNameTmp.empty() && !IsDebugableApp(bundleNameTmp)) {
         HLOGE("--app option only support debug application.");
         err = "--app option only support debug application\n";
         printf("%s", err.c_str());
@@ -872,7 +824,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
         if (pos != std::string::npos) {
             bundleName = bundleName.substr(0, pos);
         }
-        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsAllowRelease(pid, bundleName)) {
+        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName)) {
             HLOGE("-p option only support debug application for %s", bundleName.c_str());
             err = "-p option only support debug application\n";
             printf("%s", err.c_str());
@@ -990,17 +942,6 @@ bool IsAllowProfilingUid()
     HLOGD("curUid is %d\n", curUid);
     CHECK_TRUE(ALLOW_UIDS.find(curUid) == ALLOW_UIDS.end(), true, 0, "");
     return false;
-#else
-    return false;
-#endif
-}
-
-bool IsTaskManagerUid()
-{
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-    static unsigned int curUid = getuid();
-    HLOGD("IsTaskManagerUid: curUid is %d\n", curUid);
-    return curUid == TASK_MANAGER_UID;
 #else
     return false;
 #endif
@@ -1228,52 +1169,32 @@ void AgeHiperflogFiles()
 #endif
 }
 
-std::string GetSelinuxLabel()
+bool IsHiShellLabel()
 {
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
     pid_t ppid = syscall(SYS_getppid);
     char buf[DEFAULT_STRING_BUF_SIZE] = "";
     if (snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "/proc/%d/attr/current", ppid) < 0) {
         HLOGE("get buf failed, pid is %d", ppid);
-        return "";
+        return false;
     }
 
     const char* attrName = "security.selinux";
     ssize_t attrSize = getxattr(buf, attrName, nullptr, 0);
     if (attrSize == 0 || attrSize == - 1) {
-        return "";
+        return false;
     }
     char* attrValue = new(std::nothrow) char[attrSize];
     if (attrValue == nullptr) {
-        return "";
+        return false;
     }
     if (getxattr(buf, attrName, attrValue, attrSize) == -1) {
         delete []attrValue;
-        return "";
+        return false;
     }
     std::string label(attrValue, attrSize - 1);
     delete []attrValue;
-    return label;
-#else
-    return "";
-#endif
-}
-
-bool IsHiShellLabel()
-{
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-    std::string label = GetSelinuxLabel();
-    return label == HISHELL_LABEL;
-#else
-    return false;
-#endif
-}
-
-bool IsTaskManagerLabel()
-{
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-    std::string label = GetSelinuxLabel();
-    return label == TASK_MANAGER_LABEL;
+    return label == "u:r:hishell_hap:s0";
 #else
     return false;
 #endif

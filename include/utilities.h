@@ -402,9 +402,6 @@ void CollectPidsByAppname(std::set<pid_t> &pids, const Container& appPackage)
 }
 
 bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, const int checkAppMs);
-bool IsTaskManagerUid();
-bool IsAllowReleaseApp(const std::string& appPackage);
-bool IsAllowRelease(const pid_t appPid, const std::string& appPackage);
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err);
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
 bool IsSupportNonDebuggableApp();
@@ -439,7 +436,6 @@ bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value);
 std::string GetDefaultPathByEnv(const std::string fileType);
 std::string ExtractNumericPrefix(const std::string& str);
 bool IsHiShellLabel();
-bool IsTaskManagerLabel();
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
