@@ -2618,6 +2618,7 @@ HWTEST_F(SubCommandRecordTest, UpdateDevHostMaps4, TestSize.Level1)
     EXPECT_EQ(recordIn.data_.addr, addr);
 }
 
+
 HWTEST_F(SubCommandRecordTest, CheckRecordDefaultPath, TestSize.Level1)
 {
     SubCommandRecord cmd;
@@ -2766,6 +2767,22 @@ HWTEST_F(SubCommandRecordTest, ProcessUserSymbols, TestSize.Level2)
     recordCmd.fileWriter_ = std::make_unique<PerfFileWriter>();
     bool result = recordCmd.ProcessUserSymbols();
     EXPECT_TRUE(result);
+}
+
+HWTEST_F(SubCommandRecordTest, UpdateMapPids, TestSize.Level2)
+{
+    SubCommandRecord recordCmd;
+
+    std::vector<pid_t> testPids {1};
+    std::vector<pid_t> testTids {2};
+
+    recordCmd.originalPids_ = testPids;
+    recordCmd.perfEvents_.SetPid(testPids);
+    recordCmd.UpdateMapPids();
+
+    std::vector<pid_t> selectPids = recordCmd.selectPids_;
+    EXPECT_FALSE(selectPids.empty());
+    EXPECT_EQ(selectPids.size(), testPids.size());
 }
 
 HWTEST_F(SubCommandRecordTest, UseJsvm, TestSize.Level2)

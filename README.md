@@ -19,7 +19,7 @@ hiperf is a command-line debugging tool provided by OpenHarmony for developers. 
 ├── include			# Project header files.
 │   └── nonlinux	# Header file for cross compilation (non-Linux platform)
 ├── interfaces		# APIs
-│   └── innerkits	# C++ APIs.
+│   └── innerkits	# C++ APIs.
 ├── proto		    # Definition of the data structure exported to proto by the report command
 ├── script			# Host scripts, including HTML
 │   └── test		# Unit test of the script
