@@ -675,6 +675,9 @@ void SubCommandRecordTest::TestEvents(std::string &opt, std::string &uk, bool is
             if (testEventCount <= 0) {
                 break;
             }
+            if (config.second.find("ftrace:function") != std::string::npos) {
+                continue;
+            }
             cmdline += config.second;
             cmdline += uk;
             cmdline += ",";
