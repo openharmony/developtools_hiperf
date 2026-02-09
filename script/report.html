@@ -4592,6 +4592,9 @@ input{
                     if (count >= this.chartMaxCount) {
                         break;
                     }
+                    if (item.isMergedThread === "true") {
+                        continue;
+                    }
                     chartSource.push({
                         id:item.tid,
                         name: this.getThreadName(item.tid),
@@ -5137,6 +5140,9 @@ input{
             this.source = [];
             this.eventInfo.processes.forEach(process => {
                 process.threads.forEach(thread => {
+                    if (thread.isMergedThread === "true") {
+                        return;
+                    }
                     thread.libs.forEach(lib => {
                         lib.functions.forEach(fun => {
                             this.source.push({
