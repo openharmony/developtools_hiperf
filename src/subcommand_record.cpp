@@ -909,7 +909,7 @@ bool SubCommandRecord::ParseCallStackOption(const std::vector<std::string> &call
             }
         }
         isCallStackDwarf_ = true;
-        SymbolsFile::needJsvm_ = true; // only in record and dwarf mode need to parse Jsvm frame
+        SymbolsFile::needV8_ = true; // only in record and dwarf mode need to parse V8 frame
     } else {
         printf("Invalid -s value '%s'.\n", callStackType.at(0).c_str());
         return false;

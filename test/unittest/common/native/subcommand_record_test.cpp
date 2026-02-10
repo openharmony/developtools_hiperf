@@ -2788,7 +2788,7 @@ HWTEST_F(SubCommandRecordTest, UseJsvm, TestSize.Level2)
 {
     SubCommandRecord cmd;
     cmd.ParseCallStackOption({"dwarf"});
-    EXPECT_TRUE(SymbolsFile::needJsvm_);
+    EXPECT_TRUE(SymbolsFile::needV8_);
 }
 /**
  * @tc.name: SetSelectGroups

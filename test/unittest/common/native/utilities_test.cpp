@@ -985,22 +985,35 @@ HWTEST_F(UtilitiesTest, StringToUint64ErrorTest, TestSize.Level2)
 }
 
 /**
- * @tc.name: IsV8File
- * @tc.desc: Test IsV8File function.
+ * @tc.name: IsJsvmV8File
+ * @tc.desc: Test IsJsvmV8File function.
  * @tc.type: FUNC
 */
-HWTEST_F(UtilitiesTest, IsV8File, TestSize.Level2)
+HWTEST_F(UtilitiesTest, IsJsvmV8File, TestSize.Level2)
 {
     std::string filepath = "[anon:JSVM_JIT]";
-    EXPECT_TRUE(IsV8File(filepath));
-    filepath = "[anon:ARKWEB_JIT]";
-    EXPECT_TRUE(IsV8File(filepath));
-    filepath = "[anon:v8]";
-    EXPECT_TRUE(IsV8File(filepath));
-    filepath = "[anon:test]";
-    EXPECT_FALSE(IsV8File(filepath));
+    EXPECT_TRUE(IsJsvmV8File(filepath));
     filepath = "/system/lib64/libv8_shared.so";
-    EXPECT_FALSE(IsV8File(filepath));
+    EXPECT_FALSE(IsJsvmV8File(filepath));
+}
+
+/**
+ * @tc.name: IsArkwebV8File
+ * @tc.desc: Test IsArkwebV8File function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(UtilitiesTest, IsArkwebV8File, TestSize.Level2)
+{
+    std::string filepath = "[anon:JSVM_JIT]";
+    EXPECT_FALSE(IsArkwebV8File(filepath));
+    filepath = "[anon:ARKWEB_JIT]";
+    EXPECT_FALSE(IsArkwebV8File(filepath));
+    filepath = "[anon:v8]";
+    EXPECT_TRUE(IsArkwebV8File(filepath));
+    filepath = "[anon:JS_V8]";
+    EXPECT_TRUE(IsArkwebV8File(filepath));
+    filepath = "[anon:test]";
+    EXPECT_FALSE(IsArkwebV8File(filepath));
 }
 
 /**

@@ -81,7 +81,8 @@ enum SymbolsFileType {
     SYMBOL_JS_FILE,
     SYMBOL_HAP_FILE,
     SYMBOL_CJ_FILE,
-    SYMBOL_V8_FILE,
+    SYMBOL_JSVM_V8_FILE,
+    SYMBOL_ARKWEB_V8_FILE,
     SYMBOL_UNKNOW_FILE,
 };
 
@@ -126,7 +127,12 @@ public:
     {
         return false;
     }
-    virtual bool IsV8()
+    virtual bool IsJsvm()
+    {
+        return false;
+    }
+
+    virtual bool IsArkweb()
     {
         return false;
     }
@@ -203,7 +209,7 @@ public:
     // this means we are in recording
     // will try read some elf in runtime path
     static bool onRecording_;
-    static bool needJsvm_;
+    static bool needV8_;
     std::vector<DfxSymbol> symbols_ {};
     std::vector<DfxSymbol *> matchedSymbols_ {};
     std::map<uint64_t, DfxSymbol> symbolsMap_;

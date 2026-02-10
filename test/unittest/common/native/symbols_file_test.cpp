@@ -995,10 +995,10 @@ HWTEST_F(SymbolsFileTest, CreateCJSymbolsFile2, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols, TestSize.Level1)
 {
-    SymbolsFile::needJsvm_ = false;
+    SymbolsFile::needV8_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
-    EXPECT_EQ(symbolsFile->IsV8(), true);
+    EXPECT_EQ(symbolsFile->IsJsvm(), true);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
@@ -1018,10 +1018,10 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols2, TestSize.Level1)
 {
-    SymbolsFile::needJsvm_ = false;
+    SymbolsFile::needV8_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
-    EXPECT_EQ(symbolsFile->IsV8(), true);
+    EXPECT_EQ(symbolsFile->IsJsvm(), true);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
@@ -1041,20 +1041,18 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols2, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
 {
-    SymbolsFile::needJsvm_ = true;
+    SymbolsFile::needV8_ = true;
     const std::string filename = "[anon:ARKWEB_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
-    EXPECT_EQ(symbolsFile->IsV8(), false);
+    EXPECT_EQ(symbolsFile->IsJsvm(), false);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
     uint64_t offset = rnd_();
     uint32_t prot = rnd_();
     std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
-    symbolsFile->symbolsMap_.insert(std::make_pair(ip,
-        DfxSymbol(ip, 0, "", "", map->name)));
     auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
-    EXPECT_EQ(symbol.IsValid(), true);
+    EXPECT_EQ(symbol.IsValid(), false);
 }
 
 /**
@@ -1064,10 +1062,10 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
 {
-    SymbolsFile::needJsvm_ = false;
+    SymbolsFile::needV8_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
-    EXPECT_EQ(symbolsFile->IsV8(), true);
+    EXPECT_EQ(symbolsFile->IsJsvm(), true);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
@@ -1078,6 +1076,56 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
     EXPECT_EQ(symbolsFile->LoadSymbols(map, "/system/lib64/libv8_shared.so"), true);
     auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
     EXPECT_EQ(symbol.IsValid(), false);
+}
+
+/**
+ * @tc.name: CreateArkwebV8Symbols
+ * @tc.desc: Only test CreateArkwebV8Symbols function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, CreateArkwebV8Symbols, TestSize.Level1)
+{
+    SymbolsFile::needV8_ = false;
+    const std::string filename = "[anon:v8]";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_EQ(symbolsFile->IsArkweb(), true);
+    uint64_t ip = rnd_();
+    uint64_t begin = rnd_();
+    uint64_t len = rnd_();
+    uint64_t offset = rnd_();
+    uint32_t prot = rnd_();
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+    symbolsFile->symbolsMap_.insert(std::make_pair(ip,
+        DfxSymbol(ip, 0, "", "", map->name)));
+    EXPECT_EQ(symbolsFile->LoadDebugInfo(map, "/system/lib64/libv8_shared.so"), true);
+    EXPECT_EQ(symbolsFile->LoadSymbols(map, "/system/lib64/libv8_shared.so"), true);
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    EXPECT_EQ(symbol.IsValid(), true);
+}
+
+/**
+ * @tc.name: CreateArkwebV8Symbols2
+ * @tc.desc: Only test CreateArkwebV8Symbols2 function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, CreateArkwebV8Symbols2, TestSize.Level1)
+{
+    SymbolsFile::needV8_ = false;
+    const std::string filename = "[anon:JS_V8]";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_EQ(symbolsFile->IsArkweb(), true);
+    uint64_t ip = rnd_();
+    uint64_t begin = rnd_();
+    uint64_t len = rnd_();
+    uint64_t offset = rnd_();
+    uint32_t prot = rnd_();
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+    symbolsFile->symbolsMap_.insert(std::make_pair(ip,
+        DfxSymbol(ip, 0, "", "", map->name)));
+    EXPECT_EQ(symbolsFile->LoadDebugInfo(map, "/system/lib64/libv8_shared.so"), true);
+    EXPECT_EQ(symbolsFile->LoadSymbols(map, "/system/lib64/libv8_shared.so"), true);
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    EXPECT_EQ(symbol.IsValid(), true);
 }
 
 /**
