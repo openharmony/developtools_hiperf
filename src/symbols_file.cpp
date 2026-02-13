@@ -1064,15 +1064,8 @@ public:
                    "map is exec not abc file , the symbol file is:%s", map_->name.c_str());
 
         if (StringEndsWith(filePath_, ".hap") || StringEndsWith(filePath_, ".hsp") ||
-            StringEndsWith(filePath_, ".hqf")) {
-            dfxExtractor_ = std::make_unique<DfxExtractor>(filePath_);
-            CHECK_TRUE(dfxExtractor_->GetHapAbcInfo(loadOffSet_, abcDataPtr_, abcDataSize_), false, 1,
-                       "failed to call GetHapAbcInfo, the symbol file is:%s", filePath_.c_str());
-            HLOGD("loadOffSet %u", (uint32_t)loadOffSet_);
-            if (abcDataPtr_ != nullptr) {
-                isHapAbc_ = true;
-                HLOGD("symbol file : %s, isAbc: %d", filePath_.c_str(), isHapAbc_);
-            }
+            StringEndsWith(filePath_, ".hqf") || StringEndsWith(filePath_, ".abc")) {
+            isHapAbc_ = true;
         } else {
             loadOffSet_ = map_->offset;
             abcDataSize_ = map_->end - map_->begin;
@@ -1157,10 +1150,19 @@ public:
             JsFunction jsFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
-            auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip),
-                                                            static_cast<uintptr_t>(map->begin),
-                                                            loadOffSet_, abcDataPtr_.get(), abcDataSize_,
-                                                            arkExtractorptr_, &jsFunc);
+            if(StringEndsWith(module, ".hap") || StringEndsWith(module, ".hsp") ||
+               StringEndsWith(module, ".hqf") || StringEndsWith(module, ".abc")) {
+                auto ret = DfxArk::Instance().ParseArkFileInfo(static_cast<uintptr_t>(ip),
+                                                               static_cast<uintptr_t>(map->begin),
+                                                               static_cast<uintptr_t>(map->offset),
+                                                               filePath_.c_str(),
+                                                               arkExtractorptr_, &jsFunc);
+            }else{
+                auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip),
+                                                                static_cast<uintptr_t>(map->begin),
+                                                                loadOffSet_, abcDataPtr_.get(), abcDataSize_,
+                                                                arkExtractorptr_, &jsFunc);
+            }
             if (ret == -1) {
                 HLOGD("failed to call ParseArkFrameInfo, the symbol file is : %s", map->name.c_str());
                 return DfxSymbol(ip, "");
