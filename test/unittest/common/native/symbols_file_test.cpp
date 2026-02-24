@@ -995,10 +995,11 @@ HWTEST_F(SymbolsFileTest, CreateCJSymbolsFile2, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols, TestSize.Level1)
 {
-    SymbolsFile::needV8_ = false;
+    SymbolsFile::needJsvm_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsJsvm(), true);
+    EXPECT_EQ(symbolsFile->IsArkweb(), false);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
@@ -1018,10 +1019,11 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols2, TestSize.Level1)
 {
-    SymbolsFile::needV8_ = false;
+    SymbolsFile::needJsvm_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsJsvm(), true);
+    EXPECT_EQ(symbolsFile->IsArkweb(), false);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
@@ -1041,7 +1043,7 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols2, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
 {
-    SymbolsFile::needV8_ = true;
+    SymbolsFile::needJsvm_ = true;
     const std::string filename = "[anon:ARKWEB_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsJsvm(), false);
@@ -1062,7 +1064,7 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols3, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
 {
-    SymbolsFile::needV8_ = false;
+    SymbolsFile::needJsvm_ = false;
     const std::string filename = "[anon:JSVM_JIT]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
     EXPECT_EQ(symbolsFile->IsJsvm(), true);
@@ -1085,10 +1087,8 @@ HWTEST_F(SymbolsFileTest, CreateV8Symbols4, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateArkwebV8Symbols, TestSize.Level1)
 {
-    SymbolsFile::needV8_ = false;
     const std::string filename = "[anon:v8]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
-    EXPECT_EQ(symbolsFile->IsArkweb(), true);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();
@@ -1110,10 +1110,8 @@ HWTEST_F(SymbolsFileTest, CreateArkwebV8Symbols, TestSize.Level1)
  */
 HWTEST_F(SymbolsFileTest, CreateArkwebV8Symbols2, TestSize.Level1)
 {
-    SymbolsFile::needV8_ = false;
     const std::string filename = "[anon:JS_V8]";
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
-    EXPECT_EQ(symbolsFile->IsArkweb(), true);
     uint64_t ip = rnd_();
     uint64_t begin = rnd_();
     uint64_t len = rnd_();

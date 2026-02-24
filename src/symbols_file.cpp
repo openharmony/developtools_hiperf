@@ -50,7 +50,7 @@ namespace Developtools {
 namespace HiPerf {
 using namespace std::chrono;
 bool SymbolsFile::onRecording_ = true;
-bool SymbolsFile::needV8_ = false;
+bool SymbolsFile::needJsvm_ = false;
 uint32_t SymbolsFile::offsetNum_ = 0;
 
 const std::string SymbolsFile::GetBuildId() const
@@ -1217,7 +1217,7 @@ public:
     bool IsJsvm() override
     {
 #if defined(is_ohos) && is_ohos
-        if (!needV8_) {
+        if (!needJsvm_) {
             return true;
         }
         if (jsvmExtracted_) {
@@ -1286,7 +1286,7 @@ public:
         HLOGD("map name:%s", map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
-        if (IsJsvm() && needV8_) {
+        if (IsJsvm() && needJsvm_) {
             JsvmFunction jsvmFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
@@ -1324,6 +1324,16 @@ private:
 
     pid_t pid_ = 0;
 
+    std::string GetDemangle(const WebJsFunction& webjsFunction)
+    {
+        std::string result(webjsFunction.functionName);
+        if (strlen(webjsFunction.url) > 0) {
+            result += ":[" + std::string(webjsFunction.url) + ":" + std::to_string(webjsFunction.line) +
+                      ":" + std::to_string(webjsFunction.column) + "]";
+        }
+        return result;
+    }
+
 public:
     explicit ArkwebV8FileSymbols(const std::string &symbolFilePath, pid_t pid)
         : ElfFileSymbols(symbolFilePath, SYMBOL_ARKWEB_V8_FILE)
@@ -1344,9 +1354,6 @@ public:
     bool IsArkweb() override
     {
 #if defined(is_ohos) && is_ohos
-        if (!needV8_) {
-            return true;
-        }
         if (arkwebExtracted_) {
             return isArkweb_;
         }
@@ -1413,18 +1420,19 @@ public:
         HLOGD("map name:%s", map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
-        if (IsArkweb() && needV8_) {
-            JsvmFunction jsvmFunc;
+        if (IsArkweb()) {
+            WebJsFunction webJsFunction;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
             auto ret = DfxJsvm::Instance().ParseArkwebJsFrameInfo(static_cast<uintptr_t>(ip),
-                                                                  arkwebExtractorPtr_, &jsvmFunc);
+                                                                  arkwebExtractorPtr_, &webJsFunction);
             if (ret == -1) {
                 HLOGD("failed to call ParseArkwebJsFrameInfo, the symbol file is : %s", map->name.c_str());
                 return DfxSymbol(ip, "");
             }
-            this->symbolsMap_.insert(std::make_pair(ip,
-                DfxSymbol(ip, 0, jsvmFunc.functionName, "", map->name)));
+            std::string demangle = GetDemangle(webJsFunction);
+            DfxSymbol symbol = DfxSymbol(ip, 0, webJsFunction.functionName, demangle, map->name);
+            this->symbolsMap_.insert(std::make_pair(ip, symbol));
 
             DfxSymbol &foundSymbol = symbolsMap_[ip];
             if (!foundSymbol.matched_) {
@@ -1434,7 +1442,7 @@ public:
             }
 
             HLOGD("ip : 0x%" PRIx64 " the symbol file is : %s, function is %s demangle_ : %s", ip,
-                  symbolsMap_[ip].module_.data(), jsvmFunc.functionName, matchedSymbols_.back()->demangle_.data());
+                  symbolsMap_[ip].module_.data(), webJsFunction.functionName, matchedSymbols_.back()->demangle_.data());
             return symbolsMap_[ip];
         }
 #endif
