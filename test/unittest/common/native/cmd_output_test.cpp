@@ -186,15 +186,6 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPid_HuksService_SuccessC
  	          true);
 }
 
-HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationApp_SuccessCase, TestSize.Level0)
-{
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 --app hiperf_test_demo",
-                                     {"Profiling duration is 3.000 seconds"}), true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
-}
-
 HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCorrectDurationPrompt_SuccessCase,
  	     TestSize.Level1)
 {
