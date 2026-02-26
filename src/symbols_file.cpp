@@ -1170,8 +1170,7 @@ public:
                     return DfxSymbol(ip, "");
                 }
             }
-            this->symbolsMap_.insert(std::make_pair(ip,
-                                                    DfxSymbol(ip, jsFunc.codeBegin, jsFunc.functionName,
+            this->symbolsMap_.insert(std::make_pair(ip, DfxSymbol(ip, jsFunc.codeBegin, jsFunc.functionName,
                                                     jsFunc.ToString(), map->name)));
 
             DfxSymbol &foundSymbol = symbolsMap_[ip];
