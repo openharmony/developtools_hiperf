@@ -1150,14 +1150,13 @@ public:
             JsFunction jsFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
-            if(StringEndsWith(module, ".hap") || StringEndsWith(module, ".hsp") ||
-               StringEndsWith(module, ".hqf") || StringEndsWith(module, ".abc")) {
+            if (StringEndsWith(map->name, ".hap") || StringEndsWith(map->name, ".hsp")
+                || StringEndsWith(map->name, ".hqf") || StringEndsWith(map->name, ".abc")) {
                 auto ret = DfxArk::Instance().ParseArkFileInfo(static_cast<uintptr_t>(ip),
                                                                static_cast<uintptr_t>(map->begin),
-                                                               static_cast<uintptr_t>(map->offset),
-                                                               filePath_.c_str(),
+                                                               static_cast<uintptr_t>(map->offset), filePath_.c_str(),
                                                                arkExtractorptr_, &jsFunc);
-            }else{
+            } else {
                 auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip),
                                                                 static_cast<uintptr_t>(map->begin),
                                                                 loadOffSet_, abcDataPtr_.get(), abcDataSize_,
