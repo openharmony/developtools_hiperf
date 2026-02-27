@@ -1208,6 +1208,206 @@ HWTEST_F(PerfEventRecordTest, AuxtraceInitErr, TestSize.Level3)
     EXPECT_NE(record.header_.size, sizeof(PerfRecordAuxtraceData) + sizeof(perf_event_header));
     free(p);
 }
+
+/**
+ * @tc.name: CommLongString
+ * @tc.desc: Test PerfRecordComm with long string exceeding KILO
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, CommLongString, TestSize.Level2)
+{
+    std::string longComm(KILO + 500, 'A');
+    PerfRecordComm recordIn {true, 1, 2, longComm};
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_COMM);
+    ASSERT_EQ(recordIn.GetName(), RECORDNAME_COMM);
+
+    size_t expectedSize = HEADER_SIZE + sizeof(PerfRecordCommData);
+    ASSERT_EQ(recordIn.GetSize(), expectedSize);
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+    ASSERT_EQ(buff.size(), expectedSize);
+
+    ASSERT_EQ(strlen(recordIn.data_.comm), KILO - 1);
+    PerfRecordComm recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.GetType(), PERF_RECORD_COMM);
+    ASSERT_EQ(recordOut.data_.pid, 1);
+    ASSERT_EQ(recordOut.data_.tid, 2);
+    ASSERT_EQ(strlen(recordOut.data_.comm), KILO - 1);
+}
+
+/**
+ * @tc.name: MmapLongFilename
+ * @tc.desc: Test PerfRecordMmap with long filename exceeding KILO
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, MmapLongFilename, TestSize.Level2)
+{
+    std::string longFilename(KILO + 1000, 'B');
+    PerfRecordMmap recordIn {true, 1, 2, 0x1000, 0x2000, 0, longFilename};
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_MMAP);
+    ASSERT_EQ(recordIn.GetName(), RECORDNAME_MMAP);
+
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+    ASSERT_LE(strlen(recordIn.data_.filename), KILO - 1);
+
+    PerfRecordMmap recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.GetType(), PERF_RECORD_MMAP);
+    ASSERT_EQ(recordOut.data_.pid, 1);
+    ASSERT_EQ(recordOut.data_.tid, 2);
+}
+
+/**
+ * @tc.name: Mmap2LongFilename
+ * @tc.desc: Test PerfRecordMmap2 with long filename exceeding KILO
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, Mmap2LongFilename, TestSize.Level2)
+{
+    std::string longFilename(KILO + 500, 'C');
+    PerfRecordMmap2 recordIn {true, 1, 2, 0x1000, 0x2000, 0, 3, 4, 5, 6, 7, longFilename};
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_MMAP2);
+    ASSERT_EQ(recordIn.GetName(), RECORDNAME_MMAP2);
+
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+    ASSERT_LE(strlen(recordIn.data_.filename), KILO - 1);
+
+    PerfRecordMmap2 recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.GetType(), PERF_RECORD_MMAP2);
+    ASSERT_EQ(recordOut.data_.pid, 1);
+    ASSERT_EQ(recordOut.data_.tid, 2);
+    ASSERT_EQ(recordOut.data_.maj, 3);
+    ASSERT_EQ(recordOut.data_.min, 4);
+}
+
+/**
+ * @tc.name: CommWithNullChars
+ * @tc.desc: Test PerfRecordComm with string containing null characters
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, CommWithNullChars, TestSize.Level2)
+{
+    std::string commWithNulls = "test";
+    commWithNulls += '\0';
+    commWithNulls += "extra";
+    commWithNulls += '\0';
+    commWithNulls += "data";
+
+    PerfRecordComm recordIn {true, 1, 2, commWithNulls};
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_COMM);
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+
+    PerfRecordComm recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.GetType(), PERF_RECORD_COMM);
+    ASSERT_EQ(recordOut.data_.pid, 1);
+    ASSERT_EQ(recordOut.data_.tid, 2);
+}
+
+/**
+ * @tc.name: CommEmptyString
+ * @tc.desc: Test PerfRecordComm with empty string
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, CommEmptyString, TestSize.Level2)
+{
+    std::string emptyComm = "";
+    PerfRecordComm recordIn {true, 1, 2, emptyComm};
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_COMM);
+
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+    size_t expectedSize = HEADER_SIZE + sizeof(PerfRecordCommData) - KILO + 1;
+    ASSERT_EQ(recordIn.GetSize(), expectedSize);
+
+    PerfRecordComm recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.GetType(), PERF_RECORD_COMM);
+    ASSERT_EQ(recordOut.data_.pid, 1);
+    ASSERT_EQ(recordOut.data_.tid, 2);
+}
+
+/**
+ * @tc.name: CommExactlyKILO
+ * @tc.desc: Test PerfRecordComm with string exactly KILO length
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, CommExactlyKILO, TestSize.Level2)
+{
+    std::string exactKiloComm(KILO, 'D');
+    PerfRecordComm recordIn {true, 1, 2, exactKiloComm};
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_COMM);
+    ASSERT_EQ(strlen(recordIn.data_.comm), KILO - 1);
+
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+
+    PerfRecordComm recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.GetType(), PERF_RECORD_COMM);
+    ASSERT_EQ(strlen(recordOut.data_.comm), KILO - 1);
+}
+
+/**
+ * @tc.name: MmapGetBinarySafetyCheck
+ * @tc.desc: Test PerfRecordMmap GetBinary with boundary check
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, MmapGetBinarySafetyCheck, TestSize.Level2)
+{
+    std::string normalFilename = "normal_file.so";
+    PerfRecordMmap recordIn {true, 100, 200, 0x10000, 0x20000, 0x1000, normalFilename};
+
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_MMAP);
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+    ASSERT_EQ(buff.size(), recordIn.GetSize());
+
+    PerfRecordMmap recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.data_.pid, 100);
+    ASSERT_EQ(recordOut.data_.tid, 200);
+    ASSERT_EQ(recordOut.data_.addr, 0x10000);
+    ASSERT_EQ(recordOut.data_.len, 0x20000);
+    ASSERT_EQ(recordOut.data_.pgoff, 0x1000);
+    ASSERT_STREQ(recordOut.data_.filename, normalFilename.c_str());
+}
+
+/**
+ * @tc.name: Mmap2GetBinarySafetyCheck
+ * @tc.desc: Test PerfRecordMmap2 GetBinary with boundary check
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfEventRecordTest, Mmap2GetBinarySafetyCheck, TestSize.Level2)
+{
+    std::string normalFilename = "normal_lib.so";
+    PerfRecordMmap2 recordIn {true, 100, 200, 0x10000, 0x20000, 0x1000,
+                              10, 20, 12345, 7, 1, normalFilename};
+
+    ASSERT_EQ(recordIn.GetType(), PERF_RECORD_MMAP2);
+    std::vector<uint8_t> buff;
+    ASSERT_TRUE(recordIn.GetBinary(buff));
+    ASSERT_EQ(buff.size(), recordIn.GetSize());
+
+    PerfRecordMmap2 recordOut;
+    recordOut.Init(buff.data());
+    ASSERT_EQ(recordOut.data_.pid, 100);
+    ASSERT_EQ(recordOut.data_.tid, 200);
+    ASSERT_EQ(recordOut.data_.addr, 0x10000);
+    ASSERT_EQ(recordOut.data_.len, 0x20000);
+    ASSERT_EQ(recordOut.data_.pgoff, 0x1000);
+    ASSERT_EQ(recordOut.data_.maj, 10);
+    ASSERT_EQ(recordOut.data_.min, 20);
+    ASSERT_EQ(recordOut.data_.ino, 12345);
+    ASSERT_EQ(recordOut.data_.prot, 7);
+    ASSERT_EQ(recordOut.data_.flags, 1);
+    ASSERT_STREQ(recordOut.data_.filename, normalFilename.c_str());
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
