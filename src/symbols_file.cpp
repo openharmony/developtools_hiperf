@@ -1024,7 +1024,7 @@ private:
     std::unique_ptr<uint8_t[]> abcDataPtr_ = nullptr;
     [[maybe_unused]] uintptr_t loadOffSet_ = 0;
     [[maybe_unused]] size_t abcDataSize_ = 0;
-    [[maybe_unused]] uintptr_t arkExtractorptr_ = 0;
+    [[maybe_unused]] uintptr_t arkExtractorPtr_ = 0;
     bool isHapAbc_ = false;
     pid_t pid_ = 0;
 public:
@@ -1038,9 +1038,9 @@ public:
     {
 #if defined(is_ohos) && is_ohos
         abcDataPtr_ = nullptr;
-        if (arkExtractorptr_ != 0) {
-            DfxArk::Instance().ArkDestoryJsSymbolExtractor(arkExtractorptr_);
-            arkExtractorptr_ = 0;
+        if (arkExtractorPtr_ != 0) {
+            DfxArk::Instance().ArkDestoryJsSymbolExtractor(arkExtractorPtr_);
+            arkExtractorPtr_ = 0;
         }
 #endif
     }
@@ -1086,9 +1086,9 @@ public:
             HLOGD("symbol file name %s loadOffSet %u abcDataSize_ %u",
                   filePath_.c_str(), (uint32_t)loadOffSet_, (uint32_t)abcDataSize_);
         }
-        auto ret = DfxArk::Instance().ArkCreateJsSymbolExtractor(&arkExtractorptr_);
+        auto ret = DfxArk::Instance().ArkCreateJsSymbolExtractor(&arkExtractorPtr_);
         if (ret < 0) {
-            arkExtractorptr_ = 0;
+            arkExtractorPtr_ = 0;
             HLOGE("failed to call ArkCreateJsSymbolExtractor, the symbol file is:%s", filePath_.c_str());
         }
 #endif
@@ -1160,7 +1160,7 @@ public:
             auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip),
                                                             static_cast<uintptr_t>(map->begin),
                                                             loadOffSet_, abcDataPtr_.get(), abcDataSize_,
-                                                            arkExtractorptr_, &jsFunc);
+                                                            arkExtractorPtr_, &jsFunc);
             if (ret == -1) {
                 HLOGD("failed to call ParseArkFrameInfo, the symbol file is : %s", map->name.c_str());
                 return DfxSymbol(ip, "");
@@ -1189,59 +1189,59 @@ public:
     }
 };
 
-class V8FileSymbols : public ElfFileSymbols {
+class JsvmV8FileSymbols : public ElfFileSymbols {
 private:
-    bool v8Extracted_ = false;
-    [[maybe_unused]] bool isV8_ = false;
-    [[maybe_unused]] uintptr_t jsvmExtractorptr_ = 0;
+    bool jsvmExtracted_ = false;
+    [[maybe_unused]] bool isJsvm_ = false;
+    [[maybe_unused]] uintptr_t jsvmExtractorPtr_ = 0;
 
     pid_t pid_ = 0;
 
 public:
-    explicit V8FileSymbols(const std::string &symbolFilePath, pid_t pid)
-        : ElfFileSymbols(symbolFilePath, SYMBOL_V8_FILE)
+    explicit JsvmV8FileSymbols(const std::string &symbolFilePath, pid_t pid)
+        : ElfFileSymbols(symbolFilePath, SYMBOL_JSVM_V8_FILE)
     {
         pid_ = pid;
     }
 
-    ~V8FileSymbols() override
+    ~JsvmV8FileSymbols() override
     {
 #if defined(is_ohos) && is_ohos
-        if (jsvmExtractorptr_ != 0) {
-            DfxJsvm::Instance().JsvmDestroyJsSymbolExtractor(jsvmExtractorptr_);
-            jsvmExtractorptr_ = 0;
+        if (jsvmExtractorPtr_ != 0) {
+            DfxJsvm::Instance().JsvmDestroyJsSymbolExtractor(jsvmExtractorPtr_);
+            jsvmExtractorPtr_ = 0;
         }
 #endif
     }
 
-    bool IsV8() override
+    bool IsJsvm() override
     {
 #if defined(is_ohos) && is_ohos
         if (!needJsvm_) {
             return true;
         }
-        if (v8Extracted_) {
-            return isV8_;
+        if (jsvmExtracted_) {
+            return isJsvm_;
         }
-        v8Extracted_ = true;
-        if (jsvmExtractorptr_ == 0 && StringStartsWith(filePath_, "[anon:JSVM_JIT")) {
-            auto ret = DfxJsvm::Instance().JsvmCreateJsSymbolExtractor(&jsvmExtractorptr_, pid_);
+        jsvmExtracted_ = true;
+        if (jsvmExtractorPtr_ == 0 && IsJsvmV8File(filePath_)) {
+            auto ret = DfxJsvm::Instance().JsvmCreateJsSymbolExtractor(&jsvmExtractorPtr_, pid_);
             if (ret < 0) {
-                jsvmExtractorptr_ = 0;
-                isV8_ = false;
+                jsvmExtractorPtr_ = 0;
+                isJsvm_ = false;
                 HLOGE("failed to call JsvmCreateJsSymbolExtractor, the symbol file is:%s", filePath_.c_str());
             } else {
-                isV8_ = true;
+                isJsvm_ = true;
             }
         }
-        return isV8_;
+        return isJsvm_;
 #endif
         return true;
     }
 
     void SetBoolValue(bool value) override
     {
-        v8Extracted_ = value;
+        jsvmExtracted_ = value;
     }
 
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
@@ -1286,11 +1286,12 @@ public:
         HLOGD("map name:%s", map->name.c_str());
 
 #if defined(is_ohos) && is_ohos
-        if (IsV8() && needJsvm_) {
+        if (IsJsvm() && needJsvm_) {
             JsvmFunction jsvmFunc;
             std::string module = map->name;
             HLOGD("map->name module:%s", module.c_str());
-            auto ret = DfxJsvm::Instance().ParseJsvmFrameInfo(static_cast<uintptr_t>(ip), jsvmExtractorptr_, &jsvmFunc);
+            auto ret = DfxJsvm::Instance().ParseJsvmFrameInfo(static_cast<uintptr_t>(ip),
+                                                              jsvmExtractorPtr_, &jsvmFunc);
             if (ret == -1) {
                 HLOGD("failed to call ParseJsvmFrameInfo, the symbol file is : %s", map->name.c_str());
                 return DfxSymbol(ip, "");
@@ -1307,6 +1308,141 @@ public:
 
             HLOGD("ip : 0x%" PRIx64 " the symbol file is : %s, function is %s demangle_ : %s", ip,
                   symbolsMap_[ip].module_.data(), jsvmFunc.functionName, matchedSymbols_.back()->demangle_.data());
+            return symbolsMap_[ip];
+        }
+#endif
+        DfxSymbol symbol(ip, "");
+        return symbol;
+    }
+};
+
+class ArkwebV8FileSymbols : public ElfFileSymbols {
+private:
+    bool arkwebExtracted_ = false;
+    [[maybe_unused]] bool isArkweb_ = false;
+    [[maybe_unused]] uintptr_t arkwebExtractorPtr_ = 0;
+
+    pid_t pid_ = 0;
+
+    std::string GetDemangle(const WebJsFunction& webjsFunction)
+    {
+        std::string result(webjsFunction.functionName);
+        if (strlen(webjsFunction.url) > 0) {
+            result += ":[" + std::string(webjsFunction.url) + ":" + std::to_string(webjsFunction.line) +
+                      ":" + std::to_string(webjsFunction.column) + "]";
+        }
+        return result;
+    }
+
+public:
+    explicit ArkwebV8FileSymbols(const std::string &symbolFilePath, pid_t pid)
+        : ElfFileSymbols(symbolFilePath, SYMBOL_ARKWEB_V8_FILE)
+    {
+        pid_ = pid;
+    }
+
+    ~ArkwebV8FileSymbols() override
+    {
+#if defined(is_ohos) && is_ohos
+        if (arkwebExtractorPtr_ != 0) {
+            DfxJsvm::Instance().ArkwebDestroyJsSymbolExtractor(arkwebExtractorPtr_);
+            arkwebExtractorPtr_ = 0;
+        }
+#endif
+    }
+
+    bool IsArkweb() override
+    {
+#if defined(is_ohos) && is_ohos
+        if (arkwebExtracted_) {
+            return isArkweb_;
+        }
+        arkwebExtracted_ = true;
+        if (arkwebExtractorPtr_ == 0 && IsArkwebV8File(filePath_)) {
+            auto ret = DfxJsvm::Instance().ArkwebCreateJsSymbolExtractor(&arkwebExtractorPtr_, pid_);
+            if (ret < 0) {
+                arkwebExtractorPtr_ = 0;
+                isArkweb_ = false;
+                HLOGE("failed to call ArkwebCreateJsSymbolExtractor, the symbol file is:%s", filePath_.c_str());
+            } else {
+                isArkweb_ = true;
+            }
+        }
+        return isArkweb_;
+#endif
+        return true;
+    }
+
+    void SetBoolValue(bool value) override
+    {
+        arkwebExtracted_ = value;
+    }
+
+    bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
+    {
+        if (map == nullptr) {
+            HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
+            return false;
+        }
+        HLOGD("map name:%s", map->name.c_str());
+        if (debugInfoLoaded_) {
+            return true;
+        }
+        CHECK_TRUE(onRecording_, true, 0, "");
+
+        debugInfoLoaded_ = true;
+        debugInfoLoadResult_ = true;
+        return true;
+    }
+
+    bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
+    {
+        if (map == nullptr) {
+            HLOGD("map is null, symbolFilePath: %s", symbolFilePath.c_str());
+            return false;
+        }
+        HLOGD("map name:%s", map->name.c_str());
+        CHECK_TRUE(!symbolsLoaded_ && onRecording_, true, 0, "");
+        symbolsLoaded_ = true;
+        return true;
+    }
+
+    DfxSymbol GetSymbolWithPcAndMap(const uint64_t ip, std::shared_ptr<DfxMap> map) override
+    {
+        // get cache
+        auto iter = symbolsMap_.find(ip);
+        if (iter != symbolsMap_.end()) {
+            return iter->second;
+        }
+        if (map == nullptr) {
+            return DfxSymbol(ip, "");
+        }
+        HLOGD("map name:%s", map->name.c_str());
+
+#if defined(is_ohos) && is_ohos
+        if (IsArkweb()) {
+            WebJsFunction webJsFunction;
+            std::string module = map->name;
+            HLOGD("map->name module:%s", module.c_str());
+            auto ret = DfxJsvm::Instance().ParseArkwebJsFrameInfo(static_cast<uintptr_t>(ip),
+                                                                  arkwebExtractorPtr_, &webJsFunction);
+            if (ret == -1) {
+                HLOGD("failed to call ParseArkwebJsFrameInfo, the symbol file is : %s", map->name.c_str());
+                return DfxSymbol(ip, "");
+            }
+            std::string demangle = GetDemangle(webJsFunction);
+            DfxSymbol symbol = DfxSymbol(ip, 0, webJsFunction.functionName, demangle, map->name);
+            this->symbolsMap_.insert(std::make_pair(ip, symbol));
+
+            DfxSymbol &foundSymbol = symbolsMap_[ip];
+            if (!foundSymbol.matched_) {
+                foundSymbol.matched_ = true;
+                foundSymbol.symbolFileIndex_ = id_;
+                matchedSymbols_.push_back(&(symbolsMap_[ip]));
+            }
+
+            HLOGD("ip : 0x%" PRIx64 " the symbol file is : %s, function is %s demangle_ : %s", ip,
+                  symbolsMap_[ip].module_.data(), webJsFunction.functionName, matchedSymbols_.back()->demangle_.data());
             return symbolsMap_[ip];
         }
 #endif
@@ -1359,8 +1495,10 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
             return std::make_unique<JSFileSymbols>(symbolFilePath);
         case SYMBOL_HAP_FILE:
             return std::make_unique<HapFileSymbols>(symbolFilePath, pid);
-        case SYMBOL_V8_FILE:
-            return std::make_unique<V8FileSymbols>(symbolFilePath, pid);
+        case SYMBOL_JSVM_V8_FILE:
+            return std::make_unique<JsvmV8FileSymbols>(symbolFilePath, pid);
+        case SYMBOL_ARKWEB_V8_FILE:
+            return std::make_unique<ArkwebV8FileSymbols>(symbolFilePath, pid);
         case SYMBOL_CJ_FILE:
             return std::make_unique<CJFileSymbols>(symbolFilePath);
         default:
@@ -1399,8 +1537,10 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &s
         return SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE, symbolFilePath);
     } else if (IsArkJsFile(symbolFilePath)) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_HAP_FILE, symbolFilePath, pid);
-    } else if (IsV8File(symbolFilePath)) {
-        return SymbolsFile::CreateSymbolsFile(SYMBOL_V8_FILE, symbolFilePath, pid);
+    } else if (IsJsvmV8File(symbolFilePath)) {
+        return SymbolsFile::CreateSymbolsFile(SYMBOL_JSVM_V8_FILE, symbolFilePath, pid);
+    } else if (IsArkwebV8File(symbolFilePath)) {
+        return SymbolsFile::CreateSymbolsFile(SYMBOL_ARKWEB_V8_FILE, symbolFilePath, pid);
     } else if (IsCJFile(symbolFilePath)) {
         return SymbolsFile::CreateSymbolsFile(SYMBOL_CJ_FILE, symbolFilePath, pid);
     } else {
@@ -1572,8 +1712,10 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
 {
     bool isHapSymbolFile = (static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_HAP_FILE);
     HLOGD("isHapSymbolFile : %d", isHapSymbolFile);
-    bool isV8SymbolFile = (static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_V8_FILE);
-    HLOGD("isV8SymbolFile : %d", isV8SymbolFile);
+    bool isJsvmV8SymbolFile = (static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_JSVM_V8_FILE);
+    HLOGD("isJsvmV8SymbolFile : %d", isJsvmV8SymbolFile);
+    bool isArkwebV8SymbolFile = (static_cast<SymbolsFileType>(symbolFileStruct.symbolType_) == SYMBOL_ARKWEB_V8_FILE);
+    HLOGD("isArkwebV8SymbolFile : %d", isArkwebV8SymbolFile);
     auto symbolsFile = CreateSymbolsFile(symbolFileStruct.filePath_);
 
     // default create elf file. but hap file need special operation.
@@ -1587,7 +1729,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
                                            symbolStruct.symbolName_, symbolFileStruct.filePath_);
     }
     symbolsFile->AdjustSymbols(); // reorder
-    if (isHapSymbolFile || isV8SymbolFile) {
+    if (isHapSymbolFile || isJsvmV8SymbolFile || isArkwebV8SymbolFile) {
         for (const auto& symbol : symbolsFile->symbols_) {
             symbolsFile->symbolsMap_.emplace(symbol.funcVaddr_, symbol);
         }

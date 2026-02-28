@@ -1299,11 +1299,11 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(const uint64_t ip, const VirtualTh
         symbolsFile->LoadSymbols(map);
     }
     DfxSymbol foundSymbols;
-    if (!symbolsFile->IsAbc() && !IsV8File(map->name)) {
+    bool isAbcOrV8 = symbolsFile->IsAbc() || IsJsvmV8File(map->name) || IsArkwebV8File(map->name);
+    if (!isAbcOrV8) {
         foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
     } else {
-        HLOGD("symbolsFile:%s is ABC or V8 :%d", symbolsFile->filePath_.c_str(),
-              symbolsFile->IsAbc() || symbolsFile->IsV8());
+        HLOGD("symbolsFile:%s is ABC or V8 :%d", symbolsFile->filePath_.c_str(), isAbcOrV8);
         foundSymbols = symbolsFile->GetSymbolWithPcAndMap(ip, map);
     }
 
@@ -1314,7 +1314,7 @@ const DfxSymbol VirtualRuntime::GetUserSymbol(const uint64_t ip, const VirtualTh
     }
     HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s", ip,
           vaddrSymbol.fileVaddr_, map->name.c_str());
-    if (symbolsFile->IsAbc() || symbolsFile->IsV8()) {
+    if (isAbcOrV8) {
         symbolsFile->symbolsMap_.insert(std::make_pair(ip, vaddrSymbol));
     }
     return vaddrSymbol;

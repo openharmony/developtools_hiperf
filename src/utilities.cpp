@@ -1073,11 +1073,15 @@ bool IsArkJsFile(const std::string& filepath)
             StringEndsWith(filepath, ".hqf"));
 }
 
-bool IsV8File(const std::string& filepath)
+bool IsJsvmV8File(const std::string& filepath)
 {
-    return (StringStartsWith(filepath, "[anon:JSVM_JIT") ||
-            StringStartsWith(filepath, "[anon:ARKWEB_JIT") ||
-            StringStartsWith(filepath, "[anon:v8"));
+    return (StringStartsWith(filepath, "[anon:JSVM_JIT"));
+}
+
+bool IsArkwebV8File(const std::string& filepath)
+{
+    return (StringStartsWith(filepath, "[anon:v8") ||
+            StringStartsWith(filepath, "[anon:JS_V8"));
 }
 
 bool IsHiviewCall()
