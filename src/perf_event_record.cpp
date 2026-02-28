@@ -16,6 +16,8 @@
 
 #include "perf_event_record.h"
 #include <cinttypes>
+
+#include "hiperf_hilog.h"
 #include "spe_decoder.h"
 
 #include "utilities.h"
@@ -304,11 +306,15 @@ PerfRecordMmap::PerfRecordMmap(bool inKernel, u32 pid, u32 tid, u64 addr, u64 le
     data_.addr = addr;
     data_.len = len;
     data_.pgoff = pgoff;
-    if (strncpy_s(data_.filename, KILO, filename.c_str(), filename.size()) != 0) {
+    size_t filenameLen = std::min(filename.size(), static_cast<size_t>(KILO - 1));
+    if (strncpy_s(data_.filename, KILO, filename.c_str(), filenameLen) != 0) {
         HLOGE("strncpy_s failed");
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "strncpy_s failed !!!");
+#endif
     }
 
-    header_.size = sizeof(header_) + sizeof(data_) - KILO + filename.size() + 1;
+    header_.size = sizeof(header_) + sizeof(data_) - KILO + filenameLen + 1;
 }
 
 bool PerfRecordMmap::GetBinary(std::vector<uint8_t> &buf) const
@@ -319,10 +325,23 @@ bool PerfRecordMmap::GetBinary(std::vector<uint8_t> &buf) const
 
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
+    size_t bufSize = buf.size() - GetHeaderSize();
 
     // data_.filename[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    size_t copySize = GetSize() - GetHeaderSize();
+    if (copySize > sizeof(data_)) {
+        HLOGE("copySize %zu exceeds sizeof(data_) %zu", copySize, sizeof(data_));
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "copySize %{public}zu exceeds sizeof(data_) %{public}zu",
+                      copySize, sizeof(data_));
+#endif
+    }
+    if (memcpy_s(p, bufSize, reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s failed copySize %zu", copySize);
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "memcpy_s failed copySize %{public}zu", copySize);
+#endif
+    }
     return true;
 }
 
@@ -365,11 +384,15 @@ PerfRecordMmap2::PerfRecordMmap2(const bool inKernel, const u32 pid, const u32 t
     data_.ino_generation = 0;
     data_.prot = prot;
     data_.flags = flags;
-    if (strncpy_s(data_.filename, KILO, filename.c_str(), filename.size()) != 0) {
+    size_t filenameLen = std::min(filename.size(), static_cast<size_t>(KILO - 1));
+    if (strncpy_s(data_.filename, KILO, filename.c_str(), filenameLen) != 0) {
         HLOGE("strncpy_s failed");
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "strncpy_s failed !!!");
+#endif
     }
 
-    header_.size = sizeof(header_) + sizeof(data_) - KILO + filename.size() + 1;
+    header_.size = sizeof(header_) + sizeof(data_) - KILO + filenameLen + 1;
 }
 
 PerfRecordMmap2::PerfRecordMmap2(const bool inKernel, const u32 pid, const u32 tid, std::shared_ptr<DfxMap> item)
@@ -388,11 +411,15 @@ PerfRecordMmap2::PerfRecordMmap2(const bool inKernel, const u32 pid, const u32 t
         // r--p 00000000 103:3e 12307                         /data/storage/el1/bundle/entry.hap
         // why prot get from this is 7. rwxp
         DfxMap::PermsToProts(item->perms, data_.prot, data_.flags);
-        if (strncpy_s(data_.filename, KILO, item->name.c_str(), item->name.size()) != 0) {
+        size_t nameLen = std::min(item->name.size(), static_cast<size_t>(KILO - 1));
+        if (strncpy_s(data_.filename, KILO, item->name.c_str(), nameLen) != 0) {
             HLOGE("strncpy_s failed");
+#if defined(is_ohos) && is_ohos
+            HIPERF_HILOGE(MODULE_DEFAULT, "strncpy_s failed !!!");
+#endif
         }
 
-        header_.size = sizeof(header_) + sizeof(data_) - KILO + item->name.size() + 1;
+        header_.size = sizeof(header_) + sizeof(data_) - KILO + nameLen + 1;
     } else {
         data_.addr = 0;
         data_.len = 0;
@@ -415,10 +442,23 @@ bool PerfRecordMmap2::GetBinary(std::vector<uint8_t> &buf) const
 
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
+    size_t bufSize = buf.size() - GetHeaderSize();
 
     // data_.filename[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    size_t copySize = GetSize() - GetHeaderSize();
+    if (copySize > sizeof(data_)) {
+        HLOGE("copySize %zu exceeds sizeof(data_) %zu", copySize, sizeof(data_));
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "copySize %{public}zu exceeds sizeof(data_) %{public}zu",
+                      copySize, sizeof(data_));
+#endif
+    }
+    if (memcpy_s(p, bufSize, reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s failed copySize %zu", copySize);
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "memcpy_s failed copySize %{public}zu", copySize);
+#endif
+    }
     return true;
 }
 
@@ -474,11 +514,16 @@ PerfRecordComm::PerfRecordComm(const bool inKernel, const u32 pid, const u32 tid
     PerfEventRecord::Init(PERF_RECORD_COMM, inKernel);
     data_.pid = pid;
     data_.tid = tid;
-    if (strncpy_s(data_.comm, KILO, comm.c_str(), comm.size()) != 0) {
+
+    size_t commLen = std::min(comm.size(), static_cast<size_t>(KILO - 1));
+    if (strncpy_s(data_.comm, KILO, comm.c_str(), commLen) != 0) {
         HLOGE("strncpy_s failed !!!");
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "strncpy_s failed !!!");
+#endif
     }
 
-    header_.size = sizeof(header_) + sizeof(data_) - KILO + comm.size() + 1;
+    header_.size = sizeof(header_) + sizeof(data_) - KILO + commLen + 1;
 }
 
 bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
@@ -489,10 +534,23 @@ bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
 
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
+    size_t bufSize = buf.size() - GetHeaderSize();
 
     // data_.comm[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    size_t copySize = GetSize() - GetHeaderSize();
+    if (copySize > sizeof(data_)) {
+        HLOGE("copySize %zu exceeds sizeof(data_) %zu", copySize, sizeof(data_));
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "copySize %{public}zu exceeds sizeof(data_) %{public}zu",
+                      copySize, sizeof(data_));
+#endif
+    }
+    if (memcpy_s(p, bufSize, reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s failed copySize %zu", copySize);
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "memcpy_s failed copySize %{public}zu", copySize);
+#endif
+    }
 
     return true;
 }
