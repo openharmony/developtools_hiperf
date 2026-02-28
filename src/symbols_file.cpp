@@ -1155,7 +1155,7 @@ public:
                 auto ret = DfxArk::Instance().ParseArkFileInfo(static_cast<uintptr_t>(ip),
                                                                static_cast<uintptr_t>(map->begin),
                                                                static_cast<uintptr_t>(map->offset), filePath_.c_str(),
-                                                               arkExtractorptr_, &jsFunc);
+                                                               arkExtractorPtr_, &jsFunc);
                 if (ret == -1) {
                     HLOGD("failed to call ParseArkFileInfo, the symbol file is : %s", map->name.c_str());
                     return DfxSymbol(ip, "");
@@ -1164,7 +1164,7 @@ public:
                 auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip),
                                                                 static_cast<uintptr_t>(map->begin),
                                                                 loadOffSet_, abcDataPtr_.get(), abcDataSize_,
-                                                                arkExtractorptr_, &jsFunc);
+                                                                arkExtractorPtr_, &jsFunc);
                 if (ret == -1) {
                     HLOGD("failed to call ParseArkFrameInfo, the symbol file is : %s", map->name.c_str());
                     return DfxSymbol(ip, "");
