@@ -101,6 +101,10 @@ std::string VirtualRuntime::ReadThreadName(const pid_t tid, const bool isThread)
     if (comm == EMPTY_STRING) {
         comm = ReadFromSavedCmdLines(tid);
     }
+    size_t nullPos = comm.find('\0');
+    if (nullPos != std::string::npos) {
+        comm.resize(nullPos);
+    }
     comm.erase(std::remove(comm.begin(), comm.end(), '\r'), comm.end());
     comm.erase(std::remove(comm.begin(), comm.end(), '\n'), comm.end());
     return comm;
