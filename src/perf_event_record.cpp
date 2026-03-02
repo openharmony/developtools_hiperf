@@ -16,6 +16,8 @@
 
 #include "perf_event_record.h"
 #include <cinttypes>
+
+#include "hiperf_hilog.h"
 #include "spe_decoder.h"
 
 #include "utilities.h"
@@ -474,11 +476,13 @@ PerfRecordComm::PerfRecordComm(const bool inKernel, const u32 pid, const u32 tid
     PerfEventRecord::Init(PERF_RECORD_COMM, inKernel);
     data_.pid = pid;
     data_.tid = tid;
-    if (strncpy_s(data_.comm, KILO, comm.c_str(), comm.size()) != 0) {
+
+    size_t commLen = std::min(comm.size(), static_cast<size_t>(KILO - 1));
+    if (strncpy_s(data_.comm, KILO, comm.c_str(), commLen) != 0) {
         HLOGE("strncpy_s failed !!!");
     }
 
-    header_.size = sizeof(header_) + sizeof(data_) - KILO + comm.size() + 1;
+    header_.size = sizeof(header_) + sizeof(data_) - KILO + commLen + 1;
 }
 
 bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
@@ -489,10 +493,16 @@ bool PerfRecordComm::GetBinary(std::vector<uint8_t> &buf) const
 
     GetHeaderBinary(buf);
     uint8_t *p = buf.data() + GetHeaderSize();
+    size_t bufSize = buf.size() - GetHeaderSize();
 
     // data_.comm[] is variable-length
-    std::copy(reinterpret_cast<const uint8_t *>(&data_),
-              reinterpret_cast<const uint8_t *>(&data_) + GetSize() - GetHeaderSize(), p);
+    size_t copySize = GetSize() - GetHeaderSize();
+    if (memcpy_s(p, bufSize, reinterpret_cast<const uint8_t *>(&data_), copySize) != 0) {
+        HLOGE("memcpy_s failed copySize %zu", copySize);
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "memcpy_s failed copySize %{public}zu", copySize);
+#endif
+    }
 
     return true;
 }
