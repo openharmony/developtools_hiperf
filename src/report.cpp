@@ -34,8 +34,14 @@ namespace Developtools {
 namespace HiPerf {
 unsigned long long ReportItem::allIndex_ = 0;
 
-std::string Report::GetAdltExtendMapName(const std::string mapName, const std::string originSoName)
+std::string Report::GetAdltExtendMapName(const std::string &mapName, const std::string &originSoName)
 {
+    constexpr size_t LimitNameLen = 256;
+    if (mapName.size() > LimitNameLen || originSoName.size() > LimitNameLen) {
+        HIPERF_HILOGI(MODULE_DEFAULT,
+            "GetAdltExtendMapName %" HILOG_PUBLIC "zu|%" HILOG_PUBLIC "zu, %" HILOG_PUBLIC "s|%" HILOG_PUBLIC "s",
+            mapName.size(), originSoName.size(), mapName.c_str(), originSoName.c_str());
+    }
     if (!originSoName.empty()) {
         return mapName + ":" + originSoName;
     }
