@@ -391,7 +391,6 @@ void Client::SetDebugMuchMode()
 
 bool Client::Start()
 {
-
     std::vector<std::string> args;
     args.push_back("-p");
     args.push_back(std::to_string(getpid()));
