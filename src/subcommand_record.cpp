@@ -2577,16 +2577,11 @@ bool SubCommandRecord::OnlineReportData()
     if (!report_) {
         return true;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s begin to report file",
-                  __FUNCTION__);
     bool ret = false;
     std::string tempFileName = outputFilename_ + ".tmp";
     if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s can't rename file "
-                      "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      __FUNCTION__, errno, errInfo);
         return false;
     }
 
@@ -2605,12 +2600,7 @@ bool SubCommandRecord::OnlineReportData()
     if (remove(tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s remove file failed"
-                      "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      __FUNCTION__, errno, errInfo);
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s report result %" HILOG_PUBLIC "s",
-                  __FUNCTION__, ret ? "success" : "fail");
     return ret;
 }
 
