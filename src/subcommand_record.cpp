@@ -2583,7 +2583,7 @@ bool SubCommandRecord::OnlineReportData()
     if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "can't rename file " 
+        HIPERF_HILOGI(MODULE_DEFAULT, "can't rename file "
                       "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
                       errno, errInfo);
         return false;
@@ -2606,10 +2606,10 @@ bool SubCommandRecord::OnlineReportData()
         strerror_r(errno, errInfo, ERRINFOLEN);
         HIPERF_HILOGI(MODULE_DEFAULT, "remove file failed"
                       "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      errno, errInfo); 
+                      errno, errInfo);
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "report result : %" HILOG_PUBLIC "s", 
-                  ret ? "success" : "fail");   
+    HIPERF_HILOGI(MODULE_DEFAULT, "report result : %" HILOG_PUBLIC "s",
+                  ret ? "success" : "fail");
     return ret;
 }
 
