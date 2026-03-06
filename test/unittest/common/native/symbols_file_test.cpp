@@ -1156,6 +1156,132 @@ HWTEST_F(SymbolsFileTest, KernerlThreadSymbolsParse, TestSize.Level1)
         EXPECT_EQ(symbolsFile->LoadDebugInfo(), true);
     }
 }
+
+/**
+ * @tc.name: HapFileParseArkFileInfoWithHap
+ * @tc.desc: Test GetSymbolWithPcAndMap for .hap file using ParseArkFileInfo path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, HapFileParseArkFileInfoWithHap, TestSize.Level1)
+{
+    const std::string filename = "/data/storage/test.hap";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_HAP_FILE);
+
+    uint64_t ip = 0x1000;
+    uint64_t begin = 0x100;
+    uint64_t len = 0x2000;
+    uint64_t offset = 0;
+    uint32_t prot = PROT_READ | PROT_EXEC;
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+
+    // Test GetSymbolWithPcAndMap with .hap suffix - should use ParseArkFileInfo branch
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    // Since DfxArk is not mocked, expect invalid symbol in non-ohos environment
+    // In ohos environment, depends on actual ParseArkFileInfo result
+    EXPECT_EQ(symbol.fileVaddr_, 0u);
+}
+
+/**
+ * @tc.name: HapFileParseArkFileInfoWithHsp
+ * @tc.desc: Test GetSymbolWithPcAndMap for .hsp file using ParseArkFileInfo path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, HapFileParseArkFileInfoWithHsp, TestSize.Level1)
+{
+    const std::string filename = "/data/storage/test.hsp";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_HAP_FILE);
+
+    uint64_t ip = 0x2000;
+    uint64_t begin = 0x200;
+    uint64_t len = 0x3000;
+    uint64_t offset = 0x100;
+    uint32_t prot = PROT_READ | PROT_EXEC;
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+
+    // Test GetSymbolWithPcAndMap with .hsp suffix - should use ParseArkFileInfo branch
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    EXPECT_EQ(symbol.fileVaddr_, 0u);
+}
+
+/**
+ * @tc.name: HapFileParseArkFileInfoWithHqf
+ * @tc.desc: Test GetSymbolWithPcAndMap for .hqf file using ParseArkFileInfo path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, HapFileParseArkFileInfoWithHqf, TestSize.Level1)
+{
+    const std::string filename = "/data/storage/test.hqf";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_HAP_FILE);
+
+    uint64_t ip = 0x3000;
+    uint64_t begin = 0x300;
+    uint64_t len = 0x4000;
+    uint64_t offset = 0x200;
+    uint32_t prot = PROT_READ | PROT_EXEC;
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+
+    // Test GetSymbolWithPcAndMap with .hqf suffix - should use ParseArkFileInfo branch
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    EXPECT_EQ(symbol.fileVaddr_, 0u);
+}
+
+/**
+ * @tc.name: HapFileParseArkFileInfoWithAbc
+ * @tc.desc: Test GetSymbolWithPcAndMap for .abc file using ParseArkFileInfo path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, HapFileParseArkFileInfoWithAbc, TestSize.Level1)
+{
+    const std::string filename = "/data/storage/test.abc";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_HAP_FILE);
+
+    uint64_t ip = 0x4000;
+    uint64_t begin = 0x400;
+    uint64_t len = 0x5000;
+    uint64_t offset = 0x300;
+    uint32_t prot = PROT_READ | PROT_EXEC;
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
+
+    // Test GetSymbolWithPcAndMap with .abc suffix - should use ParseArkFileInfo branch
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    EXPECT_EQ(symbol.fileVaddr_, 0u);
+}
+
+/**
+ * @tc.name: HapFileParseArkFrameInfoWithOtherFile
+ * @tc.desc: Test GetSymbolWithPcAndMap for other files using ParseArkFrameInfo path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, HapFileParseArkFrameInfoWithOtherFile, TestSize.Level1)
+{
+    // Create a HAP file symbol but with a map that has non-hap/hsp/hqf/abc name
+    const std::string filename = "/data/storage/test.hap";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(filename);
+    EXPECT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_HAP_FILE);
+
+    // Use a different map name that doesn't end with .hap/.hsp/.hqf/.abc
+    const std::string mapName = "/data/app/entry/files/test.bin";
+    uint64_t ip = 0x5000;
+    uint64_t begin = 0x500;
+    uint64_t len = 0x6000;
+    uint64_t offset = 0x400;
+    uint32_t prot = PROT_READ | PROT_EXEC;
+    std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, mapName);
+
+    // Test GetSymbolWithPcAndMap with non-matching suffix - should use ParseArkFrameInfo branch
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(ip, map);
+    EXPECT_EQ(symbol.fileVaddr_, 0u);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
