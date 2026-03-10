@@ -2097,7 +2097,7 @@ void SubCommandRecord::AddMemTotalFeature()
         if ((it + 1) != subStrs.end()) {
             uint64_t memTotal = 0;
             if (!StringToUint64(*(it + 1), memTotal)) {
-                HLOGD("get uint64_t failed, paramValue: %s", (*(it + 1)).c_str());
+                HLOGE("get uint64_t failed, paramValue: %s", (*(it + 1)).c_str());
                 continue;
             }
             fileWriter_->AddU64Feature(FEATURE::TOTAL_MEM, memTotal);

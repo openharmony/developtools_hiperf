@@ -687,7 +687,7 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
     }
 }
 
-    void Client::KillChild()
+void Client::KillChild()
 {
     HIPERF_HILOGI(MODULE_CPP_API, "Client KillChild\n");
     if (clientToServerFd_ != -1) {
