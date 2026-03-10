@@ -2097,7 +2097,7 @@ void SubCommandRecord::AddMemTotalFeature()
         if ((it + 1) != subStrs.end()) {
             uint64_t memTotal = 0;
             if (!StringToUint64(*(it + 1), memTotal)) {
-                HIPERF_HILOGE(MODULE_DEFAULT, "get uint64_t failed, paramValue: %{public}s", (*(it + 1)).c_str());
+                HLOGE("get uint64_t failed, paramValue: %s", (*(it + 1)).c_str());
                 continue;
             }
             fileWriter_->AddU64Feature(FEATURE::TOTAL_MEM, memTotal);
@@ -2577,16 +2577,15 @@ bool SubCommandRecord::OnlineReportData()
     if (!report_) {
         return true;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s begin to report file",
-                  __FUNCTION__);
+    HIPERF_HILOGI(MODULE_DEFAULT, "begin to report file");
     bool ret = false;
     std::string tempFileName = outputFilename_ + ".tmp";
     if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s can't rename file "
+        HIPERF_HILOGI(MODULE_DEFAULT, "can't rename file "
                       "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      __FUNCTION__, errno, errInfo);
+                      errno, errInfo);
         return false;
     }
 
@@ -2605,12 +2604,12 @@ bool SubCommandRecord::OnlineReportData()
     if (remove(tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s remove file failed"
+        HIPERF_HILOGI(MODULE_DEFAULT, "remove file failed"
                       "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
-                      __FUNCTION__, errno, errInfo);
+                      errno, errInfo);
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "%" HILOG_PUBLIC "s report result %" HILOG_PUBLIC "s",
-                  __FUNCTION__, ret ? "success" : "fail");
+    HIPERF_HILOGI(MODULE_DEFAULT, "report result : %" HILOG_PUBLIC "s",
+                  ret ? "success" : "fail");
     return ret;
 }
 

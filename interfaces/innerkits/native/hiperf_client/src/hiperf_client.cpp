@@ -335,8 +335,7 @@ void RecordOption::SetBackTrackSec(int backTracesec)
 
 Client::Client(const std::string &outputDir)
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "%" HILOG_PUBLIC "s default init\n",
-                  __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client default init\n");
     Setup(outputDir);
 }
 
@@ -393,8 +392,7 @@ void Client::SetDebugMuchMode()
 
 bool Client::Start()
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
-
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Start with default option\n");
     std::vector<std::string> args;
     args.push_back("-p");
     args.push_back(std::to_string(getpid()));
@@ -463,7 +461,7 @@ void Client::ParentHandleProcess(int (&clientToServerFd)[2], int (&serverToClien
 
 bool Client::Start(const std::vector<std::string> &args, bool immediately)
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Start with args\n");
     if (!ready_) {
         HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
@@ -514,7 +512,7 @@ bool Client::Start(const std::vector<std::string> &args, bool immediately)
 
 bool Client::Start(const RecordOption &option)
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Start with option\n");
     if (!option.GetOutputFileName().empty()) {
         outputFileName_ = option.GetOutputFileName();
     }
@@ -611,7 +609,7 @@ bool Client::ParentWait(pid_t &wpid, pid_t pid, int &childStatus)
 
 bool Client::RunHiperfCmdSync(const RecordOption &option)
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client RunHiperfCmdSync\n");
     if (!ready_) {
         HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
@@ -640,7 +638,7 @@ bool Client::RunHiperfCmdSync(const RecordOption &option)
 
 bool Client::PrePare(const RecordOption &option)
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Prepare\n");
     if (!option.GetOutputFileName().empty()) {
         outputFileName_ = option.GetOutputFileName();
     }
@@ -691,7 +689,7 @@ bool Client::WaitCommandReply(std::chrono::milliseconds timeOut)
 
 void Client::KillChild()
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client KillChild\n");
     if (clientToServerFd_ != -1) {
         close(clientToServerFd_);
         clientToServerFd_ = -1;
@@ -720,8 +718,8 @@ bool Client::SendCommandAndWait(const std::string &cmd)
     }
     ssize_t size = write(clientToServerFd_, cmd.c_str(), cmd.size());
     HIPERF_HILOGI(MODULE_CPP_API,
-                  "Client:%" HILOG_PUBLIC "s -> %" HILOG_PUBLIC "d : %" HILOG_PUBLIC "zd\n",
-                  cmd.c_str(), clientToServerFd_, size);
+                  "Client: ClientToServerFd -> %" HILOG_PUBLIC "s : %" HILOG_PUBLIC "zd\n",
+                  cmd.c_str(), size);
     if (size >= 0 && static_cast<size_t>(size) == cmd.size()) {
         return WaitCommandReply();
     } else {
@@ -735,7 +733,7 @@ bool Client::StartRun()
         HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Start Run\n");
     if (SendCommandAndWait(REPLY_START)) {
         return true;
     }
@@ -748,7 +746,7 @@ bool Client::Pause()
         HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Pause\n");
     if (SendCommandAndWait(REPLY_PAUSE)) {
         return true;
     }
@@ -761,7 +759,7 @@ bool Client::Resume()
         HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Resume\n");
     if (SendCommandAndWait(REPLY_RESUME)) {
         return true;
     }
@@ -774,7 +772,7 @@ bool Client::Output()
         HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Output\n");
     if (SendCommandAndWait(REPLY_OUTPUT)) {
         // wait output process exit really
         while (SendCommandAndWait(REPLY_OUTPUT_CHECK)) {
@@ -791,7 +789,7 @@ bool Client::Stop()
         HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.\n");
         return false;
     }
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "Client Stop\n");
     if (SendCommandAndWait(REPLY_STOP)) {
         // wait sampling process exit really
         while (SendCommandAndWait(REPLY_CHECK)) {
@@ -804,7 +802,7 @@ bool Client::Stop()
 
 void Client::EnableHilog()
 {
-    HIPERF_HILOGI(MODULE_CPP_API, "Client:%" HILOG_PUBLIC "s\n", __FUNCTION__);
+    HIPERF_HILOGI(MODULE_CPP_API, "EnableHilog\n");
     hilog_ = true;
 }
 } // namespace HiperfClient

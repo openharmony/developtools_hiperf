@@ -832,7 +832,6 @@ void SubCommandStat::HandleCommunicationError(const int& fd, const pid_t& pid, c
         HIPERF_HILOGE(MODULE_DEFAULT, "reply is %{public}s", reply.c_str());
     }
     HLOGI("fd is %d", fd);
-    HIPERF_HILOGI(MODULE_DEFAULT, "fd is %{public}d", fd);
     if (kill(pid, SIGTERM) != 0) {
         HLOGE("Failed to send SIGTERM to %d", pid);
         HIPERF_HILOGE(MODULE_DEFAULT, "Failed to send SIGTERM to %{public}d", pid);
