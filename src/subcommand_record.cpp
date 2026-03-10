@@ -2598,6 +2598,7 @@ bool SubCommandRecord::OnlineReportData()
     args.emplace_back(outputFilename_);
     args.emplace_back("-s");
     if (reporter->ParseOption(args)) {
+        reporter->SetAppendOriginSoName(false);
         ret =  (reporter->OnSubCommand(args) != HiperfError::NO_ERR);
     }
 

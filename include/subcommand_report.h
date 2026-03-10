@@ -119,6 +119,10 @@ public:
     ~SubCommandReport();
 
     static SubCommand& GetInstance();
+    void SetAppendOriginSoName(bool value)
+    {
+        reportOption_.appendOriginSoName_ = value;
+    }
 private:
     void ProcessSample(std::unique_ptr<PerfRecordSample> &);
     void BroadcastSample(std::unique_ptr<PerfRecordSample> &);
