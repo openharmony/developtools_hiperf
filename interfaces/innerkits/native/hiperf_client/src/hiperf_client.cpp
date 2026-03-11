@@ -98,7 +98,9 @@ void RecordOption::SetOption(const std::string &name, int value)
     auto it = std::find(args_.begin(), args_.end(), name);
     if (it != args_.end()) {
         it++;
-        *it = std::to_string(value);
+        if (it != args_.end()) {
+            *it = std::to_string(value);
+        }
         return;
     }
 
@@ -129,7 +131,9 @@ void RecordOption::SetOption(const std::string &name, const std::vector<int> &vI
 
     if (it != args_.end()) {
         it++;
-        *it = str;
+        if (it != args_.end()) {
+            *it = str;
+        }
         return;
     }
     args_.emplace_back(name);
@@ -141,14 +145,18 @@ void RecordOption::SetOption(const std::string &name, const std::string &str)
     auto it = std::find(args_.begin(), args_.end(), name);
     if (str.empty()) {
         if (it != args_.end()) {
-            args_.erase(it);
-            args_.erase(it); // remove value
+            it = args_.erase(it); // remove key
+            if (it != args_.end()) {
+                args_.erase(it); // remove value
+            }
         }
         return;
     }
     if (it != args_.end()) {
         it++;
-        *it = str;
+        if (it != args_.end()) {
+            *it = str;
+        }
         return;
     }
     args_.emplace_back(name);
@@ -160,8 +168,10 @@ void RecordOption::SetOption(const std::string &name, const std::vector<std::str
     auto it = std::find(args_.begin(), args_.end(), name);
     if (vStr.empty()) {
         if (it != args_.end()) {
-            args_.erase(it);
-            args_.erase(it); // remove value
+            it = args_.erase(it); // remove key
+            if (it != args_.end()) {
+                args_.erase(it); // remove value
+            }
         }
         return;
     }
@@ -175,7 +185,9 @@ void RecordOption::SetOption(const std::string &name, const std::vector<std::str
 
     if (it != args_.end()) {
         it++;
-        *it = str;
+        if (it != args_.end()) {
+            *it = str;
+        }
         return;
     }
     args_.emplace_back(name);
