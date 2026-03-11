@@ -647,6 +647,124 @@ HWTEST_F(HiperfClientTest, UpdateExistingOptionWithVector, TestSize.Level2)
     ASSERT_EQ(args[0], "-e");
     ASSERT_EQ(args[1], "hw-cache-references,hw-cache-misses");
 }
+
+/**
+ * @tc.desc: SetOption(int) - key is last element without value (heap overflow fix)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionIntKeyIsLastElementNoValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", true);
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+
+    opt.SetOption("-a", 100);
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+}
+
+/**
+ * @tc.desc: SetOption(vector<int>) - key is last element without value (heap overflow fix)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionVectorIntKeyIsLastElementNoValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", true);
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+
+    opt.SetOption("-a", std::vector<int>{1, 2});
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+}
+
+/**
+ * @tc.desc: SetOption(string) - key is last element without value (heap overflow fix)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionStringKeyIsLastElementNoValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", true);
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+
+    opt.SetOption("-a", std::string("perf.data"));
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+}
+
+/**
+ * @tc.desc: SetOption(vector<string>) - key is last element without value (heap overflow fix)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionVectorStringKeyIsLastElementNoValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", true);
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+
+    opt.SetOption("-a", std::vector<std::string>{"hw-cpu-cycles"});
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+}
+
+/**
+ * @tc.desc: SetOption(string) - empty string, key is last element without value (erase fix)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionStringEmptyKeyLastNoValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", true);
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+
+    opt.SetOption("-a", std::string(""));
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 0);
+}
+
+/**
+ * @tc.desc: SetOption(vector<string>) - empty vector, key is last element without value (erase fix)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionVectorStringEmptyKeyLastNoValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", true);
+
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1);
+    ASSERT_EQ(args[0], "-a");
+
+    opt.SetOption("-a", std::vector<std::string>{});
+
+    args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 0);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
