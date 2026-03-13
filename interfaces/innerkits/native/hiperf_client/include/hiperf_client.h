@@ -15,7 +15,9 @@
 #ifndef HIPERF_CLIENT_H_
 #define HIPERF_CLIENT_H_
 
+#include <atomic>
 #include <chrono>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -34,6 +36,15 @@ inline const std::string REPLY_PAUSE = "PAUSE\n";
 inline const std::string REPLY_RESUME = "RESUME\n";
 inline const std::string REPLY_CHECK = "CHECK\n";
 #define HIPERF_EXIT_CODE 0
+
+enum class KillResult {
+    KILL_SUCCESS = 0,
+    KILL_NO_PROCESS = -1,
+    KILL_PROCESS_NOT_EXIST = -2,
+    KILL_PERMISSION_DENIED = -3,
+    KILL_INVALID_SIGNAL = -4,
+    KILL_UNKNOWN_ERROR = -5
+};
 
 class RecordOption {
 public:
@@ -203,6 +214,10 @@ public:
      * Must be used with the SetBackTrack(true).
      */
     void SetBackTrackSec(int backTracesec);
+    /**
+     * Set the Stoppable recording command, default is disable
+     */
+    void SetSyncCmdStoppable(bool enable);
 
     /**
      * Get the string vector of all options.
@@ -219,8 +234,16 @@ public:
     {
         return timeSpec_;
     }
+    /**
+     * Get SyncCmdStoppable attribute
+     */
+    bool IsSyncCmdStoppable() const
+    {
+        return syncCmdStoppable_;
+    }
 private:
     bool timeSpec_ = false;
+    bool syncCmdStoppable_ = false;
     std::vector<std::string> args_ = {};
     std::vector<std::string> selectEvents_ = {"hw-cpu-cycles:u"};
     std::string outputFileName_ = "";
@@ -255,6 +278,14 @@ public:
      * Start record synchronizely with specified time
      */
     bool RunHiperfCmdSync(const RecordOption &option);
+    /**
+     * Start stoppable record synchronizely with specified time
+     */
+    bool RunCmdSyncStoppable(const RecordOption &option);
+    /**
+     * Stop the record command started by RunCmdSyncStoppable()
+     */
+    KillResult StopHiperfCmdSync();
     /**
      * prepare record with options of RecordOption
      */
@@ -350,8 +381,9 @@ private:
 
     int clientToServerFd_ = -1;
     int serverToClientFd_ = -1;
-    pid_t hperfPid_ = -1;
+    std::atomic<pid_t> hiperfPid_ {-1};
     pid_t hperfPrePid_ = -1; // hiperf pid for prepare mode
+    int execSyncPipeFd_[2] {-1, -1};
 };
 } // namespace HiperfClient
 } // namespace HiPerf
