@@ -38,9 +38,8 @@ namespace OHOS::Developtools::HiPerf {
 
 static std::atomic<bool> g_haveIpc = false;
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-int32_t g_getBundleInfoFlags = static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
-#else
-int32_t g_getBundleInfoFlags = 1;
+static int32_t g_getBundleInfoFlags =
+    static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
 #endif
 
 BundleMgrProxy GetBundleMgrProxy(std::string& err)

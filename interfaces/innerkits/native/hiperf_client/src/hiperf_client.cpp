@@ -672,14 +672,15 @@ bool Client::RunCmdSyncStoppable(const RecordOption &option)
         HIPERF_HILOGE(MODULE_CPP_API, "failed to create exec sync pipe: %" HILOG_PUBLIC "s", errInfo);
         return false;
     }
-    execSyncPipeFd_[0] = pipeFd[0]; // parent keeps read-end
-    execSyncPipeFd_[1] = pipeFd[1]; // child holds write-end (closed by kernel on execv)
+    execSyncPipeReadFd_.store(pipeFd[0]);  // parent keeps read-end
+    execSyncPipeWriteFd_.store(pipeFd[1]); // child holds write-end (closed by kernel on execv)
 
     pid_t pid = fork();
     if (pid == -1) {
         close(pipeFd[0]);
         close(pipeFd[1]);
-        execSyncPipeFd_[0] = execSyncPipeFd_[1] = -1;
+        execSyncPipeReadFd_.store(-1);
+        execSyncPipeWriteFd_.store(-1);
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HIPERF_HILOGE(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
@@ -695,15 +696,15 @@ bool Client::RunCmdSyncStoppable(const RecordOption &option)
         hiperfPid_.store(pid);
         // Close the child write-end copy in parent; we only need the read-end.
         close(pipeFd[1]);
-        execSyncPipeFd_[1] = -1;
+        execSyncPipeWriteFd_.store(-1);
 
         pid_t wpid;
         int childStatus;
         bool ret = ParentWait(wpid, pid, childStatus);
         hiperfPid_.store(-1);
-        if (execSyncPipeFd_[0] != -1) {
-            close(execSyncPipeFd_[0]);
-            execSyncPipeFd_[0] = -1;
+        int rfd = execSyncPipeReadFd_.exchange(-1);
+        if (rfd != -1) {
+            close(rfd);
         }
         return ret;
     }
@@ -713,12 +714,12 @@ bool Client::RunCmdSyncStoppable(const RecordOption &option)
 KillResult Client::StopHiperfCmdSync()
 {
     HIPERF_HILOGI(MODULE_CPP_API, "Client StopHiperfCmdSync");
-    if (execSyncPipeFd_[0] != -1) {
-        struct pollfd pfd {execSyncPipeFd_[0], POLLIN | POLLHUP, 0};
+    int rfd = execSyncPipeReadFd_.exchange(-1);
+    if (rfd != -1) {
+        struct pollfd pfd {rfd, POLLIN | POLLHUP, 0};
         constexpr int EXEC_WAIT_MS = 1000;
         poll(&pfd, 1, EXEC_WAIT_MS);
-        close(execSyncPipeFd_[0]);
-        execSyncPipeFd_[0] = -1;
+        close(rfd);
     }
 
     constexpr int PID_WAIT_RETRIES = 100;

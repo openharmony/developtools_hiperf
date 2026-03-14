@@ -383,7 +383,8 @@ private:
     int serverToClientFd_ = -1;
     std::atomic<pid_t> hiperfPid_ {-1};
     pid_t hperfPrePid_ = -1; // hiperf pid for prepare mode
-    int execSyncPipeFd_[2] {-1, -1};
+    std::atomic<int> execSyncPipeReadFd_ {-1};
+    std::atomic<int> execSyncPipeWriteFd_ {-1};
 };
 } // namespace HiperfClient
 } // namespace HiPerf
