@@ -808,7 +808,7 @@ bool IsAllowReleaseApp(const std::string& appPackage)
     const std::string cmdline {"/cmdline"};
     appPid = FindMatchingPidInProc(basePath, cmdline, appPackage);
     if (appPid <= 0) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running\n", appPackage.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running", appPackage.c_str());
         return false;
     }
 
@@ -821,12 +821,12 @@ bool IsAllowReleaseApp(const std::string& appPackage)
 bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
 {
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
-    if (!IsTaskManagerLabel() || !IsTaskManagerUid()) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: not task manager");
+    if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: not allow release");
         return false;
     }
-    if (!IsThirdPartyApp(appPackage)) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: non third party app %{public}s", appPackage.c_str());
+    if (!IsProfileableThirdPartyApp(appPackage)) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: not profileable or third party");
         return false;
     }
 

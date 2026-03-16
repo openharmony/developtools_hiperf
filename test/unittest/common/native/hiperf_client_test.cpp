@@ -507,7 +507,7 @@ HWTEST_F(HiperfClientTest, SetCallStackSamplingConfigsWithZeroDuration, TestSize
     std::vector<pid_t> selectPids = {getpid()};
     opt.SetSelectPids(selectPids);
     opt.SetCallStackSamplingConfigs(0);
-    
+
     bool hasTimeStopSec = false;
     int actualDuration = 0;
     for (size_t i = 0; i < opt.GetOptionVecString().size(); i++) {
@@ -764,6 +764,71 @@ HWTEST_F(HiperfClientTest, SetOptionVectorStringEmptyKeyLastNoValue, TestSize.Le
 
     args = opt.GetOptionVecString();
     ASSERT_EQ(args.size(), 0);
+}
+
+/**
+ * @tc.name: SetSyncCmdStoppable_DefaultFalse
+ * @tc.desc: Test IsSyncCmdStoppable returns false by default
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetSyncCmdStoppable_DefaultFalse, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    EXPECT_FALSE(opt.IsSyncCmdStoppable());
+}
+
+/**
+ * @tc.name: SetSyncCmdStoppable_Enable
+ * @tc.desc: Test SetSyncCmdStoppable enables stoppable sync cmd mode
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetSyncCmdStoppable_Enable, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetSyncCmdStoppable(true);
+    EXPECT_TRUE(opt.IsSyncCmdStoppable());
+}
+
+/**
+ * @tc.name: SetSyncCmdStoppable_Disable
+ * @tc.desc: Test SetSyncCmdStoppable can be disabled after enabled
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetSyncCmdStoppable_Disable, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetSyncCmdStoppable(true);
+    EXPECT_TRUE(opt.IsSyncCmdStoppable());
+    opt.SetSyncCmdStoppable(false);
+    EXPECT_FALSE(opt.IsSyncCmdStoppable());
+}
+
+/**
+ * @tc.name: StopHiperfCmdSync_NotRunning
+ * @tc.desc: Test StopHiperfCmdSync returns KILL_NO_PROCESS when no recording is running
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, StopHiperfCmdSync_NotRunning, TestSize.Level1)
+{
+    HiperfClient::Client client;
+    EXPECT_TRUE(client.Setup("/data/test/"));
+    HiperfClient::KillResult result = client.StopHiperfCmdSync();
+    EXPECT_EQ(result, HiperfClient::KillResult::KILL_NO_PROCESS);
+}
+
+/**
+ * @tc.name: RunCmdSyncStoppable_NotReady
+ * @tc.desc: Test RunCmdSyncStoppable returns false when client is not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, RunCmdSyncStoppable_NotReady, TestSize.Level1)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    HiperfClient::RecordOption opt;
+    opt.SetTimeStopSec(1);
+    opt.SetSyncCmdStoppable(true);
+    EXPECT_FALSE(client.RunCmdSyncStoppable(opt));
 }
 } // namespace HiPerf
 } // namespace Developtools

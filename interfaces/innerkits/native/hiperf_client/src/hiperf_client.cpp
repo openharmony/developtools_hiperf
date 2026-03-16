@@ -19,6 +19,7 @@
 #include <cinttypes>
 #include <csignal>
 #include <cstring>
+#include <fcntl.h>
 #include <thread>
 #include <poll.h>
 #include <sys/prctl.h>
@@ -213,6 +214,11 @@ void RecordOption::SetTimeStopSec(int timeStopSec)
 {
     this->timeSpec_ = true;
     SetOption(ARG_TIME_STOP_SEC, timeStopSec);
+}
+
+void RecordOption::SetSyncCmdStoppable(bool enable)
+{
+    this->syncCmdStoppable_ = enable;
 }
 
 void RecordOption::SetFrequency(int frequency)
@@ -529,6 +535,9 @@ bool Client::Start(const RecordOption &option)
         outputFileName_ = option.GetOutputFileName();
     }
     if (option.IsTimeSpecified()) {
+        if (option.IsSyncCmdStoppable()) {
+            return RunCmdSyncStoppable(option);
+        }
         return RunHiperfCmdSync(option);
     }
     return Start(option.GetOptionVecString());
@@ -618,7 +627,6 @@ bool Client::ParentWait(pid_t &wpid, pid_t pid, int &childStatus)
     return ret;
 }
 
-
 bool Client::RunHiperfCmdSync(const RecordOption &option)
 {
     HIPERF_HILOGI(MODULE_CPP_API, "Client RunHiperfCmdSync\n");
@@ -631,21 +639,126 @@ bool Client::RunHiperfCmdSync(const RecordOption &option)
     pid_t wpid;
     int childStatus;
     bool ret = false;
-    hperfPid_ = fork();
-    if (hperfPid_ == -1) {
+    pid_t pid = fork();
+    if (pid == -1) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
         HIPERF_HILOGI(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
         return false;
-    } else if (hperfPid_ == 0) {
-        // child execute
+    } else if (pid == 0) {
         std::vector<std::string> cmd;
         GetExecCmd(cmd, args);
         ChildRunExecv(cmd);
     } else {
-        ret = ParentWait(wpid, hperfPid_, childStatus);
+        hiperfPid_.store(pid);
+        ret = ParentWait(wpid, pid, childStatus);
+        hiperfPid_.store(-1);
     }
     return ret;
+}
+
+bool Client::RunCmdSyncStoppable(const RecordOption &option)
+{
+    HIPERF_HILOGI(MODULE_CPP_API, "Client RunCmdSyncStoppable");
+    if (!ready_) {
+        HIPERF_HILOGI(MODULE_CPP_API, "Client:hiperf not ready.");
+        return false;
+    }
+
+    int pipeFd[2] {-1, -1};
+    if (pipe2(pipeFd, O_CLOEXEC) != 0) {
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGE(MODULE_CPP_API, "failed to create exec sync pipe: %" HILOG_PUBLIC "s", errInfo);
+        return false;
+    }
+    execSyncPipeReadFd_.store(pipeFd[0]);  // parent keeps read-end
+    execSyncPipeWriteFd_.store(pipeFd[1]); // child holds write-end (closed by kernel on execv)
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        close(pipeFd[0]);
+        close(pipeFd[1]);
+        execSyncPipeReadFd_.store(-1);
+        execSyncPipeWriteFd_.store(-1);
+        char errInfo[ERRINFOLEN] = { 0 };
+        strerror_r(errno, errInfo, ERRINFOLEN);
+        HIPERF_HILOGE(MODULE_CPP_API, "failed to fork: %" HILOG_PUBLIC "s", errInfo);
+        return false;
+    } else if (pid == 0) {
+        close(pipeFd[0]);
+        // write-end (pipeFd[1]) has O_CLOEXEC; kernel closes it on execv.
+        const std::vector<std::string> &args = option.GetOptionVecString();
+        std::vector<std::string> cmd;
+        GetExecCmd(cmd, args);
+        ChildRunExecv(cmd);
+    } else {
+        hiperfPid_.store(pid);
+        // Close the child write-end copy in parent; we only need the read-end.
+        close(pipeFd[1]);
+        execSyncPipeWriteFd_.store(-1);
+
+        pid_t wpid;
+        int childStatus;
+        bool ret = ParentWait(wpid, pid, childStatus);
+        hiperfPid_.store(-1);
+        int rfd = execSyncPipeReadFd_.exchange(-1);
+        if (rfd != -1) {
+            close(rfd);
+        }
+        return ret;
+    }
+    return false;
+}
+
+KillResult Client::StopHiperfCmdSync()
+{
+    HIPERF_HILOGI(MODULE_CPP_API, "Client StopHiperfCmdSync");
+    int rfd = execSyncPipeReadFd_.exchange(-1);
+    if (rfd != -1) {
+        struct pollfd pfd {rfd, POLLIN | POLLHUP, 0};
+        constexpr int EXEC_WAIT_MS = 1000;
+        poll(&pfd, 1, EXEC_WAIT_MS);
+        close(rfd);
+    }
+
+    constexpr int PID_WAIT_RETRIES = 100;
+    constexpr int PID_WAIT_US = 100;
+    pid_t pid = -1;
+    for (int i = 0; i < PID_WAIT_RETRIES; ++i) {
+        pid = hiperfPid_.load();
+        if (pid > 0) {
+            break;
+        }
+        usleep(PID_WAIT_US);
+    }
+    while (pid > 0) {
+        if (hiperfPid_.compare_exchange_weak(pid, -1)) {
+            break;
+        }
+    }
+    if (pid <= 0) {
+        HIPERF_HILOGE(MODULE_CPP_API, "Client:hiperf not running or already stopped.");
+        return KillResult::KILL_NO_PROCESS;
+    }
+    int killResult = kill(pid, SIGKILL);
+    if (killResult == 0) {
+        return KillResult::KILL_SUCCESS;
+    }
+
+    switch (errno) {
+        case ESRCH:
+            HIPERF_HILOGE(MODULE_CPP_API, "Client:hiperf process not found.");
+            return KillResult::KILL_PROCESS_NOT_EXIST;
+        case EPERM:
+            HIPERF_HILOGE(MODULE_CPP_API, "Client:permission denied.");
+            return KillResult::KILL_PERMISSION_DENIED;
+        case EINVAL:
+            HIPERF_HILOGE(MODULE_CPP_API, "Client:invalid signal.");
+            return KillResult::KILL_INVALID_SIGNAL;
+    }
+    HIPERF_HILOGE(MODULE_CPP_API, "Client:unknown error.");
+    return KillResult::KILL_UNKNOWN_ERROR;
 }
 
 bool Client::PrePare(const RecordOption &option)
@@ -710,9 +823,9 @@ void Client::KillChild()
         close(serverToClientFd_);
         serverToClientFd_ = -1;
     }
-    if (hperfPid_ > 0) {
-        kill(hperfPid_, SIGKILL);
-        hperfPid_ = -1;
+    pid_t hperfPid = hiperfPid_.exchange(-1);
+    if (hperfPid > 0) {
+        kill(hperfPid, SIGKILL);
     }
     if (hperfPrePid_ > 0) {
         pid_t wpid;

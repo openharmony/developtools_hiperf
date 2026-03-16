@@ -1071,14 +1071,14 @@ HWTEST_F(UtilitiesTest, IsDebugableApp, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsThirdPartyApp
- * @tc.desc: Test IsThirdPartyApp fun
+ * @tc.name: IsProfileableThirdPartyApp
+ * @tc.desc: Test IsProfileableThirdPartyApp fun
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, IsThirdPartyApp, TestSize.Level1)
+HWTEST_F(UtilitiesTest, IsProfileableThirdPartyApp, TestSize.Level1)
 {
     const std::string hiviewName = "hiview";
-    EXPECT_FALSE(IsThirdPartyApp(hiviewName));
+    EXPECT_FALSE(IsProfileableThirdPartyApp(hiviewName));
 }
 
 /**
@@ -1236,6 +1236,56 @@ HWTEST_F(UtilitiesTest, FindMatchingPidInProc, TestSize.Level2)
     std::string cmdline {"/cmdline"};
     std::string appPackageName {"init"};
     EXPECT_EQ(FindMatchingPidInProc(basePath, cmdline, appPackageName), 1);
+}
+
+/**
+ * @tc.name: IsTaskManagerUid
+ * @tc.desc: Test IsTaskManagerUid returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsTaskManagerUid, TestSize.Level1)
+{
+    EXPECT_FALSE(IsTaskManagerUid());
+}
+
+/**
+ * @tc.name: IsTaskManagerLabel
+ * @tc.desc: Test IsTaskManagerLabel returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsTaskManagerLabel, TestSize.Level1)
+{
+    EXPECT_FALSE(IsTaskManagerLabel());
+}
+
+/**
+ * @tc.name: IsHiShellLabel
+ * @tc.desc: Test IsHiShellLabel returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsHiShellLabel, TestSize.Level1)
+{
+    EXPECT_FALSE(IsHiShellLabel());
+}
+
+/**
+ * @tc.name: IsAllowReleaseApp_NotRunning
+ * @tc.desc: Test IsAllowReleaseApp returns false when app is not running
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsAllowReleaseApp_NotRunning, TestSize.Level1)
+{
+    EXPECT_FALSE(IsAllowReleaseApp("hiperf_test_demo"));
+}
+
+/**
+ * @tc.name: IsAllowRelease_InvalidPid
+ * @tc.desc: Test IsAllowRelease returns false for invalid pid
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsAllowRelease_InvalidPid, TestSize.Level1)
+{
+    EXPECT_FALSE(IsAllowRelease(-1, "hiperf_test_demo"));
 }
 } // namespace HiPerf
 } // namespace Developtools
