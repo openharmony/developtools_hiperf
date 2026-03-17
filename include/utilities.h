@@ -441,6 +441,7 @@ std::string GetDefaultPathByEnv(const std::string fileType);
 std::string ExtractNumericPrefix(const std::string& str);
 bool IsHiShellLabel();
 bool IsTaskManagerLabel();
+bool IsAllowSkipDeveloperMode();
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

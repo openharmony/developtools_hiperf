@@ -61,7 +61,7 @@ void RegisterCommandComponent()
 
 int main(const int argc, const char *argv[])
 {
-    if (!GetDeveloperMode() && !IsAllowProfilingUid()) {
+    if (!GetDeveloperMode() && !IsAllowProfilingUid() && !IsAllowSkipDeveloperMode()) {
         printf("error: not in developermode, exit.\n");
         return -1;
     }
