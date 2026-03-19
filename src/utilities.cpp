@@ -55,8 +55,7 @@ static const std::string USER_TYPE_PARAM_GET = "";
 static const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
 const std::string UID_TAG = "Uid:";
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
-const uint32_t TASK_MANAGER_UID = 7005;
-const uint32_t ALLOW_RELEASE_UID = 20000;
+constexpr uint32_t TASK_MANAGER_UID = 7005;
 const std::string HISHELL_LABEL = "u:r:hishell_hap:s0";
 const std::string TASK_MANAGER_LABEL = "u:r:task_manager_service:s0";
 #endif
@@ -822,20 +821,10 @@ bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
 {
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
     if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: not allow release");
+        HLOGE("IsAllowReleaseApp: not allow release");
         return false;
     }
-    if (!IsProfileableThirdPartyApp(appPackage)) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: not profileable or third party");
-        return false;
-    }
-
-    uint32_t appUid = 0;
-    if (GetUidFromPid(appPid, appUid)) {
-        return appUid >= ALLOW_RELEASE_UID;
-    }
-    HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: get app uid failed for %{public}s", appPackage.c_str());
-    return false;
+    return IsProfileableThirdPartyApp(appPackage);
 #else
     return false;
 #endif
@@ -848,8 +837,21 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
     if (pos != std::string::npos) {
         bundleNameTmp = bundleNameTmp.substr(0, pos);
     }
-    if (!IsSupportNonDebuggableApp() && !bundleNameTmp.empty()
-        && !IsDebugableApp(bundleNameTmp) && !IsAllowReleaseApp(bundleNameTmp)) {
+    if (bundleNameTmp.empty()) {
+        return true;
+    }
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+    if (!GetDeveloperMode()) {
+        if (!IsAllowReleaseApp(bundleNameTmp)) {
+            HLOGE("--app option only support profileable application in non-developer mode.");
+            err = "--app option only support profileable application in non-developer mode\n";
+            printf("%s", err.c_str());
+            return false;
+        }
+        return true;
+    }
+#endif
+    if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleNameTmp) && !IsAllowReleaseApp(bundleNameTmp)) {
         HLOGE("--app option only support debug application.");
         err = "--app option only support debug application\n";
         printf("%s", err.c_str());
@@ -861,6 +863,9 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
 {
     CHECK_TRUE(!pids.empty(), true, 1, "IsExistDebugByPid: pids is empty.");
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+    bool devMode = GetDeveloperMode();
+#endif
     for (auto pid : pids) {
         if (pid <= 0) {
             err = "Invalid -p value '" + std::to_string(pid) + "', the pid should be larger than 0\n";
@@ -872,6 +877,18 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
         if (pos != std::string::npos) {
             bundleName = bundleName.substr(0, pos);
         }
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+        if (!devMode) {
+            if (!IsAllowRelease(pid, bundleName)) {
+                HLOGE("-p option only support profileable application in non-developer mode for %s",
+                      bundleName.c_str());
+                err = "-p option only support profileable application in non-developer mode\n";
+                printf("%s", err.c_str());
+                return false;
+            }
+            continue;
+        }
+#endif
         if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsAllowRelease(pid, bundleName)) {
             HLOGE("-p option only support debug application for %s", bundleName.c_str());
             err = "-p option only support debug application\n";
@@ -1278,6 +1295,21 @@ bool IsTaskManagerLabel()
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
     std::string label = GetSelinuxLabel();
     return label == TASK_MANAGER_LABEL;
+#else
+    return false;
+#endif
+}
+
+bool IsAllowSkipDeveloperMode()
+{
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
+    if (IsHiShellLabel()) {
+        return true;
+    }
+    if (IsTaskManagerLabel() && IsTaskManagerUid()) {
+        return true;
+    }
+    return false;
 #else
     return false;
 #endif

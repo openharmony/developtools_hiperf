@@ -1287,6 +1287,28 @@ HWTEST_F(UtilitiesTest, IsAllowRelease_InvalidPid, TestSize.Level1)
 {
     EXPECT_FALSE(IsAllowRelease(-1, "hiperf_test_demo"));
 }
+
+/**
+ * @tc.name: IsAllowSkipDeveloperMode_NotHiShellNotTaskManager
+ * @tc.desc: Test IsAllowSkipDeveloperMode returns false when caller is neither hishell nor taskmanager
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsAllowSkipDeveloperMode_NotHiShellNotTaskManager, TestSize.Level2)
+{
+    EXPECT_FALSE(IsAllowSkipDeveloperMode());
+}
+
+/**
+ * @tc.name: IsExistDebugByApp_EmptyBundleName
+ * @tc.desc: Test IsExistDebugByApp returns true when bundleName is empty (no check needed)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsExistDebugByApp_EmptyBundleName, TestSize.Level2)
+{
+    std::string err;
+    EXPECT_TRUE(IsExistDebugByApp("", err));
+    EXPECT_TRUE(err.empty());
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

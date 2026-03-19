@@ -38,7 +38,7 @@ namespace OHOS::Developtools::HiPerf {
 
 static std::atomic<bool> g_haveIpc = false;
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-static int32_t g_getBundleInfoFlags =
+static constexpr int32_t GET_BUNDLEINFO_FLAGS =
     static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
 #endif
 
@@ -112,15 +112,15 @@ bool IsDebugableApp(const std::string& bundleName)
     bool isDebugApp = false;
     auto ret = proxy->IsDebuggableApplication(bundleName, isDebugApp);
     if (ret != ERR_OK) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: IsDebuggableApplication failed!");
+        HLOGE("IsDebugableApp error, err: IsDebuggableApplication failed!");
         return false;
     }
 
     if (!isDebugApp) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsDebugableApp error, err: app is not debuggable");
+        HLOGE("IsDebugableApp error, err: app is not debuggable");
         return false;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "app: %{public}s is debuggable", bundleName.c_str());
+    HLOGI("app is debuggable");
     return true;
 #else
     return false;
@@ -139,12 +139,11 @@ bool IsApplicationEncryped(const int pid)
         bundleName = bundleName.substr(0, pos);
     }
     AppExecFwk::ApplicationInfo appInfo;
-    bool ret = GetAppInfo(bundleName, appInfo, g_getBundleInfoFlags);
+    bool ret = GetAppInfo(bundleName, appInfo, GET_BUNDLEINFO_FLAGS);
     CHECK_TRUE(ret, true, 1, "%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
     bool isEncrypted = (appInfo.applicationReservedFlag &
                         static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
-    HIPERF_HILOGI(MODULE_DEFAULT, "check application encryped.%{public}d : %{public}s, pid:%{public}d",
-                  isEncrypted, bundleName.c_str(), pid);
+    HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);
     return isEncrypted;
 #else
     return false;
@@ -161,18 +160,18 @@ bool IsProfileableThirdPartyApp(const std::string& bundleName)
     }
 
     AppExecFwk::ApplicationInfo appInfo;
-    if (!GetAppInfo(bundleName, appInfo, g_getBundleInfoFlags)) {
+    if (!GetAppInfo(bundleName, appInfo, GET_BUNDLEINFO_FLAGS)) {
         return false;
     }
     if (!appInfo.profileable) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsProfileableThirdPartyApp: app is not profileable");
+        HLOGE("app is not profileable");
         return false;
     }
     if (appInfo.isSystemApp) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsProfileableThirdPartyApp: app is system app");
+        HLOGE("app is system app");
         return false;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "app: %{public}s is profileable third party app", bundleName.c_str());
+    HLOGI("app is profileable third party app");
     return true;
 #else
     return false;
