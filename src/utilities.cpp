@@ -832,19 +832,19 @@ bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
 
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
 {
+    if (bundleName.empty()) {
+        return true;
+    }
     std::string bundleNameTmp = bundleName;
     auto pos = bundleNameTmp.find(":");
     if (pos != std::string::npos) {
         bundleNameTmp = bundleNameTmp.substr(0, pos);
     }
-    if (bundleNameTmp.empty()) {
-        return true;
-    }
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
     if (!GetDeveloperMode()) {
         if (!IsAllowReleaseApp(bundleNameTmp)) {
-            HLOGE("--app option only support profileable application in non-developer mode.");
-            err = "--app option only support profileable application in non-developer mode\n";
+            HLOGE("--app option only support profileable application.");
+            err = "--app option only support profileable application\n";
             printf("%s", err.c_str());
             return false;
         }
@@ -880,9 +880,8 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
         if (!devMode) {
             if (!IsAllowRelease(pid, bundleName)) {
-                HLOGE("-p option only support profileable application in non-developer mode for %s",
-                      bundleName.c_str());
-                err = "-p option only support profileable application in non-developer mode\n";
+                HLOGE("-p option only support profileable application for %s", bundleName.c_str());
+                err = "-p option only support profileable application\n";
                 printf("%s", err.c_str());
                 return false;
             }
