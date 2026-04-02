@@ -179,7 +179,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPid_HuksService_SuccessC
     std::vector<std::string> get_app_pids;
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    ASSERT_FALSE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
+    EXPECT_FLASE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -p " + get_app_pids[0],
  	                                 {"create control hiperf sampling success"}), true);
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
@@ -192,6 +192,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCo
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
     std::vector<std::string> get_app_pids;
     GetAppPids("pidof hiperf_test_demo", get_app_pids);
+    EXPECT_FLASE(get_app_pids.empty()) << "hiperf_test_demo process not found, test aborted";
     EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -p " + get_app_pids[0],
 		     {"Profiling duration is 3.000 seconds"}), true);
     RunCmd("hiperf record --control stop");
