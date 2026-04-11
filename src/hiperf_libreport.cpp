@@ -187,13 +187,12 @@ const char *ReportGetElfArch(const char *elfPath)
     return machineName;
 }
 
-int Dump(const char *fileName)
+int Dump(const char *stringArgs)
 {
     std::unique_ptr<SubCommandDump> dump = std::make_unique<SubCommandDump>();
-    HLOGD("dump the file %s\n", fileName);
-    if (fileName != nullptr) {
-        std::vector<std::string> args;
-        args.emplace_back(fileName);
+    printf("dump the file, args: '%s'\n", stringArgs);
+    if (stringArgs != nullptr) {
+        auto args = StringSplit(stringArgs, " ");
         if (dump->ParseOption(args)) {
             return dump->OnSubCommand(args) == HiperfError::NO_ERR ? 0 : -1;
         }
