@@ -25,6 +25,7 @@ static const std::vector<std::string> EXT_FEATURE_NAMES = {
     "hiperf_workloader_cmd",
     "hiperf_record_time",
     "hiperf_cpu_off",
+    "hiperf_add_counter",
     "hiperf_hm_devhost",
     "hiperf_stack_table",
 };

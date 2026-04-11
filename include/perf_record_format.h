@@ -175,6 +175,11 @@ struct PerfRecordSampleData {
     u64 period = 0;    /* if PERF_SAMPLE_PERIOD */
     struct read_format v;
     /* if PERF_SAMPLE_READ */
+    u64 read_nr = 0;
+    u64 read_time_enabled = 0;
+    u64 read_time_running = 0;
+    u64 *read_values = nullptr;
+    u64 *read_ids = nullptr;
     u64 nr = 0;                        /* if PERF_SAMPLE_CALLCHAIN */
     u64 *ips = nullptr;                /* if PERF_SAMPLE_CALLCHAIN */
     u32 raw_size = 0;                  /* if PERF_SAMPLE_RAW */

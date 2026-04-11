@@ -134,6 +134,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" timeStopSec:\t%f sec\n", timeStopSec_);
     printf(" frequency:\t%d\n", frequency_);
     printf(" selectEvents:\t%s\n", VectorToString(selectEvents_).c_str());
+    printf(" addCounters:\t%s\n", VectorToString(addCounters_).c_str());
     int i = 0;
     for (auto &group : selectGroups_) {
         i++;
@@ -308,6 +309,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!Option::GetOptionValue(args, "-g", selectGroups_)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--add-counter", addCounters_)) {
         return false;
     }
     if (!GetSpeOptions()) {
@@ -569,6 +573,10 @@ bool SubCommandRecord::CheckOptions()
         return false;
     }
     if (!CheckSpeOption()) {
+        return false;
+    }
+    if (!addCounters_.empty() && !noInherit_) {
+        printf("--add-counter must be used with --no-inherit.\n");
         return false;
     }
     return true;
@@ -1137,6 +1145,7 @@ bool SubCommandRecord::AddEventsAndHandleOffCpu()
     for (auto &group : selectGroups_) {
         CHECK_TRUE(perfEvents_.AddEvents(group, true), false, 1, "Fail to AddEvents groups");
     }
+    CHECK_TRUE(perfEvents_.AddCounters(addCounters_), false, 1, "Fail to AddCounters");
     // cpu off add after default event (we need both sched_switch and user selected events)
     if (offCPU_) {
         CHECK_TRUE(std::find(selectEvents_.begin(), selectEvents_.end(), "sched_switch") == selectEvents_.end(),
@@ -2149,6 +2158,13 @@ void SubCommandRecord::AddCpuOffFeature()
     }
 }
 
+void SubCommandRecord::AddAddCounterFeature()
+{
+    if (!addCounters_.empty()) {
+        fileWriter_->AddStringFeature(FEATURE::HIPERF_ADD_COUNTER, VectorToString(addCounters_));
+    }
+}
+
 void SubCommandRecord::AddDevhostFeature()
 {
     if (isHM_) {
@@ -2172,6 +2188,8 @@ bool SubCommandRecord::AddFeatureRecordFile()
     AddWorkloadCmdFeature();
 
     AddCpuOffFeature();
+
+    AddAddCounterFeature();
 
     AddDevhostFeature();
 

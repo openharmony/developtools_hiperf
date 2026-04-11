@@ -283,6 +283,7 @@ public:
 class PerfRecordSample : public PerfEventRecordTemplate<PerfRecordSampleData, PERF_RECORD_TYPE_SAMPLE> {
 public:
     uint64_t sampleType_ = SAMPLE_TYPE;
+    uint64_t readFormat_ = 0;
     uint64_t skipKernel_ = 0;
     uint64_t skipPid_ = 0;
     // extend
@@ -333,6 +334,11 @@ public:
     pid_t GetServerPidof(unsigned int ipNr);
 private:
     static bool dumpRemoveStack_;
+    void ParseSampleReadData(uint8_t *&p, u64 &dataSize);
+    void ParseSampleTailData(uint8_t *&p, const perf_event_attr &attr, u64 &dataSize, uint8_t *start);
+    void SerializeSampleReadData(uint8_t *&p) const;
+    void SerializeSampleTailData(uint8_t *&p) const;
+    void DumpSampleReadData(const int indent) const;
     void ParseRecordData(uint8_t *p, const perf_event_attr &attr, u64 &dataSize, uint8_t *start);
 };
 

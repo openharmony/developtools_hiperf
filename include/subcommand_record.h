@@ -102,6 +102,9 @@ public:
         "         Put the events into a group, can set multiple groups by multiple -g\n"
         "         PMU is required to report data in designated groups\n"
         "         limited by HW capability, too many events cannot be reported in the same sampling)\n"
+        "   --add-counter <event1[:<u|k>]>[,event1[:<u|k>]]...\n"
+        "         Add extra counter events and store their values in each sample.\n"
+        "         Must be used with --no-inherit.\n"
         "   --no-inherit\n"
         "         Don't trace child processes.\n"
         "   -p <pid1>[,pid2]...\n"
@@ -288,6 +291,7 @@ private:
     std::vector<pid_t> inputPidTidArgs_ = {};
     bool restart_ = false;
     std::vector<std::string> selectEvents_ = {};
+    std::vector<std::string> addCounters_ = {};
     std::vector<std::vector<std::string>> selectGroups_ = {};
     std::vector<std::string> callStackType_ = {};
     std::vector<std::string> vecBranchFilters_ = {};
@@ -415,6 +419,7 @@ private:
     void AddWorkloadCmdFeature();
     void AddCommandLineFeature();
     void AddCpuOffFeature();
+    void AddAddCounterFeature();
     void AddDevhostFeature();
     bool AddFeatureRecordFile();
 

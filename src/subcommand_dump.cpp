@@ -328,6 +328,13 @@ static std::map<int, std::string> g_sampleTypeNames = {
     {PERF_SAMPLE_SERVER_PID, "server_pid"},
 };
 
+static std::map<int, std::string> g_readFormatNames = {
+    {PERF_FORMAT_TOTAL_TIME_ENABLED, "total_time_enabled"},
+    {PERF_FORMAT_TOTAL_TIME_RUNNING, "total_time_running"},
+    {PERF_FORMAT_ID, "id"},
+    {PERF_FORMAT_GROUP, "group"},
+};
+
 void SubCommandDump::DumpSampleType(const uint64_t sampleType, const int indent)
 {
     std::string names;
@@ -340,6 +347,20 @@ void SubCommandDump::DumpSampleType(const uint64_t sampleType, const int indent)
         }
     }
     PRINT_INDENT(indent + 1, "sample_type names: %s\n", names.c_str());
+}
+
+static void DumpReadFormat(const uint64_t readFormat, const int indent)
+{
+    std::string names;
+    for (auto &pair : g_readFormatNames) {
+        if (readFormat & pair.first) {
+            if (!names.empty()) {
+                names.append(",");
+            }
+            names.append(pair.second);
+        }
+    }
+    PRINT_INDENT(indent + 1, "read_format names: %s\n", names.c_str());
 }
 
 void SubCommandDump::DumpPrintEventAttr(const perf_event_attr &attr, const int indent)
@@ -358,6 +379,7 @@ void SubCommandDump::DumpPrintEventAttr(const perf_event_attr &attr, const int i
     DumpSampleType(attr.sample_type, indent);
 
     PRINT_INDENT(indent + 1, "read_format (0x%llx) \n", attr.read_format);
+    DumpReadFormat(attr.read_format, indent);
 
     PRINT_INDENT(indent + 1, "disabled %u, inherit %u, pinned %u, exclusive %u\n", attr.disabled,
                  attr.inherit, attr.pinned, attr.exclusive);
