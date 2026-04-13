@@ -67,12 +67,12 @@ python3 hiperf_annotate.py -i perf.data -s /path/to/source --sym_dir ./binary_ca
 | `--sym_dir` | 包含符号文件的目录（可指定多个） | 否 | `./binary_cache` |
 | `--ndk_path` | LLVM 工具路径 | 否 | - |
 | `--raw_period` | 显示原始周期值而非百分比 | 否 | `False` |
-| `--summary_width` | 摘要文件的最大宽度 | 否 | `80` |
+| `--summary_width` | 摘要文件的最大宽度 | 否 | `30` |
 | `--dso` | 仅分析指定 DSO 的数据 | 否 | - |
 | `-o, --output` | 注释文件的输出目录 | 否 | `annotated_files` |
 | `--add_disassembly` | 生成反汇编注释 | 否 | `False` |
 | `--disassembly_output_dir` | 反汇编输出目录 | 否 | `annotated_disassembly` |
-| `--dso_size_threshold` | DSO 大小阈值（字节），超过阈值的 DSO 不处理 | 否 | `1073741824` (1GB) |
+| `--dso_size_threshold` | DSO 大小阈值，超过阈值的 DSO 不处理 | 否 | `1G` |
 
 ### 使用示例
 
@@ -138,7 +138,7 @@ python3 hiperf_annotate.py \
     -i perf.data \
     -s src/ \
     --sym_dir binary_cache/ \
-    --dso_size_threshold 536870912
+    --dso_size_threshold 512M
 ```
 
 ## 输出说明
@@ -167,7 +167,7 @@ annotated_disassembly/            # 反汇编输出目录（如果启用 --add_d
 
 摘要文件包含多层次的性能统计：
 
-```txt
+```
 total period: 1000
 
 === DSO Summary ===
@@ -195,7 +195,7 @@ Total           Self            Function/Line
 - **Self（自身周期）**：该函数/行本身的执行时间，不包括子函数的执行时间
 
 **关键关系：**
-```txt
+```
 Total = Self + 所有子函数的 Self
 ```
 
@@ -345,12 +345,12 @@ WARNING: Can't find source file: /path/to/source/main.cpp
 
 **警告信息：**
 ```
-WARNING: local file build id xxx is not request build id yyy
+WARNING: Build ID mismatch for /path/to/libxxx.so: expected xxx, got yyy
 ```
 
 **解决方案：**
 1. 确保指定 sym_dir 目录下的符号文件是正确的版本
-3. 检查 perf.data 和符号文件是否来自同一构建版本
+2. 检查 perf.data 和符号文件是否来自同一构建版本
 
 ### 问题：没有 .debug_line section
 
@@ -372,6 +372,16 @@ WARNING: Skipping large DSO: libc.so (size: 2147483648 bytes > threshold: 107374
 **解决方案：**
 1. 这不是错误，是性能优化措施
 2. 如果需要分析该DSO，增加 `--dso_size_threshold` 值
+
+**汇总信息：**
+```
+  Skipped X large DSOs, Y DSOs not found, Z DSOs with build ID mismatch
+```
+
+说明：
+- X：跳过的大型 DSO 数量
+- Y：未找到的 DSO 数量
+- Z：Build ID 不匹配的 DSO 数量
 
 ### 问题：反汇编生成失败
 
