@@ -21,6 +21,7 @@
 #include <cinttypes>
 #include <condition_variable>
 #include <deque>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -325,7 +326,7 @@ struct read_format_group {
     __u64 nr;           /* The number of events */
     __u64 timeEnabled; /* if PERF_FORMAT_TOTAL_TIME_ENABLED */
     __u64 timeRunning; /* if PERF_FORMAT_TOTAL_TIME_RUNNING */
-    read_format_event events[1];
+    read_format_event events[5]; /* array of nr events, max 5 */
 };
 
 struct read_format_no_group {
@@ -341,6 +342,7 @@ class PerfEvents {
 public:
     static constexpr uint64_t DEFAULT_SAMPLE_FREQUNCY = 4000;
     static constexpr uint64_t DEFAULT_SAMPLE_PERIOD = 1;
+    static constexpr uint64_t INFINITE_SAMPLE_PERIOD = std::numeric_limits<uint64_t>::max();
     static constexpr uint64_t DEFAULT_TIMEOUT = 10 * 1000;
     static constexpr size_t MIN_BUFFER_SIZE = 64 * 1024 * 1024;
     static constexpr size_t BUFFER_LOW_LEVEL = 10 * 1024 * 1024;
@@ -355,6 +357,7 @@ public:
     ~PerfEvents();
 
     bool AddEvents(const std::vector<std::string> &eventStrings, const bool group = false);
+    bool AddCounters(const std::vector<std::string> &eventStrings);
     bool PrepareTracking(void);
     bool StartTracking(const bool immediately = true);
     bool StopTracking(void);
@@ -573,6 +576,7 @@ private:
     void GetRecordFieldFromMmap(MmapFd &mmap, void *dest, size_t pos, size_t size);
     void MoveRecordToBuf(MmapFd &mmap, bool &isAuxEvent, u64 &auxOffset, u64 &auxSize, u32 &pid, u32 &tid);
     size_t GetCallChainPosInSampleRecord(const perf_event_attr &attr);
+    size_t GetSampleReadSizeInSampleRecord(MmapFd &mmap, size_t pos);
     size_t GetStackSizePosInSampleRecord(MmapFd &mmap);
     bool CutStackAndMove(MmapFd &mmap);
     inline void WaitDataFromRingBuffer();
@@ -624,14 +628,25 @@ private:
 
     struct FdItem {
         OHOS::UniqueFd fd;
+        int groupFd = -1;
         int cpu = -1;
         pid_t pid = -1;
         pid_t tid = -1;
         __u64 eventCount = 0;
         mutable uint64_t perfId = 0;
-        uint64_t GetPrefId() const
+        uint64_t GetPerfId(bool isFormatGroup, int idx) const
         {
-            if (perfId == 0) {
+            if (perfId != 0) {
+                return perfId;
+            }
+            if (isFormatGroup) {
+                read_format_group readGroupValue;
+                if (read(groupFd, &readGroupValue, sizeof(readGroupValue)) > 0) {
+                    perfId = readGroupValue.events[idx].id;
+                } else {
+                    HLOGW("read failed with group fd %d", groupFd);
+                }
+            } else {
                 read_format_no_group readNoGroupValue;
                 if (read(fd, &readNoGroupValue, sizeof(readNoGroupValue)) > 0) {
                     perfId = readNoGroupValue.id;
@@ -705,6 +720,7 @@ private:
     void PutAllCpus();
     bool PrepareFdEvents();
     bool CreateFdEvents();
+    int HandleCreateFdOpenError(const EventItem &eventItem, size_t icpu, size_t ipid) const;
     int CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu, const size_t ipid,
                                  uint &fdNumber, int &groupFdCache);
     bool StatReport(const __u64 &durationInSec);

@@ -571,6 +571,7 @@ PerfRecordSample::PerfRecordSample(const PerfRecordSample& sample)
     data_ = sample.data_;
 
     sampleType_ = sample.sampleType_;
+    readFormat_ = sample.readFormat_;
     skipKernel_ = sample.skipKernel_;
     skipPid_ = sample.skipPid_;
 
@@ -582,18 +583,39 @@ PerfRecordSample::PerfRecordSample(const PerfRecordSample& sample)
     removeStack_ = sample.removeStack_;
 }
 
-void PerfRecordSample::ParseRecordData(uint8_t *p, const perf_event_attr &attr, u64 &dataSize, uint8_t *start)
+void PerfRecordSample::ParseSampleReadData(uint8_t *&p, u64 &dataSize)
 {
-    // parse record according SAMPLE_TYPE
-    PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip, dataSize);
-    PopFromBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id, dataSize);
-    PopFromBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res, dataSize);
-    PopFromBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period, dataSize);
+    if ((sampleType_ & PERF_SAMPLE_READ) == 0) {
+        return;
+    }
+    if (readFormat_ & PERF_FORMAT_GROUP) {
+        PopFromBinary(true, p, data_.read_nr, dataSize);
+        PopFromBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.read_time_enabled, dataSize);
+        PopFromBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.read_time_running, dataSize);
+        if (data_.read_nr > 0) {
+            data_.read_values = reinterpret_cast<u64 *>(p);
+            SetPointerOffset(p, data_.read_nr * sizeof(u64), dataSize);
+            if (readFormat_ & PERF_FORMAT_ID) {
+                data_.read_ids = reinterpret_cast<u64 *>(p);
+                SetPointerOffset(p, data_.read_nr * sizeof(u64), dataSize);
+            }
+        }
+        return;
+    }
+    PopFromBinary(true, p, data_.v.value, dataSize);
+    PopFromBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.v.timeEnabled, dataSize);
+    PopFromBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.v.timeRunning, dataSize);
+    PopFromBinary(readFormat_ & PERF_FORMAT_ID, p, data_.v.id, dataSize);
+    data_.read_nr = 1;
+    data_.read_time_enabled = data_.v.timeEnabled;
+    data_.read_time_running = data_.v.timeRunning;
+    data_.read_values = &(data_.v.value);
+    data_.read_ids = (readFormat_ & PERF_FORMAT_ID) ? &(data_.v.id) : nullptr;
+}
+
+void PerfRecordSample::ParseSampleTailData(uint8_t *&p, const perf_event_attr &attr,
+                                           u64 &dataSize, uint8_t *start)
+{
     PopFromBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr, dataSize);
     if (data_.nr > 0) {
         // the pointer is from input(p), require caller keep input(p) with *this together
@@ -634,6 +656,22 @@ void PerfRecordSample::ParseRecordData(uint8_t *p, const perf_event_attr &attr, 
     }
 }
 
+void PerfRecordSample::ParseRecordData(uint8_t *p, const perf_event_attr &attr, u64 &dataSize, uint8_t *start)
+{
+    // parse record according SAMPLE_TYPE
+    PopFromBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip, dataSize);
+    PopFromBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id, dataSize);
+    PopFromBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res, dataSize);
+    PopFromBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period, dataSize);
+    ParseSampleReadData(p, dataSize);
+    ParseSampleTailData(p, attr, dataSize, start);
+}
+
 void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
 {
     PerfEventRecord::InitHeader(p);
@@ -642,6 +680,7 @@ void PerfRecordSample::Init(uint8_t *p, const perf_event_attr &attr)
     // clear the vector data
     Clean();
     sampleType_ = attr.sample_type;
+    readFormat_ = attr.read_format;
     skipKernel_ = 0;
     skipPid_ = 0;
     stackId_ = {0};
@@ -664,22 +703,33 @@ bool PerfRecordSample::IsDumpRemoveStack()
     return dumpRemoveStack_;
 }
 
-bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
+void PerfRecordSample::SerializeSampleReadData(uint8_t *&p) const
 {
-    if (buf.size() < GetSize()) {
-        buf.resize(GetSize());
+    if ((sampleType_ & PERF_SAMPLE_READ) == 0) {
+        return;
     }
-    GetHeaderBinary(buf);
-    uint8_t *p = buf.data() + GetHeaderSize();
-    PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id);
-    PushToBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip);
-    PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid);
-    PushToBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time);
-    PushToBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr);
-    PushToBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id);
-    PushToBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id);
-    PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res);
-    PushToBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period);
+    if (readFormat_ & PERF_FORMAT_GROUP) {
+        PushToBinary(true, p, data_.read_nr);
+        PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.read_time_enabled);
+        PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.read_time_running);
+        if (data_.read_nr > 0 && data_.read_values != nullptr) {
+            std::copy(data_.read_values, data_.read_values + data_.read_nr, reinterpret_cast<u64 *>(p));
+            p += data_.read_nr * sizeof(u64);
+        }
+        if ((readFormat_ & PERF_FORMAT_ID) && data_.read_nr > 0 && data_.read_ids != nullptr) {
+            std::copy(data_.read_ids, data_.read_ids + data_.read_nr, reinterpret_cast<u64 *>(p));
+            p += data_.read_nr * sizeof(u64);
+        }
+        return;
+    }
+    PushToBinary(true, p, data_.v.value);
+    PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.v.timeEnabled);
+    PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.v.timeRunning);
+    PushToBinary(readFormat_ & PERF_FORMAT_ID, p, data_.v.id);
+}
+
+void PerfRecordSample::SerializeSampleTailData(uint8_t *&p) const
+{
     PushToBinary(sampleType_ & PERF_SAMPLE_CALLCHAIN, p, data_.nr);
     if (data_.nr > 0 && !removeStack_) {
         std::copy(data_.ips + skipKernel_, data_.ips + data_.nr + skipKernel_,
@@ -714,6 +764,26 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
         PushToBinary(true, p, data_.dyn_size);
     }
     PushToBinary(removeStack_, p, stackId_.value);
+}
+
+bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
+{
+    if (buf.size() < GetSize()) {
+        buf.resize(GetSize());
+    }
+    GetHeaderBinary(buf);
+    uint8_t *p = buf.data() + GetHeaderSize();
+    PushToBinary(sampleType_ & PERF_SAMPLE_IDENTIFIER, p, data_.sample_id);
+    PushToBinary(sampleType_ & PERF_SAMPLE_IP, p, data_.ip);
+    PushToBinary2(sampleType_ & PERF_SAMPLE_TID, p, data_.pid, data_.tid);
+    PushToBinary(sampleType_ & PERF_SAMPLE_TIME, p, data_.time);
+    PushToBinary(sampleType_ & PERF_SAMPLE_ADDR, p, data_.addr);
+    PushToBinary(sampleType_ & PERF_SAMPLE_ID, p, data_.id);
+    PushToBinary(sampleType_ & PERF_SAMPLE_STREAM_ID, p, data_.stream_id);
+    PushToBinary2(sampleType_ & PERF_SAMPLE_CPU, p, data_.cpu, data_.res);
+    PushToBinary(sampleType_ & PERF_SAMPLE_PERIOD, p, data_.period);
+    SerializeSampleReadData(p);
+    SerializeSampleTailData(p);
     return true;
 }
 
@@ -777,6 +847,38 @@ void PerfRecordSample::DumpRegsUser(const int indent) const
     }
 }
 
+void PerfRecordSample::DumpSampleReadData(const int indent) const
+{
+    if ((sampleType_ & PERF_SAMPLE_READ) == 0) {
+        return;
+    }
+    if (readFormat_ & PERF_FORMAT_GROUP) {
+        PRINT_INDENT(indent, "read group nr %" PRIu64 ", time_enabled %" PRIu64
+                     ", time_running %" PRIu64 "\n",
+                     static_cast<uint64_t>(data_.read_nr),
+                     static_cast<uint64_t>(data_.read_time_enabled),
+                     static_cast<uint64_t>(data_.read_time_running));
+        for (u64 i = 0; i < data_.read_nr; ++i) {
+            uint64_t value = (data_.read_values != nullptr) ? data_.read_values[i] : 0;
+            if (readFormat_ & PERF_FORMAT_ID) {
+                uint64_t id = (data_.read_ids != nullptr) ? data_.read_ids[i] : 0;
+                PRINT_INDENT(indent + 1, "value[%" PRIu64 "]=%" PRIu64 ", id[%" PRIu64 "]=%" PRIu64 "\n",
+                             static_cast<uint64_t>(i), value, static_cast<uint64_t>(i), id);
+            } else {
+                PRINT_INDENT(indent + 1, "value[%" PRIu64 "]=%" PRIu64 "\n",
+                             static_cast<uint64_t>(i), value);
+            }
+        }
+        return;
+    }
+    PRINT_INDENT(indent, "read value %" PRIu64 ", time_enabled %" PRIu64
+                 ", time_running %" PRIu64 ", id %" PRIu64 "\n",
+                 static_cast<uint64_t>(data_.v.value),
+                 static_cast<uint64_t>(data_.v.timeEnabled),
+                 static_cast<uint64_t>(data_.v.timeRunning),
+                 static_cast<uint64_t>(data_.v.id));
+}
+
 
 void PerfRecordSample::DumpData(const int indent) const
 {
@@ -808,6 +910,7 @@ void PerfRecordSample::DumpData(const int indent) const
     if (sampleType_ & PERF_SAMPLE_PERIOD) {
         PRINT_INDENT(indent, "period %" PRIu64 "\n", static_cast<uint64_t>(data_.period));
     }
+    DumpSampleReadData(indent);
     if (stackId_.section.id > 0) {
         PRINT_INDENT(indent, "stackid %" PRIu64 "\n", static_cast<uint64_t>(stackId_.section.id));
     }

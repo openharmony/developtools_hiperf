@@ -48,12 +48,54 @@ std::string Report::GetAdltExtendMapName(const std::string &mapName, const std::
     return mapName;
 }
 
+void Report::FillReportItemCounterValues(ReportItem &item, const PerfRecordSample &sample) const
+{
+    if (addCounterNames_.empty()) {
+        return;
+    }
+
+    item.counts_.assign(addCounterNames_.size(), 0);
+    item.accCounts_.assign(addCounterNames_.size(), 0);
+    if ((sample.sampleType_ & PERF_SAMPLE_READ) == 0 || sample.data_.read_nr == 0 ||
+        sample.data_.read_values == nullptr || sample.data_.read_ids == nullptr) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < sample.data_.read_nr; ++i) {
+        auto it = addCounterIdIndexMaps_.find(sample.data_.read_ids[i]);
+        if (it == addCounterIdIndexMaps_.end()) {
+            continue;
+        }
+        size_t idx = it->second;
+        if (idx >= item.counts_.size()) {
+            continue;
+        }
+        item.counts_[idx] = sample.data_.read_values[i];
+        item.accCounts_[idx] = sample.data_.read_values[i];
+    }
+}
+
+std::string Report::FormatCounterValues(const std::vector<uint64_t> &values,
+                                        const std::vector<std::string> &counterNames) const
+{
+    if (values.empty() || counterNames.empty() || values.size() != counterNames.size()) {
+        return "";
+    }
+    std::string result;
+    for (size_t i = 0; i < values.size(); ++i) {
+        if (!result.empty()) {
+            result.append(",");
+        }
+        result.append(StringPrintf("%s=%" PRIu64 "", counterNames[i].c_str(), values[i]));
+    }
+    return result;
+}
+
 void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCallStack)
 {
     size_t configIndex = GetConfigIndex(sample.data_.id);
-    HLOG_ASSERT_MESSAGE(configs_.size() > configIndex,
-                        "in %zu configs found index %zu, from ids %llu", configs_.size(),
-                        configIndex, sample.data_.id);
+    HLOG_ASSERT_MESSAGE(configs_.size() > configIndex, "in %zu configs found index %zu, from ids %llu",
+                        configs_.size(), configIndex, sample.data_.id);
     VirtualThread &thread = virtualRuntime_.GetThread(sample.data_.pid, sample.data_.tid);
     HLOG_ASSERT(sample.callFrames_.size() > 0);
     // if we need callstack ?
@@ -64,6 +106,7 @@ void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCal
         ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
             sample.data_.pid, sample.data_.tid, thread.name_, mapName,
             frameIt->funcName, frameIt->funcOffset, sample.data_.period);
+        FillReportItemCounterValues(item, sample);
         HLOGD("ReportItem: %s", item.ToDebugString().c_str());
         HLOG_ASSERT(!item.func_.empty());
 
@@ -74,8 +117,7 @@ void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCal
             // in add items case , right one should only have 1 callstack
             // so just new callfames and move to next level
             ReportItemCallFrame &nextCallFrame = currentCallFrames->emplace_back(
-                frameIt->funcName, frameIt->funcOffset, frameIt->mapName,
-                sample.data_.period,
+                frameIt->funcName, frameIt->funcOffset, frameIt->mapName, sample.data_.period,
                 (std::next(frameIt) == sample.callFrames_.rend()) ? sample.data_.period : 0);
             HLOGV("add callframe %s", nextCallFrame.ToDebugString().c_str());
             currentCallFrames = &nextCallFrame.childs;
@@ -94,9 +136,9 @@ void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCal
                 frameIt++;
             }
             auto mapName = GetAdltExtendMapName(frameIt->mapName, frameIt->originSoName);
-            ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
-                sample.data_.pid, sample.data_.tid, thread.name_, mapName,
-                frameIt->funcName, frameIt->funcOffset, sample.data_.period);
+            ReportItem &item = configs_[configIndex].reportItems_.emplace_back(sample.data_.pid, sample.data_.tid,
+                thread.name_, mapName, frameIt->funcName, frameIt->funcOffset, sample.data_.period);
+            FillReportItemCounterValues(item, sample);
             HLOGV("%s", item.ToDebugString().c_str());
             HLOG_ASSERT(!item.func_.empty());
         }
@@ -120,6 +162,7 @@ void Report::AddReportItemBranch(const PerfRecordSample &sample)
         ReportItem &item = configs_[configIndex].reportItems_.emplace_back(
             sample.data_.pid, sample.data_.tid, thread.name_, symbolTo.module_, symbolTo.GetName(),
             symbolTo.funcVaddr_, 1u);
+        FillReportItemCounterValues(item, sample);
 
         item.fromDso_ = symbolFrom.module_;
         item.fromFunc_ = symbolFrom.GetName();
@@ -311,19 +354,30 @@ void Report::MergeCallFrameCount(ReportItem &leftItem, ReportItem &rightItem)
 
 bool Report::MultiLevelSameAndUpdateCount(ReportItem &l, ReportItem &r)
 {
-    if (MultiLevelCompare(l, r) == 0) {
-        l.eventCount_ += r.eventCount_;
-        HLOGM("l %" PRIu64 " %s c:%zu vs r %" PRIu64 " %s c:%zu", l.eventCount_, l.func_.data(),
-              l.callStacks_.size(), r.eventCount_, r.func_.data(), r.callStacks_.size());
-        // if it have call stack?
-        if (r.callStacks_.size() != 0) {
-            // add to left (right to left)
-            MergeCallFrameCount(l, r);
-        }
-        return true;
-    } else {
+    if (MultiLevelCompare(l, r) != 0) {
         return false;
     }
+    l.eventCount_ += r.eventCount_;
+    l.mergedSampleCount_ += r.mergedSampleCount_;
+    if (!l.accCounts_.empty() && l.accCounts_.size() == r.accCounts_.size()) {
+        for (size_t i = 0; i < l.accCounts_.size(); ++i) {
+            l.accCounts_[i] += r.accCounts_[i];
+            if (l.mergedSampleCount_ > 0) {
+                l.counts_[i] = l.accCounts_[i] / l.mergedSampleCount_;
+            }
+        }
+    } else if (l.accCounts_.empty() && !r.accCounts_.empty()) {
+        l.accCounts_ = r.accCounts_;
+        l.counts_ = r.counts_;
+    }
+    HLOGM("l %" PRIu64 " %s c:%zu vs r %" PRIu64 " %s c:%zu", l.eventCount_, l.func_.data(),
+            l.callStacks_.size(), r.eventCount_, r.func_.data(), r.callStacks_.size());
+    // if it have call stack?
+    if (r.callStacks_.size() != 0) {
+        // add to left (right to left)
+        MergeCallFrameCount(l, r);
+    }
+    return true;
 }
 
 bool Report::MultiLevelSorting(const ReportItem &a, const ReportItem &b)
@@ -365,6 +419,9 @@ void Report::OutputStdStatistics(ReportEventConfigItem &config)
         fprintf(output_, "Event Count: ");
     }
     fprintf(output_, "%" PRIu64 "\n", config.eventCount_);
+    if (!config.addCounterNames_.empty()) {
+        fprintf(output_, "Add counters: %s\n", VectorToString(config.addCounterNames_).c_str());
+    }
 }
 
 void Report::OutputStdHead(ReportEventConfigItem &config, const bool diffMode)
@@ -401,6 +458,13 @@ void Report::OutputStdHead(ReportEventConfigItem &config, const bool diffMode)
         }
         HLOGD("'%s' max len %zu(from '%s') console width %d", key.keyName_.c_str(), key.maxLen_,
               key.maxValue_.c_str(), remainingWidth);
+    }
+    if (!config.addCounterNames_.empty()) {
+        size_t counterColumnLen = std::max(static_cast<size_t>(24),
+                                           VectorToString(config.addCounterNames_).size() + 8);
+        int counterColLen = static_cast<int>(counterColumnLen);
+        fprintf(output_, "%-*s ", counterColLen, "counts");
+        fprintf(output_, "%-*s ", counterColLen, "acc_counts");
     }
     if (fprintf(output_, "\n") < 0) {
         return;
@@ -506,7 +570,7 @@ void Report::OutputStdContent(ReportEventConfigItem &config)
         } else {
             fprintf(output_, "%*.2f%%  ", FULL_PERCENTAGE_NUM_LEN, reportItem.heat);
         }
-        OutputStdContentItem(reportItem);
+        OutputStdContentItem(config, reportItem);
         if (reportItem.callStacks_.size() != 0) {
             HLOGV("reportItem.callStacks_ %zu %s", reportItem.callStacks_.size(),
                   reportItem.ToDebugString().c_str());
@@ -519,7 +583,7 @@ void Report::OutputStdContent(ReportEventConfigItem &config)
     }
 }
 
-void Report::OutputStdContentItem(const ReportItem &reportItem)
+void Report::OutputStdContentItem(const ReportEventConfigItem &config, const ReportItem &reportItem)
 {
     // output by sort keys
     for (auto sortKey : displayKeyNames_) {
@@ -527,6 +591,15 @@ void Report::OutputStdContentItem(const ReportItem &reportItem)
         if (fprintf(output_, "%s ", reportKey.GetValue(reportItem).c_str()) < 0) {
             return;
         }
+    }
+    if (!config.addCounterNames_.empty()) {
+        size_t counterColumnLen = std::max(static_cast<size_t>(24),
+                                           VectorToString(config.addCounterNames_).size() + 8);
+        int counterColLen = static_cast<int>(counterColumnLen);
+        std::string counts = FormatCounterValues(reportItem.counts_, config.addCounterNames_);
+        std::string accCounts = FormatCounterValues(reportItem.accCounts_, config.addCounterNames_);
+        fprintf(output_, "%-*s ", counterColLen, counts.c_str());
+        fprintf(output_, "%-*s ", counterColLen, accCounts.c_str());
     }
     if (fprintf(output_, "\n") < 0) {
         return;
@@ -578,7 +651,7 @@ void Report::OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfig
                     // output the diff heating
                     if (it->heat > option_.heatLimit_ && it2->heat > option_.heatLimit_) {
                         OutputStdItemHeating(it->heat, it2->heat);
-                        OutputStdContentItem(*it);
+                        OutputStdContentItem(left, *it);
                     }
                     it++;
                     it2++;
@@ -587,7 +660,7 @@ void Report::OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfig
                     // only print it2 item
                     if (it2->heat > option_.heatLimit_) {
                         OutputStdItemHeating(0.0f, it2->heat);
-                        OutputStdContentItem(*it2);
+                        OutputStdContentItem(right, *it2);
                     }
                     it2++;
                     continue; // next it2
@@ -597,7 +670,7 @@ void Report::OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfig
             // no more it2, go on print all the it
             if (it->heat > option_.heatLimit_) {
                 OutputStdItemHeating(it->heat, 0.0f);
-                OutputStdContentItem(*it);
+                OutputStdContentItem(left, *it);
             }
             it++;
             continue; // next it
@@ -606,7 +679,7 @@ void Report::OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfig
     while (it2 != right.reportItems_.end()) {
         // if diff still have some item in it2 ,print it
         OutputStdItemHeating(0, it2->heat);
-        OutputStdContentItem(*it2);
+        OutputStdContentItem(right, *it2);
         it2++;
     }
 }

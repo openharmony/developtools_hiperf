@@ -279,6 +279,46 @@ bool PerfEvents::AddEvents(const std::vector<std::string> &eventStrings, const b
     return true;
 }
 
+bool PerfEvents::AddCounters(const std::vector<std::string> &eventStrings)
+{
+    if (eventStrings.empty()) {
+        return true;
+    }
+    if (eventGroupItem_.empty()) {
+        HLOGE("add counter failed, no events selected");
+        return false;
+    }
+    if (eventGroupItem_.size() > 1) {
+        printf("Failed to add counters. Only one event group is allowed.\n");
+        HLOGE("add counter failed, event groups(%zu) > 1", eventGroupItem_.size());
+        return false;
+    }
+    size_t maxEventsNum = 5;
+    size_t eventsNum = eventGroupItem_[0].eventItems.size() + eventStrings.size();
+    if (eventsNum > maxEventsNum) {
+        printf("Failed to add counters. The number of events in one group can't exceed 5.");
+        HLOGE("Failed to add counters. Events number in one group is %zu", eventsNum);
+        return false;
+    }
+
+    for (const auto &eventString : eventStrings) {
+        if (!AddEvent(eventString, true)) {
+            return false;
+        }
+        EventItem &selection = eventGroupItem_[0].eventItems.back();
+        selection.attr.freq = 0;
+        selection.attr.sample_freq = 0;
+        selection.attr.sample_period = INFINITE_SAMPLE_PERIOD;
+        selection.attr.inherit = 0;
+    }
+
+    for (auto &selection : eventGroupItem_[0].eventItems) {
+        selection.attr.sample_type |= PERF_SAMPLE_READ;
+        selection.attr.read_format |= PERF_FORMAT_GROUP;
+    }
+    return true;
+}
+
 bool PerfEvents::HandleTokensTracePoint(const std::vector<std::string>& eventTokens, std::string& name,
                                         bool& excludeUser, bool& excludeKernel, bool& isTracePoint)
 {
@@ -1171,32 +1211,36 @@ bool PerfEvents::PrepareFdEvents(void)
     return true;
 }
 
+int PerfEvents::HandleCreateFdOpenError(const EventItem &eventItem, size_t icpu, size_t ipid) const
+{
+    if (errno == ESRCH) {
+        if (verboseReport_) {
+            printf("pid %d does not exist.\n", pids_[ipid]);
+        }
+        HLOGE("pid %d does not exist.\n", pids_[ipid]);
+        HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFdEvents] pid %{public}d does not exist.", pids_[ipid]);
+        return 1;
+    }
+    char errInfo[ERRINFOLEN] = { 0 };
+    strerror_r(errno, errInfo, ERRINFOLEN);
+    // clang-format off
+    if (verboseReport_) {
+        printf("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
+            eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
+    }
+    HLOGE("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
+        eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
+    // clang-format on
+    return 0; // jump to next cpu
+}
+
 int PerfEvents::CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu, const size_t ipid,
                                          uint &fdNumber, int &groupFdCache)
 {
     UniqueFd fd = Open(eventItem.attr, pids_[ipid], cpus_[icpu], groupFdCache, 0);
     // clang-format on
     if (fd < 0) {
-        if (errno == ESRCH) {
-            if (verboseReport_) {
-                printf("pid %d does not exist.\n", pids_[ipid]);
-            }
-            HLOGE("pid %d does not exist.\n", pids_[ipid]);
-            HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFdEvents] pid %{public}d does not exist.", pids_[ipid]);
-            return 1;
-        } else {
-            char errInfo[ERRINFOLEN] = { 0 };
-            strerror_r(errno, errInfo, ERRINFOLEN);
-            // clang-format off
-            if (verboseReport_) {
-                printf("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
-                    eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
-            }
-            HLOGE("%s event is not supported by the kernel on cpu %d. reason: %d:%s\n",
-                eventItem.configName.c_str(), cpus_[icpu], errno, errInfo);
-            // clang-format on
-            return 0; // jump to next cpu
-        }
+        return HandleCreateFdOpenError(eventItem, icpu, ipid);
     }
     // after open successed , fill the result and make a new FdItem
     FdItem &fdItem = eventItem.fdItems.emplace_back();
@@ -1220,6 +1264,7 @@ int PerfEvents::CreateFdEventsForEachPid(EventItem &eventItem, const size_t icpu
     if (groupFdCacheNum == -1) {
         groupFdCache = fdItem.fd.Get();
     }
+    fdItem.groupFd = groupFdCache;
     return 1;
 }
 
@@ -1445,14 +1490,16 @@ std::vector<AttrWithId> PerfEvents::GetAttrWithId() const
 
     for (const auto &eventGroupItem : eventGroupItem_) {
         HLOGV(" eventItems %zu eventItems:", eventGroupItem.eventItems.size());
-        for (const auto &eventItem : eventGroupItem.eventItems) {
+        size_t size = eventGroupItem.eventItems.size();
+        for (auto i = 0; i < size; i++) {
             AttrWithId attrId;
-            attrId.attr = eventItem.attr;
-            attrId.name = eventItem.configName;
-            HLOGV("  fdItems %zu fdItems:", eventItem.fdItems.size());
-            for (const auto &fdItem : eventItem.fdItems) {
-                auto &id = attrId.ids.emplace_back(fdItem.GetPrefId());
-                HLOGV("    eventItem.fdItems GetPrefId %" PRIu64 "", id);
+            attrId.attr = eventGroupItem.eventItems[i].attr;
+            attrId.name = eventGroupItem.eventItems[i].configName;
+            HLOGV("  fdItems %zu fdItems:", eventGroupItem.eventItems[i].fdItems.size());
+            for (const auto &fdItem : eventGroupItem.eventItems[i].fdItems) {
+                bool isFormatGroup = (eventGroupItem.eventItems[i].attr.read_format & PERF_FORMAT_GROUP) != 0;
+                auto &id = attrId.ids.emplace_back(fdItem.GetPerfId(isFormatGroup, i));
+                HLOGV("    eventItem.fdItems GetPerfId %" PRIu64 "", id);
             }
             result.emplace_back(attrId);
         }
@@ -1661,16 +1708,48 @@ size_t PerfEvents::GetCallChainPosInSampleRecord(const perf_event_attr &attr)
         attr.sample_type & (PERF_SAMPLE_IDENTIFIER | PERF_SAMPLE_IP | PERF_SAMPLE_TID |
                             PERF_SAMPLE_TIME | PERF_SAMPLE_ADDR | PERF_SAMPLE_ID |
                             PERF_SAMPLE_STREAM_ID | PERF_SAMPLE_CPU | PERF_SAMPLE_PERIOD));
-    size_t pos = sizeof(perf_event_header) + sizeof(uint64_t) * fixedFieldNumber;
-    if (attr.sample_type & PERF_SAMPLE_READ) {
-        pos += sizeof(read_format);
+    return sizeof(perf_event_header) + sizeof(uint64_t) * fixedFieldNumber;
+}
+
+size_t PerfEvents::GetSampleReadSizeInSampleRecord(MmapFd &mmap, size_t pos)
+{
+    if ((mmap.attr->sample_type & PERF_SAMPLE_READ) == 0 || mmap.attr->read_format == 0) {
+        return 0;
     }
-    return pos;
+
+    size_t readSize = sizeof(uint64_t); // value for non-group, nr for group
+    uint64_t format = mmap.attr->read_format;
+    if (format & PERF_FORMAT_GROUP) {
+        uint64_t nr = 0;
+        GetRecordFieldFromMmap(mmap, &nr, mmap.mmapPage->data_tail + pos, sizeof(nr));
+        if (format & PERF_FORMAT_TOTAL_TIME_ENABLED) {
+            readSize += sizeof(uint64_t);
+        }
+        if (format & PERF_FORMAT_TOTAL_TIME_RUNNING) {
+            readSize += sizeof(uint64_t);
+        }
+        readSize += nr * sizeof(uint64_t); // values
+        if (format & PERF_FORMAT_ID) {
+            readSize += nr * sizeof(uint64_t); // ids
+        }
+    } else {
+        if (format & PERF_FORMAT_TOTAL_TIME_ENABLED) {
+            readSize += sizeof(uint64_t);
+        }
+        if (format & PERF_FORMAT_TOTAL_TIME_RUNNING) {
+            readSize += sizeof(uint64_t);
+        }
+        if (format & PERF_FORMAT_ID) {
+            readSize += sizeof(uint64_t);
+        }
+    }
+    return readSize;
 }
 
 size_t PerfEvents::GetStackSizePosInSampleRecord(MmapFd &mmap)
 {
     size_t pos = mmap.posCallChain;
+    pos += GetSampleReadSizeInSampleRecord(mmap, pos);
     if (mmap.attr->sample_type & PERF_SAMPLE_CALLCHAIN) {
         uint64_t nr = 0;
         GetRecordFieldFromMmap(mmap, &nr, mmap.mmapPage->data_tail + pos, sizeof(nr));

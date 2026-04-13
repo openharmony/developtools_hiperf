@@ -17,6 +17,7 @@
 #include "subcommand_report.h"
 
 #include <memory>
+#include <limits>
 #include <set>
 #include <sstream>
 
@@ -33,6 +34,38 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+namespace {
+bool IsAddCounterAttr(const AttrWithId &fileAttr)
+{
+    return ((fileAttr.attr.read_format & PERF_FORMAT_GROUP) != 0u) &&
+           (fileAttr.attr.freq == 0u) &&
+           (fileAttr.attr.sample_period == std::numeric_limits<uint64_t>::max());
+}
+
+void RegisterAddCounterIds(Report &report, const AttrWithId &fileAttr, const std::string &eventName)
+{
+    size_t counterIndex = 0;
+    auto &counterNames = report.addCounterNames_;
+    auto counterIt = std::find(counterNames.begin(), counterNames.end(), eventName);
+    if (counterIt == counterNames.end()) {
+        counterNames.emplace_back(eventName);
+        counterIndex = counterNames.size() - 1;
+    } else {
+        counterIndex = static_cast<size_t>(std::distance(counterNames.begin(), counterIt));
+    }
+    for (uint64_t id : fileAttr.ids) {
+        report.addCounterIdIndexMaps_[id] = counterIndex;
+    }
+}
+
+void ApplyAddCounterNamesToConfigs(Report &report)
+{
+    for (auto &config : report.configs_) {
+        config.addCounterNames_ = report.addCounterNames_;
+    }
+}
+} // namespace
+
 bool SubCommandReport::ParseOption(std::vector<std::string> &args)
 {
     if (!Option::GetOptionValue(args, "-i", recordFile_[FIRST])) {
@@ -202,6 +235,14 @@ void SubCommandReport::BroadcastSample(std::unique_ptr<PerfRecordSample> &sample
 void SubCommandReport::ProcessSample(std::unique_ptr<PerfRecordSample> &sample)
 {
     sample->DumpLog(__FUNCTION__);
+    if (GetReport().configIdIndexMaps_.count(sample->data_.id) == 0) {
+        // Added counters are part of PERF_SAMPLE_READ and don't create independent report entries.
+        if (GetReport().addCounterIdIndexMaps_.count(sample->data_.id) > 0) {
+            return;
+        }
+        HLOGW("skip sample with unknown id %" PRIu64 "", static_cast<uint64_t>(sample->data_.id));
+        return;
+    }
     if (jsonFormat_) {
         reportJsonFile_->UpdateReportSample(sample->data_.id, sample->data_.pid, sample->data_.tid,
                                             sample->data_.period);
@@ -346,6 +387,10 @@ void SubCommandReport::UpdateReportInfo()
 
 void SubCommandReport::LoadEventConfigData()
 {
+    GetReport().configs_.clear();
+    GetReport().configIdIndexMaps_.clear();
+    cpuOffids_.clear();
+    configNames_.clear();
     auto features = recordFileReader_->GetFeatures();
     cpuOffMode_ = find(features.begin(), features.end(), FEATURE::HIPERF_CPU_OFF) != features.end();
     if (cpuOffMode_) {
@@ -377,6 +422,10 @@ void SubCommandReport::LoadEventDesc()
 
         HLOGV("event name[%zu]: %s ids: %s", i, fileAttr.name.c_str(),
               VectorToString(fileAttr.ids).c_str());
+        if (IsAddCounterAttr(fileAttr)) {
+            RegisterAddCounterIds(GetReport(), fileAttr, fileAttr.name);
+            continue;
+        }
         if (cpuOffMode_ && fileAttr.name == cpuOffEventName) {
             // found cpuoff event id
             std::set<uint64_t> cpuOffids(fileAttr.ids.begin(), fileAttr.ids.end());
@@ -404,6 +453,7 @@ void SubCommandReport::LoadEventDesc()
             }
         }
     }
+    ApplyAddCounterNamesToConfigs(GetReport());
 }
 
 void SubCommandReport::LoadAttrSection()
@@ -414,6 +464,10 @@ void SubCommandReport::LoadAttrSection()
         const AttrWithId &fileAttr = attrIds[i];
         std::string name = PerfEvents::GetStaticConfigName(
             static_cast<perf_type_id>(fileAttr.attr.type), fileAttr.attr.config);
+        if (IsAddCounterAttr(fileAttr)) {
+            RegisterAddCounterIds(GetReport(), fileAttr, name);
+            continue;
+        }
         configNames_.emplace_back(name);
         for (uint64_t id : fileAttr.ids) {
             GetReport().configIdIndexMaps_[id] = GetReport().configs_.size(); // setup index
@@ -430,11 +484,19 @@ void SubCommandReport::LoadAttrSection()
         HLOGV("event name[%zu]: %s ids: %s", i, name_.c_str(),
               VectorToString(fileAttr.ids).c_str());
     }
+    ApplyAddCounterNamesToConfigs(GetReport());
 #endif
 }
 
 void SubCommandReport::ProcessFeaturesData()
 {
+    std::string addCounterStr = recordFileReader_->GetFeatureString(FEATURE::HIPERF_ADD_COUNTER);
+    if (!addCounterStr.empty()) {
+        GetReport().addCounterNames_ = StringSplit(addCounterStr, ",");
+    } else {
+        GetReport().addCounterNames_.clear();
+    }
+    GetReport().addCounterIdIndexMaps_.clear();
     LoadEventConfigData();
 
     // update device arch from feature

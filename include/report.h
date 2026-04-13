@@ -119,6 +119,9 @@ public:
     std::string_view func_ = "";
     uint64_t vaddr_ = 0;
     uint64_t eventCount_ = 0; // event count
+    uint64_t mergedSampleCount_ = 1;
+    std::vector<uint64_t> counts_ = {};
+    std::vector<uint64_t> accCounts_ = {};
     std::vector<ReportItemCallFrame> callStacks_;
     float heat = 0.0f;
     static unsigned long long allIndex_; // debug only
@@ -479,6 +482,7 @@ public:
         uint32_t type_ = 0;
         uint64_t config_ = 0;
         std::vector<uint64_t> ids_;
+        std::vector<std::string> addCounterNames_ = {};
 
         bool coutMode_ = true; // use cout or time ?
         bool operator==(const ReportEventConfigItem &o) const
@@ -504,6 +508,8 @@ public:
     virtual ~Report() {}
 
     std::map<uint64_t, size_t> configIdIndexMaps_; // index of configNames_
+    std::vector<std::string> addCounterNames_ = {};
+    std::map<uint64_t, size_t> addCounterIdIndexMaps_ = {};
     std::string GetConfigName(const uint64_t id)
     {
         size_t index = GetConfigIndex(id);
@@ -550,12 +556,15 @@ private:
     void OutputStdContent(ReportEventConfigItem &config);
     void OutputStdContentDiff(ReportEventConfigItem &left, ReportEventConfigItem &right);
 
-    void OutputStdContentItem(const ReportItem &reportItem);
+    void OutputStdContentItem(const ReportEventConfigItem &config, const ReportItem &reportItem);
 
     void OutputStdCallFrames(const int indent, const ReportItemCallFrame &callFrame, const uint64_t totalEventCount);
     bool OutputStdCallFrame(const int indent, const std::string_view &funcName, const uint64_t eventCount,
                             const uint64_t totalEventCount);
     void OutputStdItemHeating(const float heat, const float heat2);
+    void FillReportItemCounterValues(ReportItem &item, const PerfRecordSample &sample) const;
+    std::string FormatCounterValues(const std::vector<uint64_t> &values,
+                                    const std::vector<std::string> &counterNames) const;
 };
 } // namespace HiPerf
 } // namespace Developtools
