@@ -408,6 +408,7 @@ bool IsAllowRelease(const pid_t appPid, const std::string& appPackage);
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err);
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
 bool IsSupportNonDebuggableApp();
+bool IsUnlcokedDevice();
 const std::string GetUserType();
 bool GetDeveloperMode();
 bool IsArkJsFile(const std::string& filepath);

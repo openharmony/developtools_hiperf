@@ -52,6 +52,9 @@ namespace HiPerf {
 static const std::string USER_DOMESTIC_BETA = "beta";
 static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";
+static const std::string UNLOCKED_DEVICE_PARAM = "ohos.boot.hvb.enable";
+static const std::string UNLOCKED_DEVICE_PARAM_GET = "";
+static const std::string UNLOCKED_DEVICE_VALUE = "orange";
 static const std::string HIVIEW_CMDLINE = "/system/bin/hiview";
 const std::string UID_TAG = "Uid:";
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
@@ -820,7 +823,8 @@ bool IsAllowReleaseApp(const std::string& appPackage)
 bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
 {
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
-    if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()) {
+    if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()
+        && !IsUnlockedDevice()) {
         HLOGE("IsAllowReleaseApp: not allow release");
         return false;
     }
@@ -929,6 +933,20 @@ bool IsSupportNonDebuggableApp()
         return false;
     }
     return true;
+}
+
+bool IsUnlcokedDevice()
+{
+#if defined(is_ohos) && is_ohos
+    std::string deviceType = OHOS::system::GetParameter(UNLOCKED_DEVICE_PARAM, UNLOCKED_DEVICE_PARAM_GET);
+    HLOGD("IsUnlockedDevice: %s is %s", UNLOCKED_DEVICE_PARAM.c_str(), deviceType.c_str());
+    if (deviceType == UNLOCKED_DEVICE_VALUE) {
+        return true;
+    }
+    return false;
+#else
+    return false;
+#endif
 }
 
 const std::string GetUserType()
