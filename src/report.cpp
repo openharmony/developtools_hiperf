@@ -56,7 +56,8 @@ void Report::FillReportItemCounterValues(ReportItem &item, const PerfRecordSampl
     }
 
     for (uint64_t i = 0; i < sample.data_.read_nr; ++i) {
-        auto it = addCounterIdIndexMaps_.find(sample.data_.read_ids[i]);
+        uint64_t readId = sample.GetReadIdByIndex(i);
+        auto it = addCounterIdIndexMaps_.find(readId);
         if (it == addCounterIdIndexMaps_.end()) {
             continue;
         }
@@ -64,8 +65,9 @@ void Report::FillReportItemCounterValues(ReportItem &item, const PerfRecordSampl
         if (idx >= item.counts_.size()) {
             continue;
         }
-        item.counts_[idx] = sample.data_.read_values[i];
-        item.accCounts_[idx] = sample.data_.read_values[i];
+        uint64_t readValue = sample.GetReadValueByIndex(i);
+        item.counts_[idx] = readValue;
+        item.accCounts_[idx] = readValue;
     }
 }
 

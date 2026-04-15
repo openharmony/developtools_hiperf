@@ -15,6 +15,7 @@
 
 #include "perf_event_record_test.h"
 
+#include <algorithm>
 #include <cstring>
 #include <thread>
 
@@ -1407,6 +1408,81 @@ HWTEST_F(PerfEventRecordTest, Mmap2GetBinarySafetyCheck, TestSize.Level2)
     ASSERT_EQ(recordOut.data_.prot, 7);
     ASSERT_EQ(recordOut.data_.flags, 1);
     ASSERT_STREQ(recordOut.data_.filename, normalFilename.c_str());
+}
+
+static std::vector<uint8_t> BuildSampleReadRecord(const std::vector<uint64_t> &payload)
+{
+    std::vector<uint8_t> buffer(sizeof(perf_event_header), 0);
+    for (uint64_t value : payload) {
+        size_t oldSize = buffer.size();
+        buffer.resize(oldSize + sizeof(uint64_t));
+        const auto *valueBytes = reinterpret_cast<const uint8_t *>(&value);
+        std::copy_n(valueBytes, sizeof(value), buffer.data() + oldSize);
+    }
+    perf_event_header header {
+        PERF_RECORD_SAMPLE,
+        PERF_RECORD_MISC_KERNEL,
+        static_cast<uint16_t>(buffer.size()),
+    };
+    const auto *headerBytes = reinterpret_cast<const uint8_t *>(&header);
+    std::copy_n(headerBytes, sizeof(header), buffer.data());
+    return buffer;
+}
+
+HWTEST_F(PerfEventRecordTest, SampleReadGroupInterleavedParseSerialize, TestSize.Level1)
+{
+    perf_event_attr attr {};
+    attr.sample_type = PERF_SAMPLE_READ;
+    attr.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_TOTAL_TIME_ENABLED |
+                       PERF_FORMAT_TOTAL_TIME_RUNNING | PERF_FORMAT_ID;
+
+    std::vector<uint8_t> input = BuildSampleReadRecord(
+        {2, 1000, 900, 101, 10001, 202, 20002});
+    PerfRecordSample sample;
+    sample.Init(input.data(), attr);
+
+    ASSERT_EQ(sample.data_.read_nr, 2u);
+    ASSERT_NE(sample.data_.read_values, nullptr);
+    ASSERT_NE(sample.data_.read_ids, nullptr);
+    EXPECT_EQ(sample.GetReadValueByIndex(0), 101u);
+    EXPECT_EQ(sample.GetReadIdByIndex(0), 10001u);
+    EXPECT_EQ(sample.GetReadValueByIndex(1), 202u);
+    EXPECT_EQ(sample.GetReadIdByIndex(1), 20002u);
+    EXPECT_EQ(sample.GetReadValueByIndex(2), 0u);
+    EXPECT_EQ(sample.GetReadIdByIndex(2), 0u);
+
+    std::vector<uint8_t> output;
+    ASSERT_TRUE(sample.GetBinary(output));
+    ASSERT_EQ(output.size(), input.size());
+    EXPECT_EQ(CompareByteStream(input.data(), output.data(), input.size()), 0);
+}
+
+HWTEST_F(PerfEventRecordTest, SampleReadAccessorsNoGroupAndNoId, TestSize.Level2)
+{
+    perf_event_attr nonGroupAttr {};
+    nonGroupAttr.sample_type = PERF_SAMPLE_READ;
+    nonGroupAttr.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED |
+                               PERF_FORMAT_TOTAL_TIME_RUNNING | PERF_FORMAT_ID;
+    std::vector<uint8_t> nonGroupInput = BuildSampleReadRecord({55, 77, 66, 99});
+    PerfRecordSample nonGroupSample;
+    nonGroupSample.Init(nonGroupInput.data(), nonGroupAttr);
+    ASSERT_EQ(nonGroupSample.data_.read_nr, 1u);
+    EXPECT_EQ(nonGroupSample.GetReadValueByIndex(0), 55u);
+    EXPECT_EQ(nonGroupSample.GetReadIdByIndex(0), 99u);
+    EXPECT_EQ(nonGroupSample.GetReadValueByIndex(1), 0u);
+    EXPECT_EQ(nonGroupSample.GetReadIdByIndex(1), 0u);
+
+    perf_event_attr groupNoIdAttr {};
+    groupNoIdAttr.sample_type = PERF_SAMPLE_READ;
+    groupNoIdAttr.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_TOTAL_TIME_ENABLED;
+    std::vector<uint8_t> groupNoIdInput = BuildSampleReadRecord({3, 88, 1, 2, 3});
+    PerfRecordSample groupNoIdSample;
+    groupNoIdSample.Init(groupNoIdInput.data(), groupNoIdAttr);
+    ASSERT_EQ(groupNoIdSample.data_.read_nr, 3u);
+    EXPECT_EQ(groupNoIdSample.GetReadValueByIndex(0), 1u);
+    EXPECT_EQ(groupNoIdSample.GetReadValueByIndex(1), 2u);
+    EXPECT_EQ(groupNoIdSample.GetReadValueByIndex(2), 3u);
+    EXPECT_EQ(groupNoIdSample.GetReadIdByIndex(0), 0u);
 }
 } // namespace HiPerf
 } // namespace Developtools

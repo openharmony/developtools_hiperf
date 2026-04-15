@@ -84,6 +84,19 @@ HWTEST_F(PerfFileFormatTest, GetFeatureName, TestSize.Level0)
     }
 }
 
+HWTEST_F(PerfFileFormatTest, GetHiperfAddCounterFeatureName, TestSize.Level1)
+{
+    EXPECT_EQ(PerfFileSection::GetFeatureName(FEATURE::HIPERF_ADD_COUNTER), "hiperf_add_counter");
+    bool found = false;
+    for (auto feature : FeatureStrings) {
+        if (feature == FEATURE::HIPERF_ADD_COUNTER) {
+            found = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(found);
+}
+
 HWTEST_F(PerfFileFormatTest, PerfFileSectionString, TestSize.Level1)
 {
     std::string testString("this is test string");

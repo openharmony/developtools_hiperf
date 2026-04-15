@@ -2757,6 +2757,46 @@ HWTEST_F(SubCommandRecordTest, TestAddEventsFail, TestSize.Level2)
     EXPECT_FALSE(recordCmd.AddEventsAndHandleOffCpu());
 }
 
+HWTEST_F(SubCommandRecordTest, CheckOptionsAddCounterRequireNoInherit, TestSize.Level2)
+{
+    SubCommandRecord recordCmd;
+    recordCmd.targetSystemWide_ = true;
+    recordCmd.addCounters_ = {"sw-context-switches"};
+    recordCmd.noInherit_ = false;
+    EXPECT_FALSE(recordCmd.CheckOptions());
+}
+
+HWTEST_F(SubCommandRecordTest, CheckOptionsAddCounterWithNoInherit, TestSize.Level2)
+{
+    SubCommandRecord recordCmd;
+    recordCmd.targetSystemWide_ = true;
+    recordCmd.addCounters_ = {"sw-context-switches"};
+    recordCmd.noInherit_ = true;
+    EXPECT_TRUE(recordCmd.CheckOptions());
+}
+
+HWTEST_F(SubCommandRecordTest, AddEventsAndHandleOffCpuWithAddCounter, TestSize.Level2)
+{
+    SubCommandRecord recordCmd;
+    recordCmd.selectEvents_ = {"sw-task-clock"};
+    recordCmd.addCounters_ = {"sw-context-switches"};
+    recordCmd.offCPU_ = false;
+    ASSERT_TRUE(recordCmd.AddEventsAndHandleOffCpu());
+
+    ASSERT_EQ(recordCmd.perfEvents_.eventGroupItem_.size(), 1u);
+    auto &eventItems = recordCmd.perfEvents_.eventGroupItem_[0].eventItems;
+    ASSERT_GE(eventItems.size(), 2u);
+    for (const auto &eventItem : eventItems) {
+        EXPECT_NE(eventItem.attr.sample_type & PERF_SAMPLE_READ, 0u);
+        EXPECT_NE(eventItem.attr.read_format & PERF_FORMAT_GROUP, 0u);
+    }
+
+    const auto &counterEvent = eventItems.back();
+    EXPECT_EQ(counterEvent.attr.freq, 0u);
+    EXPECT_EQ(counterEvent.attr.sample_period, PerfEvents::INFINITE_SAMPLE_PERIOD);
+    EXPECT_EQ(counterEvent.attr.inherit, 0u);
+}
+
 /**
  * @tc.name: ProcessUserSymbols
  * @tc.desc: Test ProcessUserSymbols

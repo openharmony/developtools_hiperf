@@ -1161,6 +1161,37 @@ HWTEST_F(SubCommandReportTest, TestVerifyDisplayOption, TestSize.Level1)
     EXPECT_EQ(mSubCommandReport.VerifyDisplayOption(), true);
 }
 
+HWTEST_F(SubCommandReportTest, ProcessSampleSkipAddCounterOnlyId, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    auto sample = std::make_unique<PerfRecordSample>(false, 1, 2, 3);
+    sample->data_.id = 12345;
+    reportCmd.GetReport().addCounterIdIndexMaps_[12345] = 0;
+
+    reportCmd.ProcessSample(sample);
+    EXPECT_TRUE(reportCmd.GetReport().configs_.empty());
+
+    sample->data_.id = 54321;
+    reportCmd.ProcessSample(sample);
+    EXPECT_TRUE(reportCmd.GetReport().configs_.empty());
+}
+
+HWTEST_F(SubCommandReportTest, ProcessSampleKnownConfigId, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.GetReport().configs_.emplace_back("event", PERF_TYPE_SOFTWARE, PERF_COUNT_SW_TASK_CLOCK);
+    reportCmd.GetReport().configIdIndexMaps_[7] = 0;
+
+    auto sample = std::make_unique<PerfRecordSample>(false, 10, 20, 99);
+    sample->data_.id = 7;
+    sample->callFrames_.emplace_back(0x1000, 0x10, "dummy.so", "func");
+
+    reportCmd.ProcessSample(sample);
+    ASSERT_EQ(reportCmd.GetReport().configs_[0].reportItems_.size(), 1u);
+    EXPECT_EQ(reportCmd.GetReport().configs_[0].sampleCount_, 1u);
+    EXPECT_EQ(reportCmd.GetReport().configs_[0].eventCount_, 99u);
+}
+
 /**
  * @tc.name: TestDwarfCompress
  * @tc.desc:

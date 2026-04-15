@@ -353,7 +353,8 @@ static void DumpReadFormat(const uint64_t readFormat, const int indent)
 {
     std::string names;
     for (auto &pair : g_readFormatNames) {
-        if (readFormat & pair.first) {
+        uint64_t mask = pair.first;
+        if (readFormat & mask) {
             if (!names.empty()) {
                 names.append(",");
             }
