@@ -804,7 +804,6 @@ bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPac
 
 bool IsAllowReleaseApp(const std::string& appPackage)
 {
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
     pid_t appPid = -1;
     const std::string basePath {"/proc/"};
     const std::string cmdline {"/cmdline"};
@@ -813,18 +812,17 @@ bool IsAllowReleaseApp(const std::string& appPackage)
         HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running", appPackage.c_str());
         return false;
     }
-
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
     return IsAllowRelease(appPid, appPackage);
 #else
-    return false;
+    return IsUnlockedDevice();
 #endif
 }
 
 bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
 {
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
-    if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()
-        && !IsUnlockedDevice()) {
+    if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()) {
         HLOGE("IsAllowReleaseApp: not allow release");
         return false;
     }
