@@ -809,7 +809,6 @@ bool IsAllowReleaseApp(const std::string& appPackage)
     const std::string cmdline {"/cmdline"};
     appPid = FindMatchingPidInProc(basePath, cmdline, appPackage);
     if (appPid <= 0) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running", appPackage.c_str());
         return false;
     }
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
