@@ -935,7 +935,7 @@ bool IsSupportNonDebuggableApp()
     return true;
 }
 
-bool IsUnlcokedDevice()
+bool IsUnlockedDevice()
 {
 #if defined(is_ohos) && is_ohos
     std::string deviceType = OHOS::system::GetParameter(UNLOCKED_DEVICE_PARAM, UNLOCKED_DEVICE_PARAM_GET);
