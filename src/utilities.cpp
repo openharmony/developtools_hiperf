@@ -810,6 +810,7 @@ bool IsAllowReleaseApp(const std::string& appPackage)
     const std::string cmdline {"/cmdline"};
     appPid = FindMatchingPidInProc(basePath, cmdline, appPackage);
     if (appPid <= 0) {
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running", appPackage.c_str());
         return false;
     }
     return IsAllowRelease(appPid, appPackage);
@@ -935,8 +936,7 @@ bool IsSupportNonDebuggableApp()
 bool IsUnlockedDevice()
 {
 #if defined(is_ohos) && is_ohos
-    std::string deviceType = OHOS::system::GetParameter(UNLOCKED_DEVICE_PARAM, UNLOCKED_DEVICE_PARAM_GET);
-    HLOGD("IsUnlockedDevice: %s is %s", UNLOCKED_DEVICE_PARAM.c_str(), deviceType.c_str());
+    std::string deviceType = GetDeviceType();
     if (deviceType == UNLOCKED_DEVICE_VALUE) {
         return true;
     }
@@ -955,6 +955,17 @@ const std::string GetUserType()
 #else
     return "";
 #endif
+}
+
+const std::string GetDeviceType()
+{
+#if defined(is_ohos) && is_ohos
+    std::string deviceType = OHOS::system::GetParameter(UNLOCKED_DEVICE_PARAM, UNLOCKED_DEVICE_PARAM_GET);
+    HLOGD("GetDeviceType: deviceType is %s", deviceType.c_str());
+    return deviceType;
+#else
+    return "";
+#endif   
 }
 
 bool GetDeveloperMode()

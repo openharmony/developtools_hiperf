@@ -410,6 +410,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
 bool IsSupportNonDebuggableApp();
 bool IsUnlockedDevice();
 const std::string GetUserType();
+const std::string GetDeviceType();
 bool GetDeveloperMode();
 bool IsArkJsFile(const std::string& filepath);
 bool IsJsvmV8File(const std::string& filepath);
