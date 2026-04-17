@@ -851,7 +851,7 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
         }
         return true;
     }
-#endif+
+#endif
     if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleNameTmp) && !IsAllowReleaseApp(bundleNameTmp)) {
         HLOGE("--app option only support debug application.");
         err = "--app option only support debug application\n";
