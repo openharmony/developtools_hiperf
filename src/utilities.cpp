@@ -804,6 +804,7 @@ bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPac
 
 bool IsAllowReleaseApp(const std::string& appPackage)
 {
+#if defined(is_sandbox_mapping) && is_sandbox_mapping
     pid_t appPid = -1;
     const std::string basePath {"/proc/"};
     const std::string cmdline {"/cmdline"};
@@ -811,7 +812,6 @@ bool IsAllowReleaseApp(const std::string& appPackage)
     if (appPid <= 0) {
         return false;
     }
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
     return IsAllowRelease(appPid, appPackage);
 #else
     return IsUnlockedDevice();
@@ -851,7 +851,7 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
         }
         return true;
     }
-#endif
+#endif+
     if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleNameTmp) && !IsAllowReleaseApp(bundleNameTmp)) {
         HLOGE("--app option only support debug application.");
         err = "--app option only support debug application\n";
