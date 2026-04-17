@@ -965,7 +965,7 @@ const std::string GetDeviceType()
     return deviceType;
 #else
     return "";
-#endif   
+#endif
 }
 
 bool GetDeveloperMode()
