@@ -27,7 +27,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void CmdOutputTest::SetUpTestCase()
@@ -35,7 +34,7 @@ void CmdOutputTest::SetUpTestCase()
     if (chmod("/data/test/hiperf_test_demo", 0755) == -1) { // 0755 : -rwxr-xr-x
         GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
     }
-    system("/data/test/hiperf_test_demo &");
+    (void)system("/data/test/hiperf_test_demo &");
 }
 
 void CmdOutputTest::TearDownTestCase()
@@ -46,10 +45,9 @@ void CmdOutputTest::TearDownTestCase()
     }
 }
 
-void CmdOutputTest::SetUp() {
-}
-
-void CmdOutputTest::TearDown() {
+void CmdOutputTest::SetUp() 
+{
+    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
 }
 
 /**
@@ -59,142 +57,96 @@ void CmdOutputTest::TearDown() {
  */
 HWTEST_F(CmdOutputTest, RecordCommand_ControlStartStop_FailureCase, TestSize.Level1)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling failed"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling failed"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling failed"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling failed"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlAllActions_SuccessCase, TestSize.Level0)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_DuplicateRun_ConflictCase, TestSize.Level1)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"another sampling service is running"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"another sampling service is running"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateStart_SuccessCase, TestSize.Level1)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepare_PauseResumeWithoutStart_FailureCase, TestSize.Level1)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling failed"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling failed"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling failed"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling failed"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateResumePause_SuccessCase, TestSize.Level1)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control resume", {"resume sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control pause", {"pause sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStartStop_DuplicateStop_FailureCase, TestSize.Level1)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling failed"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling failed"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithBacktrack_StartDuplicateOutput_SuccessCase, TestSize.Level0)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -a --backtrack",
- 	                                 {"create control hiperf sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control output", {"output sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control output", {"output sampling success"}),
- 	          true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a --backtrack",
+ 	                                 {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control output", {"output sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control output", {"output sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_Stop_SuccessCase, TestSize.Level0)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare --app hiperf_test_demo",
- 	                                 {"create control hiperf sampling success"}), true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}), true);
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare --app hiperf_test_demo",
+ 	                                 {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPid_HuksService_SuccessCase, TestSize.Level1)
 {
-    std::vector<std::string> get_app_pids;
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    EXPECT_FALSE(get_app_pids.empty());
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control prepare -p " + get_app_pids[0],
- 	                                 {"create control hiperf sampling success"}), true);
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}),
- 	          true);
+    std::vector<std::string> appPids;
+    GetAppPids("hiperf_test_demo", appPids);
+    EXPECT_FALSE(appPids.empty());
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -p " + appPids[0],
+ 	                                 {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
 }
 
 HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCorrectDurationPrompt_SuccessCase,
  	     TestSize.Level1)
 {
-    ASSERT_TRUE(RunCmd("hiperf record --control stop"));
-    std::vector<std::string> get_app_pids;
-    GetAppPids("pidof hiperf_test_demo", get_app_pids);
-    EXPECT_FALSE(get_app_pids.empty());
-    EXPECT_EQ(CheckTraceCommandOutput("hiperf record -d 3 -p " + get_app_pids[0],
-		     {"Profiling duration is 3.000 seconds"}), true);
+    std::vector<std::string> appPids;
+    GetAppPids("hiperf_test_demo", appPids);
+    EXPECT_FALSE(appPids.empty());
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record -d 3 -p " + appPids[0],
+		       {"Profiling duration is 3.000 seconds"}));
     RunCmd("hiperf record --control stop");
 }
 } // namespace HiPerf

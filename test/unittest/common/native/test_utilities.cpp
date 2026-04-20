@@ -110,13 +110,14 @@ bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::stri
     }
     return checkIdx == keywords.size();
 }
-bool GetAppPids(const std::string& cmds, std::vector<std::string>& vec_pid)
+bool GetAppPids(const std::string& appName, std::vector<std::string>& pids)
 {
+    const std::string cmds = "pidof" + appName; 
     if (cmds.empty()) {
         return false;
     }
  	 
-    vec_pid.clear();
+    pids.clear();
     FILE *fp = nullptr;
     fp = popen(cmds.c_str(), "r");
     if (fp == nullptr) {
@@ -126,7 +127,7 @@ bool GetAppPids(const std::string& cmds, std::vector<std::string>& vec_pid)
     const int bufLen = 1024;
  	char res[bufLen] = { '\0' };
     while (fgets(res, sizeof(res), fp) != nullptr) {
-        vec_pid.push_back(std::string(res));
+        pids.push_back(std::string(res));
     }
     pclose(fp);
     return true;
