@@ -112,7 +112,7 @@ bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::stri
 }
 bool GetAppPids(const std::string& appName, std::vector<std::string>& pids)
 {
-    const std::string cmds = "pidof" + appName; 
+    const std::string cmds = "pidof" + appName;
     if (cmds.empty()) {
         return false;
     }
