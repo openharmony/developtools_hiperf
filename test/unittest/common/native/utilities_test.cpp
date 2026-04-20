@@ -1276,9 +1276,7 @@ HWTEST_F(UtilitiesTest, IsHiShellLabel, TestSize.Level1)
 HWTEST_F(UtilitiesTest, IsAllowReleaseApp_NotRunning, TestSize.Level1)
 {
 #if defined(is_ohos) && is_ohos
-    EXPECT_TRUE(IsAllowReleaseApp("hiperf_test_demo"));
-#else
-    EXPECT_FALSE(IsAllowReleaseApp("hiperf_test_demo"));
+    EXPECT_EQ(IsAllowReleaseApp("hiperf_test_demo"), IsUnlockedDevice());
 #endif
 }
 
@@ -1323,16 +1321,6 @@ HWTEST_F(UtilitiesTest, IsUnlockedDevice_ReturnsExpectedByDeviceType, TestSize.L
 {
     const std::string deviceType = GetDeviceType();
     EXPECT_EQ(IsUnlockedDevice(), deviceType == "orange");
-}
-
-/**
- * @tc.name: IsAllowReleaseApp_FallbackToUnlockedDevice
- * @tc.desc: Test IsAllowReleaseApp falls back to IsUnlockedDevice when sandbox mapping is disabled
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, IsAllowReleaseApp_FallbackToUnlockedDevice, TestSize.Level1)
-{
-    EXPECT_EQ(IsAllowReleaseApp("hiperf_test_demo"), IsUnlockedDevice());
 }
 
 } // namespace HiPerf
