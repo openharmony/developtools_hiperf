@@ -853,13 +853,13 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
         return true;
     }
 #endif
-    if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleNameTmp) && !IsAllowReleaseApp(bundleNameTmp)) {
-        HLOGE("--app option only support debug application.");
-        err = "--app option only support debug application\n";
-        printf("%s", err.c_str());
-        return false;
+    if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleName) || IsUnlockedDevice() || IsAllowRelease(pid, bundleName)) {
+        return true;
     }
-    return true;
+    HLOGE("--app option only support debug application.");
+    err = "--app option only support debug application\n";
+    printf("%s", err.c_str());
+    return false;
 }
 
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
@@ -890,12 +890,13 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
             continue;
         }
 #endif
-        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsAllowRelease(pid, bundleName)) {
-            HLOGE("-p option only support debug application for %s", bundleName.c_str());
-            err = "-p option only support debug application\n";
-            printf("%s", err.c_str());
-            return false;
+        if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleName) || IsUnlockedDevice() || IsAllowRelease(pid, bundleName)) {
+            return true;
         }
+        HLOGE("-p option only support debug application for %s", bundleName.c_str());
+        err = "-p option only support debug application\n";
+        printf("%s", err.c_str());
+        return false;
     }
     return true;
 }
