@@ -893,7 +893,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
             continue;
         }
 #endif
-        if (!IsSupportNonDebuggableApp() || !IsDebugableApp(bundleName) || !IsAllowReleaseApp(bundleName)) {
+        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsAllowReleaseApp(bundleName)) {
             HLOGE("-p option only support debug application for %s", bundleName.c_str());
             err = "-p option only support debug application\n";
             printf("%s", err.c_str());
