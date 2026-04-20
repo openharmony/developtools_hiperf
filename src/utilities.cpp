@@ -834,7 +834,7 @@ bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
 
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
 {
-    if (bundleName.empty()) {
+    if (bundleName.empty() || IsUnlockedDevice()) {
         return true;
     }
     std::string bundleNameTmp = bundleName;
@@ -853,8 +853,7 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
         return true;
     }
 #endif
-        if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleNameTmp) || IsUnlockedDevice()
-            || IsAllowReleaseApp(bundleNameTmp)) {
+    if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleNameTmp) || IsAllowReleaseApp(bundleNameTmp)) {
         return true;
     }
     HLOGE("--app option only support debug application.");
@@ -875,6 +874,9 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
             printf("%s", err.c_str());
             return false;
         }
+        if (IsUnlockedDevice()) {
+            continue;
+        }
         std::string bundleName = GetProcessName(pid);
         auto pos = bundleName.find(":");
         if (pos != std::string::npos) {
@@ -891,14 +893,12 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
             continue;
         }
 #endif
-        if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleName) || IsUnlockedDevice()
-            || IsAllowReleaseApp(bundleName)) {
-            return true;
+        if (!IsSupportNonDebuggableApp() || !IsDebugableApp(bundleName) || !IsAllowReleaseApp(bundleName)) {
+            HLOGE("-p option only support debug application for %s", bundleName.c_str());
+            err = "-p option only support debug application\n";
+            printf("%s", err.c_str());
+            return false;
         }
-        HLOGE("-p option only support debug application for %s", bundleName.c_str());
-        err = "-p option only support debug application\n";
-        printf("%s", err.c_str());
-        return false;
     }
     return true;
 }
