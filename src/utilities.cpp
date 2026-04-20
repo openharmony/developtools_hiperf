@@ -854,7 +854,7 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
     }
 #endif
         if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleName) || IsUnlockedDevice()
-            || IsAllowRelease(pid, bundleName)) {
+            || !IsAllowReleaseApp(bundleNameTmp)) {
         return true;
     }
     HLOGE("--app option only support debug application.");
@@ -892,7 +892,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
         }
 #endif
         if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleName) || IsUnlockedDevice()
-            || IsAllowRelease(pid, bundleName)) {
+            || !IsAllowReleaseApp(bundleNameTmp)) {
             return true;
         }
         HLOGE("-p option only support debug application for %s", bundleName.c_str());
