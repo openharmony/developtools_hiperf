@@ -45,7 +45,7 @@ void CmdOutputTest::TearDownTestCase()
     }
 }
 
-void CmdOutputTest::SetUp() 
+void CmdOutputTest::SetUp()
 {
     ASSERT_TRUE(RunCmd("hiperf record --control stop"));
 }
@@ -106,7 +106,8 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStart_DuplicateResumePause_S
 
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareStartStop_DuplicateStop_FailureCase, TestSize.Level1)
 {
-    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", {"create control hiperf sampling success"}));
+    EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -a", 
+               {"create control hiperf sampling success"}));
     EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control start", {"start sampling success"}));
     EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling success"}));
     EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control stop", {"stop sampling failed"}));
