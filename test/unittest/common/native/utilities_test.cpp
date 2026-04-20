@@ -1275,9 +1275,7 @@ HWTEST_F(UtilitiesTest, IsHiShellLabel, TestSize.Level1)
  */
 HWTEST_F(UtilitiesTest, IsAllowReleaseApp_NotRunning, TestSize.Level1)
 {
-#if defined(is_ohos) && is_ohos
-    EXPECT_EQ(IsAllowReleaseApp("hiperf_test_demo"), IsUnlockedDevice());
-#endif
+    EXPECT_FALSE(IsAllowReleaseApp("hiperf_test_demo"));
 }
 
 /**
