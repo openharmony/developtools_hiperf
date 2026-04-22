@@ -367,7 +367,6 @@ struct ReportOption {
 
     bool debug_ = false;
     bool hideCount_ = false;
-    bool appendOriginSoName_ = true;
 };
 
 class Report {

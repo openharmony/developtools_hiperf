@@ -2595,40 +2595,39 @@ bool SubCommandRecord::OnlineReportData()
     if (!report_) {
         return true;
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "begin to report file");
     bool ret = false;
     std::string tempFileName = outputFilename_ + ".tmp";
     if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "can't rename file "
-                      "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
+        HIPERF_HILOGI(MODULE_DEFAULT, "can't rename file, errno: %" HILOG_PUBLIC "d, errInfo: %" HILOG_PUBLIC "s",
                       errno, errInfo);
         return false;
     }
 
     std::unique_ptr<SubCommandReport> reporter = std::make_unique<SubCommandReport>();
-    HLOGD("report the file %s to report file %s \n", tempFileName.c_str(), outputFilename_.c_str());
+    HIPERF_HILOGI(MODULE_DEFAULT, "report the file %" HILOG_PUBLIC "s to report file %" HILOG_PUBLIC "s",
+                  tempFileName.c_str(), outputFilename_.c_str());
     std::vector<std::string> args;
     args.emplace_back("-i");
     args.emplace_back(tempFileName);
     args.emplace_back("-o");
     args.emplace_back(outputFilename_);
     args.emplace_back("-s");
+    HiperfError err = HiperfError::NO_ERR;
     if (reporter->ParseOption(args)) {
-        reporter->SetAppendOriginSoName(false);
-        ret =  (reporter->OnSubCommand(args) != HiperfError::NO_ERR);
+        err = reporter->OnSubCommand(args);
+        ret = (err == HiperfError::NO_ERR);
     }
 
     if (remove(tempFileName.c_str()) != 0) {
         char errInfo[ERRINFOLEN] = { 0 };
         strerror_r(errno, errInfo, ERRINFOLEN);
-        HIPERF_HILOGI(MODULE_DEFAULT, "remove file failed"
-                      "errno:%" HILOG_PUBLIC "d , errInfo: %" HILOG_PUBLIC "s\n",
+        HIPERF_HILOGI(MODULE_DEFAULT, "remove file failed, errno: %" HILOG_PUBLIC "d, errInfo: %" HILOG_PUBLIC "s",
                       errno, errInfo);
     }
-    HIPERF_HILOGI(MODULE_DEFAULT, "report result : %" HILOG_PUBLIC "s",
-                  ret ? "success" : "fail");
+    HIPERF_HILOGI(MODULE_DEFAULT, "report result: %" HILOG_PUBLIC "s, err: %" HILOG_PUBLIC "d",
+                  ret ? "success" : "fail", err);
     return ret;
 }
 

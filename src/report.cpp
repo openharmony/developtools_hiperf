@@ -36,13 +36,7 @@ unsigned long long ReportItem::allIndex_ = 0;
 
 std::string Report::GetAdltExtendMapName(const std::string &mapName, const std::string &originSoName)
 {
-    if (option_.appendOriginSoName_ && !originSoName.empty()) {
-        constexpr size_t LimitNameLen = 256;
-        if (mapName.size() > LimitNameLen || originSoName.size() > LimitNameLen) {
-            HIPERF_HILOGI(MODULE_DEFAULT,
-                "GetAdltExtendMapName length %" HILOG_PUBLIC "zu|%" HILOG_PUBLIC "zu",
-                mapName.size(), originSoName.size());
-        }
+    if (!originSoName.empty()) {
         return mapName + ":" + originSoName;
     }
     return mapName;
@@ -96,8 +90,14 @@ void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCal
     size_t configIndex = GetConfigIndex(sample.data_.id);
     HLOG_ASSERT_MESSAGE(configs_.size() > configIndex, "in %zu configs found index %zu, from ids %llu",
                         configs_.size(), configIndex, sample.data_.id);
+    configs_[configIndex].sampleCount_++;
+    configs_[configIndex].eventCount_ += sample.data_.period;
+
+    if (sample.callFrames_.empty()) {
+        return;
+    }
+
     VirtualThread &thread = virtualRuntime_.GetThread(sample.data_.pid, sample.data_.tid);
-    HLOG_ASSERT(sample.callFrames_.size() > 0);
     // if we need callstack ?
     if (includeCallStack) {
         // we will use caller mode , from last to first
@@ -143,8 +143,6 @@ void Report::AddReportItem(const PerfRecordSample &sample, const bool includeCal
             HLOG_ASSERT(!item.func_.empty());
         }
     }
-    configs_[configIndex].sampleCount_++;
-    configs_[configIndex].eventCount_ += sample.data_.period;
 }
 
 void Report::AddReportItemBranch(const PerfRecordSample &sample)
