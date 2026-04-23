@@ -139,7 +139,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithApp_Stop_SuccessCase, Te
 HWTEST_F(CmdOutputTest, RecordCommand_ControlPrepareWithPid_HuksService_SuccessCase, TestSize.Level1)
 {
     std::vector<std::string> appPids;
-    GetAppPids("hiperf_test_demo", appPids);
+    GetAppPids(std::string("hiperf_test_demo"), appPids);
     EXPECT_FALSE(appPids.empty());
     EXPECT_TRUE(CheckTraceCommandOutput("hiperf record --control prepare -p " + appPids[0],
  	                                 {"create control hiperf sampling success"}));
@@ -150,7 +150,7 @@ HWTEST_F(CmdOutputTest, RecordCommand_RecordWithDurationPid_HuksService_OutputCo
  	     TestSize.Level1)
 {
     std::vector<std::string> appPids;
-    GetAppPids("hiperf_test_demo", appPids);
+    GetAppPids(std::string("hiperf_test_demo"), appPids);
     EXPECT_FALSE(appPids.empty());
     EXPECT_TRUE(CheckTraceCommandOutput("hiperf record -d 3 -p " + appPids[0],
 		       {"Profiling duration is 3.000 seconds"}));
