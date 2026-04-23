@@ -868,13 +868,14 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
     bool devMode = GetDeveloperMode();
 #endif
+    bool deviceIsUnlocked = IsUnlockedDevice();
     for (auto pid : pids) {
         if (pid <= 0) {
             err = "Invalid -p value '" + std::to_string(pid) + "', the pid should be larger than 0\n";
             printf("%s", err.c_str());
             return false;
         }
-        if (IsUnlockedDevice()) {
+        if (deviceIsUnlocked) {
             continue;
         }
         std::string bundleName = GetProcessName(pid);
