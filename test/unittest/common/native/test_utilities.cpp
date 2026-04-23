@@ -113,11 +113,9 @@ bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::stri
 bool GetAppPids(const std::string& appName, std::vector<std::string>& pids)
 {
     const std::string cmds = std::string("pidof ") + appName;
-
     if (cmds.empty()) {
         return false;
     }
-
     pids.clear();
     FILE *fp = nullptr;
     fp = popen(cmds.c_str(), "r");
