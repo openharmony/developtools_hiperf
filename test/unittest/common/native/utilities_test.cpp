@@ -1309,6 +1309,18 @@ HWTEST_F(UtilitiesTest, IsExistDebugByApp_EmptyBundleName, TestSize.Level2)
     EXPECT_TRUE(IsExistDebugByApp("", err));
     EXPECT_TRUE(err.empty());
 }
+
+/**
+ * @tc.name: IsUnlockedDevice_ReturnsExpectedByDeviceType
+ * @tc.desc: Test IsUnlockedDevice matches the current device type value
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsUnlockedDevice_ReturnsExpectedByDeviceType, TestSize.Level1)
+{
+    const std::string deviceType = GetDeviceType();
+    EXPECT_EQ(IsUnlockedDevice(), deviceType == "orange");
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
