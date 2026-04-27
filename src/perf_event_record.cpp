@@ -26,6 +26,9 @@
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+namespace {
+constexpr u64 GROUP_READ_VALUE_ID_STRIDE = 2;
+}
 
 bool PerfRecordSample::dumpRemoveStack_ = false;
 std::vector<u64> PerfRecordSample::ips_ = {};
@@ -594,9 +597,11 @@ void PerfRecordSample::ParseSampleReadData(uint8_t *&p, u64 &dataSize)
         PopFromBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.read_time_running, dataSize);
         if (data_.read_nr > 0) {
             data_.read_values = reinterpret_cast<u64 *>(p);
-            SetPointerOffset(p, data_.read_nr * sizeof(u64), dataSize);
             if (readFormat_ & PERF_FORMAT_ID) {
-                data_.read_ids = reinterpret_cast<u64 *>(p);
+                // In PERF_FORMAT_GROUP mode, each event entry is [value, id] interleaved.
+                data_.read_ids = reinterpret_cast<u64 *>(p + sizeof(u64));
+                SetPointerOffset(p, data_.read_nr * sizeof(u64) * GROUP_READ_VALUE_ID_STRIDE, dataSize);
+            } else {
                 SetPointerOffset(p, data_.read_nr * sizeof(u64), dataSize);
             }
         }
@@ -708,24 +713,26 @@ void PerfRecordSample::SerializeSampleReadData(uint8_t *&p) const
     if ((sampleType_ & PERF_SAMPLE_READ) == 0) {
         return;
     }
-    if (readFormat_ & PERF_FORMAT_GROUP) {
-        PushToBinary(true, p, data_.read_nr);
-        PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.read_time_enabled);
-        PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.read_time_running);
-        if (data_.read_nr > 0 && data_.read_values != nullptr) {
-            std::copy(data_.read_values, data_.read_values + data_.read_nr, reinterpret_cast<u64 *>(p));
-            p += data_.read_nr * sizeof(u64);
-        }
-        if ((readFormat_ & PERF_FORMAT_ID) && data_.read_nr > 0 && data_.read_ids != nullptr) {
-            std::copy(data_.read_ids, data_.read_ids + data_.read_nr, reinterpret_cast<u64 *>(p));
-            p += data_.read_nr * sizeof(u64);
-        }
+    if ((readFormat_ & PERF_FORMAT_GROUP) == 0) {
+        PushToBinary(true, p, data_.v.value);
+        PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.v.timeEnabled);
+        PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.v.timeRunning);
+        PushToBinary(readFormat_ & PERF_FORMAT_ID, p, data_.v.id);
         return;
     }
-    PushToBinary(true, p, data_.v.value);
-    PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.v.timeEnabled);
-    PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.v.timeRunning);
-    PushToBinary(readFormat_ & PERF_FORMAT_ID, p, data_.v.id);
+    PushToBinary(true, p, data_.read_nr);
+    PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_ENABLED, p, data_.read_time_enabled);
+    PushToBinary(readFormat_ & PERF_FORMAT_TOTAL_TIME_RUNNING, p, data_.read_time_running);
+    if (data_.read_nr == 0 || data_.read_values == nullptr) {
+        return;
+    }
+    const bool hasReadIds = ((readFormat_ & PERF_FORMAT_ID) != 0) && (data_.read_ids != nullptr);
+    for (u64 i = 0; i < data_.read_nr; ++i) {
+        PushToBinary(true, p, GetReadValueByIndex(i));
+        if (hasReadIds) {
+            PushToBinary(true, p, GetReadIdByIndex(i));
+        }
+    }
 }
 
 void PerfRecordSample::SerializeSampleTailData(uint8_t *&p) const
@@ -785,6 +792,28 @@ bool PerfRecordSample::GetBinary(std::vector<uint8_t> &buf) const
     SerializeSampleReadData(p);
     SerializeSampleTailData(p);
     return true;
+}
+
+uint64_t PerfRecordSample::GetReadValueByIndex(const u64 index) const
+{
+    if (index >= data_.read_nr || data_.read_values == nullptr) {
+        return 0;
+    }
+    if ((readFormat_ & PERF_FORMAT_GROUP) && (readFormat_ & PERF_FORMAT_ID)) {
+        return data_.read_values[index * GROUP_READ_VALUE_ID_STRIDE];
+    }
+    return data_.read_values[index];
+}
+
+uint64_t PerfRecordSample::GetReadIdByIndex(const u64 index) const
+{
+    if (index >= data_.read_nr || data_.read_ids == nullptr) {
+        return 0;
+    }
+    if ((readFormat_ & PERF_FORMAT_GROUP) && (readFormat_ & PERF_FORMAT_ID)) {
+        return data_.read_ids[index * GROUP_READ_VALUE_ID_STRIDE];
+    }
+    return data_.read_ids[index];
 }
 
 void PerfRecordSample::DumpCallchain(const int indent) const
@@ -859,9 +888,9 @@ void PerfRecordSample::DumpSampleReadData(const int indent) const
                      static_cast<uint64_t>(data_.read_time_enabled),
                      static_cast<uint64_t>(data_.read_time_running));
         for (u64 i = 0; i < data_.read_nr; ++i) {
-            uint64_t value = (data_.read_values != nullptr) ? data_.read_values[i] : 0;
+            uint64_t value = GetReadValueByIndex(i);
             if (readFormat_ & PERF_FORMAT_ID) {
-                uint64_t id = (data_.read_ids != nullptr) ? data_.read_ids[i] : 0;
+                uint64_t id = GetReadIdByIndex(i);
                 PRINT_INDENT(indent + 1, "value[%" PRIu64 "]=%" PRIu64 ", id[%" PRIu64 "]=%" PRIu64 "\n",
                              static_cast<uint64_t>(i), value, static_cast<uint64_t>(i), id);
             } else {

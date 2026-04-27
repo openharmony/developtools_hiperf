@@ -135,6 +135,21 @@ HWTEST_F(SubCommandDumpTest, DumpHeaderAttrs, TestSize.Level0)
     TestDumpCommand("-i /data/test/resource/testdata/perf.data --head ");
 }
 
+HWTEST_F(SubCommandDumpTest, DumpPrintEventAttrReadFormatNames, TestSize.Level2)
+{
+    perf_event_attr attr {};
+    attr.sample_type = PERF_SAMPLE_IP | PERF_SAMPLE_READ;
+    attr.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING |
+                       PERF_FORMAT_ID | PERF_FORMAT_GROUP;
+
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    SubCommandDump::DumpPrintEventAttr(attr, 0);
+    std::string stringOut = stdoutRecord.Stop();
+    EXPECT_NE(stringOut.find("read_format names: total_time_enabled,total_time_running,id,group"),
+              std::string::npos);
+}
+
 HWTEST_F(SubCommandDumpTest, DumpData, TestSize.Level2)
 {
     TestDumpCommand("-i /data/test/resource/testdata/perf.data -d ");

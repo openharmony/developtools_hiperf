@@ -632,6 +632,88 @@ HWTEST_F(PerfEventsTest, HandleNonTracePoint_InvalidHexEvent, TestSize.Level2)
     EXPECT_FALSE(result);
     EXPECT_TRUE(event.eventGroupItem_.empty());
 }
+
+HWTEST_F(PerfEventsTest, AddCountersBoundaryChecks, TestSize.Level2)
+{
+    PerfEvents event;
+    EXPECT_TRUE(event.AddCounters({}));
+
+    EXPECT_FALSE(event.AddCounters({"sw-task-clock"}));
+
+    event.eventGroupItem_.clear();
+    event.eventGroupItem_.emplace_back();
+    event.eventGroupItem_.emplace_back();
+    EXPECT_FALSE(event.AddCounters({"sw-task-clock"}));
+
+    event.eventGroupItem_.clear();
+    event.eventGroupItem_.emplace_back();
+    for (size_t i = 0; i < 5; ++i) {
+        event.eventGroupItem_[0].eventItems.emplace_back();
+    }
+    EXPECT_FALSE(event.AddCounters({"sw-task-clock"}));
+
+    event.eventGroupItem_.clear();
+    event.eventGroupItem_.emplace_back();
+    event.eventGroupItem_[0].eventItems.emplace_back();
+    EXPECT_FALSE(event.AddCounters({"invalid-event-name"}));
+}
+
+HWTEST_F(PerfEventsTest, SampleReadSizeForGroupAndNonGroup, TestSize.Level2)
+{
+    PerfEvents event;
+    perf_event_attr attr {};
+    perf_event_mmap_page mmapPage {};
+    std::vector<uint64_t> ringData(16, 0);
+
+    PerfEvents::MmapFd mmapFd {};
+    mmapFd.attr = &attr;
+    mmapFd.mmapPage = &mmapPage;
+    mmapFd.buf = reinterpret_cast<uint8_t *>(ringData.data());
+    mmapFd.bufSize = ringData.size() * sizeof(uint64_t);
+    mmapPage.data_tail = 0;
+
+    attr.sample_type = PERF_SAMPLE_READ;
+    attr.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_TOTAL_TIME_ENABLED |
+                       PERF_FORMAT_TOTAL_TIME_RUNNING | PERF_FORMAT_ID;
+    ringData[0] = 2;
+    EXPECT_EQ(event.GetSampleReadSizeInSampleRecord(mmapFd, 0), static_cast<size_t>(7 * sizeof(uint64_t)));
+
+    attr.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_TOTAL_TIME_ENABLED;
+    ringData[0] = 3;
+    EXPECT_EQ(event.GetSampleReadSizeInSampleRecord(mmapFd, 0), static_cast<size_t>(5 * sizeof(uint64_t)));
+
+    attr.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING | PERF_FORMAT_ID;
+    EXPECT_EQ(event.GetSampleReadSizeInSampleRecord(mmapFd, 0), static_cast<size_t>(4 * sizeof(uint64_t)));
+
+    attr.sample_type = PERF_SAMPLE_IP;
+    EXPECT_EQ(event.GetSampleReadSizeInSampleRecord(mmapFd, 0), 0u);
+}
+
+HWTEST_F(PerfEventsTest, CallChainAndStackPosWithSampleRead, TestSize.Level2)
+{
+    PerfEvents event;
+    perf_event_attr attr {};
+    attr.sample_type = PERF_SAMPLE_IP | PERF_SAMPLE_TID | PERF_SAMPLE_READ;
+    attr.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
+
+    size_t callChainPos = event.GetCallChainPosInSampleRecord(attr);
+    EXPECT_EQ(callChainPos, sizeof(perf_event_header) + sizeof(uint64_t) * 2);
+
+    perf_event_mmap_page mmapPage {};
+    std::vector<uint64_t> ringData(16, 0);
+    ringData[0] = 2;
+    PerfEvents::MmapFd mmapFd {};
+    mmapFd.attr = &attr;
+    mmapFd.mmapPage = &mmapPage;
+    mmapFd.buf = reinterpret_cast<uint8_t *>(ringData.data());
+    mmapFd.bufSize = ringData.size() * sizeof(uint64_t);
+    mmapFd.posCallChain = 0;
+    mmapPage.data_tail = 0;
+
+    size_t readSize = event.GetSampleReadSizeInSampleRecord(mmapFd, 0);
+    EXPECT_EQ(readSize, static_cast<size_t>(5 * sizeof(uint64_t)));
+    EXPECT_EQ(event.GetStackSizePosInSampleRecord(mmapFd), readSize);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

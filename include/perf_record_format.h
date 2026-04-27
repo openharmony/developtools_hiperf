@@ -178,6 +178,8 @@ struct PerfRecordSampleData {
     u64 read_nr = 0;
     u64 read_time_enabled = 0;
     u64 read_time_running = 0;
+    // PERF_FORMAT_GROUP + PERF_FORMAT_ID stores entries as [value,id] interleaved.
+    // In that case read_values points to the first value and read_ids points to the first id.
     u64 *read_values = nullptr;
     u64 *read_ids = nullptr;
     u64 nr = 0;                        /* if PERF_SAMPLE_CALLCHAIN */

@@ -307,7 +307,6 @@ bool PerfEvents::AddCounters(const std::vector<std::string> &eventStrings)
         }
         EventItem &selection = eventGroupItem_[0].eventItems.back();
         selection.attr.freq = 0;
-        selection.attr.sample_freq = 0;
         selection.attr.sample_period = INFINITE_SAMPLE_PERIOD;
         selection.attr.inherit = 0;
     }
@@ -1491,7 +1490,7 @@ std::vector<AttrWithId> PerfEvents::GetAttrWithId() const
     for (const auto &eventGroupItem : eventGroupItem_) {
         HLOGV(" eventItems %zu eventItems:", eventGroupItem.eventItems.size());
         size_t size = eventGroupItem.eventItems.size();
-        for (auto i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             AttrWithId attrId;
             attrId.attr = eventGroupItem.eventItems[i].attr;
             attrId.name = eventGroupItem.eventItems[i].configName;
@@ -1728,10 +1727,11 @@ size_t PerfEvents::GetSampleReadSizeInSampleRecord(MmapFd &mmap, size_t pos)
         if (format & PERF_FORMAT_TOTAL_TIME_RUNNING) {
             readSize += sizeof(uint64_t);
         }
-        readSize += nr * sizeof(uint64_t); // values
+        size_t groupEntrySize = sizeof(uint64_t); // value
         if (format & PERF_FORMAT_ID) {
-            readSize += nr * sizeof(uint64_t); // ids
+            groupEntrySize += sizeof(uint64_t); // id (value,id) interleaved per entry
         }
+        readSize += nr * groupEntrySize;
     } else {
         if (format & PERF_FORMAT_TOTAL_TIME_ENABLED) {
             readSize += sizeof(uint64_t);

@@ -813,6 +813,78 @@ HWTEST_F(ReportTest, AddReportItemBranch, TestSize.Level1)
     EXPECT_STREQ(report_->configs_[0].reportItems_[2].func_.data(), "swapper@0x123402");
 }
 
+HWTEST_F(ReportTest, AddReportItemWithAddCounterReadGroup, TestSize.Level2)
+{
+    report_->addCounterNames_ = {"counter_a", "counter_b"};
+    report_->addCounterIdIndexMaps_ = {{1001, 0}, {2002, 1}};
+    report_->configs_[0].addCounterNames_ = report_->addCounterNames_;
+
+    PerfRecordSample sample(false, 1, 2, 3);
+    sample.sampleType_ = PERF_SAMPLE_READ;
+    sample.readFormat_ = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
+    u64 readData[] = {111, 1001, 222, 2002};
+    sample.data_.read_nr = 2;
+    sample.data_.read_values = readData;
+    sample.data_.read_ids = readData + 1;
+    sample.callFrames_.emplace_back(0x1, 0x1000, "dummy.so", "funcA");
+
+    report_->AddReportItem(sample, false);
+    ASSERT_EQ(report_->configs_[0].reportItems_.size(), 1u);
+    const ReportItem &item = report_->configs_[0].reportItems_[0];
+    ASSERT_EQ(item.counts_.size(), 2u);
+    ASSERT_EQ(item.accCounts_.size(), 2u);
+    EXPECT_EQ(item.counts_[0], 111u);
+    EXPECT_EQ(item.counts_[1], 222u);
+    EXPECT_EQ(item.accCounts_[0], 111u);
+    EXPECT_EQ(item.accCounts_[1], 222u);
+}
+
+HWTEST_F(ReportTest, MultiLevelSameAndUpdateCountWithAddCounterValues, TestSize.Level2)
+{
+    ReportItem left(1, 2, "comm", "dso", "func", 0x123, 10);
+    ReportItem right(1, 2, "comm", "dso", "func", 0x123, 30);
+    left.counts_ = {10, 20};
+    left.accCounts_ = {10, 20};
+    right.counts_ = {30, 50};
+    right.accCounts_ = {30, 50};
+
+    EXPECT_TRUE(report_->MultiLevelSameAndUpdateCount(left, right));
+    EXPECT_EQ(left.eventCount_, 40u);
+    EXPECT_EQ(left.mergedSampleCount_, 2u);
+    ASSERT_EQ(left.accCounts_.size(), 2u);
+    EXPECT_EQ(left.accCounts_[0], 40u);
+    EXPECT_EQ(left.accCounts_[1], 70u);
+    EXPECT_EQ(left.counts_[0], 20u);
+    EXPECT_EQ(left.counts_[1], 35u);
+
+    ReportItem leftEmpty(1, 2, "comm", "dso", "func", 0x123, 5);
+    ReportItem rightOnly(1, 2, "comm", "dso", "func", 0x123, 7);
+    rightOnly.counts_ = {9};
+    rightOnly.accCounts_ = {9};
+    EXPECT_TRUE(report_->MultiLevelSameAndUpdateCount(leftEmpty, rightOnly));
+    ASSERT_EQ(leftEmpty.counts_.size(), 1u);
+    ASSERT_EQ(leftEmpty.accCounts_.size(), 1u);
+    EXPECT_EQ(leftEmpty.counts_[0], 9u);
+    EXPECT_EQ(leftEmpty.accCounts_[0], 9u);
+
+    ReportItem leftMismatch(1, 2, "comm", "dso", "func", 0x123, 1);
+    ReportItem rightMismatch(1, 2, "comm", "dso", "func", 0x123, 1);
+    leftMismatch.counts_ = {7};
+    leftMismatch.accCounts_ = {7};
+    rightMismatch.counts_ = {1, 2};
+    rightMismatch.accCounts_ = {1, 2};
+    EXPECT_TRUE(report_->MultiLevelSameAndUpdateCount(leftMismatch, rightMismatch));
+    ASSERT_EQ(leftMismatch.accCounts_.size(), 1u);
+    EXPECT_EQ(leftMismatch.accCounts_[0], 7u);
+}
+
+HWTEST_F(ReportTest, FormatCounterValuesMismatchSize, TestSize.Level2)
+{
+    EXPECT_EQ(report_->FormatCounterValues({}, {}), "");
+    EXPECT_EQ(report_->FormatCounterValues({1, 2}, {"a"}), "");
+    EXPECT_EQ(report_->FormatCounterValues({3, 4}, {"a", "b"}), "a=3,b=4");
+}
+
 /**
  * @tc.name: PrepareConsole
  * @tc.desc:

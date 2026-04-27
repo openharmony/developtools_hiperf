@@ -309,6 +309,8 @@ public:
     void DumpBranchStack(const int indent) const;
     void DumpRegsUser(const int indent) const;
     void DumpLog(const std::string &prefix) const override;
+    uint64_t GetReadValueByIndex(const u64 index) const;
+    uint64_t GetReadIdByIndex(const u64 index) const;
     void RecoverCallStack();
     // originalSize is use for expand callstack
     void ReplaceWithCallStack(const size_t originalSize = 0);
