@@ -126,9 +126,6 @@ bool GetAppPids(const std::string& appName, std::vector<std::string>& pids)
     }
     const int bufLen = 1024;
  	char res[bufLen] = { '\0' };
-    //while (fgets(res, sizeof(res), fp) != nullptr) {
-    //    pids.push_back(std::string(res));
-    //}
     while (fgets(res, sizeof(res), fp) != nullptr) {
         std::string line(res);
         if (!line.empty() && line.back() == '\n') {
