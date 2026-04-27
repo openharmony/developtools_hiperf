@@ -18,6 +18,7 @@
 #include <cinttypes>
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 
 namespace OHOS {
 namespace Developtools {
@@ -112,10 +113,10 @@ bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::stri
 }
 bool GetAppPids(const std::string& appName, std::vector<std::string>& pids)
 {
-    const std::string cmds = std::string("pidof ") + appName;
-    if (cmds.empty()) {
+    if (appName.empty()) {
         return false;
     }
+    const std::string cmds = std::string("pidof ") + appName;
     pids.clear();
     FILE *fp = nullptr;
     fp = popen(cmds.c_str(), "r");
@@ -125,8 +126,19 @@ bool GetAppPids(const std::string& appName, std::vector<std::string>& pids)
     }
     const int bufLen = 1024;
  	char res[bufLen] = { '\0' };
+    //while (fgets(res, sizeof(res), fp) != nullptr) {
+    //    pids.push_back(std::string(res));
+    //}
     while (fgets(res, sizeof(res), fp) != nullptr) {
-        pids.push_back(std::string(res));
+        std::string line(res);
+        if (!line.empty() && line.back() == '\n') {
+            line.pop_back();
+        }
+        std::istringstream iss(line);
+        std::string pid;
+        while (iss >> pid) {
+            pids.push_back(pid);
+        }
     }
     pclose(fp);
     return true;
