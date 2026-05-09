@@ -254,8 +254,12 @@ ohos_source_set("hiperf_platform_common") {
   if (is_ohos) {
     external_deps += [
       "hisysevent:libhisysevent",
+      "hiprofiler:libstack_common",
       "protobuf:protobuf_lite",
     ]
+  } else {
+    # Headers + stack_map_query/kernel_map_lookup TU (mingw/host); GN forbids raw include_dirs to hiprofiler.
+    external_deps += [ "hiprofiler:stack_common_static" ]
   }
   sources = sources_platform_common
 }
@@ -455,7 +459,10 @@ ohos_executable("hiperf") {
     "ipc:ipc_single",
   ]
   if (is_ohos) {
-    external_deps += [ "protobuf:protobuf_lite" ]
+    external_deps += [
+      "hiprofiler:libstack_common",
+      "protobuf:protobuf_lite",
+    ]
   }
   if (hiperf_feature_support_usr_symlink) {
     symlink_target_name = [

@@ -27,6 +27,7 @@
 #include "symbols_file.h"
 #include "utilities.h"
 #include "virtual_runtime.h"
+#include "stack_map_query.h"
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
@@ -59,93 +60,39 @@ int64_t VirtualThread::FindMapIndexByAddr(uint64_t addr) const
 {
     HLOGM("try found vaddr 0x%" PRIx64 "in maps %zu", addr, memMaps_.size());
     const int64_t illegal = -1;
-    if (memMaps_.size() == 0) {
+    auto r = OHOS::Developtools::StackCommon::LookupMapByAddrIndexed(memMaps_, memMapsIndexs_, addr);
+    if (!r.ok) {
         return illegal;
     }
-    if (memMaps_[memMapsIndexs_[0]]->begin > addr) {
-        return illegal;
+    if (r.sortedPosition > 0) {
+        memMaps_[r.mapVectorIndex]->prevMap = memMaps_[memMapsIndexs_[r.sortedPosition - 1]];
     }
-    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() >= 1 ? memMapsIndexs_.size() -  1 : 0]]->end <= addr) {
-        return illegal;
-    }
-    constexpr int divisorNum = 2;
-    std::size_t left = 0;
-    std::size_t right = memMapsIndexs_.size();
-    std::size_t mid = (right - left) / divisorNum + left;
-    while (left < right) {
-        if (addr < memMaps_[memMapsIndexs_[mid]]->end) {
-            right = mid;
-            mid = (right - left) / divisorNum + left;
-            continue;
-        }
-        if (addr >= memMaps_[memMapsIndexs_[mid]]->end) {
-            left = mid + 1;
-            mid = (right - left) / divisorNum + left;
-            continue;
-        }
-    }
-    if (addr >= memMaps_[memMapsIndexs_[left]]->begin && addr < memMaps_[memMapsIndexs_[left]]->end) {
-        if (left > 0) {
-            memMaps_[memMapsIndexs_[left]]->prevMap = memMaps_[memMapsIndexs_[left - 1]];
-        }
-        return static_cast<int64_t>(memMapsIndexs_[left]);
-    }
-    return illegal;
+    return r.mapVectorIndex;
 }
 
 std::shared_ptr<DfxMap> VirtualThread::FindMapByAddr(uint64_t addr) const
 {
-    HLOGM("try found vaddr 0x%" PRIx64 "in maps %zu", addr, memMaps_.size());
-    if (memMaps_.size() == 0) {
+    if (memMaps_.empty()) {
         return nullptr;
     }
-    if (memMaps_[memMapsIndexs_[0]]->begin > addr) {
+    int64_t idx = FindMapIndexByAddr(addr);
+    if (idx < 0) {
         return nullptr;
     }
-    if (memMaps_[memMapsIndexs_[memMapsIndexs_.size() >= 1 ? memMapsIndexs_.size() - 1 : 0]]->end <= addr) {
-        return nullptr;
-    }
-    constexpr int divisorNum = 2;
-    std::size_t left = 0;
-    std::size_t right = memMapsIndexs_.size();
-    std::size_t mid = (right - left) / divisorNum + left;
-    while (left < right) {
-        if (addr < memMaps_[memMapsIndexs_[mid]]->end) {
-            right = mid;
-            mid = (right - left) / divisorNum + left;
-            continue;
-        }
-        if (addr >= memMaps_[memMapsIndexs_[mid]]->end) {
-            left = mid + 1;
-            mid = (right - left) / divisorNum + left;
-            continue;
-        }
-    }
-    if (addr >= memMaps_[memMapsIndexs_[left]]->begin && addr < memMaps_[memMapsIndexs_[left]]->end) {
-        if (left > 0) {
-            memMaps_[memMapsIndexs_[left]]->prevMap = memMaps_[memMapsIndexs_[left - 1]];
-        }
-        return memMaps_[memMapsIndexs_[left]];
-    }
-    return nullptr;
+    return memMaps_[static_cast<size_t>(idx)];
 }
 
 std::shared_ptr<DfxMap> VirtualThread::FindMapByFileInfo(const std::string name, uint64_t offset) const
 {
-    for (auto &map : memMaps_) {
-        if (name != map->name) {
-            continue;
-        }
-        // check begin and length
-        if (offset >= map->offset && (offset - map->offset) < (map->end - map->begin)) {
-            HLOGMMM("found fileoffset 0x%" PRIx64 " in map (0x%" PRIx64 " - 0x%" PRIx64
-                    " pageoffset 0x%" PRIx64 ")  from %s",
-                    offset, map->begin, map->end, map->offset, map->name.c_str());
-            return map;
-        }
+    auto map = OHOS::Developtools::StackCommon::FindMapByFileOffset(memMaps_, name, offset);
+    if (map != nullptr) {
+        HLOGMMM("found fileoffset 0x%" PRIx64 " in map (0x%" PRIx64 " - 0x%" PRIx64
+                " pageoffset 0x%" PRIx64 ")  from %s",
+                offset, map->begin, map->end, map->offset, map->name.c_str());
+    } else {
+        HLOGM("NOT found offset 0x%" PRIx64 " in maps %zu ", offset, memMaps_.size());
     }
-    HLOGM("NOT found offset 0x%" PRIx64 " in maps %zu ", offset, memMaps_.size());
-    return nullptr;
+    return map;
 }
 
 SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) const
@@ -172,10 +119,10 @@ SymbolsFile *VirtualThread::FindSymbolsFileByMap(std::shared_ptr<DfxMap> map) co
     }
 
 #ifdef DEBUG_MISS_SYMBOL
-    if (find(missedSymbolFile_.begin(), missedSymbolFile_.end(), inMap.name) ==
+    if (find(missedSymbolFile_.begin(), missedSymbolFile_.end(), map->name) ==
         missedSymbolFile_.end()) {
-        missedSymbolFile_.emplace_back(inMap.name);
-        HLOGW("NOT found symbol for map '%s'", inMap.name.c_str());
+        missedSymbolFile_.emplace_back(map->name);
+        HLOGW("NOT found symbol for map '%s'", map->name.c_str());
         for (const auto &file : symbolsFiles_) {
             HLOGW(" we have '%s'", file->filePath_.c_str());
         }
@@ -382,19 +329,7 @@ void VirtualThread::ParseDevhostMap(const pid_t devhost)
 
 void VirtualThread::SortMemMaps()
 {
-    for (int currPos = 1; currPos < static_cast<int>(memMaps_.size()); ++currPos) {
-        int targetPos = currPos - 1;
-        while (targetPos >= 0 && memMaps_[memMapsIndexs_[currPos]]->end < memMaps_[memMapsIndexs_[targetPos]]->end) {
-            --targetPos;
-        }
-        if (targetPos < currPos - 1) {
-            auto target = memMapsIndexs_[currPos];
-            for (int k = currPos - 1; k > targetPos; --k) {
-                memMapsIndexs_[k + 1] = memMapsIndexs_[k];
-            }
-            memMapsIndexs_[targetPos + 1] = target;
-        }
-    }
+    OHOS::Developtools::StackCommon::SortMapIndicesByEndAscending(memMaps_, memMapsIndexs_);
 }
 
 std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string &filename, uint64_t const begin,
