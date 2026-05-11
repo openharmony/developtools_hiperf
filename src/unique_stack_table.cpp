@@ -60,7 +60,7 @@ bool UniqueStackTable::Resize()
         return false;
     }
 
-    if (memcpy_s(newTable.get(), tableSize_, tableBuf_.get(), tableSize_) != 0) {
+    if (memcpy_s(newTable.get(), newtableSize, tableBuf_.get(), tableSize_) != 0) {
         HLOGE("%s: memcpy_s(%u) failed, errno: %d", __func__, tableSize_, errno);
         return false;
     }
