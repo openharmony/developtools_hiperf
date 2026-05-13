@@ -291,8 +291,9 @@ void VirtualThread::ParseServiceMap(const std::string &filename)
     std::string line;
     while (std::getline(s, line)) {
         std::vector<std::string> mapTokens = StringSplit(line, " ");
+        // name_ is sysmgr, but the map name maybe sysmgr-main, so just check contain relation
         if (mapTokens.size() == MMAP_LINE_MAX_TOKEN &&
-            mapTokens[MMAP_LINE_TOKEN_INDEX_NAME] == name_) {
+            mapTokens[MMAP_LINE_TOKEN_INDEX_NAME].find(name_) != std::string::npos) {
             HLOGM("map line: %s", line.c_str());
             constexpr int mmapAddrRangeToken = 2;
             std::vector<std::string> addrRanges = StringSplit(mapTokens[0], "-");
