@@ -184,21 +184,21 @@ void VirtualRuntime::PutSmoDataToRecord(PerfRecordSmoDataFragment &perfRecordSmo
 {
     std::vector<uint8_t> binaryData(mapOffset);
     uint8_t* ptr = binaryData.data();
-    if (memcpy_s(ptr, sizeof(perfRecordSmoDataFragment.smoHeader), &(perfRecordSmoDataFragment.smoHeader),
+    if (memcpy_s(ptr, mapOffset, &(perfRecordSmoDataFragment.smoHeader),
         sizeof(perfRecordSmoDataFragment.smoHeader)) != 0) {
         HLOGE("memcpy_s return failed in PutSmoDataToRecord with smoHeader");
         return;
     }
     ptr += sizeof(SmoHeaderFragment);
     for (SmoMergeSoHeaderFragment smoMergeSoHeader : perfRecordSmoDataFragment.smoMergeSoHeaderList) {
-        if (memcpy_s(ptr, sizeof(smoMergeSoHeader), &(smoMergeSoHeader), sizeof(smoMergeSoHeader)) != 0) {
+        if (memcpy_s(ptr, mapOffset-(ptr - binaryData.data()), &(smoMergeSoHeader), sizeof(smoMergeSoHeader)) != 0) {
             HLOGE("memcpy_s return failed in PutSmoDataToRecord with smoMergeSoHeader");
             return;
         }
         ptr += sizeof(smoMergeSoHeader);
     }
     for (AdltMapFragment adltMap : perfRecordSmoDataFragment.adltMapList) {
-        if (memcpy_s(ptr, sizeof(adltMap), &(adltMap), sizeof(adltMap)) != 0) {
+        if (memcpy_s(ptr, mapOffset-(ptr - binaryData.data()), &(adltMap), sizeof(adltMap)) != 0) {
             HLOGE("memcpy_s return failed in PutSmoDataToRecord with adltMap");
             return;
         }
