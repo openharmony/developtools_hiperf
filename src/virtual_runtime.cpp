@@ -32,6 +32,7 @@
 #include "symbols_file.h"
 #include "utilities.h"
 #include "string_util.h"
+#include "kernel_map_lookup.h"
 
 using namespace std::chrono;
 namespace OHOS {
@@ -1181,45 +1182,43 @@ const DfxSymbol VirtualRuntime::GetKernelSymbol(const uint64_t ip, const std::ve
                                                 const VirtualThread &thread)
 {
     DfxSymbol vaddrSymbol(ip, thread.name_);
-    for (auto &map : memMaps) {
-        if (ip > map.begin && ip < map.end) {
-            HLOGM("found addr 0x%" PRIx64 " in kernel map 0x%" PRIx64 " - 0x%" PRIx64 " from %s",
-                  ip, map.begin, map.end, map.name.c_str());
-            vaddrSymbol.module_ = map.name;
-            // found symbols by file name
-            for (auto &symbolsFile : symbolsFiles_) {
-                if (symbolsFile->filePath_ == map.name) {
-                    vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
-                    vaddrSymbol.fileVaddr_ =
-                        symbolsFile->GetVaddrInSymbols(ip, map.begin, map.offset);
-                    perf_callchain_context context = PERF_CONTEXT_KERNEL;
-                    if (GetSymbolCache(vaddrSymbol.fileVaddr_, vaddrSymbol, context)) {
-                        return vaddrSymbol;
-                    }
-                    HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64
-                          " at '%s'",
-                          vaddrSymbol.fileVaddr_, ip, map.name.c_str());
-                    if (!symbolsFile->SymbolsLoaded()) {
-                        symbolsFile->LoadSymbols();
-                    }
-                    DfxSymbol foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
-                    foundSymbols.taskVaddr_ = ip;
-                    if (!foundSymbols.IsValid()) {
-                        HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s",
-                              ip, vaddrSymbol.fileVaddr_, map.name.c_str());
-                        return vaddrSymbol;
-                    } else {
-                        return foundSymbols;
-                    }
-                }
+    size_t mapIdx = OHOS::Developtools::StackCommon::FindFirstMapContainingIp(ip, memMaps);
+    if (mapIdx == OHOS::Developtools::StackCommon::K_INVALID_KERNEL_MAP_INDEX) {
+        return vaddrSymbol;
+    }
+    const auto &map = memMaps[mapIdx];
+    HLOGM("found addr 0x%" PRIx64 " in kernel map 0x%" PRIx64 " - 0x%" PRIx64 " from %s",
+          ip, map.begin, map.end, map.name.c_str());
+    vaddrSymbol.module_ = map.name;
+    // found symbols by file name
+    for (auto &symbolsFile : symbolsFiles_) {
+        if (symbolsFile->filePath_ == map.name) {
+            vaddrSymbol.symbolFileIndex_ = symbolsFile->id_;
+            vaddrSymbol.fileVaddr_ =
+                symbolsFile->GetVaddrInSymbols(ip, map.begin, map.offset);
+            perf_callchain_context context = PERF_CONTEXT_KERNEL;
+            if (GetSymbolCache(vaddrSymbol.fileVaddr_, vaddrSymbol, context)) {
+                return vaddrSymbol;
             }
-            HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip,
-                  map.name.c_str());
-        } else {
-            HLOGM("addr 0x%" PRIx64 " not in map 0x%" PRIx64 " - 0x%" PRIx64 " from %s", ip,
-                  map.begin, map.end, map.name.c_str());
+            HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64
+                  " at '%s'",
+                  vaddrSymbol.fileVaddr_, ip, map.name.c_str());
+            if (!symbolsFile->SymbolsLoaded()) {
+                symbolsFile->LoadSymbols();
+            }
+            DfxSymbol foundSymbols = symbolsFile->GetSymbolWithVaddr(vaddrSymbol.fileVaddr_);
+            foundSymbols.taskVaddr_ = ip;
+            if (!foundSymbols.IsValid()) {
+                HLOGW("addr 0x%" PRIx64 " vaddr  0x%" PRIx64 " NOT found in symbol file %s",
+                      ip, vaddrSymbol.fileVaddr_, map.name.c_str());
+                return vaddrSymbol;
+            } else {
+                return foundSymbols;
+            }
         }
     }
+    HLOGW("addr 0x%" PRIx64 " in map but NOT found the symbol file %s", ip,
+          map.name.c_str());
     return vaddrSymbol;
 }
 

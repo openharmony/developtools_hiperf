@@ -191,6 +191,7 @@ ohos_unittest("hiperf_unittest") {
   if (is_ohos) {
     sources += [ "./../src/callstack.cpp" ]
     external_deps += [
+      "hiprofiler:libstack_common",
       "init:libbegetutil",
       "ipc:ipc_core",
       "protobuf:protobuf_lite",
