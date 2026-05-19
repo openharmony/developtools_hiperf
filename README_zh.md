@@ -54,7 +54,7 @@ hiperf 是 OpenHarmony 为开发人员提供的用于调试的命令行工具，
 #### 基础配置
 
 - 确保组件名在于产品形态配置的 json 中
-  - [产品形态配置](https://gitee.com/openharmony/productdefine_common)
+  - [产品形态配置](https://gitcode.com/openharmony/productdefine_common)
     - 加入 `"developtools:hiperf":{}` 即可
 
 
@@ -390,10 +390,10 @@ Z:\OHOS_STD_2.0\developtools\hdc_standard\prebuilt\windows\hdc_std.exe
 
 研发工具链子系统
 
-[**developtools\hiperf**](https://gitee.com/openharmony/developtools_hiperf)
+[**developtools\hiperf**](https://gitcode.com/openharmony/developtools_hiperf)
 
-[developtools\developtools_profiler](https://gitee.com/openharmony/developtools_profiler)
+[developtools\developtools_profiler](https://gitcode.com/openharmony/developtools_profiler)
 
-[developtools\developtools_bytrace](https://gitee.com/openharmony/developtools_bytrace)
+[developtools\developtools_bytrace](https://gitcode.com/openharmony/developtools_bytrace)
 
-[third_party\protobuf](https://gitee.com/openharmony/third_party_protobuf)
+[third_party\protobuf](https://gitcode.com/openharmony/third_party_protobuf)
