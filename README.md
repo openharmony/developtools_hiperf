@@ -44,7 +44,7 @@ hiperf must be used with Python 3.7.0 or later.
 #### Basic Settings
 
 - Ensure that the hiperf component name is in the JSON file of the Product Definition.
-  - [Product Definition](https://gitee.com/openharmony/productdefine_common)
+  - [Product Definition](https://gitcode.com/openharmony/productdefine_common)
     - Add `"developtools:hiperf":{}`.
 
 
@@ -374,10 +374,10 @@ Z:\OHOS_STD_2.0\developtools\hdc_standard\prebuilt\windows\hdc_std.exe
 
 Development Toolchain Subsystem
 
-[**developtools\hiperf**](https://gitee.com/openharmony/developtools_hiperf)
+[**developtools\hiperf**](https://gitcode.com/openharmony/developtools_hiperf)
 
-[developtools\developtools_profiler](https://gitee.com/openharmony/developtools_profiler)
+[developtools\developtools_profiler](https://gitcode.com/openharmony/developtools_profiler)
 
-[developtools\developtools_bytrace](https://gitee.com/openharmony/developtools_bytrace)
+[developtools\developtools_bytrace](https://gitcode.com/openharmony/developtools_bytrace)
 
-[third_party\protobuf](https://gitee.com/openharmony/third_party_protobuf)
+[third_party\protobuf](https://gitcode.com/openharmony/third_party_protobuf)
