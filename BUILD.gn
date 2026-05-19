@@ -319,8 +319,11 @@ ohos_source_set("support_protobuf") {
 
   #protobuf
   public_configs = common_configs
-  public_configs += [ ":protobuf_config" ]
-  public_deps = [ ":proto_file_cpp" ]
+  public_configs += [
+    ":protobuf_config",
+    ":proto_file_cpp_config",
+  ]
+  deps = [ ":proto_file_cpp" ]
 
   if (is_ohos) {
     external_deps = [ "faultloggerd:libunwinder" ]
