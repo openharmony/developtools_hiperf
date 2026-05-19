@@ -125,7 +125,6 @@ ohos_unittest("hiperf_unittest") {
     defines += [ "is_sandbox_mapping=${hiperf_sandbox_log_path_mapping}" ]
   }
 
-  public_deps = []
   external_deps = [
     "abseil-cpp:absl_container",
     "abseil-cpp:absl_cord",
@@ -209,7 +208,7 @@ ohos_unittest("hiperf_unittest") {
 
   if (!hiperf_target_static) {
     public_configs += [ "${hiperf_path}/:protobuf_config" ]
-    public_deps += [ "${hiperf_path}/:proto_file_cpp" ]
+    deps += [ "${hiperf_path}/:proto_file_cpp" ]
     sources += [ "./../src/report_protobuf_file.cpp" ]
   }
 

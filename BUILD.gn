@@ -213,7 +213,7 @@ ohos_source_set("hiperf_platform_common") {
   part_name = "hiperf"
   subsystem_name = "developtools"
   use_exceptions = true
-  public_deps = common_deps
+  deps = common_deps
   public_configs = common_configs
   defines = []
 
@@ -272,7 +272,7 @@ ohos_source_set("hiperf_platform_linux") {
   part_name = "hiperf"
   subsystem_name = "developtools"
   use_exceptions = true
-  public_deps = common_deps
+  deps = common_deps
   public_configs = common_configs
 
   if (is_ohos) {
@@ -323,8 +323,11 @@ ohos_source_set("support_protobuf") {
 
   #protobuf
   public_configs = common_configs
-  public_configs += [ ":protobuf_config" ]
-  public_deps = [ ":proto_file_cpp" ]
+  public_configs += [
+    ":protobuf_config",
+    ":proto_file_cpp_config",
+  ]
+  deps = [ ":proto_file_cpp" ]
 
   if (is_ohos) {
     external_deps = [ "faultloggerd:libunwinder" ]
@@ -542,8 +545,10 @@ ohos_source_set("hiperf_platform_host") {
   part_name = "hiperf"
   subsystem_name = "developtools"
   sources = [ "./src/hiperf_libreport.cpp" ]
-  deps = [ ":adapt_mingw_sourceset" ]
-  public_deps = [ ":hiperf_platform_common" ]
+  deps = [
+    ":adapt_mingw_sourceset",
+    ":hiperf_platform_common",
+  ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
