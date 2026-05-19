@@ -893,7 +893,8 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
     static std::shared_ptr<DfxMap> prevMap;
     if ((recordMmap2.data_.prot & PROT_EXEC) != 0) {
         // fake first segment, when second segment come.
-        auto symFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, recordMmap2.data_.filename);
+        auto symFile = SymbolsFile::CreateSymbolsFile(
+            SYMBOL_ELF_FILE, recordMmap2.data_.filename, recordMmap2.data_.pid);
         CHECK_TRUE(symFile != nullptr, false, 1, "CheckValidSandBoxMmap Failed to create symbolFile!");
 
         std::shared_ptr<DfxMap> curMap;

@@ -51,7 +51,8 @@ public:
           memMaps_(processMemMaps_),
           vaddr4kPageCache_(vaddr4kPageCacheOfProc_),
           memMapsIndexs_(processMemMapsIndexs_),
-          parent_(*this) {}
+          parent_(*this),
+          isContainerProcess_(IsContainerProcess(pid)) {}
 
     VirtualThread(const pid_t pid, const pid_t tid, VirtualThread &thread,
                   const std::vector<std::unique_ptr<SymbolsFile>> &symbolsFiles)
@@ -62,7 +63,8 @@ public:
           memMaps_(thread.processMemMaps_),
           vaddr4kPageCache_(thread.vaddr4kPageCacheOfProc_),
           memMapsIndexs_(thread.processMemMapsIndexs_),
-          parent_(thread)
+          parent_(thread),
+          isContainerProcess_(IsContainerProcess(pid))
     {
         HLOG_ASSERT(pid != tid);
         HLOGV("%d %d map from parent size is %zu", pid, tid, memMaps_.size());
@@ -115,6 +117,7 @@ private:
     VirtualThread &parent_;
     uint64_t adltLoadBase = static_cast<uint64_t>(-1);
     bool getLoadBaseFlag = false;
+    bool isContainerProcess_ = false;
 #ifdef HIPERF_DEBUG
     mutable std::unordered_set<uint64_t> missedRuntimeVaddr_;
 #endif

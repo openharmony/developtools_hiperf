@@ -444,6 +444,23 @@ std::string ExtractNumericPrefix(const std::string& str);
 bool IsHiShellLabel();
 bool IsTaskManagerLabel();
 bool IsAllowSkipDeveloperMode();
+bool IsContainerProcess(pid_t pid);
+
+class NamespaceSwitcher {
+public:
+    explicit NamespaceSwitcher(pid_t targetPid);
+    ~NamespaceSwitcher();
+    
+    bool SwitchToTarget();
+    bool RestoreOriginal();
+    bool IsValid() const;
+    
+private:
+    [[maybe_unused]] int originalNsFd_ = -1;
+    [[maybe_unused]] int targetNsFd_ = -1;
+    [[maybe_unused]] pid_t targetPid_ = -1;
+    [[maybe_unused]] bool switched_ = false;
+};
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
