@@ -24,9 +24,9 @@ namespace Developtools {
 namespace HiPerf {
 class CmdOutputTest : public testing::Test {
 public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp();
+static void SetUpTestCase(void);
+static void TearDownTestCase(void);
+void SetUp();
 };
 
 void CmdOutputTest::SetUpTestCase()

@@ -15,5 +15,4 @@
 #ifndef CMD_OUTPUT_TEST_
 #define CMD_OUTPUT_TEST_
 #include "utilities.h"
- 	 
 #endif // CMD_OUTPUT_TEST_
