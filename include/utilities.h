@@ -444,6 +444,8 @@ std::string ExtractNumericPrefix(const std::string& str);
 bool IsHiShellLabel();
 bool IsTaskManagerLabel();
 bool IsAllowSkipDeveloperMode();
+bool IsContainerProcess(pid_t pid);
+void AdaptContainerSymbolFilePath(std::string& path);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

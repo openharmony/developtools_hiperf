@@ -1321,6 +1321,90 @@ HWTEST_F(UtilitiesTest, IsUnlockedDevice_ReturnsExpectedByDeviceType, TestSize.L
     EXPECT_EQ(IsUnlockedDevice(), deviceType == "orange");
 }
 
+/**
+ * @tc.name: IsContainerProcess_ValidPid
+ * @tc.desc: Test IsContainerProcess with current process pid (non-container)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsContainerProcess_ValidPid, TestSize.Level1)
+{
+    pid_t pid = getpid();
+    EXPECT_FALSE(IsContainerProcess(pid));
+}
+
+/**
+ * @tc.name: IsContainerProcess_InitProcess
+ * @tc.desc: Test IsContainerProcess with init process (PID 1, non-container)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsContainerProcess_InitProcess, TestSize.Level2)
+{
+    pid_t initPid = 1;
+    EXPECT_FALSE(IsContainerProcess(initPid));
+}
+
+/**
+ * @tc.name: IsContainerProcess_InvalidPid
+ * @tc.desc: Test IsContainerProcess with invalid pid (-1)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsContainerProcess_InvalidPid, TestSize.Level2)
+{
+    pid_t invalidPid = -1;
+    EXPECT_FALSE(IsContainerProcess(invalidPid));
+}
+
+/**
+ * @tc.name: IsContainerProcess_NonExistentPid
+ * @tc.desc: Test IsContainerProcess with non-existent pid
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsContainerProcess_NonExistentPid, TestSize.Level2)
+{
+    pid_t nonExistentPid = 999999;
+    EXPECT_FALSE(IsContainerProcess(nonExistentPid));
+}
+
+/**
+ * @tc.name: AdaptContainerSymbolFilePath_NormalPath
+ * @tc.desc: Test AdaptContainerSymbolFilePath with normal path in HM environment
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, AdaptContainerSymbolFilePath_NormalPath, TestSize.Level1)
+{
+    if (IsHM()) {
+        std::string path = "/system/lib64/libc.so";
+        std::string originalPath = path;
+        AdaptContainerSymbolFilePath(path);
+        EXPECT_FALSE(path == originalPath);
+    }
+}
+
+/**
+ * @tc.name: AdaptContainerSymbolFilePath_EmptyPath
+ * @tc.desc: Test AdaptContainerSymbolFilePath with empty path
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, AdaptContainerSymbolFilePath_EmptyPath, TestSize.Level2)
+{
+    std::string path = "";
+    AdaptContainerSymbolFilePath(path);
+    EXPECT_EQ(path, "");
+}
+
+/**
+ * @tc.name: AdaptContainerSymbolFilePath_RelativePath
+ * @tc.desc: Test AdaptContainerSymbolFilePath with relative path
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, AdaptContainerSymbolFilePath_RelativePath, TestSize.Level2)
+{
+    std::string path = "./libtest.so";
+    std::string originalPath = path;
+    AdaptContainerSymbolFilePath(path);
+    EXPECT_EQ(path, originalPath);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
