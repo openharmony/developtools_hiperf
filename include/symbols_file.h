@@ -91,7 +91,6 @@ public:
     SymbolsFileType symbolFileType_;
     std::string filePath_ = "";
     int32_t id_ = -1; // used to report protobuf file
-    pid_t pid_ = 0; // process pid for container namespace switching
 
     // [14] .text             PROGBITS         00000000002c5000  000c5000
     // min exec addr , general it point to .text
@@ -103,8 +102,8 @@ public:
     uint64_t textExecVaddrRange_ = maxVaddr;
     std::shared_ptr<DfxMap> map_ = nullptr;
 
-    SymbolsFile(SymbolsFileType symbolType, const std::string path, pid_t pid = 0)
-        : symbolFileType_(symbolType), filePath_(path), pid_(pid) {};
+    SymbolsFile(SymbolsFileType symbolType, const std::string path)
+        : symbolFileType_(symbolType), filePath_(path) {};
     virtual ~SymbolsFile();
 
     virtual std::shared_ptr<DfxElf> GetElfFile()
