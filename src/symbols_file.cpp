@@ -23,7 +23,6 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <fstream>
-#include <memory>
 #include <string_view>
 #include <type_traits>
 
@@ -167,9 +166,8 @@ const std::string SymbolsFile::FindSymbolFile(
 class ElfFileSymbols : public SymbolsFile {
 public:
     explicit ElfFileSymbols(const std::string &symbolFilePath,
-                            const SymbolsFileType symbolsFileType = SYMBOL_ELF_FILE,
-                            pid_t pid = 0)
-        : SymbolsFile(symbolsFileType, symbolFilePath, pid)
+                            const SymbolsFileType symbolsFileType = SYMBOL_ELF_FILE)
+        : SymbolsFile(symbolsFileType, symbolFilePath)
     {
     }
 
@@ -186,24 +184,18 @@ public:
     bool LoadSymbols(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
         symbolsLoaded_ = true;
-
-        bool needSwitchNamespace = false;
-        auto nsSwitcher = PrepareNamespaceSwitch(needSwitchNamespace);
-
         std::string findPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
-        if (findPath.empty() && elfFile_ == nullptr) {
+        if (findPath.empty() && elfFile_ == nullptr) { // elf not compressed in hap has been initialized before
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
-            CleanupNamespaceSwitch(nsSwitcher, needSwitchNamespace);
             return false;
         }
-
-        bool result = LoadElfSymbols(map, findPath);
-        CleanupNamespaceSwitch(nsSwitcher, needSwitchNamespace);
-
-        if (!result) {
+        if (LoadElfSymbols(map, findPath)) {
+            return true;
+        } else {
             HLOGW("elf open failed with '%s'", findPath.c_str());
+            return false;
         }
-        return result;
+        return false;
     }
 
     void EnableMiniDebugInfo() override
@@ -258,21 +250,12 @@ protected:
             return debugInfoLoadResult_; // return the result of loaded
         }
         debugInfoLoaded_ = true;
-
-        bool needSwitchNamespace = false;
-        auto nsSwitcher = PrepareNamespaceSwitch(needSwitchNamespace);
-
         std::string elfPath = FindSymbolFile(symbolsFileSearchPaths_, symbolFilePath);
         if (elfPath.empty()) {
             HLOGW("elf found failed (belong to %s)", filePath_.c_str());
-            CleanupNamespaceSwitch(nsSwitcher, needSwitchNamespace);
             return false;
         }
-
-        bool result = CreateElfFile(map, elfPath);
-        CleanupNamespaceSwitch(nsSwitcher, needSwitchNamespace);
-
-        if (!result) {
+        if (!CreateElfFile(map, elfPath)) {
             return false;
         }
         HLOGD("loaded elf %s", elfPath.c_str());
@@ -318,35 +301,6 @@ private:
     uint64_t ehFrameHDRFdeTableElfOffset_ {0};
     std::shared_ptr<DfxElf> elfFile_ = nullptr;
     std::unordered_map<uint64_t, ElfLoadInfo> info_;
-
-    std::unique_ptr<NamespaceSwitcher> PrepareNamespaceSwitch(bool &needSwitchNamespace)
-    {
-        needSwitchNamespace = IsContainerProcess(pid_);
-        std::unique_ptr<NamespaceSwitcher> nsSwitcher(nullptr);
-
-        if (needSwitchNamespace) {
-            nsSwitcher = std::make_unique<NamespaceSwitcher>(pid_);
-            if (nsSwitcher && nsSwitcher->IsValid()) {
-                HLOGD("Switching to container namespace for pid %d", pid_);
-                if (!nsSwitcher->SwitchToTarget()) {
-                    HLOGW("Failed to switch to container namespace");
-                    needSwitchNamespace = false;
-                }
-            } else {
-                HLOGW("NamespaceSwitcher initialization failed for pid %d", pid_);
-                needSwitchNamespace = false;
-            }
-        }
-        return nsSwitcher;
-    }
-
-    void CleanupNamespaceSwitch(std::unique_ptr<NamespaceSwitcher> &nsSwitcher, bool needSwitchNamespace)
-    {
-        if (needSwitchNamespace && nsSwitcher) {
-            HLOGD("Restoring to original namespace");
-            nsSwitcher->RestoreOriginal();
-        }
-    }
 
     bool GetSectionInfo(const std::string &name, uint64_t &sectionVaddr, uint64_t &sectionSize,
                         uint64_t &sectionFileOffset) const override
@@ -1545,7 +1499,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(SymbolsFileType symb
         case SYMBOL_KERNEL_THREAD_FILE:
             return std::make_unique<KernelThreadSymbols>(symbolFilePath);
         case SYMBOL_ELF_FILE:
-            return std::make_unique<ElfFileSymbols>(symbolFilePath, SYMBOL_ELF_FILE, pid);
+            return std::make_unique<ElfFileSymbols>(symbolFilePath);
         case SYMBOL_JAVA_FILE:
             return std::make_unique<JavaFileSymbols>(symbolFilePath);
         case SYMBOL_JS_FILE:
@@ -1602,7 +1556,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::CreateSymbolsFile(const std::string &s
         return SymbolsFile::CreateSymbolsFile(SYMBOL_CJ_FILE, symbolFilePath, pid);
     } else {
         // default is elf, this may be problematic in the future.
-        return SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, symbolFilePath, pid);
+        return SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE, symbolFilePath);
     }
 }
 

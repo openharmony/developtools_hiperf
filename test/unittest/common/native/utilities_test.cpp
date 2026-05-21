@@ -16,12 +16,9 @@
 #include "utilities_test.h"
 #include <chrono>
 #include <thread>
-#include <sys/wait.h>
-#include <unistd.h>
 #include "ipc_utilities.h"
 #include "test_utilities.h"
 #include "utilities.h"
-#include <cerrno>
 
 using namespace testing::ext;
 namespace OHOS {
@@ -1322,120 +1319,6 @@ HWTEST_F(UtilitiesTest, IsUnlockedDevice_ReturnsExpectedByDeviceType, TestSize.L
 {
     const std::string deviceType = GetDeviceType();
     EXPECT_EQ(IsUnlockedDevice(), deviceType == "orange");
-}
-
-/**
- * @tc.name: IsContainerProcess_ValidPid
- * @tc.desc: Test IsContainerProcess with current process pid (non-container)
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, IsContainerProcess_ValidPid, TestSize.Level1)
-{
-    pid_t pid = getpid();
-    EXPECT_FALSE(IsContainerProcess(pid));
-}
-
-/**
- * @tc.name: IsContainerProcess_InitProcess
- * @tc.desc: Test IsContainerProcess with init process (PID 1, non-container)
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, IsContainerProcess_InitProcess, TestSize.Level2)
-{
-    pid_t initPid = 1;
-    EXPECT_FALSE(IsContainerProcess(initPid));
-}
-
-/**
- * @tc.name: IsContainerProcess_InvalidPid
- * @tc.desc: Test IsContainerProcess with invalid pid (-1)
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, IsContainerProcess_InvalidPid, TestSize.Level2)
-{
-    pid_t invalidPid = -1;
-    EXPECT_FALSE(IsContainerProcess(invalidPid));
-}
-
-/**
- * @tc.name: IsContainerProcess_NonExistentPid
- * @tc.desc: Test IsContainerProcess with non-existent pid
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, IsContainerProcess_NonExistentPid, TestSize.Level2)
-{
-    pid_t nonExistentPid = 999999;
-    EXPECT_FALSE(IsContainerProcess(nonExistentPid));
-}
-
-/**
- * @tc.name: NamespaceSwitcher_InvalidPid
- * @tc.desc: Test NamespaceSwitcher with invalid pid (-1)
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, NamespaceSwitcher_InvalidPid, TestSize.Level2)
-{
-    pid_t pid = fork();
-    if (pid == 0) {
-        NamespaceSwitcher switcher(-1);
-        exit(switcher.IsValid() ? 1 : 0);
-    } else if (pid > 0) {
-        int status = 0;
-        waitpid(pid, &status, 0);
-        EXPECT_EQ(WEXITSTATUS(status), 0);
-    } else {
-        EXPECT_TRUE(false) << "fork failed";
-    }
-}
-
-/**
- * @tc.name: NamespaceSwitcher_CurrentPid
- * @tc.desc: Test NamespaceSwitcher with current process pid (should be valid)
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, NamespaceSwitcher_CurrentPid, TestSize.Level1)
-{
-    pid_t pid = fork();
-    if (pid == 0) {
-        NamespaceSwitcher switcher(getpid());
-        exit(switcher.IsValid() ? 0 : 1);
-    } else if (pid > 0) {
-        int status = 0;
-        waitpid(pid, &status, 0);
-        EXPECT_EQ(WEXITSTATUS(status), 0);
-    } else {
-        EXPECT_TRUE(false) << "fork failed";
-    }
-}
-
-/**
- * @tc.name: NamespaceSwitcher_SwitchAndRestore
- * @tc.desc: Test NamespaceSwitcher switch and restore functionality in forked process
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, NamespaceSwitcher_SwitchAndRestore, TestSize.Level1)
-{
-    pid_t pid = fork();
-    if (pid == 0) {
-        pid_t childPid = getpid();
-        NamespaceSwitcher switcher(childPid);
-        if (switcher.IsValid()) {
-            bool switchResult = switcher.SwitchToTarget();
-            bool restoreResult = false;
-            if (switchResult) {
-                restoreResult = switcher.RestoreOriginal();
-            }
-            exit((switchResult && restoreResult) ? 0 : 1);
-        }
-        exit(2);
-    } else if (pid > 0) {
-        int status = 0;
-        waitpid(pid, &status, 0);
-        int exitCode = WEXITSTATUS(status);
-        EXPECT_EQ(exitCode, 0) << "SwitchAndRestore failed with exit code: " << exitCode;
-    } else {
-        EXPECT_TRUE(false) << "fork failed";
-    }
 }
 
 } // namespace HiPerf
