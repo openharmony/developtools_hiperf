@@ -21,7 +21,7 @@ namespace OHOS::Developtools::HiPerf {
 
 bool IsDebugableApp(const std::string& bundleName);
 bool IsApplicationEncryped(const int pid);
-bool IsProfileableThirdPartyApp(const std::string& bundleName);
+bool IsProfileableApp(const std::string& bundleName);
 
 void CheckIpcBeforeFork();
 

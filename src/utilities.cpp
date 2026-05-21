@@ -804,32 +804,17 @@ bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPac
 
 bool IsAllowReleaseApp(const std::string& appPackage)
 {
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
     pid_t appPid = -1;
     const std::string basePath {"/proc/"};
     const std::string cmdline {"/cmdline"};
     appPid = FindMatchingPidInProc(basePath, cmdline, appPackage);
     if (appPid <= 0) {
+#if defined(is_ohos) && is_ohos
         HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running", appPackage.c_str());
+#endif
         return false;
     }
-    return IsAllowRelease(appPid, appPackage);
-#else
-    return false;
-#endif
-}
-
-bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
-{
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-    if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()) {
-        HLOGE("IsAllowReleaseApp: not allow release");
-        return false;
-    }
-    return IsProfileableThirdPartyApp(appPackage);
-#else
-    return false;
-#endif
+    return IsProfileableApp(appPackage);
 }
 
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
@@ -856,8 +841,8 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
     if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleNameTmp) || IsAllowReleaseApp(bundleNameTmp)) {
         return true;
     }
-    HLOGE("--app option only support debug application.");
-    err = "--app option only support debug application\n";
+    HLOGE("--app option only support debug or profileable application.");
+    err = "--app option only support debug or profileable application\n";
     printf("%s", err.c_str());
     return false;
 }
@@ -885,7 +870,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
         }
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
         if (!devMode) {
-            if (!IsAllowRelease(pid, bundleName)) {
+            if (!IsProfileableApp(bundleName)) {
                 HLOGE("-p option only support profileable application for %s", bundleName.c_str());
                 err = "-p option only support profileable application\n";
                 printf("%s", err.c_str());
@@ -894,9 +879,9 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
             continue;
         }
 #endif
-        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsAllowRelease(pid, bundleName)) {
-            HLOGE("-p option only support debug application for %s", bundleName.c_str());
-            err = "-p option only support debug application\n";
+        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsProfileableApp(bundleName)) {
+            HLOGE("-p option only support debug or profileable application for %s", bundleName.c_str());
+            err = "-p option only support debug or profileable application\n";
             printf("%s", err.c_str());
             return false;
         }

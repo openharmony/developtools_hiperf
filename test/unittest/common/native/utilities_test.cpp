@@ -1077,14 +1077,14 @@ HWTEST_F(UtilitiesTest, IsDebugableApp, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsProfileableThirdPartyApp
- * @tc.desc: Test IsProfileableThirdPartyApp fun
+ * @tc.name: IsProfileableApp
+ * @tc.desc: Test IsProfileableApp fun
  * @tc.type: FUNC
  */
-HWTEST_F(UtilitiesTest, IsProfileableThirdPartyApp, TestSize.Level1)
+HWTEST_F(UtilitiesTest, IsProfileableApp, TestSize.Level1)
 {
     const std::string hiviewName = "hiview";
-    EXPECT_FALSE(IsProfileableThirdPartyApp(hiviewName));
+    EXPECT_FALSE(IsProfileableApp(hiviewName));
 }
 
 /**
@@ -1282,16 +1282,6 @@ HWTEST_F(UtilitiesTest, IsHiShellLabel, TestSize.Level1)
 HWTEST_F(UtilitiesTest, IsAllowReleaseApp_NotRunning, TestSize.Level1)
 {
     EXPECT_FALSE(IsAllowReleaseApp("hiperf_test_demo"));
-}
-
-/**
- * @tc.name: IsAllowRelease_InvalidPid
- * @tc.desc: Test IsAllowRelease returns false for invalid pid
- * @tc.type: FUNC
- */
-HWTEST_F(UtilitiesTest, IsAllowRelease_InvalidPid, TestSize.Level1)
-{
-    EXPECT_FALSE(IsAllowRelease(-1, "hiperf_test_demo"));
 }
 
 /**
