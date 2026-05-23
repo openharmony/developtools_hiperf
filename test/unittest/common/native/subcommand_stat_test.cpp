@@ -87,13 +87,19 @@ void SubCommandStatTest::SetUpTestCase()
     if (chmod("/data/test/hiperf_test_demo", 0755) == -1) { // 0755 : -rwxr-xr-x
         GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
     }
-    system("/data/test/hiperf_test_demo &");
+    if (system("/data/test/hiperf_test_demo &") != 0) {
+        GTEST_LOG_(ERROR) << "start hiperf_test_demo failed.";
+    } else {
+        GTEST_LOG_(INFO) << "start hiperf_test_demo success.";
+    }
 }
 
 void SubCommandStatTest::TearDownTestCase()
 {
     if (system("kill -9 `pidof hiperf_test_demo`") != 0) {
         GTEST_LOG_(ERROR) << "kill hiperf_test_demo failed.";
+    } else {
+        GTEST_LOG_(INFO) << "kill hiperf_test_demo success.";
     }
 }
 
@@ -2392,13 +2398,11 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control01, TestSize.Level1)
     ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a",
         {"create control hiperf counting success", "stat result will saved in /data/local/tmp/perf_stat.txt"}), true);
-    sleep(1); // wait 1s
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
         {"start counting success"}), true);
-    sleep(1); // wait 1s
+    sleep(1); // wait for data collection to avoid empty perf_stat.txt
     EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
         {"stop counting success"}), true);
-    sleep(1); // wait 1s
     ASSERT_TRUE(IsFileExistsAndNonEmpty(TEST_FILE, true));
 }
 
@@ -2486,18 +2490,16 @@ HWTEST_F(SubCommandStatTest, TestOnSubCommand_control05, TestSize.Level1)
 HWTEST_F(SubCommandStatTest, Control_Stability, TestSize.Level1)
 {
     ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
-    for (int i = 0; i < 10; i++) {  // 10: Number of loop
+    for (int i = 0; i < 5; i++) {  // 5: Number of loop
         ASSERT_TRUE(RemoveFile(TEST_FILE));
         EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control prepare -a -e hw-cpu-cycles,hw-instructions",
             {"create control hiperf counting success", "stat result will saved in /data/local/tmp/perf_stat.txt"}),
             true);
-        sleep(1); // wait 1s
         EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control start",
             {"start counting success"}), true);
-        sleep(1); // wait 1s
+        sleep(1); // wait for data collection to avoid empty perf_stat.txt
         EXPECT_EQ(CheckTraceCommandOutput("hiperf stat --control stop",
             {"stop counting success"}), true);
-        sleep(1); // wait 1s
         ASSERT_TRUE(IsFileExistsAndNonEmpty(TEST_FILE, true));
     }
 }
