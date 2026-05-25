@@ -17,7 +17,6 @@
 
 #if defined(is_ohos) && is_ohos
 #include <sys/utsname.h>
-#include <dlfcn.h>
 #endif
 #include <zlib.h>
 #include <thread>
@@ -1438,117 +1437,6 @@ std::string ExtractNumericPrefix(const std::string& str)
         trimmed = trimmed.substr(0, end);
     }
     return trimmed;
-}
-
-bool IsContainerProcess(pid_t pid)
-{
-    const std::string procStatusPathFormat = "/proc/%d/status";
-    const std::string nspidTag = "NSpid:";
-    constexpr size_t nspidTagLen = 6;
-    constexpr int containerProcessPidCount = 2;
-
-    std::string path = StringPrintf(procStatusPathFormat.c_str(), pid);
-    std::string content = ReadFileToString(path);
-    if (content.empty()) {
-        HLOGD("IsContainerProcess pid %d: false (failed to read status)", pid);
-        return false;
-    }
-
-    size_t pos = content.find(nspidTag);
-    if (pos == std::string::npos) {
-        HLOGD("IsContainerProcess pid %d: false (no NSpid tag)", pid);
-        return false;
-    }
-
-    size_t endPos = content.find('\n', pos);
-    if (endPos == std::string::npos) {
-        endPos = content.size();
-    }
-    std::string nspidLine = content.substr(pos + nspidTagLen, endPos - pos - nspidTagLen);
-
-    auto parts = StringSplit(StringTrim(nspidLine), "\t");
-    int pidCount = 0;
-    for (const auto& part : parts) {
-        if (!part.empty()) {
-            pidCount++;
-        }
-    }
-    bool isContainer = pidCount >= containerProcessPidCount;
-    HLOGD("IsContainerProcess pid %d: %s (NSpid count %d)", pid, isContainer ? "true" : "false", pidCount);
-    return isContainer;
-}
-
-class DlopenHelper {
-public:
-    explicit DlopenHelper(const std::string& libPath)
-    {
-#if defined(is_ohos) && is_ohos
-        std::string resolvedPath = CanonicalizeSpecPath(libPath.c_str());
-        if (resolvedPath.empty()) {
-            HLOGE("CanonicalizeSpecPath failed for %s", libPath.c_str());
-            return;
-        }
-        handle_ = dlopen(resolvedPath.c_str(), RTLD_LAZY);
-        if (!handle_) {
-            HLOGE("dlopen %s failed: %s", resolvedPath.c_str(), dlerror());
-        } else {
-            HLOGD("dlopen %s success", resolvedPath.c_str());
-        }
-#endif
-    }
-
-    ~DlopenHelper()
-    {
-#if defined(is_ohos) && is_ohos
-        if (handle_) {
-            dlclose(handle_);
-            handle_ = nullptr;
-        }
-#endif
-    }
-
-    bool IsValid() const
-    {
-        return handle_ != nullptr;
-    }
-
-    template<typename FuncType>
-    FuncType GetSymbol(const std::string& symbolName) const
-    {
-#if defined(is_ohos) && is_ohos
-        if (handle_) {
-            return reinterpret_cast<FuncType>(dlsym(handle_, symbolName.c_str()));
-        }
-#endif
-        return nullptr;
-    }
-
-private:
-    void* handle_ = nullptr;
-};
-
-void AdaptContainerSymbolFilePath(std::string& path)
-{
-#if defined(is_ohos) && is_ohos
-    static DlopenHelper helper("/system/lib64/libhiperf_utils.so");
-    static bool (*adaptFunc)(const char*, char*, const size_t) = nullptr;
-    static bool loaded = false;
-
-    if (!loaded) {
-        if (helper.IsValid()) {
-            adaptFunc = helper.GetSymbol<bool(*)(const char*, char*, const size_t)>("AdaptContainerSymbolFilePath");
-        }
-        loaded = true;
-    }
-
-    if (adaptFunc) {
-        constexpr size_t maxPathLength = 256;
-        char buffer[maxPathLength];
-        if (adaptFunc(path.c_str(), buffer, maxPathLength)) {
-            path = std::string(buffer);
-        }
-    }
-#endif
 }
 } // namespace HiPerf
 } // namespace Developtools
