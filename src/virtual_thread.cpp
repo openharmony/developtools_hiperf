@@ -208,6 +208,7 @@ void VirtualThread::ParseMap()
     if (!(OHOS::HiviewDFX::DfxMaps::Create(pid_, memMaps_, memMapsIndexs_))) {
         HLOGE("VirtualThread Failed to Parse Map.");
     }
+    FixContainerMap();
     SortMemMaps();
 }
 #endif
@@ -217,6 +218,19 @@ void VirtualThread::FixHMBundleMap()
     // fix bundle path in map
     for (auto &map : memMaps_) {
         NeedAdaptHMBundlePath(map->name, name_);
+    }
+}
+
+void VirtualThread::FixContainerMap()
+{
+    if (!isContainerProcess_) {
+        return;
+    }
+    std::string containerRoot = StringPrintf("/proc/%d/root", pid_);
+    for (auto &map : memMaps_) {
+        if (!StringStartsWith(map->name, containerRoot)) {
+            map->name = containerRoot + map->name;
+        }
     }
 }
 
@@ -336,11 +350,18 @@ std::shared_ptr<DfxMap> VirtualThread::CreateMapItem(const std::string &filename
                                                      const uint64_t len, const uint64_t offset,
                                                      const uint32_t prot)
 {
-    if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(filename)) {
+    std::string adaptedFilename = filename;
+    if (isContainerProcess_) {
+        std::string containerRoot = StringPrintf("/proc/%d/root", pid_);
+        if (!StringStartsWith(adaptedFilename, containerRoot)) {
+            adaptedFilename = containerRoot + adaptedFilename;
+        }
+    }
+    if (!OHOS::HiviewDFX::DfxMaps::IsLegalMapItem(adaptedFilename)) {
         return nullptr; // skip some memmap
     }
     std::shared_ptr<DfxMap> map = memMaps_.emplace_back(std::make_shared<DfxMap>(begin, begin + len, offset,
-        prot, filename));
+        prot, adaptedFilename));
     memMapsIndexs_.emplace_back(memMaps_.size() >= 1 ? memMaps_.size() - 1 : 0);
     if (map->name.find("libadlt") != std::string::npos && EndsWith(map->name, ".so")) {
         if (!getLoadBaseFlag && offset == 0 && ((prot & PROT_EXEC) == 0)) {

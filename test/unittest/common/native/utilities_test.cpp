@@ -1321,6 +1321,49 @@ HWTEST_F(UtilitiesTest, IsUnlockedDevice_ReturnsExpectedByDeviceType, TestSize.L
     EXPECT_EQ(IsUnlockedDevice(), deviceType == "orange");
 }
 
+/**
+ * @tc.name: IsContainerProcess_InvalidPid
+ * @tc.desc: Test IsContainerProcess with invalid PID (cannot read status)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsContainerProcess_InvalidPid, TestSize.Level2)
+{
+    EXPECT_FALSE(IsContainerProcess(-1));
+    EXPECT_FALSE(IsContainerProcess(9999999));
+}
+
+/**
+ * @tc.name: IsContainerProcess_CurrentProcess
+ * @tc.desc: Test IsContainerProcess with current process PID
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsContainerProcess_CurrentProcess, TestSize.Level2)
+{
+    pid_t currentPid = getpid();
+    bool result = IsContainerProcess(currentPid);
+    std::string statusPath = StringPrintf("/proc/%d/status", currentPid);
+    std::string content = ReadFileToString(statusPath);
+    
+    if (content.find("NSpid:") == std::string::npos) {
+        EXPECT_FALSE(result);
+    } else {
+        size_t pos = content.find("NSpid:");
+        size_t endPos = content.find('\n', pos);
+        if (endPos == std::string::npos) {
+            endPos = content.size();
+        }
+        std::string nspidLine = content.substr(pos + 6, endPos - pos - 6);
+        auto parts = StringSplit(StringTrim(nspidLine), "\t");
+        int pidCount = 0;
+        for (const auto& part : parts) {
+            if (!part.empty()) {
+                pidCount++;
+            }
+        }
+        EXPECT_EQ(result, pidCount >= 2);
+    }
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
