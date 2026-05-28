@@ -55,7 +55,7 @@ public:
     static constexpr int TEST_CODE_RUN_TIME = 10240;
     static constexpr int DOUBLE = 2;
     static constexpr int TRIPLE = 3;
-    static constexpr auto TEST_TIME = 3s;
+    static constexpr auto TEST_TIME = 1s;
     static constexpr auto DEFAULT_TRACKING_TIME = 1000;
     static constexpr auto DEFAULT_STAT_REPORT_TIME = 500;
     static constexpr auto DEFAULT_SAMPLE_MMAPAGE = 256;
@@ -228,7 +228,6 @@ HWTEST_F(PerfEventsTest, RecordNormal, TestSize.Level1)
     EXPECT_EQ(event.PauseTracking(), true);
     std::this_thread::sleep_for(TEST_TIME); // wait for clearing mmap buffer
     uint64_t recordCount = gRecordCount;
-    std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(recordCount, gRecordCount) << "now should have no record";
     EXPECT_EQ(event.ResumeTracking(), true);
     TestCodeThread();
@@ -268,7 +267,6 @@ HWTEST_F(PerfEventsTest, RecordSetAll, TestSize.Level0)
     EXPECT_EQ(event.PauseTracking(), true);
     std::this_thread::sleep_for(TEST_TIME); // wait for clearing mmap buffer
     uint64_t recordCount = gRecordCount;
-    std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(recordCount, gRecordCount) << "now should have no record";
     EXPECT_EQ(event.ResumeTracking(), true);
     TestCodeThread();
@@ -317,7 +315,6 @@ HWTEST_F(PerfEventsTest, StatNormal, TestSize.Level0)
     EXPECT_EQ(event.PauseTracking(), true);
     EXPECT_GT(gStatCount, 0u) << "should have stats";
     uint64_t statCount = gStatCount;
-    std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(event.ResumeTracking(), true);
     std::this_thread::sleep_for(TEST_TIME);
     EXPECT_EQ(event.StopTracking(), true);

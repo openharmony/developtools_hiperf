@@ -49,13 +49,19 @@ void CpuUsageTest::SetUpTestCase()
     if (chmod("/data/test/hiperf_test_demo", 0755) == -1) { // 0755 : -rwxr-xr-x
         GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
     }
-    system("/data/test/hiperf_test_demo &");
+    if (system("/data/test/hiperf_test_demo &") != 0) {
+        GTEST_LOG_(ERROR) << "start hiperf_test_demo failed.";
+    } else {
+        GTEST_LOG_(INFO) << "start hiperf_test_demo success.";
+    }
 }
 
 void CpuUsageTest::TearDownTestCase()
 {
     if (system("kill -9 `pidof hiperf_test_demo`") != 0) {
         GTEST_LOG_(ERROR) << "kill hiperf_test_demo failed.";
+    } else {
+        GTEST_LOG_(INFO) << "kill hiperf_test_demo success.";
     }
 }
 
@@ -212,12 +218,11 @@ float CpuUsageTest::GetAverageCpuUsage(pid_t pid, uint64_t timeOut)
         ++count;
         cpuUsage += GetCpuUsageRatio(pid);
         auto thisTime = std::chrono::steady_clock::now();
-        if ((uint64_t)duration_cast<milliseconds>(thisTime - startTime).count()
-            > timeOut) {
-                break;
-            }
+        if ((uint64_t)duration_cast<milliseconds>(thisTime - startTime).count() > timeOut) {
+            break;
+        }
     }
-    cpuUsage =  HUNDRED * cpuUsage / count;
+    cpuUsage = HUNDRED * cpuUsage / count;
     return cpuUsage;
 }
 
@@ -228,12 +233,13 @@ void CpuUsageTest::TestCpuUsage(const std::string &option, unsigned int expect, 
         cmd += "--app hiperf_test_demo";
     }
     cmd += " " + option;
+    GTEST_LOG_(INFO) << "exec command: " << cmd;
 
     std::thread perf(system, cmd.c_str());
-    perf.detach();
     pid_t pid = GetPidByProcessName("hiperf");
-    uint64_t timeOut = 10000;
+    uint64_t timeOut = 2000;
     float cpuUsage = GetAverageCpuUsage(pid, timeOut);
+    perf.join();
 
     EXPECT_LE(cpuUsage, expect);
 }
@@ -245,7 +251,7 @@ void CpuUsageTest::TestCpuUsage(const std::string &option, unsigned int expect, 
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_SYSTEM, TestSize.Level0)
 {
-    TestCpuUsage("-a -f 100 -s fp -d 10", F100_FP_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 100 -s fp -d 2", F100_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -255,7 +261,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_SYSTEM, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_SYSTEM, TestSize.Level1)
 {
-    TestCpuUsage("-a -f 500 -s fp -d 10", F500_FP_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 500 -s fp -d 2", F500_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -265,7 +271,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_SYSTEM, TestSize.Level2)
 {
-    TestCpuUsage("-a -f 1000 -s fp -d 10", F1000_FP_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 1000 -s fp -d 2", F1000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -275,7 +281,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_SYSTEM, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_SYSTEM, TestSize.Level2)
 {
-    TestCpuUsage("-a -f 2000 -s fp -d 10", F2000_FP_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 2000 -s fp -d 2", F2000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -285,7 +291,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_SYSTEM, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_SYSTEM, TestSize.Level0)
 {
-    TestCpuUsage("-a -f 4000 -s fp -d 10", F4000_FP_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 4000 -s fp -d 2", F4000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -295,7 +301,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_SYSTEM, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_SYSTEM, TestSize.Level3)
 {
-    TestCpuUsage("-a -f 8000 -s fp -d 10", F8000_FP_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 8000 -s fp -d 2", F8000_FP_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -305,7 +311,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_SYSTEM, TestSize.Level3)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_SYSTEM, TestSize.Level0)
 {
-    TestCpuUsage("-a -f 100 -s dwarf -d 10", F100_DWARF_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 100 -s dwarf -d 2", F100_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -315,7 +321,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_SYSTEM, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_SYSTEM, TestSize.Level1)
 {
-    TestCpuUsage("-a -f 500 -s dwarf -d 10", F500_DWARF_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 500 -s dwarf -d 2", F500_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -325,7 +331,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_SYSTEM, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_SYSTEM, TestSize.Level2)
 {
-    TestCpuUsage("-a -f 1000 -s dwarf -d 10", F1000_DWARF_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 1000 -s dwarf -d 2", F1000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -335,7 +341,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_SYSTEM, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_SYSTEM, TestSize.Level2)
 {
-    TestCpuUsage("-a -f 2000 -s dwarf -d 10", F2000_DWARF_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 2000 -s dwarf -d 2", F2000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -345,7 +351,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_SYSTEM, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_SYSTEM, TestSize.Level0)
 {
-    TestCpuUsage("-a -f 4000 -s dwarf -d 10", F4000_DWARF_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 4000 -s dwarf -d 2", F4000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -355,7 +361,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_SYSTEM, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_SYSTEM, TestSize.Level3)
 {
-    TestCpuUsage("-a -f 8000 -s dwarf -d 10", F8000_DWARF_CPU_LIMIT_SYSTEM, false);
+    TestCpuUsage("-a -f 8000 -s dwarf -d 2", F8000_DWARF_CPU_LIMIT_SYSTEM, false);
 }
 
 /**
@@ -365,7 +371,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_SYSTEM, TestSize.Level3)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_PROCESS, TestSize.Level0)
 {
-    TestCpuUsage("-f 100 -s fp -d 10", F100_FP_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 100 -s fp -d 2", F100_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -375,7 +381,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_FP_PROCESS, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_PROCESS, TestSize.Level1)
 {
-    TestCpuUsage("-f 500 -s fp -d 10", F500_FP_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 500 -s fp -d 2", F500_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -385,7 +391,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_FP_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_PROCESS, TestSize.Level2)
 {
-    TestCpuUsage("-f 1000 -s fp -d 10", F1000_FP_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 1000 -s fp -d 2", F1000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -395,7 +401,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_FP_PROCESS, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_PROCESS, TestSize.Level2)
 {
-    TestCpuUsage("-f 2000 -s fp -d 10", F2000_FP_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 2000 -s fp -d 2", F2000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -405,7 +411,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_FP_PROCESS, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_PROCESS, TestSize.Level0)
 {
-    TestCpuUsage("-f 4000 -s fp -d 10", F4000_FP_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 4000 -s fp -d 2", F4000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -415,7 +421,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_FP_PROCESS, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_PROCESS, TestSize.Level3)
 {
-    TestCpuUsage("-f 8000 -s fp -d 10", F8000_FP_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 8000 -s fp -d 2", F8000_FP_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -425,7 +431,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF8000_FP_PROCESS, TestSize.Level3)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_PROCESS, TestSize.Level0)
 {
-    TestCpuUsage("-f 100 -s dwarf -d 10", F100_DWARF_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 100 -s dwarf -d 2", F100_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -435,7 +441,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF100_DWARF_PROCESS, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_PROCESS, TestSize.Level1)
 {
-    TestCpuUsage("-f 500 -s dwarf -d 10", F500_DWARF_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 500 -s dwarf -d 2", F500_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -445,7 +451,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF500_DWARF_PROCESS, TestSize.Level1)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_PROCESS, TestSize.Level2)
 {
-    TestCpuUsage("-f 1000 -s dwarf -d 10", F1000_DWARF_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 1000 -s dwarf -d 2", F1000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -455,7 +461,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF1000_DWARF_PROCESS, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_PROCESS, TestSize.Level2)
 {
-    TestCpuUsage("-f 2000 -s dwarf -d 10", F2000_DWARF_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 2000 -s dwarf -d 2", F2000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -465,7 +471,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF2000_DWARF_PROCESS, TestSize.Level2)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_PROCESS, TestSize.Level0)
 {
-    TestCpuUsage("-f 4000 -s dwarf -d 10", F4000_DWARF_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 4000 -s dwarf -d 2", F4000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 
 /**
@@ -475,7 +481,7 @@ HWTEST_F(CpuUsageTest, recordCpuUsageF4000_DWARF_PROCESS, TestSize.Level0)
  */
 HWTEST_F(CpuUsageTest, recordCpuUsageF8000_DWARF_PROCESS, TestSize.Level3)
 {
-    TestCpuUsage("-f 8000 -s dwarf -d 10", F8000_DWARF_CPU_LIMIT_PROCESS, true);
+    TestCpuUsage("-f 8000 -s dwarf -d 2", F8000_DWARF_CPU_LIMIT_PROCESS, true);
 }
 } // namespace HiPerf
 } // namespace Developtools

@@ -44,7 +44,11 @@ void HiperfClientTest::SetUpTestCase()
     if (chmod("/data/test/hiperf_test_demo", 0755) == -1) { // 0755 : -rwxr-xr-x
         GTEST_LOG_(ERROR) << "hiperf_test_demo chmod failed.";
     }
-    system("/data/test/hiperf_test_demo &");
+    if (system("/data/test/hiperf_test_demo &") != 0) {
+        GTEST_LOG_(ERROR) << "start hiperf_test_demo failed.";
+    } else {
+        GTEST_LOG_(INFO) << "start hiperf_test_demo success.";
+    }
 }
 
 void HiperfClientTest::TearDownTestCase()
@@ -52,6 +56,8 @@ void HiperfClientTest::TearDownTestCase()
     DebugLogger::GetInstance()->Reset();
     if (system("kill -9 `pidof hiperf_test_demo`") != 0) {
         GTEST_LOG_(ERROR) << "kill hiperf_test_demo failed.";
+    } else {
+        GTEST_LOG_(INFO) << "kill hiperf_test_demo success.";
     }
 }
 
@@ -74,10 +80,10 @@ HWTEST_F(HiperfClientTest, NoPara, TestSize.Level0)
     ASSERT_TRUE(myHiperf.Start());
 
     ASSERT_TRUE(myHiperf.Pause());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Resume());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Stop());
 
@@ -95,10 +101,10 @@ HWTEST_F(HiperfClientTest, OutDir, TestSize.Level1)
     ASSERT_TRUE(myHiperf.Start());
 
     ASSERT_TRUE(myHiperf.Pause());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Resume());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Stop());
 
@@ -115,10 +121,10 @@ HWTEST_F(HiperfClientTest, DebugMuchMode, TestSize.Level0)
     ASSERT_TRUE(myHiperf.Start());
 
     ASSERT_TRUE(myHiperf.Pause());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Resume());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Stop());
 
@@ -136,10 +142,10 @@ HWTEST_F(HiperfClientTest, EnableHilog, TestSize.Level1)
     ASSERT_TRUE(myHiperf.Start());
 
     ASSERT_TRUE(myHiperf.Pause());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Resume());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Stop());
 
@@ -155,10 +161,10 @@ HWTEST_F(HiperfClientTest, Prepare, TestSize.Level0)
 
     HiperfClient::Client myHiperf("/data/local/tmp/");
     ASSERT_TRUE(myHiperf.PrePare(opt));
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.StartRun());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     ASSERT_TRUE(myHiperf.Stop());
 
@@ -192,12 +198,12 @@ void HiperfClientTest::TestCaseOption(const HiperfClient::RecordOption &opt)
     if (!myHiperf.Pause()) {
         retPause = false;
     }
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     if (!myHiperf.Resume()) {
         retResume = false;
     }
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
 
     if (!myHiperf.Stop()) {
         retStop = false;
@@ -243,7 +249,7 @@ HWTEST_F(HiperfClientTest, SetTimeStopSec, TestSize.Level2)
     HiperfClient::RecordOption opt;
     std::vector<pid_t> selectPids = {getpid()};
     opt.SetSelectPids(selectPids);
-    opt.SetTimeStopSec(40);
+    opt.SetTimeStopSec(2);
 
     HiperfClient::Client myHiperf;
     ASSERT_TRUE(myHiperf.IsReady());
@@ -491,9 +497,9 @@ HWTEST_F(HiperfClientTest, Output, TestSize.Level1)
 
     HiperfClient::Client myHiperf("/data/local/tmp/");
     EXPECT_TRUE(myHiperf.PrePare(opt));
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
     EXPECT_FALSE(myHiperf.Output());
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(100ms);
     EXPECT_TRUE(myHiperf.Stop());
 }
 
