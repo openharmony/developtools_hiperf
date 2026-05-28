@@ -157,6 +157,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" disableUnwind_:\t%d\n", disableUnwind_);
     printf(" disableCallstackExpend_:\t%d\n", disableCallstackExpend_);
     printf(" enableDebugInfoSymbolic:\t%d\n", enableDebugInfoSymbolic_);
+    printf(" sampleRaw_:\t%d\n", sampleRaw_);
     printf(" symbolDir_:\t%s\n", VectorToString(symbolDir_).c_str());
     printf(" outputFilename_:\t%s\n", outputFilename_.c_str());
     printf(" appPackage_:\t%s\n", appPackage_.c_str());
@@ -267,6 +268,9 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         return false;
     }
     if (!GetOptionFrequencyAndPeriod(args)) {
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--raw-data", cpuPercent_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--cpu-limit", cpuPercent_)) {
@@ -1101,6 +1105,7 @@ void SubCommandRecord::ConfigureBasicParams()
     perfEvents_.SetTimeOut(timeStopSec_);
     perfEvents_.SetVerboseReport(verboseReport_);
     perfEvents_.SetMmapPages(mmapPages_);
+    perfEvents_.SetSampleRaw(sampleRaw_);
 
     if (!clockId_.empty()) {
         perfEvents_.SetClockId(GetClockId(clockId_));

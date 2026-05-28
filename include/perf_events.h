@@ -394,6 +394,7 @@ public:
 
     void SetSampleFrequency(const unsigned int frequency);
     void SetSamplePeriod(const unsigned int period);
+    void SetSampleRaw(const bool sampleRaw);
 
     // for background track
     void SetBackTrack(const bool backtrack);
@@ -621,6 +622,7 @@ private:
 
     unsigned int samplePeriod_ = 0;
     unsigned int sampleFreq_ = 0;
+    bool sampleRaw_ = false;
     uint64_t config_ = 0;
     uint64_t config1_ = 0;
     uint64_t config2_ = 0;
