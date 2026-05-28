@@ -433,6 +433,60 @@ HWTEST_F(VirtualThreadTest, ParseDevhostMapEachLine, TestSize.Level1)
         }
     }
 }
+
+/**
+ * @tc.name: FixContainerMap_NonContainerProcess
+ * @tc.desc: Test FixContainerMap does not modify maps for non-container process
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualThreadTest, FixContainerMap_NonContainerProcess, TestSize.Level1)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    VirtualThread thread(getpid(), files);
+    thread.CreateMapItem("/system/lib/libtest.so", 0x1000, 0x2000, 0x0);
+    
+    auto& mapsBefore = thread.GetMaps();
+    ASSERT_GT(mapsBefore.size(), 0u);
+    std::string nameBefore = mapsBefore[0]->name;
+    
+    thread.FixContainerMap();
+    
+    auto& mapsAfter = thread.GetMaps();
+    EXPECT_EQ(mapsAfter[0]->name, nameBefore);
+}
+
+/**
+ * @tc.name: CreateMapItem_NonContainerProcess
+ * @tc.desc: Test CreateMapItem does not modify path for non-container process
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualThreadTest, CreateMapItem_NonContainerProcess, TestSize.Level1)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    VirtualThread thread(getpid(), files);
+    
+    thread.CreateMapItem("/system/lib/libtest.so", 0x1000, 0x2000, 0x0);
+    auto& maps = thread.GetMaps();
+    
+    ASSERT_GT(maps.size(), 0u);
+    EXPECT_EQ(maps[0]->name, "/system/lib/libtest.so");
+}
+
+/**
+ * @tc.name: CreateMapItem_IllegalMapItem
+ * @tc.desc: Test CreateMapItem returns nullptr for illegal map items
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualThreadTest, CreateMapItem_IllegalMapItem, TestSize.Level2)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    VirtualThread thread(getpid(), files);
+    
+    EXPECT_EQ(thread.CreateMapItem("", 0x1000, 0x2000, 0x0), nullptr);
+    EXPECT_EQ(thread.CreateMapItem("[heap]", 0x1000, 0x2000, 0x0), nullptr);
+    EXPECT_EQ(thread.CreateMapItem("[stack]", 0x1000, 0x2000, 0x0), nullptr);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

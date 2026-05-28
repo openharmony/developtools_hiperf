@@ -1438,6 +1438,44 @@ std::string ExtractNumericPrefix(const std::string& str)
     }
     return trimmed;
 }
+
+bool IsContainerProcess(pid_t pid)
+{
+    const std::string procStatusPathFormat = "/proc/%d/status";
+    const std::string nspidTag = "NSpid:";
+    constexpr size_t nspidTagLen = 6;
+    constexpr int containerProcessPidCount = 2;
+
+    std::string path = StringPrintf(procStatusPathFormat.c_str(), pid);
+    std::string content = ReadFileToString(path);
+    if (content.empty()) {
+        HLOGD("IsContainerProcess pid %d: false (failed to read status)", pid);
+        return false;
+    }
+
+    size_t pos = content.find(nspidTag);
+    if (pos == std::string::npos) {
+        HLOGD("IsContainerProcess pid %d: false (no NSpid tag)", pid);
+        return false;
+    }
+
+    size_t endPos = content.find('\n', pos);
+    if (endPos == std::string::npos) {
+        endPos = content.size();
+    }
+    std::string nspidLine = content.substr(pos + nspidTagLen, endPos - pos - nspidTagLen);
+
+    auto parts = StringSplit(StringTrim(nspidLine), "\t");
+    int pidCount = 0;
+    for (const auto& part : parts) {
+        if (!part.empty()) {
+            pidCount++;
+        }
+    }
+    bool isContainer = pidCount >= containerProcessPidCount;
+    HLOGD("IsContainerProcess pid %d: %s (NSpid count %d)", pid, isContainer ? "true" : "false", pidCount);
+    return isContainer;
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
