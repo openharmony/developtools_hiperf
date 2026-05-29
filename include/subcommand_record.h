@@ -265,6 +265,7 @@ private:
     bool kernelCallChain_ = true;
     bool callChainUserOnly_ = false;
     bool report_ = false;
+    bool sampleRaw_ = false;
     float timeStopSec_ = PerfEvents::DEFAULT_TIMEOUT;
     int frequency_ = 0;
     int period_ = 0;

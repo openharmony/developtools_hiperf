@@ -571,6 +571,10 @@ void PerfEvents::SetEventAttr(EventItem &eventItem, const perf_type_id type, con
         eventItem.attr.sample_type = SAMPLE_TYPE;
     }
 
+    if (sampleRaw_) {
+        eventItem.attr.sample_type |= PERF_SAMPLE_RAW;
+    }
+
     if (isHM_) {
         eventItem.attr.sample_type |= PERF_SAMPLE_SERVER_PID;
     }
@@ -1071,6 +1075,11 @@ void PerfEvents::SetSamplePeriod(const unsigned int period)
     if (period > 0) {
         samplePeriod_ = period;
     }
+}
+
+void PerfEvents::SetSampleRaw(const bool sampleRaw)
+{
+    sampleRaw_ = sampleRaw;
 }
 
 void PerfEvents::SetBackTrack(const bool backtrack)
