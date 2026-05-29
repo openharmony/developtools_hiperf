@@ -18,6 +18,7 @@
 #include <cinttypes>
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 
 namespace OHOS {
 namespace Developtools {
@@ -109,6 +110,35 @@ bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::stri
         GTEST_LOG_(ERROR) << "Failed to match keyword : " << keywords[checkIdx];
     }
     return checkIdx == keywords.size();
+}
+bool GetAppPids(const std::string& appName, std::vector<std::string>& pids)
+{
+    if (appName.empty()) {
+        return false;
+    }
+    const std::string cmds = std::string("pidof ") + appName;
+    pids.clear();
+    FILE *fp = nullptr;
+    fp = popen(cmds.c_str(), "r");
+    if (fp == nullptr) {
+        perror("popen execute failed\n");
+        return false;
+    }
+    const int bufLen = 1024;
+    char res[bufLen] = { '\0' };
+    while (fgets(res, sizeof(res), fp) != nullptr) {
+        std::string line(res);
+        if (!line.empty() && line.back() == '\n') {
+            line.pop_back();
+        }
+        std::istringstream iss(line);
+        std::string pid;
+        while (iss >> pid) {
+            pids.push_back(pid);
+        }
+    }
+    pclose(fp);
+    return true;
 }
 } // namespace HiPerf
 } // namespace Developtools

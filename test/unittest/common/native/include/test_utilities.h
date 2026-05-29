@@ -26,6 +26,7 @@ bool GetMemMapOffset(pid_t devhostPid, uint64_t &mapOffset,
                      std::vector<std::shared_ptr<OHOS::HiviewDFX::DfxMap>> &memMaps, std::string &line);
 bool RunCmd(const std::string& cmdstr);
 bool CheckTraceCommandOutput(const std::string& cmd, const std::vector<std::string>& keywords);
+bool GetAppPids(const std::string& appName, std::vector<std::string>& pids);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

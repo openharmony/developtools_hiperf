@@ -47,6 +47,7 @@ sources_base = [
   "unittest/common/native/spe_decoder_test.cpp",
   "unittest/common/native/test_utilities.cpp",
   "unittest/common/native/perf_pipe_test.cpp",
+  "unittest/common/native/cmd_output_test.cpp",
 ]
 
 if (hiperf_debug) {
