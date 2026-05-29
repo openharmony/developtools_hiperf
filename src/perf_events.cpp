@@ -571,7 +571,7 @@ void PerfEvents::SetEventAttr(EventItem &eventItem, const perf_type_id type, con
         eventItem.attr.sample_type = SAMPLE_TYPE;
     }
 
-    if (sampleRaw_ && type == PERF_TYPE_TRACEPOINT) {
+    if (sampleRaw_) {
         eventItem.attr.sample_type |= PERF_SAMPLE_RAW;
     }
 
