@@ -270,7 +270,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!GetOptionFrequencyAndPeriod(args)) {
         return false;
     }
-    if (!Option::GetOptionValue(args, "--raw-data", cpuPercent_)) {
+    if (!Option::GetOptionValue(args, "--raw-data", sampleRaw_)) {
         return false;
     }
     if (!Option::GetOptionValue(args, "--cpu-limit", cpuPercent_)) {
