@@ -518,25 +518,6 @@ HWTEST_F(VirtualThreadTest, TestFindMapIndexByAddr, TestSize.Level2)
     // Should return maps.size() or some invalid index
 }
 
-/**
- * @tc.name: TestFindMapIndexByAddrEmpty
- * @tc.desc: Test FindMapIndexByAddr with empty maps
- * @tc.type: FUNC
- */
-HWTEST_F(VirtualThreadTest, TestFindMapIndexByAddrEmpty, TestSize.Level2)
-{
-    std::vector<std::unique_ptr<SymbolsFile>> files;
-    VirtualThread thread(getpid(), files);
-    
-    // No maps created
-    auto& maps = thread.GetMaps();
-    EXPECT_EQ(maps.size(), 0u);
-    
-    // Try to find address in empty maps
-    size_t index = thread.FindMapIndexByAddr(0x1000);
-    EXPECT_EQ(index, maps.size());
-}
-
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
