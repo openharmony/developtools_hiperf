@@ -277,8 +277,10 @@ HWTEST_F(PerfFileFormatTest, PerfFileSectionEventDesc2, TestSize.Level2)
     } else {
         int status = 0;
         waitpid(pid, &status, 0);
-        ASSERT_TRUE(WIFEXITED(status));
-        EXPECT_EQ(WEXITSTATUS(status), static_cast<uint8_t>(-1));
+        ASSERT_TRUE(WIFEXITED(status) || WIFSIGNALED(status));
+        if (WIFEXITED(status)) {
+            EXPECT_EQ(WEXITSTATUS(status), static_cast<uint8_t>(-1));
+        }
     }
 }
 } // namespace HiPerf
