@@ -2278,25 +2278,24 @@ HWTEST_F(SubCommandRecordTest, CheckThreadName, TestSize.Level1)
     }
     EXPECT_EQ(get, true);
 
-    std::string recordCommand = "-t " + std::to_string(timeTid) + " -d 5 -s dwarf -o /data/local/tmp/tid_name.data";
+    std::string recordCommand = "-t " + std::to_string(timeTid) +
+                                " -d 5 -e sw-context-switches --period 1 -s dwarf -o /data/local/tmp/tid_name.data";
     TestRecordCommand(recordCommand, true, false);
     StdoutRecord stdoutRecord;
     stdoutRecord.Start();
-    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/tid_name.data -o /data/local/tmp/tid_name.report"),
-              true);
+    EXPECT_EQ(Command::DispatchCommand("report -i /data/local/tmp/tid_name.data"), true);
     std::string stringOut = stdoutRecord.Stop();
     EXPECT_EQ(stringOut.find("report done") != std::string::npos, true);
 
-    std::ifstream ifs("/data/local/tmp/tid_name.report", std::ifstream::in);
-    EXPECT_EQ(ifs.is_open(), true);
+    // Parse report content directly from stdout
+    std::istringstream stream(stringOut);
     std::string line;
-    while (getline(ifs, line)) {
+    while (getline(stream, line)) {
         if (line.find("timer_thread") != std::string::npos) {
             checkRet = true;
             break;
         }
     }
-    ifs.close();
     EXPECT_EQ(checkRet, true);
 }
 
