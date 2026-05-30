@@ -1450,8 +1450,6 @@ HWTEST_F(UtilitiesTest, TestIsStringToIntSuccessInvalid, TestSize.Level2)
     EXPECT_FALSE(IsStringToIntSuccess("", num));
     EXPECT_FALSE(IsStringToIntSuccess("12a3", num));
     EXPECT_FALSE(IsStringToIntSuccess("a123", num));
-    
-    
 }
 
 /**
