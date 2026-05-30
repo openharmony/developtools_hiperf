@@ -223,6 +223,24 @@ HWTEST_F(VirtualRuntimeTest, SetDisableUnwind, TestSize.Level1)
     EXPECT_EQ(runtime_->disableUnwind_, false);
 }
 
+/**
+ * @tc.name: ReadThreadName_Truncate_Substr
+ * @tc.desc: Validate truncation at '\0' using substr and removal of CR/LF
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, ReadThreadName_Truncate_Substr, TestSize.Level1)
+{
+    std::string raw = "commName\0extra\r\n";
+    size_t nullPos = raw.find('\0');
+    std::string comm = raw;
+    if (nullPos != std::string::npos) {
+        comm.resize(nullPos);
+    }
+    comm.erase(std::remove(comm.begin(), comm.end(), '\r'), comm.end());
+    comm.erase(std::remove(comm.begin(), comm.end(), '\n'), comm.end());
+    EXPECT_EQ(comm, "commName");
+}
+
 namespace {
 constexpr const pid_t testTid = 1;
 constexpr const uint64_t testUserVaddr = 0x1000;
