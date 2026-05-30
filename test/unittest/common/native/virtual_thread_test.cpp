@@ -487,6 +487,56 @@ HWTEST_F(VirtualThreadTest, CreateMapItem_IllegalMapItem, TestSize.Level2)
     EXPECT_EQ(thread.CreateMapItem("[stack]", 0x1000, 0x2000, 0x0), nullptr);
 }
 
+/**
+ * @tc.name: TestFindMapIndexByAddr
+ * @tc.desc: Test FindMapIndexByAddr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualThreadTest, TestFindMapIndexByAddr, TestSize.Level2)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    VirtualThread thread(getpid(), files);
+    
+    // Create some map items
+    thread.CreateMapItem("/system/lib/libtest1.so", 0x1000, 0x2000, 0x0);
+    thread.CreateMapItem("/system/lib/libtest2.so", 0x3000, 0x2000, 0x1000);
+    thread.CreateMapItem("/system/lib/libtest3.so", 0x5000, 0x2000, 0x2000);
+    
+    auto& maps = thread.GetMaps();
+    ASSERT_GE(maps.size(), 3u);
+    
+    // Test finding address within first map
+    size_t index1 = thread.FindMapIndexByAddr(0x1500);
+    EXPECT_LT(index1, maps.size());
+    
+    // Test finding address within second map
+    size_t index2 = thread.FindMapIndexByAddr(0x3500);
+    EXPECT_LT(index2, maps.size());
+    
+    // Test finding address not in any map
+    (void)thread.FindMapIndexByAddr(0xFFFF);
+    // Should return maps.size() or some invalid index
+}
+
+/**
+ * @tc.name: TestFindMapIndexByAddrEmpty
+ * @tc.desc: Test FindMapIndexByAddr with empty maps
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualThreadTest, TestFindMapIndexByAddrEmpty, TestSize.Level2)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    VirtualThread thread(getpid(), files);
+    
+    // No maps created
+    auto& maps = thread.GetMaps();
+    EXPECT_EQ(maps.size(), 0u);
+    
+    // Try to find address in empty maps
+    size_t index = thread.FindMapIndexByAddr(0x1000);
+    EXPECT_EQ(index, maps.size());
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

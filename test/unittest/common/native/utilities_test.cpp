@@ -1370,6 +1370,112 @@ HWTEST_F(UtilitiesTest, IsContainerProcess_CurrentProcess, TestSize.Level2)
     }
 }
 
+/**
+ * @tc.name: TestRoundUpBasic
+ * @tc.desc: Test RoundUp function with basic alignment values
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, TestRoundUpBasic, TestSize.Level2)
+{
+    // Test alignment with 4
+    EXPECT_EQ(RoundUp(0, 4), 0u);
+    EXPECT_EQ(RoundUp(1, 4), 4u);
+    EXPECT_EQ(RoundUp(2, 4), 4u);
+    EXPECT_EQ(RoundUp(3, 4), 4u);
+    EXPECT_EQ(RoundUp(4, 4), 4u);
+    EXPECT_EQ(RoundUp(5, 4), 8u);
+    
+    // Test alignment with 8
+    EXPECT_EQ(RoundUp(0, 8), 0u);
+    EXPECT_EQ(RoundUp(7, 8), 8u);
+    EXPECT_EQ(RoundUp(8, 8), 8u);
+    EXPECT_EQ(RoundUp(9, 8), 16u);
+    
+    // Test alignment with 16
+    EXPECT_EQ(RoundUp(15, 16), 16u);
+    EXPECT_EQ(RoundUp(16, 16), 16u);
+    EXPECT_EQ(RoundUp(17, 16), 32u);
+}
+
+/**
+ * @tc.name: TestRoundUpLargeValues
+ * @tc.desc: Test RoundUp function with large values
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, TestRoundUpLargeValues, TestSize.Level2)
+{
+    // Test large values
+    EXPECT_EQ(RoundUp(1000, 4), 1000u);
+    EXPECT_EQ(RoundUp(1001, 4), 1004u);
+    EXPECT_EQ(RoundUp(1000000, 8), 1000000u);
+    EXPECT_EQ(RoundUp(1000001, 8), 1000008u);
+}
+
+/**
+ * @tc.name: TestIsStringToIntSuccessValid
+ * @tc.desc: Test IsStringToIntSuccess with valid integer strings
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, TestIsStringToIntSuccessValid, TestSize.Level2)
+{
+    int num = 0;
+    
+    // Test positive integers
+    EXPECT_TRUE(IsStringToIntSuccess("123", num));
+    EXPECT_EQ(num, 123);
+    
+    EXPECT_TRUE(IsStringToIntSuccess("0", num));
+    EXPECT_EQ(num, 0);
+    
+    // Test negative integers
+    EXPECT_TRUE(IsStringToIntSuccess("-45", num));
+    EXPECT_EQ(num, -45);
+    
+    // Test larger numbers
+    EXPECT_TRUE(IsStringToIntSuccess("10000", num));
+    EXPECT_EQ(num, 10000);
+}
+
+/**
+ * @tc.name: TestIsStringToIntSuccessInvalid
+ * @tc.desc: Test IsStringToIntSuccess with invalid strings
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, TestIsStringToIntSuccessInvalid, TestSize.Level2)
+{
+    int num = 0;
+    
+    // Test non-numeric strings
+    EXPECT_FALSE(IsStringToIntSuccess("abc", num));
+    EXPECT_FALSE(IsStringToIntSuccess("", num));
+    EXPECT_FALSE(IsStringToIntSuccess("12a3", num));
+    EXPECT_FALSE(IsStringToIntSuccess("a123", num));
+    
+    
+}
+
+/**
+ * @tc.name: TestIsStringToIntSuccessEdgeCases
+ * @tc.desc: Test IsStringToIntSuccess with edge case values
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, TestIsStringToIntSuccessEdgeCases, TestSize.Level2)
+{
+    int num = 0;
+    
+    // Test single digit
+    EXPECT_TRUE(IsStringToIntSuccess("9", num));
+    EXPECT_EQ(num, 9);
+    
+    // Test single negative digit
+    EXPECT_TRUE(IsStringToIntSuccess("-1", num));
+    EXPECT_EQ(num, -1);
+    
+    // Test leading zeros (should be valid)
+    EXPECT_TRUE(IsStringToIntSuccess("007", num));
+    EXPECT_EQ(num, 7);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

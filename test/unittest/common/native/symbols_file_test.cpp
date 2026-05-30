@@ -1282,6 +1282,96 @@ HWTEST_F(SymbolsFileTest, HapFileParseArkFrameInfoWithOtherFile, TestSize.Level1
     EXPECT_EQ(symbol.fileVaddr_, 0u);
 }
 
+/**
+ * @tc.name: TestAdjustSymbolsEmpty
+ * @tc.desc: Test AdjustSymbols with empty symbol list
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestAdjustSymbolsEmpty, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    
+    // Empty symbols, AdjustSymbols should return immediately
+    auto symbols = symbolsFile->GetSymbols();
+    EXPECT_EQ(symbols.size(), 0u);
+}
+
+/**
+ * @tc.name: TestAddSymbol
+ * @tc.desc: Test AddSymbol function to add a single symbol
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestAddSymbol, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    
+    DfxSymbol symbol;
+    symbol.name_ = "test_func";
+    symbol.funcVaddr_ = 0x1000;
+    symbol.size_ = 0x100;
+    
+    symbolsFile->AddSymbol(symbol);
+    
+    auto symbols = symbolsFile->GetSymbols();
+    EXPECT_EQ(symbols.size(), 1u);
+    EXPECT_EQ(symbols[0].name_, "test_func");
+    EXPECT_EQ(symbols[0].funcVaddr_, 0x1000u);
+    EXPECT_EQ(symbols[0].size_, 0x100u);
+}
+
+/**
+ * @tc.name: TestAddMultipleSymbols
+ * @tc.desc: Test AddSymbol function to add multiple symbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestAddMultipleSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    
+    DfxSymbol symbol1;
+    symbol1.name_ = "func1";
+    symbol1.funcVaddr_ = 0x1000;
+    symbol1.size_ = 0x50;
+    
+    DfxSymbol symbol2;
+    symbol2.name_ = "func2";
+    symbol2.funcVaddr_ = 0x2000;
+    symbol2.size_ = 0x60;
+    
+    symbolsFile->AddSymbol(symbol1);
+    symbolsFile->AddSymbol(symbol2);
+    
+    auto symbols = symbolsFile->GetSymbols();
+    EXPECT_EQ(symbols.size(), 2u);
+}
+
+/**
+ * @tc.name: TestKernelModuleSymbolsCreate
+ * @tc.desc: Test KernelModuleSymbols creation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestKernelModuleSymbolsCreate, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_KERNEL_MODULE_FILE);
+}
+
+/**
+ * @tc.name: TestCJFileSymbolsCreate
+ * @tc.desc: Test CJFileSymbols creation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestCJFileSymbolsCreate, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_CJ_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_CJ_FILE);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

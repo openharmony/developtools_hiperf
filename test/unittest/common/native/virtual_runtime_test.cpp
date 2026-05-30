@@ -481,6 +481,79 @@ HWTEST_F(VirtualRuntimeTest, CheckGetElfByInvalidMap, TestSize.Level2)
     std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
     EXPECT_EQ(GetElfByMap(map), nullptr);
 }
+/**
+ * @tc.name: TestSetSmoFlag
+ * @tc.desc: Test SetSmoFlag and GetSmoFlag functions
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, TestSetSmoFlag, TestSize.Level2)
+{
+    VirtualRuntime runtime;
+    
+    // Test setting true
+    runtime.SetSmoFlag(true);
+    EXPECT_TRUE(runtime.GetSmoFlag());
+    
+    // Test setting false
+    runtime.SetSmoFlag(false);
+    EXPECT_FALSE(runtime.GetSmoFlag());
+}
+
+/**
+ * @tc.name: TestEnableDebugInfoSymbolic
+ * @tc.desc: Test EnableDebugInfoSymbolic function
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, TestEnableDebugInfoSymbolic, TestSize.Level2)
+{
+    VirtualRuntime runtime;
+    
+    // Enable debug info symbolic
+    runtime.EnableDebugInfoSymbolic(true);
+    runtime.EnableDebugInfoSymbolic(false);
+}
+
+/**
+ * @tc.name: TestSetDedupStack
+ * @tc.desc: Test SetDedupStack function
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, TestSetDedupStack, TestSize.Level2)
+{
+    VirtualRuntime runtime;
+    
+    // Test setting dedup stack
+    runtime.SetDedupStack();
+}
+
+/**
+ * @tc.name: TestSetHM
+ * @tc.desc: Test SetHM function
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, TestSetHM, TestSize.Level2)
+{
+    VirtualRuntime runtime;
+    
+    // Test setting HM mode
+    runtime.SetHM(true);
+    runtime.SetHM(false);
+}
+
+/**
+ * @tc.name: TestSetNeedKernelCallChain
+ * @tc.desc: Test SetNeedKernelCallChain function
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, TestSetNeedKernelCallChain, TestSize.Level2)
+{
+    VirtualRuntime runtime;
+    
+    // Test setting kernel call chain
+    runtime.SetNeedKernelCallChain(true);
+    runtime.SetNeedKernelCallChain(false);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
