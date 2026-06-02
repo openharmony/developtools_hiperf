@@ -506,16 +506,18 @@ HWTEST_F(VirtualThreadTest, TestFindMapIndexByAddr, TestSize.Level2)
     ASSERT_GE(maps.size(), 3u);
     
     // Test finding address within first map
-    size_t index1 = thread.FindMapIndexByAddr(0x1500);
-    EXPECT_LT(index1, maps.size());
+    int64_t index1 = thread.FindMapIndexByAddr(0x1500);
+    EXPECT_GE(index1, 0);
+    EXPECT_LT(static_cast<size_t>(index1), maps.size());
     
     // Test finding address within second map
-    size_t index2 = thread.FindMapIndexByAddr(0x3500);
-    EXPECT_LT(index2, maps.size());
+    int64_t index2 = thread.FindMapIndexByAddr(0x3500);
+    EXPECT_GE(index2, 0);
+    EXPECT_LT(static_cast<size_t>(index2), maps.size());
     
     // Test finding address not in any map
-    (void)thread.FindMapIndexByAddr(0xFFFF);
-    // Should return maps.size() or some invalid index
+    int64_t index3 = thread.FindMapIndexByAddr(0xFFFF);
+    EXPECT_EQ(index3, -1); // Returns -1 for invalid address
 }
 
 } // namespace HiPerf
