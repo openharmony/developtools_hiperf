@@ -117,6 +117,65 @@ HWTEST_F(UniqueStackTableTest, Test_Oversize, TestSize.Level2)
     EXPECT_EQ(table->PutIpsInTable(&stackId, baseips, sizeof(baseips)/sizeof(uint64_t)), 0);
 }
 
+/**
+ * @tc.name: TestGetPid
+ * @tc.desc: Test GetPid function returns correct pid
+ * @tc.type: FUNC
+ */
+HWTEST_F(UniqueStackTableTest, TestGetPid, TestSize.Level2)
+{
+    pid_t testPid = 1234;
+    std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(testPid);
+    EXPECT_EQ(table->GetPid(), testPid);
+}
+
+/**
+ * @tc.name: TestGetTabelSize
+ * @tc.desc: Test GetTabelSize function returns correct size
+ * @tc.type: FUNC
+ */
+HWTEST_F(UniqueStackTableTest, TestGetTabelSize, TestSize.Level2)
+{
+    uint32_t testSize = 1024;
+    std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(1, testSize);
+    EXPECT_EQ(table->GetTabelSize(), testSize);
+}
+
+/**
+ * @tc.name: TestGetUsedIndexes
+ * @tc.desc: Test GetUsedIndexes function returns used indexes vector
+ * @tc.type: FUNC
+ */
+HWTEST_F(UniqueStackTableTest, TestGetUsedIndexes, TestSize.Level2)
+{
+    std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(1);
+    
+    // Initially should be empty
+    EXPECT_EQ(table->GetUsedIndexes().size(), 0u);
+    
+    // Add some IPs
+    u64 ips[] = {0x1000, 0x2000, 0x3000};
+    StackId stackId = {0};
+    table->PutIpsInTable(&stackId, ips, sizeof(ips)/sizeof(uint64_t));
+    
+    // Should have at least 1 used index now
+    EXPECT_GE(table->GetUsedIndexes().size(), 1u);
+}
+
+/**
+ * @tc.name: TestGetWriteSize
+ * @tc.desc: Test GetWriteSize function returns correct write size
+ * @tc.type: FUNC
+ */
+HWTEST_F(UniqueStackTableTest, TestGetWriteSize, TestSize.Level2)
+{
+    std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(1);
+    
+    // Get write size should return valid value
+    size_t writeSize = table->GetWriteSize();
+    EXPECT_GT(writeSize, 0u);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

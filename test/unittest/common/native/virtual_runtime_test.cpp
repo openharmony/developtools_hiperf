@@ -499,6 +499,24 @@ HWTEST_F(VirtualRuntimeTest, CheckGetElfByInvalidMap, TestSize.Level2)
     std::shared_ptr<DfxMap> map = std::make_shared<DfxMap>(begin, begin + len, offset, prot, filename);
     EXPECT_EQ(GetElfByMap(map), nullptr);
 }
+/**
+ * @tc.name: TestSetSmoFlag
+ * @tc.desc: Test SetSmoFlag and GetSmoFlag functions
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualRuntimeTest, TestSetSmoFlag, TestSize.Level2)
+{
+    VirtualRuntime runtime;
+    
+    // Test setting true
+    runtime.SetSmoFlag(true);
+    EXPECT_TRUE(runtime.GetSmoFlag());
+    
+    // Test setting false
+    runtime.SetSmoFlag(false);
+    EXPECT_FALSE(runtime.GetSmoFlag());
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

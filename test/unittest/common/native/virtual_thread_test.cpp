@@ -487,6 +487,39 @@ HWTEST_F(VirtualThreadTest, CreateMapItem_IllegalMapItem, TestSize.Level2)
     EXPECT_EQ(thread.CreateMapItem("[stack]", 0x1000, 0x2000, 0x0), nullptr);
 }
 
+/**
+ * @tc.name: TestFindMapIndexByAddr
+ * @tc.desc: Test FindMapIndexByAddr function
+ * @tc.type: FUNC
+ */
+HWTEST_F(VirtualThreadTest, TestFindMapIndexByAddr, TestSize.Level2)
+{
+    std::vector<std::unique_ptr<SymbolsFile>> files;
+    VirtualThread thread(getpid(), files);
+    
+    // Create some map items
+    thread.CreateMapItem("/system/lib/libtest1.so", 0x1000, 0x2000, 0x0);
+    thread.CreateMapItem("/system/lib/libtest2.so", 0x3000, 0x2000, 0x1000);
+    thread.CreateMapItem("/system/lib/libtest3.so", 0x5000, 0x2000, 0x2000);
+    
+    auto& maps = thread.GetMaps();
+    ASSERT_GE(maps.size(), 3u);
+    
+    // Test finding address within first map
+    int64_t index1 = thread.FindMapIndexByAddr(0x1500);
+    EXPECT_GE(index1, 0);
+    EXPECT_LT(static_cast<size_t>(index1), maps.size());
+    
+    // Test finding address within second map
+    int64_t index2 = thread.FindMapIndexByAddr(0x3500);
+    EXPECT_GE(index2, 0);
+    EXPECT_LT(static_cast<size_t>(index2), maps.size());
+    
+    // Test finding address not in any map
+    int64_t index3 = thread.FindMapIndexByAddr(0xFFFF);
+    EXPECT_EQ(index3, -1); // Returns -1 for invalid address
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

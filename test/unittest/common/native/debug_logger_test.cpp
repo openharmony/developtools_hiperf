@@ -307,6 +307,68 @@ HWTEST_F(DebugLoggerTest, PrintHilog, TestSize.Level1)
     EXPECT_EQ(ret >= 47, true); // 47: return from hilog, msg length
 #endif
 }
+/**
+ * @tc.name: TestGetLogLevelName
+ * @tc.desc: Test GetLogLevelName function returns correct level names
+ * @tc.type: FUNC
+ */
+HWTEST_F(DebugLoggerTest, TestGetLogLevelName, TestSize.Level2)
+{
+    // Test each level name (returns short form)
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelName(LEVEL_DEBUG), "D");
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelName(LEVEL_INFO), "I");
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelName(LEVEL_WARNING), "W");
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelName(LEVEL_ERROR), "E");
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelName(LEVEL_FATAL), "F");
+}
+
+/**
+ * @tc.name: TestGetLogLevelByName
+ * @tc.desc: Test GetLogLevelByName function returns correct levels
+ * @tc.type: FUNC
+ */
+HWTEST_F(DebugLoggerTest, TestGetLogLevelByName, TestSize.Level2)
+{
+    // Test each level by name (using short form)
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelByName("D"), LEVEL_DEBUG);
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelByName("I"), LEVEL_INFO);
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelByName("W"), LEVEL_WARNING);
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelByName("E"), LEVEL_ERROR);
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelByName("F"), LEVEL_FATAL);
+    // Test unknown name returns LEVEL_MUCH
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevelByName("unknown"), LEVEL_MUCH);
+}
+
+/**
+ * @tc.name: TestGetLogLevelByTag
+ * @tc.desc: Test GetLogLevelByTag function
+ * @tc.type: FUNC
+ */
+HWTEST_F(DebugLoggerTest, TestGetLogLevelByTag, TestSize.Level2)
+{
+    // Test with valid tag
+    DebugLevel level = DebugLogger::GetInstance()->GetLogLevelByTag("HIPERF");
+    EXPECT_GE(level, LEVEL_MUCH);
+    EXPECT_LE(level, LEVEL_MAX);
+}
+
+/**
+ * @tc.name: TestSetLogLevel
+ * @tc.desc: Test SetLogLevel and GetLogLevel functions
+ * @tc.type: FUNC
+ */
+HWTEST_F(DebugLoggerTest, TestSetLogLevel, TestSize.Level2)
+{
+    DebugLogger::GetInstance()->SetLogLevel(LEVEL_DEBUG);
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevel(), LEVEL_DEBUG);
+    
+    DebugLogger::GetInstance()->SetLogLevel(LEVEL_INFO);
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevel(), LEVEL_INFO);
+    
+    DebugLogger::GetInstance()->SetLogLevel(LEVEL_ERROR);
+    EXPECT_EQ(DebugLogger::GetInstance()->GetLogLevel(), LEVEL_ERROR);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
