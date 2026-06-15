@@ -13,3 +13,4 @@
 hiviewdfx.hiperf.perf_event_max_sample_rate=100000
 hiviewdfx.hiperf.perf_cpu_time_max_percent=25
 hiviewdfx.hiperf.perf_event_mlock_kb=516
+debug.hiperf.perf_unlock_device=false

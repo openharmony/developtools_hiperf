@@ -1314,7 +1314,9 @@ HWTEST_F(UtilitiesTest, IsExistDebugByApp_EmptyBundleName, TestSize.Level2)
 HWTEST_F(UtilitiesTest, IsUnlockedDevice_ReturnsExpectedByDeviceType, TestSize.Level1)
 {
     const std::string deviceType = GetDeviceType();
-    EXPECT_EQ(IsUnlockedDevice(), deviceType == "orange");
+    const std::string unlockedDevicePerfValue = GetEnableUnlockDevicePerfParam();
+    EXPECT_EQ(IsUnlockedDevice() && IsEnableUnlockedDevicePerf(),
+              deviceType == "orange" && unlockedDevicePerfValue == "true");
 }
 
 /**
