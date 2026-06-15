@@ -150,12 +150,12 @@ bool IsApplicationEncryped(const int pid)
 #endif
 }
 
-bool IsProfileableThirdPartyApp(const std::string& bundleName)
+bool IsProfileableApp(const std::string& bundleName)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     g_haveIpc.store(true);
     if (bundleName.empty()) {
-        HIPERF_HILOGE(MODULE_DEFAULT, "IsProfileableThirdPartyApp error, err: [bundleName is empty!]");
+        HIPERF_HILOGE(MODULE_DEFAULT, "IsProfileableApp error, err: [bundleName is empty!]");
         return false;
     }
 
@@ -167,11 +167,7 @@ bool IsProfileableThirdPartyApp(const std::string& bundleName)
         HLOGE("app is not profileable");
         return false;
     }
-    if (appInfo.isSystemApp) {
-        HLOGE("app is system app");
-        return false;
-    }
-    HLOGI("app is profileable third party app");
+    HLOGI("app is profileable app");
     return true;
 #else
     return false;

@@ -52,6 +52,9 @@ namespace HiPerf {
 static const std::string USER_DOMESTIC_BETA = "beta";
 static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";
+static const std::string PERF_UNLOCKED_DEVICE_PARAM = "debug.hiperf.perf_unlock_device";
+static const std::string PERF_UNLOCKED_DEVICE_PARAM_GET = "false";
+static const std::string PERF_UNLOCKED_DEVICE_VALUE = "true";
 static const std::string UNLOCKED_DEVICE_PARAM = "ohos.boot.hvb.enable";
 static const std::string UNLOCKED_DEVICE_PARAM_GET = "";
 static const std::string UNLOCKED_DEVICE_VALUE = "orange";
@@ -804,37 +807,22 @@ bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPac
 
 bool IsAllowReleaseApp(const std::string& appPackage)
 {
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
     pid_t appPid = -1;
     const std::string basePath {"/proc/"};
     const std::string cmdline {"/cmdline"};
     appPid = FindMatchingPidInProc(basePath, cmdline, appPackage);
     if (appPid <= 0) {
+#if defined(is_ohos) && is_ohos
         HIPERF_HILOGE(MODULE_DEFAULT, "IsAllowReleaseApp: app %{public}s not running", appPackage.c_str());
+#endif
         return false;
     }
-    return IsAllowRelease(appPid, appPackage);
-#else
-    return false;
-#endif
-}
-
-bool IsAllowRelease(const pid_t appPid, const std::string& appPackage)
-{
-#if defined(is_sandbox_mapping) && is_sandbox_mapping
-    if ((!IsTaskManagerLabel() || !IsTaskManagerUid()) && !IsHiShellLabel()) {
-        HLOGE("IsAllowReleaseApp: not allow release");
-        return false;
-    }
-    return IsProfileableThirdPartyApp(appPackage);
-#else
-    return false;
-#endif
+    return IsProfileableApp(appPackage);
 }
 
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
 {
-    if (bundleName.empty() || IsUnlockedDevice()) {
+    if (bundleName.empty() || (IsUnlockedDevice() && IsEnableUnlockedDevicePerf())) {
         return true;
     }
     std::string bundleNameTmp = bundleName;
@@ -856,8 +844,8 @@ bool IsExistDebugByApp(const std::string& bundleName, std::string& err)
     if (IsSupportNonDebuggableApp() || IsDebugableApp(bundleNameTmp) || IsAllowReleaseApp(bundleNameTmp)) {
         return true;
     }
-    HLOGE("--app option only support debug application.");
-    err = "--app option only support debug application\n";
+    HLOGE("--app option only support debug or profileable application.");
+    err = "--app option only support debug or profileable application\n";
     printf("%s", err.c_str());
     return false;
 }
@@ -868,14 +856,14 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
     bool devMode = GetDeveloperMode();
 #endif
-    bool deviceIsUnlocked = IsUnlockedDevice();
+    bool isEnablePerfUnlockDevice = IsUnlockedDevice() && IsEnableUnlockedDevicePerf();
     for (auto pid : pids) {
         if (pid <= 0) {
             err = "Invalid -p value '" + std::to_string(pid) + "', the pid should be larger than 0\n";
             printf("%s", err.c_str());
             return false;
         }
-        if (deviceIsUnlocked) {
+        if (isEnablePerfUnlockDevice) {
             continue;
         }
         std::string bundleName = GetProcessName(pid);
@@ -885,7 +873,7 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
         }
 #if defined(is_sandbox_mapping) && is_sandbox_mapping
         if (!devMode) {
-            if (!IsAllowRelease(pid, bundleName)) {
+            if (!IsProfileableApp(bundleName)) {
                 HLOGE("-p option only support profileable application for %s", bundleName.c_str());
                 err = "-p option only support profileable application\n";
                 printf("%s", err.c_str());
@@ -894,9 +882,9 @@ bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err)
             continue;
         }
 #endif
-        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsAllowRelease(pid, bundleName)) {
-            HLOGE("-p option only support debug application for %s", bundleName.c_str());
-            err = "-p option only support debug application\n";
+        if (!IsSupportNonDebuggableApp() && !IsDebugableApp(bundleName) && !IsProfileableApp(bundleName)) {
+            HLOGE("-p option only support debug or profileable application for %s", bundleName.c_str());
+            err = "-p option only support debug or profileable application\n";
             printf("%s", err.c_str());
             return false;
         }
@@ -937,6 +925,17 @@ bool IsSupportNonDebuggableApp()
     return true;
 }
 
+bool IsEnableUnlockedDevicePerf()
+{
+#if defined(is_ohos) && is_ohos
+    std::string perfUnlockDevValue = GetEnableUnlockDevicePerfParam();
+    if (perfUnlockDevValue == PERF_UNLOCKED_DEVICE_VALUE) {
+        return true;
+    }
+#endif
+    return false;
+}
+
 bool IsUnlockedDevice()
 {
 #if defined(is_ohos) && is_ohos
@@ -956,6 +955,17 @@ const std::string GetUserType()
     std::string userType = OHOS::system::GetParameter(USER_TYPE_PARAM, USER_TYPE_PARAM_GET);
     HLOGD("GetUserType: userType is %s", userType.c_str());
     return userType;
+#else
+    return "";
+#endif
+}
+
+const std::string GetEnableUnlockDevicePerfParam()
+{
+#if defined(is_ohos) && is_ohos
+    std::string perfUnlockVal = OHOS::system::GetParameter(PERF_UNLOCKED_DEVICE_PARAM, PERF_UNLOCKED_DEVICE_PARAM_GET);
+    HLOGD("GetEnableUnlockDevicePerfParam: perfUnlockVal is %s", perfUnlockVal.c_str());
+    return perfUnlockVal;
 #else
     return "";
 #endif

@@ -404,12 +404,13 @@ void CollectPidsByAppname(std::set<pid_t> &pids, const Container& appPackage)
 bool CheckAppIsRunning(std::vector<pid_t> &selectPids, const std::string &appPackage, const int checkAppMs);
 bool IsTaskManagerUid();
 bool IsAllowReleaseApp(const std::string& appPackage);
-bool IsAllowRelease(const pid_t appPid, const std::string& appPackage);
 bool IsExistDebugByApp(const std::string& bundleName, std::string& err);
 bool IsExistDebugByPid(const std::vector<pid_t> &pids, std::string& err);
 bool IsSupportNonDebuggableApp();
+bool IsEnableUnlockedDevicePerf();
 bool IsUnlockedDevice();
 const std::string GetUserType();
+const std::string GetEnableUnlockDevicePerfParam();
 const std::string GetDeviceType();
 bool GetDeveloperMode();
 bool IsArkJsFile(const std::string& filepath);
