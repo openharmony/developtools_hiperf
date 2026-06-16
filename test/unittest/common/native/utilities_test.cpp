@@ -716,11 +716,19 @@ HWTEST_F(UtilitiesTest, IsBeta, TestSize.Level2)
     EXPECT_EQ(IsBeta(), true);
 }
 
+/**
+ * @tc.name: CanonicalizeSpecPath
+ * @tc.desc: Test CanonicalizeSpecPath function with various path patterns
+ * @tc.type: FUNC
+ */
 HWTEST_F(UtilitiesTest, CanonicalizeSpecPath, TestSize.Level0)
 {
     EXPECT_EQ(CanonicalizeSpecPath(nullptr), "");
+    EXPECT_EQ(CanonicalizeSpecPath(""), "");
     EXPECT_EQ(CanonicalizeSpecPath("/data/local/tmp/test/../test.txt"), "");
     EXPECT_EQ(CanonicalizeSpecPath("/data/local/tmp/nonexistent.txt"), "/data/local/tmp/nonexistent.txt");
+    const char* sandboxPath = "/proc/123/data/storage/el2/base/test.txt";
+    EXPECT_EQ(CanonicalizeSpecPath(sandboxPath), sandboxPath);
     string largePath = "./";
     for (int i = 0; i < 512; i++) { // 512: loop size
         largePath += "testpath";

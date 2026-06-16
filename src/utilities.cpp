@@ -71,8 +71,11 @@ std::string CanonicalizeSpecPath(const char* src)
     if (src == nullptr) {
         HLOGE("Error: CanonicalizeSpecPath failed");
         return "";
-    } else if (strlen(src) + 1 >= PATH_MAX) {
-        HLOGE("Error: CanonicalizeSpecPath %s failed", src);
+    }
+
+    size_t len = strlen(src);
+    if (len >= PATH_MAX) {
+        HLOGE("Error: CanonicalizeSpecPath path too long");
         return "";
     }
     char resolvedPath[PATH_MAX] = { 0 };
@@ -105,8 +108,7 @@ std::string CanonicalizeSpecPath(const char* src)
         }
     }
 #endif
-    std::string res(resolvedPath);
-    return res;
+    return std::string(resolvedPath);
 }
 
 uint32_t RoundUp(const uint32_t x, const int align)

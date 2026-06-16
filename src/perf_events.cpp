@@ -653,14 +653,13 @@ static struct sigaction g_oldSig {
 static bool CaptureSig()
 {
     HLOGD("capture Ctrl + C to end sampling decently");
-    struct sigaction sig {
-    };
+    struct sigaction sig {};
 
-    sig.sa_handler = [](int sig) {
-        printf("\n Ctrl + C detected.\n");
+    sig.sa_handler = [](int) {
+        const char msg[] = "\n Ctrl + C detected.\n";
+        (void)write(STDOUT_FILENO, msg, strlen(msg));
         g_trackRunning.store(false);
     };
-
     sig.sa_flags = 0;
     if (sigaction(SIGINT, &sig, &g_oldSig) < 0) {
         perror("Fail to call sigaction for SIGINT");
