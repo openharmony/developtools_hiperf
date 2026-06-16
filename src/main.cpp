@@ -63,6 +63,9 @@ int main(const int argc, const char *argv[])
 {
     if (!GetDeveloperMode() && !IsAllowProfilingUid() && !IsAllowSkipDeveloperMode()) {
         printf("error: not in developermode, exit.\n");
+#if defined(is_ohos) && is_ohos
+        HIPERF_HILOGE(MODULE_DEFAULT, "error: not in developermode, exit.");
+#endif
         return -1;
     }
     if (argc > 128) { // 128 : max input argument counts

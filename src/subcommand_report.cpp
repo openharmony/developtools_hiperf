@@ -672,6 +672,9 @@ HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
     SymbolsFile::onRecording_ = false;
 
     printf("loading data\n");
+#if defined(is_ohos) && is_ohos
+    HIPERF_HILOGI(MODULE_DEFAULT, "loading data");
+#endif
     if (!LoadPerfData()) {
         return HiperfError::LOAD_PERF_DATA_FAIL;
     }
@@ -685,6 +688,9 @@ HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
         index_ = FIRST;
     }
     printf("prepare report\n");
+#if defined(is_ohos) && is_ohos
+    HIPERF_HILOGI(MODULE_DEFAULT, "prepare report");
+#endif
     CHECK_TRUE(OutputReport(), HiperfError::OUTPUT_REPORT_FAIL, 1, "OutputReport failed");
 #ifdef HIPERF_DEBUG_TIME
     printf("SymbolicRecordTimes: %0.3f ms\n",
@@ -692,6 +698,9 @@ HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
 #endif
 
     printf("report done\n");
+#if defined(is_ohos) && is_ohos
+    HIPERF_HILOGI(MODULE_DEFAULT, "report done");
+#endif
     AgeHiperflogFiles();
     return HiperfError::NO_ERR;
 }

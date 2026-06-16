@@ -842,6 +842,7 @@ void SubCommandStat::HandleCommunicationError(const int& fd, const pid_t& pid, c
     }
     perfPipe_.RemoveFifoFile();
     printf("create control hiperf counting failed.\n");
+    HIPERF_HILOGE(MODULE_DEFAULT, "create control hiperf counting failed.");
 }
 
 bool SubCommandStat::ClientCommandResponse(const bool response)

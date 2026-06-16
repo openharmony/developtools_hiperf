@@ -86,6 +86,7 @@ bool PerfPipe::CreateFifoFile()
         mkfifo(fifoFileC2S_.c_str(), fifoMode) != 0) {
         if (errno == EEXIST) {
             printf("another %s service is running.\n", perfCmd_.c_str());
+            HIPERF_HILOGE(MODULE_DEFAULT, "another %{public}s service is running.", perfCmd_.c_str());
         } else {
             RemoveFifoFile();
         }
