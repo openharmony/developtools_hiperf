@@ -354,7 +354,7 @@ python make_report.py
 
 ## 常见故障说明
 
-#### Can't find hdc_std in PATH environment.
+#### Can't find hdc in PATH environment.
 
 ```
 python command_script.py -lp ps
@@ -369,7 +369,7 @@ Traceback (most recent call last):
     self.hdc = HdcInterface(root_authority=not args.not_hdc_root)
   File "Z:\OHOS_MASTER\out\host\developtools\hiperf\hiperf_utils.py", line 173, in __init__
     raise Exception("Can't find hdc in PATH environment.")
-Exception: Can't find hdc_std in PATH environment.
+Exception: Can't find hdc in PATH environment.
 ```
 
 请确认 PATH 环境变量中有 hdc 的执行文件
@@ -377,9 +377,9 @@ Exception: Can't find hdc_std in PATH environment.
 确认方法
 
 ```
-where hdc_std
-Z:\OHOS_MASTER\developtools\hdc_standard\prebuilt\windows\hdc_std.exe
-Z:\OHOS_STD_2.0\developtools\hdc_standard\prebuilt\windows\hdc_std.exe
+where hdc
+Z:\OHOS_MASTER\developtools\hdc_standard\prebuilt\windows\hdc.exe
+Z:\OHOS_STD_2.0\developtools\hdc_standard\prebuilt\windows\hdc.exe
 ```
 
 
