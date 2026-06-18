@@ -169,7 +169,7 @@ public:
     std::chrono::microseconds threadParseMapsTimes_ = std::chrono::microseconds::zero();
     std::chrono::microseconds threadCreateMmapTimes_ = std::chrono::microseconds::zero();
 #endif
-    const bool loadSymboleWhenNeeded_ = true; // this is a feature config
+    const bool loadSymbolsWhenNeeded_ = true; // this is a feature config
 
 private:
     bool needkernelCallChain_ = false;

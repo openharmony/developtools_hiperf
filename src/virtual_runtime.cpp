@@ -314,7 +314,7 @@ bool VirtualRuntime::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
     CHECK_TRUE(symbolsFile->LoadDebugInfo(map), false, 1,
                "Failed to load debuginfo for exec section in hap(%s)", map->name.c_str());
 
-    if (!loadSymboleWhenNeeded_) { // todo misspelling
+    if (!loadSymbolsWhenNeeded_) {
         symbolsFile->LoadSymbols(map);
     }
     symbolsFiles_.emplace_back(std::move(symbolsFile));
@@ -914,7 +914,7 @@ bool VirtualRuntime::CheckValidSandBoxMmap(PerfRecordMmap2 &recordMmap2)
 
         CHECK_TRUE(symFile->LoadDebugInfo(curMap), false, 1, "CheckValidSandBoxMmap Failed to load debuginfo!");
 
-        if (!loadSymboleWhenNeeded_) {
+        if (!loadSymbolsWhenNeeded_) {
             symFile->LoadSymbols(curMap);
         }
         UpdateSandBoxThreadMaps(symFile, curMap, prevMap, recordMmap2);
@@ -1165,7 +1165,7 @@ void VirtualRuntime::UpdateSymbols(std::shared_ptr<DfxMap> map, const pid_t pid)
         // also load from search path
         symbolsFile->setSymbolsFilePath(symbolsPaths_);
     }
-    if (loadSymboleWhenNeeded_) {
+    if (loadSymbolsWhenNeeded_) {
         // load it when we need it
         symbolsFiles_.emplace_back(std::move(symbolsFile));
     } else if (symbolsFile->LoadSymbols()) {
