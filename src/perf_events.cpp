@@ -210,6 +210,7 @@ bool PerfEvents::IsEventSupport(const perf_type_id type, const __u64 config)
     UniqueFd fd = Open(*attr.get());
     if (fd < 0) {
         printf("event not support %s\n", GetStaticConfigName(type, config).c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "event not support %{public}s", GetStaticConfigName(type, config).c_str());
         return false;
     }
     return true;
@@ -469,6 +470,7 @@ bool PerfEvents::AddEvent(const std::string &eventString, const bool followGroup
 
     if (isPrint) {
         printf("%s event is not supported by the kernel.\n", eventName.c_str());
+        HIPERF_HILOGE(MODULE_DEFAULT, "%{public}s event is not supported by the kernel.", eventName.c_str());
     }
     return false;
 }
@@ -692,7 +694,7 @@ bool PerfEvents::PrepareTracking(void)
             }
         }
     }
-    
+
     // 3. create events
     CHECK_TRUE(CreateFdEvents(), false, 1, "CreateFdEvents() failed");
 
@@ -754,6 +756,7 @@ bool PerfEvents::PrepareRecordThread()
 void PerfEvents::WaitRecordThread()
 {
     printf("Process and Saving data...\n");
+    HIPERF_HILOGI(MODULE_DEFAULT, "Process and Saving data...");
     ExitReadRecordBufThread();
 
     const auto usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - trackingEndTime_);
@@ -761,6 +764,8 @@ void PerfEvents::WaitRecordThread()
         printf("Record Process Completed (wait %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
     }
     HLOGV("Record Process Completed (wait %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
+    HIPERF_HILOGI(MODULE_DEFAULT, "Record Process Completed (wait %{public}" PRIu64 " ms)",
+                  static_cast<uint64_t>(usedTimeMsTick.count()));
 #ifdef HIPERF_DEBUG_TIME
     printf("%zu record processed, used %0.3f ms(%4.2f us/record)\n", recordEventCount_,
            recordCallBackTime_.count() / MS_DURATION,
@@ -817,6 +822,8 @@ bool PerfEvents::StartTracking(const bool immediately)
         }
         printf("Profiling duration is %.3f seconds.\n", float(timeOut_.count()) / THOUSANDS);
         printf("Start Profiling...\n");
+        HIPERF_HILOGI(MODULE_DEFAULT, "Profiling duration is %{public}.3f seconds. Start Profiling...",
+                      static_cast<float>(timeOut_.count()) / THOUSANDS);
     }
     if (!SetupTrackingState()) {
         HLOGE("SetupTrackingState failed.");
@@ -1119,6 +1126,10 @@ bool PerfEvents::PerfEventsEnable(const bool enable)
                     printf("Cannot '%s' perf fd! type config name: '%s:%s'\n",
                            enable ? "enable" : "disable", eventItem.typeName.c_str(),
                            eventItem.configName.c_str());
+                    HIPERF_HILOGE(MODULE_DEFAULT,
+                                  "Cannot '%{public}s' perf fd! type config name: '%{public}s:%{public}s'",
+                                  enable ? "enable" : "disable", eventItem.typeName.c_str(),
+                                  eventItem.configName.c_str());
                     return false;
                 }
             }
@@ -1204,6 +1215,7 @@ bool PerfEvents::PrepareFdEvents(void)
     // print info tell user which cpu and process we will select.
     if (pids_.size() == 1 && pids_[0] == -1) {
         HLOGI("target process: system scope \n");
+        HIPERF_HILOGI(MODULE_DEFAULT, "target process: system scope");
     } else {
         HLOGI("target process: %zu (%s)\n", pids_.size(),
               (pids_[0] == 0) ? std::to_string(gettid()).c_str() : VectorToString(pids_).c_str());
@@ -1985,6 +1997,8 @@ bool PerfEvents::HaveTargetsExit(const std::chrono::steady_clock::time_point &st
     if (pids_.empty()) {
         milliseconds usedMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
         printf("tracked processes have exited (total %" PRId64 " ms)\n", (uint64_t)usedMsTick.count());
+        HIPERF_HILOGI(MODULE_DEFAULT, "tracked processes have exited (total %{public}" PRIu64 " ms)",
+                      static_cast<uint64_t>(usedMsTick.count()));
         return true;
     }
     return false;
@@ -2027,6 +2041,8 @@ void PerfEvents::RecordLoop()
         // for user interrupt situation, print time statistic
         usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
         printf("User interrupt exit (total %" PRId64 " ms)\n", (uint64_t)usedTimeMsTick.count());
+        HIPERF_HILOGI(MODULE_DEFAULT, "User interrupt exit (total %{public}" PRIu64 " ms)",
+                      static_cast<uint64_t>(usedTimeMsTick.count()));
     }
 }
 
@@ -2064,6 +2080,8 @@ bool PerfEvents::GetStat(const steady_clock::time_point &startTime, steady_clock
         durationInSec = usedTimeMsTick.count();
         if (reportPtr_ == nullptr) {
             printf("Timeout exit (total %" PRIu64 " ms)\n", static_cast<uint64_t>(usedTimeMsTick.count()));
+            HIPERF_HILOGI(MODULE_DEFAULT, "Timeout exit (total %{public}" PRIu64 " ms)",
+                          static_cast<uint64_t>(usedTimeMsTick.count()));
         } else {
             fprintf(reportPtr_, "Timeout exit (total %" PRIu64 " ms)\n",
                 static_cast<uint64_t>(usedTimeMsTick.count()));
@@ -2104,6 +2122,8 @@ void PerfEvents::StatLoop()
         // for user interrupt situation, print time statistic
         usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - startTime);
         printf("User interrupt exit (total %" PRIu64 " ms)\n", static_cast<uint64_t>(usedTimeMsTick.count()));
+        HIPERF_HILOGI(MODULE_DEFAULT, "User interrupt exit (total %{public}" PRIu64 " ms)",
+                      static_cast<uint64_t>(usedTimeMsTick.count()));
     }
 
     if (timeReport_ == milliseconds::zero()) {

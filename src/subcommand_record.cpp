@@ -1626,6 +1626,7 @@ bool SubCommandRecord::HandleReply(bool recvSuccess, const std::string& reply,
 {
     if (recvSuccess && reply.find("OK") != std::string::npos) {
         printf("%s control hiperf sampling success.\n", restart_ ? "start" : "create");
+        HIPERF_HILOGI(MODULE_DEFAULT, "%{public}s control hiperf sampling success.", restart_ ? "start" : "create");
         isSuccess = true;
         return true;
     }
@@ -1670,6 +1671,9 @@ bool SubCommandRecord::HandleFinalResult(bool isSuccess, pid_t pid, bool shouldP
         if (shouldPrintReply) {
             strerror_r(errno, errInfo, ERRINFOLEN);
             printf("create control hiperf sampling failed. %d:%s\n", errno, errInfo);
+            HIPERF_HILOGE(MODULE_DEFAULT,
+                          "create control hiperf sampling failed. %{public}d:%{public}s",
+                          errno, errInfo);
             return false;
         }
     }
@@ -2529,15 +2533,21 @@ bool SubCommandRecord::RecordCompleted()
     double mb = static_cast<double>(fileWriter_->GetDataSize()) / (KILO * KILO);
     if (compressData_) {
         printf("[ hiperf record: Captured and compressed %.3f MB perf data. ]\n", mb);
+        HIPERF_HILOGI(MODULE_DEFAULT, "[ hiperf record: Captured and compressed %{public}.3f MB perf data. ]", mb);
     } else {
         printf("[ hiperf record: Captured %.3f MB perf data. ]\n", mb);
+        HIPERF_HILOGI(MODULE_DEFAULT, "[ hiperf record: Captured %{public}.3f MB perf data. ]", mb);
     }
     printf("[ Sample records: %zu, Non sample records: %zu ]\n", recordSamples_, recordNoSamples_);
+    HIPERF_HILOGI(MODULE_DEFAULT, "[ Sample records: %{public}zu, Non sample records: %{public}zu ]",
+                  recordSamples_, recordNoSamples_);
     // Show brief sample lost.
     size_t lostSamples = 0;
     size_t lostNonSamples = 0;
     perfEvents_.GetLostSamples(lostSamples, lostNonSamples);
     printf("[ Sample lost: %zu, Non sample lost: %zu ]\n", lostSamples, lostNonSamples);
+    HIPERF_HILOGI(MODULE_DEFAULT, "[ Sample lost: %{public}zu, Non sample lost: %{public}zu ]",
+                  lostSamples, lostNonSamples);
 
 #ifdef HIPERF_DEBUG_TIME
     ReportTime();

@@ -15,6 +15,9 @@
 
 #include "command.h"
 #include "debug_logger.h"
+#if defined(is_ohos) && is_ohos
+#include "hiperf_hilog.h"
+#endif
 #include "option.h"
 #include "subcommand.h"
 #include "utilities.h"
@@ -45,6 +48,9 @@ bool Command::DispatchSubCommands(std::vector<std::string> &arguments, CommandRe
             HLOGD("OnSubCommand -> %s", subCommand->Name().c_str());
             if (HiperfError err = subCommand->OnSubCommand(arguments); err != HiperfError::NO_ERR) {
                 printf("subcommand '%s' failed\n", subCommand->Name().c_str());
+#if defined(is_ohos) && is_ohos
+                HIPERF_HILOGE(MODULE_DEFAULT, "subcommand '%{public}s' failed", subCommand->Name().c_str());
+#endif
                 reporter.errorCode_ = err;
                 return false;
             } else {
