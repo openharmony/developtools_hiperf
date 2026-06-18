@@ -156,14 +156,14 @@ HWTEST_F(ReportProtobufFileTest, ProcessRecordPerfRecordComm, TestSize.Level2)
     protobufOutputFileWriter_->Close();
 
     auto protobufReadBack = [&](Proto::HiperfRecord &record) {
-        printf("record name %s %d\n", record.GetTypeName().c_str(), record.RecordType_case());
+        printf("record name %s %d\n", std::string(record.GetTypeName()).c_str(), record.RecordType_case());
         // the SampleStatistic always write in close.
         // so there at least 2 record ,one is expect , one is statiistic
         if (record.has_thread()) {
             const VirtualThreadInfo &message = record.thread();
             ASSERT_EQ(message.tid(), comm.data_.tid);
             ASSERT_EQ(message.pid(), comm.data_.pid);
-            ASSERT_STREQ(message.name().c_str(), comm.data_.comm);
+            ASSERT_STREQ(std::string(message.name()).c_str(), comm.data_.comm);
             expectRecord++;
         }
     };
@@ -187,7 +187,7 @@ HWTEST_F(ReportProtobufFileTest, BeforeClose, TestSize.Level1)
     protobufOutputFileWriter_->Close();
 
     auto protobufReadBack = [&](Proto::HiperfRecord &record) {
-        printf("record name %s %d\n", record.GetTypeName().c_str(), record.RecordType_case());
+        printf("record name %s %d\n", std::string(record.GetTypeName()).c_str(), record.RecordType_case());
         // the SampleStatistic always write in close.
         // so there at least 2 record ,one is expect , one is statiistic
         if (record.has_statistic()) {
@@ -218,7 +218,7 @@ HWTEST_F(ReportProtobufFileTest, ProcessSymbolsFiles, TestSize.Level0)
     protobufOutputFileWriter_->Close();
 
     auto protobufReadBack = [&](Proto::HiperfRecord &record) {
-        printf("record name %s %d\n", record.GetTypeName().c_str(), record.RecordType_case());
+        printf("record name %s %d\n", std::string(record.GetTypeName()).c_str(), record.RecordType_case());
         // the SampleStatistic always write in close.
         // so there at least 2 record ,one is expect , one is statiistic
         if (record.has_file()) {
@@ -227,11 +227,11 @@ HWTEST_F(ReportProtobufFileTest, ProcessSymbolsFiles, TestSize.Level0)
             ASSERT_EQ(message.id() >= 0, true);
             ASSERT_EQ(message.id() < symbolsFiles_.size(), true);
             const std::unique_ptr<SymbolsFile> &symbolFile = symbolsFiles_.at(message.id());
-            ASSERT_STREQ(message.path().c_str(), symbolFile->filePath_.c_str());
+            ASSERT_STREQ(std::string(message.path()).c_str(), symbolFile->filePath_.c_str());
             ASSERT_EQ(static_cast<size_t>(message.function_name_size()),
                       symbolFile->GetSymbols().size());
             for (int i = 0; i < message.function_name_size(); i++) {
-                EXPECT_STREQ(message.function_name(i).c_str(),
+                EXPECT_STREQ(std::string(message.function_name(i)).c_str(),
                              symbolFile->GetSymbols().at(i).name_.data());
             }
         }
@@ -259,7 +259,7 @@ HWTEST_F(ReportProtobufFileTest, ProcessReportInfo, TestSize.Level2)
     protobufOutputFileWriter_->Close();
 
     auto protobufReadBack = [&](Proto::HiperfRecord &record) {
-        printf("record name %s %d\n", record.GetTypeName().c_str(), record.RecordType_case());
+        printf("record name %s %d\n", std::string(record.GetTypeName()).c_str(), record.RecordType_case());
         // the SampleStatistic always write in close.
         // so there at least 2 record ,one is expect , one is statiistic
         if (record.has_info()) {
@@ -267,10 +267,10 @@ HWTEST_F(ReportProtobufFileTest, ProcessReportInfo, TestSize.Level2)
             ASSERT_EQ(message.config_name_size() > 0, true);
             ASSERT_EQ(static_cast<size_t>(message.config_name_size()), configNames.size());
             for (int i = 0; i < message.config_name_size(); i++) {
-                EXPECT_STREQ(message.config_name(i).c_str(), configNames.at(i).c_str());
+                EXPECT_STREQ(std::string(message.config_name(i)).c_str(), configNames.at(i).c_str());
             }
             if (message.has_workload_cmd()) {
-                EXPECT_STREQ(message.workload_cmd().c_str(), workloadCmd.c_str());
+                EXPECT_STREQ(std::string(message.workload_cmd()).c_str(), workloadCmd.c_str());
             }
             expectRecord++;
         }
@@ -307,7 +307,7 @@ HWTEST_F(ReportProtobufFileTest, ProcessSampleRecord, TestSize.Level1)
     protobufOutputFileWriter_->Close();
 
     auto protobufReadBack = [&](Proto::HiperfRecord &record) {
-        printf("record name %s %d\n", record.GetTypeName().c_str(), record.RecordType_case());
+        printf("record name %s %d\n", std::string(record.GetTypeName()).c_str(), record.RecordType_case());
         // the SampleStatistic always write in close.
         // so there at least 2 record ,one is expect , one is statiistic
         if (record.has_sample()) {

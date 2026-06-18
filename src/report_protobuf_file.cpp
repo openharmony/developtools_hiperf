@@ -323,7 +323,7 @@ bool ReportProtobufFileReader::Dump(const std::string fileName, ProtobufReadBack
 
 bool ReportProtobufFileReader::Dump(const CallStackSample &message, const int indent)
 {
-    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", std::string(message.GetTypeName()).c_str());
     if (message.has_time()) {
         PRINT_INDENT(indent + 1, "time:%" PRId64 "\n", message.time());
     }
@@ -355,7 +355,7 @@ bool ReportProtobufFileReader::Dump(const CallStackSample &message, const int in
 
 bool ReportProtobufFileReader::Dump(const SampleStatistic &message, const int indent)
 {
-    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", std::string(message.GetTypeName()).c_str());
     if (message.has_count()) {
         PRINT_INDENT(indent + 1, "count:%" PRIu64 "\n", message.count());
     }
@@ -367,21 +367,21 @@ bool ReportProtobufFileReader::Dump(const SampleStatistic &message, const int in
 
 bool ReportProtobufFileReader::Dump(const SymbolTableFile &message, const int indent)
 {
-    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", std::string(message.GetTypeName()).c_str());
     if (message.has_id()) {
         PRINT_INDENT(indent + 1, "id: %u\n", message.id());
     }
     if (message.has_path()) {
-        PRINT_INDENT(indent + 1, "path: %s\n", message.path().c_str());
+        PRINT_INDENT(indent + 1, "path: %s\n", std::string(message.path()).c_str());
     }
     for (int i = 0; i < message.function_name_size(); i++) {
-        PRINT_INDENT(indent + INDENT_TWO, "%d:%s\n", i, message.function_name(i).c_str());
+        PRINT_INDENT(indent + INDENT_TWO, "%d:%s\n", i, std::string(message.function_name(i)).c_str());
     }
     return false;
 }
 bool ReportProtobufFileReader::Dump(const VirtualThreadInfo &message, const int indent)
 {
-    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", std::string(message.GetTypeName()).c_str());
     if (message.has_pid()) {
         PRINT_INDENT(indent + 1, "pid:%u\n", message.pid());
     }
@@ -389,24 +389,24 @@ bool ReportProtobufFileReader::Dump(const VirtualThreadInfo &message, const int 
         PRINT_INDENT(indent + 1, "tid:%u\n", message.tid());
     }
     if (message.has_pid()) {
-        PRINT_INDENT(indent + 1, "name:%s\n", message.name().c_str());
+        PRINT_INDENT(indent + 1, "name:%s\n", std::string(message.name()).c_str());
     }
     return false;
 }
 bool ReportProtobufFileReader::Dump(const ReportInfo &message, const int indent)
 {
-    PRINT_INDENT(indent, "%s:\n", message.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", std::string(message.GetTypeName()).c_str());
     for (int i = 0; i < message.config_name_size(); i++) {
-        PRINT_INDENT(indent + 1, "config_name:%d:%s\n", i, message.config_name(i).c_str());
+        PRINT_INDENT(indent + 1, "config_name:%d:%s\n", i, std::string(message.config_name(i)).c_str());
     }
     if (message.has_workload_cmd()) {
-        PRINT_INDENT(indent + 1, "workload:%s\n", message.workload_cmd().c_str());
+        PRINT_INDENT(indent + 1, "workload:%s\n", std::string(message.workload_cmd()).c_str());
     }
     return true;
 }
 bool ReportProtobufFileReader::Dump(const HiperfRecord &record, const int indent)
 {
-    PRINT_INDENT(indent, "%s:\n", record.GetTypeName().c_str());
+    PRINT_INDENT(indent, "%s:\n", std::string(record.GetTypeName()).c_str());
     if (record.has_sample()) {
         return Dump(record.sample(), indent + 1);
     } else if (record.has_statistic()) {

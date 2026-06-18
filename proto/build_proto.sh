@@ -32,8 +32,13 @@ PREBUILD_OHOS_CLANG_RUNTIME=$BUILD_TOP/prebuilts/clang/ohos/linux-x86_64/llvm/li
 export LD_LIBRARY_PATH=$PREBUILD_HOST_CLANG_RUNTIME:$PREBUILD_OHOS_CLANG_RUNTIME:$LD_LIBRARY_PATH
 
 PROTO_PATH="../../../binarys/third_party/protobuf/innerapis/protoc/clang_x64/libs/protoc"
-echo PROTO_PATH $PROTO_PATH
-if [ -e "$PROTO_PATH" ]; then
+
+if [ -n "$protoc_cmdline" ]; then
+    cmd="$protoc_cmdline"
+    echo "Using build system protoc: $cmd"
+    $cmd
+elif [ -e "$PROTO_PATH" ]; then
+    echo "Using prebuilt protoc: $PROTO_PATH"
     if [[ $(pwd) == *src_test* ]]; then
         cmd="$PROTO_PATH --proto_path ../../../developtools/hiperf/proto --cpp_out ../../../out/standard/src_test/gen/developtools/hiperf/proto ../../../developtools/hiperf/proto/report_sample.proto"
     elif [[ $(pwd) == *test* ]]; then
@@ -44,7 +49,6 @@ if [ -e "$PROTO_PATH" ]; then
     echo $cmd
     $cmd
 else
-    cmd="$protoc_cmdline"
-    echo $cmd
-    $cmd
+    echo "ERROR: No protoc found!"
+    exit 1
 fi
