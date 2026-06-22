@@ -33,7 +33,9 @@ export LD_LIBRARY_PATH=$PREBUILD_HOST_CLANG_RUNTIME:$PREBUILD_OHOS_CLANG_RUNTIME
 
 PROTO_PATH="../../../binarys/third_party/protobuf/innerapis/protoc/clang_x64/libs/protoc"
 
-if [ -n "$protoc_cmdline" ]; then
+protoc_bin=$(echo "$protoc_cmdline" | awk '{print $1}')
+
+if [ -n "$protoc_bin" ] && [ -e "$protoc_bin" ]; then
     cmd="$protoc_cmdline"
     echo "Using build system protoc: $cmd"
     $cmd
