@@ -21,8 +21,11 @@ import re
 import shutil
 import subprocess
 import time
+import json
 from threading import Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import defaultdict
+from typing import Dict, List, Set, Tuple, Optional, Iterator
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
@@ -47,8 +50,6 @@ log_file_handler = None
 
 LOG_SEPARATOR_LENGTH = 60
 BATCH_SIZE = 500
-THREAD_POOL_INDEX_WORKERS = 8
-THREAD_POOL_ANNOTATE_WORKERS = 8
 SYMBOLIZER_TIMEOUT = 30
 READELF_TIMEOUT = 10
 SAFE_FUNC_NAME_MAX_LENGTH = 120
@@ -57,17 +58,76 @@ DEFAULT_DSO_SIZE_THRESHOLD = 1073741824
 DISASSEMBLY_CONTEXT_BYTES = 16
 
 
+def to_long_path(path):
+    r"""Add \\?\ prefix on Windows for paths exceeding MAX_PATH (260 chars).
+
+    Windows has a default path length limit of 260 characters. The \\?\ prefix
+    tells the Windows API to skip path parsing and enables paths up to 32767
+    characters. This is needed when source files are in deeply nested directories
+    and the output path preserves this structure.
+    """
+    if sys.platform != 'win32':
+        return path
+    abs_path = os.path.abspath(path)
+    long_prefix = '\\\\?\\'
+    if not abs_path.startswith(long_prefix):
+        abs_path = long_prefix + abs_path
+    return abs_path
+
+
+
+def is_executable_available(exe_name: str) -> bool:
+    """Check if executable is available. Extracted as common utility function to reduce code duplication."""
+    try:
+        result = subprocess.run([exe_name, "--version"], 
+                               capture_output=True, 
+                               timeout=SYMBOLIZER_TIMEOUT)
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, OSError):
+        return False
+
+
+class PeriodPool:
+    """Period object pool to reduce object creation and GC pressure."""
+
+    _pool = []
+    _lock = Lock()
+    _max_pool_size = 10000
+
+    @classmethod
+    def acquire(cls, period=0, acc_period=0):
+        """Acquire Period object from pool."""
+        with cls._lock:
+            if cls._pool:
+                obj = cls._pool.pop()
+                obj.period = period
+                obj.acc_period = acc_period
+                return obj
+        return Period(period, acc_period)
+
+    @classmethod
+    def release(cls, obj):
+        """Release Period object back to pool."""
+        with cls._lock:
+            if len(cls._pool) < cls._max_pool_size:
+                obj.period = 0
+                obj.acc_period = 0
+                cls._pool.append(obj)
+
+
 class Period:
     """Period information class containing self period and accumulated period.
 
     This class tracks two types of period values:
-    - period: The self period (time spent directly in This function/line)
+    - period: The self period (time spent directly in this function/line)
     - acc_period: The accumulated period (total time including all callees)
 
-    The accumulated period represents the total time spent in This function and all
+    The accumulated period represents the total time spent in this function and all
     functions it calls, while the self period represents only the time spent directly
-    in This function excluding callees.
+    in this function excluding callees.
     """
+
+    __slots__ = ['period', 'acc_period']
 
     def __init__(self, period=0, acc_period=0):
         self.period = period
@@ -87,12 +147,19 @@ class StringCache:
     It's used to reduce memory usage by replacing repeated strings with integer IDs.
     """
 
-    def __init__(self):
-        self.strings = []
-        self.string_to_id = {}
+    __slots__ = ['_string_to_id', '_id_to_string', '_next_id', '_lock', '_stats']
 
-    def get_id(self, s):
+    def __init__(self):
+        self._string_to_id: Dict[str, int] = {}
+        self._id_to_string: Dict[int, str] = {}
+        self._next_id = 0
+        self._lock = Lock()
+        self._stats = {'total_strings': 0, 'unique_strings': 0}
+
+    def get_id(self, s: str) -> int:
         """Get or create an ID for a string.
+
+        Uses sys.intern() for memory efficiency to reduce duplicate string storage.
 
         Arguments:
             s: String to cache
@@ -100,21 +167,31 @@ class StringCache:
         Returns:
             Integer ID for the string
         """
-        if s not in self.string_to_id:
-            self.string_to_id[s] = len(self.strings)
-            self.strings.append(s)
-        return self.string_to_id[s]
+        self._stats['total_strings'] += 1
 
-    def get_string(self, string_id):
+        s_interned = sys.intern(s)
+
+        if s_interned not in self._string_to_id:
+            with self._lock:
+                if s_interned not in self._string_to_id:
+                    new_id = self._next_id
+                    self._next_id += 1
+                    self._string_to_id[s_interned] = new_id
+                    self._id_to_string[new_id] = s_interned
+                    self._stats['unique_strings'] += 1
+
+        return self._string_to_id[s_interned]
+
+    def get_string(self, string_id: int) -> str:
         """Get the original string from an ID.
 
         Arguments:
             string_id: Integer ID
 
         Returns:
-            Original string
+            Original string, or empty string if ID not found
         """
-        return self.strings[string_id]
+        return self._id_to_string.get(string_id, "")
 
 
 class DsoPeriod:
@@ -124,9 +201,11 @@ class DsoPeriod:
     It maintains the DSO name ID and accumulated period information.
     """
 
+    __slots__ = ['dso_name_id', 'period']
+
     def __init__(self, dso_name_id):
         self.dso_name_id = dso_name_id
-        self.period = Period()
+        self.period = PeriodPool.acquire()
 
     def add_period(self, period):
         """Add period information to this DSO."""
@@ -142,16 +221,25 @@ class FilePeriod:
     - Total period for the file
     - Line-level period statistics (line_dict)
     - Function-level period statistics (function_dict)
+    - Per-function line statistics (func_line_dict)
 
     The line_dict maps line numbers to (function_name_id, start_line, Period) tuples,
     showing how much time was spent on each line of code and which function.
+
+    The func_line_dict maps (function_name_id, line_num) to Period, tracking each
+    function's period per line independently. This avoids the problem where
+    line_dict's function_name_id gets overwritten when different functions map
+    to the same source line across samples.
     """
+
+    __slots__ = ['file_id', 'period', 'line_dict', 'function_dict', 'func_line_dict']
 
     def __init__(self, file_id):
         self.file_id = file_id
-        self.period = Period()
-        self.line_dict = {}
-        self.function_dict = {}
+        self.period = PeriodPool.acquire()
+        self.line_dict: Dict[int, List] = defaultdict(lambda: [None, None, PeriodPool.acquire()])
+        self.function_dict: Dict[int, List] = defaultdict(lambda: [-1, PeriodPool.acquire()])
+        self.func_line_dict: Dict[Tuple[int, int], Period] = defaultdict(PeriodPool.acquire)
 
     def add_period(self, period):
         """Add period information to this file."""
@@ -169,10 +257,25 @@ class FilePeriod:
             function_name_id: ID of the function containing this line
             start_line: Starting line number of the function
         """
-        a = self.line_dict.get(line)
-        if a is None:
-            self.line_dict[line] = a = [function_name_id, start_line, Period()]
+        a = self.line_dict[line]
+        a[0] = function_name_id
+        a[1] = start_line
         a[2] += period
+
+    def add_func_line_period(self, function_name_id, line, period):
+        """Add period to a specific (function, line) pair.
+
+        Unlike add_line_period which stores a single function_name_id per line
+        (and overwrites on subsequent calls), this method keys by the
+        (function_name_id, line) pair so each function's line period is tracked
+        independently without overwrite.
+
+        Arguments:
+            function_name_id: ID of the function
+            line: Line number
+            period: Period object to add
+        """
+        self.func_line_dict[(function_name_id, line)] += period
 
     def add_function_period(self, function_name_id, function_start_line, period):
         """Add period information to a specific function in this file.
@@ -185,13 +288,12 @@ class FilePeriod:
         if function_start_line is None:
             function_start_line = -1
 
-        for existing_name_id, existing_data in list(self.function_dict.items()):
-            if existing_data[0] == function_start_line:
-                existing_data[1] += period
-                return
-
-        self.function_dict[function_name_id] = [function_start_line, Period()]
-        self.function_dict[function_name_id][1] += period
+        existing_data = self.function_dict[function_name_id]
+        if existing_data[0] == function_start_line:
+            existing_data[1] += period
+        else:
+            self.function_dict[function_name_id] = [function_start_line, PeriodPool.acquire()]
+            self.function_dict[function_name_id][1] += period
 
 
 class Symbol:
@@ -203,6 +305,8 @@ class Symbol:
     - symbol_addr: Address of the symbol entry point
     - build_id: Build ID of the DSO for symbol validation
     """
+
+    __slots__ = ['dso_name_id', 'symbol_name_id', 'symbol_addr', 'build_id']
 
     def __init__(self):
         self.dso_name_id = 0
@@ -219,9 +323,33 @@ class Sample:
     - callchain: Stack trace (list of Symbol objects)
     """
 
+    __slots__ = ['period', 'callchain']
+
     def __init__(self):
         self.period = 0
-        self.callchain = []
+        self.callchain: List[Symbol] = []
+
+
+class RegexPatterns:
+    """Precompiled regex collection. Uses class structure to manage all regex patterns and avoid recompilation overhead."""
+    __slots__ = []
+
+    CALLCHAIN_DEPTH = re.compile(r"callchain:\s*(\d+)")
+
+    CALLCHAIN_ENTRY = re.compile(r"^(\d+):0x([0-9a-fA-F]+) : (.+?):(\d+)$")
+
+    SYMBOL_PATTERN1 = re.compile(
+        r"^(.+?)\[(0x[0-9a-fA-F]+):(0x[0-9a-fA-F]+)\]\[\+(0x[0-9a-fA-F]+)\]@(.+)$"
+    )
+    SYMBOL_PATTERN2 = re.compile(r"^(.+?)\+(0x[0-9a-fA-F]+)@(.+)$")
+
+    FILE_PATH = re.compile(r"filePath:(.+)")
+    BUILD_ID = re.compile(r"buildId:'([^']+)'")
+
+    SIZE_THRESHOLD = re.compile(r"^(\d+\.?\d*)\s*([KMG]B?)?$")
+
+
+CompiledPatterns = RegexPatterns
 
 
 class DumpFileParser:
@@ -238,8 +366,8 @@ class DumpFileParser:
 
     def __init__(self, dump_file):
         self.dump_file = dump_file
-        self.samples = []
-        self.dso_build_ids = {}
+        self.samples: List[Sample] = []
+        self.dso_build_ids: Dict[str, str] = {}
         self.total_period = 0
         self.string_cache = StringCache()
 
@@ -288,22 +416,22 @@ class DumpFileParser:
         """
         in_symbol_section = False
         current_filepath = None
-        current_build_id = None
 
-        for i, line in enumerate(lines):
+        for line in lines:
             if "feature 192:hiperf_files_symbol" in line:
                 in_symbol_section = True
                 continue
 
             if in_symbol_section:
-                if line.strip().startswith("filePath:"):
-                    match = re.search(r"filePath:(.+)", line)
+                stripped = line.strip()
+                if stripped.startswith("filePath:"):
+                    match = CompiledPatterns.FILE_PATH.search(line)
                     if match:
                         current_filepath = match.group(1).strip()
                         if current_filepath.startswith("[") and current_filepath.endswith("]"):
                             current_filepath = current_filepath[1:-1]
-                elif line.strip().startswith("buildId:'"):
-                    match = re.search(r"buildId:'([^']+)'", line)
+                elif stripped.startswith("buildId:'"):
+                    match = CompiledPatterns.BUILD_ID.search(line)
                     if match:
                         current_build_id = match.group(1)
                         if current_filepath and current_build_id:
@@ -351,6 +479,14 @@ class DumpFileParser:
             self.samples.append(current_sample)
             self.total_period += current_sample.period
 
+    def _parse_int_value(self, value_str):
+        """Parse decimal value string to integer.
+
+        Handles values that may have trailing commas or other characters.
+        """
+        value_str = value_str.strip().rstrip(",")
+        return int(value_str, 10)
+
     def _parse_sample_line(self, line, sample):
         """Parse sample line to extract period information.
 
@@ -365,14 +501,6 @@ class DumpFileParser:
             parts = stripped.split()
             if len(parts) >= 2:
                 sample.period = self._parse_int_value(parts[1])
-
-    def _parse_int_value(self, value_str):
-        """Parse decimal value string to integer.
-
-        Handles values that may have trailing commas or other characters.
-        """
-        value_str = value_str.strip().rstrip(",")
-        return int(value_str, 10)
 
     def _parse_callchain(self, lines, start_idx, sample):
         """Parse callchain information from the dump file.
@@ -391,11 +519,14 @@ class DumpFileParser:
         2. Parse the next N lines as callchain entries
         3. Each entry is parsed as a Symbol object
         4. Symbols are appended to the sample's callchain list
+
+        Arguments:
+            lines: All lines from dump file
+            start_idx: Index of the 'callchain:' line
+            sample: Sample object to populate
         """
-        callchain_depth = 0
-        match = re.search(r"callchain:\s*(\d+)", lines[start_idx])
-        if match:
-            callchain_depth = int(match.group(1))
+        match = CompiledPatterns.CALLCHAIN_DEPTH.search(lines[start_idx])
+        callchain_depth = int(match.group(1)) if match else 0
 
         for i in range(start_idx + 1, min(start_idx + 1 + callchain_depth, len(lines))):
             line = lines[i].strip()
@@ -407,6 +538,8 @@ class DumpFileParser:
     def _parse_callchain_entry(self, line):
         """Parse a single callchain entry to extract symbol information.
 
+        Uses precompiled regex patterns for performance optimization.
+
         Parsing steps:
         1. Split by "index:addr : body:file_offset" to extract addr
         2. Try to match body with "symbol_name[0xhex:0xhex][+0xhex]@dso_name" to extract symbol_name, dso_name
@@ -416,20 +549,23 @@ class DumpFileParser:
         - Symbol/function name ID (if available)
         - DSO/shared library name ID
         - Symbol address (if available)
+
+        Arguments:
+            line: Single callchain entry line
+
+        Returns:
+            Symbol object, or None if parsing fails
         """
         line = line.strip()
 
-        pattern = r"^(\d+):0x([0-9a-fA-F]+) : (.+?):(\d+)$"
-        match = re.match(pattern, line)
+        match = CompiledPatterns.CALLCHAIN_ENTRY.match(line)
         if not match:
             return None
 
         body = match.group(3).strip()
-
         symbol = Symbol()
 
-        pattern2 = r"^(.+?)\[(0x[0-9a-fA-F]+):(0x[0-9a-fA-F]+)\]\[\+(0x[0-9a-fA-F]+)\]@(.+)$"
-        match2 = re.match(pattern2, body)
+        match2 = CompiledPatterns.SYMBOL_PATTERN1.match(body)
         if match2:
             symbol_name = match2.group(1).strip()
             symbol_base_addr = match2.group(3)
@@ -444,8 +580,7 @@ class DumpFileParser:
             except ValueError:
                 pass
         else:
-            pattern3 = r"^(.+?)\+(0x[0-9a-fA-F]+)@(.+)$"
-            match3 = re.match(pattern3, body)
+            match3 = CompiledPatterns.SYMBOL_PATTERN2.match(body)
             if match3:
                 symbol_name = match3.group(1).strip()
                 offset = match3.group(2)
@@ -473,18 +608,19 @@ class SourceFileSearcher:
     This class converts abstract file paths from debug info to real source file paths
     by finding best match in provided source directories.
 
-    Optimized Path Shortening Algorithm:
+    Path Shortening Algorithm:
     1. Remove leading ../ symbols from abstract_path
     2. Try paths by progressively shortening from source_dir
     3. Return first reachable file
     4. Cache results for fast lookup
     """
 
-    SOURCE_FILE_EXTS = {".h", ".hh", ".H", ".hxx", ".hpp", ".h++", ".c", ".cc", ".C", ".cxx", ".cpp", ".c++"}
+    SOURCE_FILE_EXTS = {".h", ".hh", ".H", ".hxx", ".hpp", ".h++", 
+                        ".c", ".cc", ".C", ".cxx", ".cpp", ".c++"}
 
     def __init__(self, source_dirs):
         self.source_dirs = source_dirs
-        self._cache = {}
+        self._cache: Dict[str, Optional[str]] = {}
         self._lock = Lock()
 
     @classmethod
@@ -493,7 +629,17 @@ class SourceFileSearcher:
         return ext in cls.SOURCE_FILE_EXTS
 
     def get_real_path(self, abstract_path):
-        """Get real path using path shortening algorithm with caching."""
+        """Get real path using path shortening algorithm with caching.
+
+        Converts abstract file paths from debug info to real source file paths
+        by finding best match in provided source directories.
+
+        Arguments:
+            abstract_path: Abstract path from debug info
+
+        Returns:
+            Real file path if found, None otherwise
+        """
         if not abstract_path:
             return None
 
@@ -507,32 +653,25 @@ class SourceFileSearcher:
 
         return result
 
-    def _normalize_path(self, path):
-        """Remove leading ../ symbols and normalize path."""
-        normalized = os.path.normpath(path.replace("/", os.sep))
-        parts = normalized.split(os.sep)
-
-        result = []
-        for part in parts:
-            if part == "..":
-                continue
-            elif part == "." or not part:
-                continue
-            else:
-                result.append(part)
-
-        return result
-
-    def _try_path_variants(self, path_parts):
-        """Try all path variants by progressively shortening."""
-        for start_idx in range(len(path_parts)):
-            variant_parts = path_parts[start_idx:]
-            yield variant_parts
-
     def _search_file(self, abstract_path):
-        """Search for file using path shortening strategy."""
-        path_parts = self._normalize_path(abstract_path)
+        """Search for file using path shortening strategy.
 
+        Uses progressive path shortening algorithm with direct prefix
+        concatenation and os.path.isfile() lookup, which avoids the
+        cost of walking (potentially huge) source_dirs up front.
+
+        Algorithm:
+        1. Normalize the abstract path
+        2. Try each source directory with path variants (progressive shortening)
+        3. Return first reachable file
+
+        Arguments:
+            abstract_path: Abstract path to search for
+
+        Returns:
+            Real file path if found, None otherwise
+        """
+        path_parts = self._normalize_path(abstract_path)
         if not path_parts:
             return None
 
@@ -541,11 +680,47 @@ class SourceFileSearcher:
 
             for variant_parts in self._try_path_variants(path_parts):
                 candidate = os.path.join(source_dir, *variant_parts)
-
                 if os.path.isfile(candidate):
                     return candidate
 
         return None
+
+    def _normalize_path(self, path):
+        """Remove leading ../ symbols and normalize path.
+
+        Arguments:
+            path: Path to normalize
+
+        Returns:
+            List of path components without .. or . segments
+        """
+        normalized = os.path.normpath(path.replace("/", os.sep))
+        parts = normalized.split(os.sep)
+
+        result = []
+        for part in parts:
+            if part == ".." or part == "." or not part:
+                continue
+            else:
+                result.append(part)
+
+        return result
+
+    def _try_path_variants(self, path_parts):
+        """Try all path variants by progressively shortening.
+
+        This method generates path variants by removing leading components
+        one at a time, allowing for flexible path matching.
+
+        Arguments:
+            path_parts: List of path components
+
+        Yields:
+            Path variant (list of remaining components)
+        """
+        for start_idx in range(len(path_parts)):
+            variant_parts = path_parts[start_idx:]
+            yield variant_parts
 
 
 class HiperfAddr2Line:
@@ -570,9 +745,9 @@ class HiperfAddr2Line:
         self.symbol_dirs = symbol_dirs if symbol_dirs else []
         self.source_searcher = SourceFileSearcher(source_dirs)
         self.symbolizer_path = self._find_symbolizer()
-        self.addr_map = {}
-        self.source_map = {}
-        self.file_index = {}
+        self.addr_map: Dict[str, Dict] = defaultdict(lambda: {"build_id": "", "addrs": set()})
+        self.source_map: Dict[Tuple[str, int], List] = {}
+        self.file_index: Dict[str, str] = {}
         self.cache_lock = Lock()
         self.output_dir = output_dir
         self.readelf = HiperfReadElf(ndk_path)
@@ -580,7 +755,7 @@ class HiperfAddr2Line:
         self.binary_finder = HiperfBinaryFinder(symbol_dirs, self.file_index, self.readelf)
 
     def add_addr(self, dso_path, build_id, symbol_addr):
-        """Add an addresses that needs to be converted to source line information.
+        """Add an address that needs to be converted to source line information.
 
         This method queues addresses for batch conversion. Addresses are
         grouped by DSO to optimize the symbolization process.
@@ -588,13 +763,12 @@ class HiperfAddr2Line:
         Arguments:
             dso_path: Path to the DSO/shared library
             build_id: Build ID of the DSO (for validation)
-            symbol_addr: Symbol addresses to symbolize
+            symbol_addr: Symbol address to symbolize
         """
-        if dso_path not in self.addr_map:
-            self.addr_map[dso_path] = {"build_id": build_id, "addrs": set()}
+        self.addr_map[dso_path]["build_id"] = build_id
         self.addr_map[dso_path]["addrs"].add(symbol_addr)
 
-    def convert_addrs_to_lines(self, jobs=THREAD_POOL_INDEX_WORKERS, dso_size_threshold=DEFAULT_DSO_SIZE_THRESHOLD):
+    def convert_addrs_to_lines(self, jobs=None, dso_size_threshold=DEFAULT_DSO_SIZE_THRESHOLD):
         """Batch convert addresses to source code lines with multithreading.
 
         This method performs the actual symbolization:
@@ -611,7 +785,11 @@ class HiperfAddr2Line:
             logger.warning("llvm-symbolizer not found, skipping addresses conversion")
             return
 
-        logger.info("  Threads: %d" % jobs)
+        if jobs is None:
+            cpu_count = os.cpu_count() or 4
+            jobs = cpu_count
+
+        logger.info("  Threads: %d (adaptive)" % jobs)
         logger.info("  DSO threshold: %d bytes" % dso_size_threshold)
 
         dso_items = list(self.addr_map.items())
@@ -637,7 +815,8 @@ class HiperfAddr2Line:
                     with self.binary_finder.stats_lock:
                         self.binary_finder.stats["skipped_large_dso"] += 1
                     logger.info(
-                        "  [%d/%d] Skipping large DSO: %s (size: %d bytes)" % (current, total_dso, dso_name, file_size)
+                        "  [%d/%d] Skipping large DSO: %s (size: %d bytes)" % 
+                        (current, total_dso, dso_name, file_size)
                     )
                     return
             else:
@@ -654,27 +833,21 @@ class HiperfAddr2Line:
                 % (current, total_dso, progress, dso_name, addr_count, elapsed)
             )
 
-        if jobs <= 1:
+        with ThreadPoolExecutor(max_workers=jobs) as executor:
+            futures = []
             for dso_path, dso_info in dso_items:
-                process_dso(dso_path, dso_info)
-        else:
-            with ThreadPoolExecutor(max_workers=jobs) as executor:
-                futures = []
-                for dso_path, dso_info in dso_items:
-                    future = executor.submit(process_dso, dso_path, dso_info)
-                    futures.append(future)
+                future = executor.submit(process_dso, dso_path, dso_info)
+                futures.append(future)
 
-            for future in as_completed(futures):
-                try:
-                    future.result()
-                except Exception as e:
-                    logger.error("  [ERROR] %s" % e)
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                logger.error("  [ERROR] %s" % e)
 
-        if (
-            self.binary_finder.stats["skipped_large_dso"] > 0
-            or self.binary_finder.stats["binary_not_found"] > 0
-            or self.binary_finder.stats["build_id_mismatch"] > 0
-        ):
+        if (self.binary_finder.stats["skipped_large_dso"] > 0 or
+            self.binary_finder.stats["binary_not_found"] > 0 or
+            self.binary_finder.stats["build_id_mismatch"] > 0):
             logger.info("")
             logger.info(
                 "  Skipped %d large DSOs, %d DSOs not found, %d DSOs with build ID mismatch"
@@ -686,17 +859,18 @@ class HiperfAddr2Line:
             )
 
     def get_sources(self, dso_path, addr):
-        """Get source code line information for an addresses.
+        """Get source code line information for an address.
 
         This method retrieves cached symbolization results and converts
         abstract file paths to real source file paths.
 
         Arguments:
             dso_path: Path to DSO
-            addr: Virtual addresses
+            addr: Virtual address
 
         Returns:
-            List of (file_path, line_num, function_name, start_line) tuples, or empty list if not found
+            List of (file_path, line_num, function_name, start_line) tuples,
+            or empty list if not found
         """
         key = (dso_path, addr)
         if key not in self.source_map:
@@ -747,7 +921,10 @@ class HiperfAddr2Line:
                             local_count += 1
             return local_count
 
-        with ThreadPoolExecutor(max_workers=THREAD_POOL_INDEX_WORKERS) as executor:
+        cpu_count = os.cpu_count() or 4
+        workers = min(cpu_count, 8)
+
+        with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = [executor.submit(index_dir, d) for d in self.symbol_dirs]
             for future in as_completed(futures):
                 total_files += future.result()
@@ -778,6 +955,9 @@ class HiperfAddr2Line:
         - llvm-addr2line in ndk_path (if provided)
         - llvm-symbolizer in system PATH
         - llvm-addr2line in system PATH
+
+        Returns:
+            Path to symbolizer tool, or None if not found
         """
         if self.ndk_path:
             for exe in ["llvm-symbolizer", "llvm-addr2line"]:
@@ -802,8 +982,8 @@ class HiperfAddr2Line:
         """Check if an executable is available in the system PATH.
 
         This method attempts to run the executable with --version flag
-        to verify it exists and is executable. This is more reliable than
-        just checking file existence as it also verifies the tool works.
+        to verify it exists and is executable. Uses the common utility
+        function is_executable_available() for consistency.
 
         Arguments:
             exe_name: Name of the executable to check
@@ -811,11 +991,7 @@ class HiperfAddr2Line:
         Returns:
             True if the executable can be run successfully, False otherwise
         """
-        try:
-            result = subprocess.run([exe_name, "--version"], capture_output=True, timeout=SYMBOLIZER_TIMEOUT)
-            return result.returncode == 0
-        except Exception:
-            return False
+        return is_executable_available(exe_name)
 
     def _convert_dso_addrs(self, dso_path, dso_info):
         """Convert all addresses for a single DSO in batch.
@@ -860,7 +1036,7 @@ class HiperfAddr2Line:
         - llvm-addr2line: --exe=<binary> --demangle --functions <addr1> <addr2> ...
 
         To avoid command line length limits (especially on Windows), addresses are
-        processed in batches when the number exceeds a threshold.
+        processed in batches when the number exceeds BATCH_SIZE.
 
         Arguments:
             binary_path: Path to the binary file
@@ -885,6 +1061,15 @@ class HiperfAddr2Line:
         """Implementation of batch addresses conversion.
 
         This is the actual implementation that processes a single batch of addresses.
+        Determines which symbolizer tool to use based on executable name and constructs
+        appropriate command line arguments.
+
+        Arguments:
+            binary_path: Path to the binary file
+            addrs: List of addresses to convert (single batch)
+
+        Returns:
+            Dict mapping addr to list of source information tuples
         """
         if not self.symbolizer_path or not addrs:
             return {}
@@ -892,9 +1077,7 @@ class HiperfAddr2Line:
         results = {}
         try:
             exe_name = os.path.basename(self.symbolizer_path)
-            addr_strs = []
-            for addr in addrs:
-                addr_strs.append("0x%x" % addr)
+            addr_strs = ["0x%x" % addr for addr in addrs]
 
             if "addr2line" in exe_name:
                 cmd = [self.symbolizer_path, "--exe=" + binary_path, "--demangle", "--functions"] + addr_strs
@@ -940,15 +1123,13 @@ class HiperfAddr2Line:
 
         Arguments:
             output: JSON stdout from llvm-symbolizer
-            addrs: List of addresses that were requested
+            addrs: List of addresses that were requested (for reference)
 
         Returns:
-            Dict mapping addr to list of (file_path, line_num, function_name) tuples
+            Dict mapping addr to list of (file_path, line_num, function_name, start_line) tuples
         """
         results = {}
         try:
-            import json
-
             data = json.loads(output)
 
             for item in data:
@@ -998,7 +1179,7 @@ class SourceFileAnnotator:
     - Percentage of total execution time
 
     Algorithm for period calculation:
-    - Self period: Time spent directly in This function/line
+    - Self period: Time spent directly in this function/line
     - Accumulated period: Total time including all callees
     - For callchains, the first frame gets the full period (accumulated)
     - Subsequent frames get only self period (accumulated = 0)
@@ -1010,9 +1191,10 @@ class SourceFileAnnotator:
         self.dso_filter = set(config.get("dso_filters", []))
 
         output_dir = config.get("output_dir", "annotated_files")
-        if os.path.isdir(output_dir):
-            shutil.rmtree(output_dir)
-        os.makedirs(output_dir)
+        long_output_dir = to_long_path(output_dir)
+        if os.path.isdir(long_output_dir):
+            shutil.rmtree(long_output_dir)
+        os.makedirs(long_output_dir)
 
         log_file_path = os.path.join(output_dir, "run.log")
         file_handler = logging.FileHandler(log_file_path, mode="w", encoding="utf-8")
@@ -1021,13 +1203,13 @@ class SourceFileAnnotator:
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 
-        output_dir = config.get("output_dir", "annotated_files")
         self.addr2line = HiperfAddr2Line(
-            config.get("ndk_path"), config.get("symdir", []), config.get("source_dirs", []), output_dir
+            config.get("ndk_path"), config.get("symdir", []), 
+            config.get("source_dirs", []), output_dir
         )
         self.period = 0
-        self.dso_periods = {}
-        self.file_periods = {}
+        self.dso_periods: Dict[int, DsoPeriod] = {}
+        self.file_periods: Dict[int, FilePeriod] = {}
 
     def annotate(self, parser, enable_disassembly=False):
         """Execute complete annotation workflow.
@@ -1102,7 +1284,7 @@ class SourceFileAnnotator:
         Algorithm:
         1. For each sample, extract the callchain
         2. For each symbol in the callchain:
-           - Add the symbol addresses for symbolization
+           - Add the symbol address for symbolization
         3. Filter symbols based on dso_filter if specified
 
         This ensures we have source location information for all
@@ -1144,6 +1326,8 @@ class SourceFileAnnotator:
         This method triggers the symbolization process for all
         collected addresses. The results are cached in the
         HiperfAddr2Line object for later lookup.
+
+        Uses dso_size_threshold from config to skip large DSOs.
         """
         dso_size_threshold = self.config.get("dso_size_threshold", DEFAULT_DSO_SIZE_THRESHOLD)
         self.addr2line.convert_addrs_to_lines(dso_size_threshold=dso_size_threshold)
@@ -1189,6 +1373,9 @@ class SourceFileAnnotator:
         - Parent functions show only the time spent directly in them
         - The sum of self periods + accumulated periods = total time
 
+        Uses PeriodPool for efficient memory management and releases
+        the period object after processing.
+
         Arguments:
             sample: Sample object to process
         """
@@ -1196,15 +1383,16 @@ class SourceFileAnnotator:
             return
 
         is_sample_used = False
-        used_dso_dict = {}
-        used_file_dict = {}
-        used_line_dict = {}
-        used_function_dict = {}
-        period = Period(sample.period, sample.period)
+        used_dso_dict: Dict[int, bool] = {}
+        used_file_dict: Dict[int, bool] = {}
+        used_line_dict: Dict[Tuple[int, int], bool] = {}
+        used_function_dict: Dict[Tuple[int, int], bool] = {}
+        used_func_line_dict: Dict[Tuple[int, int, int], bool] = {}
+        period = PeriodPool.acquire(sample.period, sample.period)
 
         for j, symbol in enumerate(sample.callchain):
             if j == 1:
-                period = Period(0, sample.period)
+                period.period = 0
 
             if not self._filter_symbol(symbol):
                 continue
@@ -1221,16 +1409,21 @@ class SourceFileAnnotator:
                     function_name_id = self.string_cache.get_id(function_name) if function_name else 0
                     self._add_file_period(file_path_id, period, used_file_dict)
                     if line_num:
-                        self._add_line_period(
+                        line_added = self._add_line_period(
                             file_path_id, line_num, period, function_name_id, start_line, used_line_dict
                         )
-                    if line_num and function_name and start_line:
-                        self._add_function_period(
-                            file_path_id, function_name_id, start_line, period, used_function_dict
-                        )
+                        if line_added and function_name and start_line:
+                            self._add_function_period(
+                                file_path_id, function_name_id, start_line, period, used_function_dict
+                            )
+                            self._add_func_line_period(
+                                file_path_id, function_name_id, line_num, period, used_func_line_dict
+                            )
 
         if is_sample_used:
             self.period += sample.period
+
+        PeriodPool.release(period)
 
     def _add_dso_period(self, dso_name_id, period, used_dso_dict):
         """Add period statistics to a DSO.
@@ -1245,10 +1438,9 @@ class SourceFileAnnotator:
         """
         if dso_name_id not in used_dso_dict:
             used_dso_dict[dso_name_id] = True
-            dso_period = self.dso_periods.get(dso_name_id)
-            if dso_period is None:
-                dso_period = self.dso_periods[dso_name_id] = DsoPeriod(dso_name_id)
-            dso_period.add_period(period)
+            if dso_name_id not in self.dso_periods:
+                self.dso_periods[dso_name_id] = DsoPeriod(dso_name_id)
+            self.dso_periods[dso_name_id].add_period(period)
 
     def _add_file_period(self, file_path_id, period, used_file_dict):
         """Add period statistics to a file.
@@ -1263,10 +1455,9 @@ class SourceFileAnnotator:
         """
         if file_path_id not in used_file_dict:
             used_file_dict[file_path_id] = True
-            file_period = self.file_periods.get(file_path_id)
-            if file_period is None:
-                file_period = self.file_periods[file_path_id] = FilePeriod(file_path_id)
-            file_period.add_period(period)
+            if file_path_id not in self.file_periods:
+                self.file_periods[file_path_id] = FilePeriod(file_path_id)
+            self.file_periods[file_path_id].add_period(period)
 
     def _add_line_period(self, file_path_id, line_num, period, function_name_id, start_line, used_line_dict):
         """Add period statistics to a specific line in a file.
@@ -1281,13 +1472,17 @@ class SourceFileAnnotator:
             function_name_id: ID of the function containing this line
             start_line: Starting line number of the function
             used_line_dict: Dictionary tracking used lines in current sample
+
+        Returns:
+            True if the line was actually added, False if skipped by deduplication
         """
         key = (file_path_id, line_num)
         if key not in used_line_dict:
             used_line_dict[key] = True
-            file_period = self.file_periods.get(file_path_id)
-            if file_period:
-                file_period.add_line_period(line_num, period, function_name_id, start_line)
+            if file_path_id in self.file_periods:
+                self.file_periods[file_path_id].add_line_period(line_num, period, function_name_id, start_line)
+            return True
+        return False
 
     def _add_function_period(self, file_path_id, function_name_id, function_start_line, period, used_function_dict):
         """Add period statistics to a specific function in a file.
@@ -1305,9 +1500,29 @@ class SourceFileAnnotator:
         key = (file_path_id, function_name_id)
         if key not in used_function_dict:
             used_function_dict[key] = True
-            file_period = self.file_periods.get(file_path_id)
-            if file_period:
-                file_period.add_function_period(function_name_id, function_start_line, period)
+            if file_path_id in self.file_periods:
+                self.file_periods[file_path_id].add_function_period(function_name_id, function_start_line, period)
+
+    def _add_func_line_period(self, file_path_id, function_name_id, line_num, period, used_func_line_dict):
+        """Add period for a specific (function, line) pair.
+
+        Tracks per-function line periods independently, so each function's lines
+        are never lost due to another function overwriting the same line_num in
+        line_dict. Deduplication is per (file, function, line) within a single
+        sample, matching the semantics of _add_function_period.
+
+        Arguments:
+            file_path_id: ID of the file path
+            function_name_id: ID of the function name
+            line_num: Line number
+            period: Period object to add
+            used_func_line_dict: Dictionary tracking used (function, line) pairs
+        """
+        key = (file_path_id, function_name_id, line_num)
+        if key not in used_func_line_dict:
+            used_func_line_dict[key] = True
+            if file_path_id in self.file_periods:
+                self.file_periods[file_path_id].add_func_line_period(function_name_id, line_num, period)
 
     def _write_period(self):
         """Write summary report with period statistics.
@@ -1341,6 +1556,9 @@ class SourceFileAnnotator:
         Total           Self            DSO
         100.00%         50.00%          /system/lib/libapp.so
         ...
+
+        Arguments:
+            summary_fh: File handle to write to
         """
         dso_periods = sorted(self.dso_periods.values(), key=lambda x: x.period.acc_period, reverse=True)
 
@@ -1366,6 +1584,9 @@ class SourceFileAnnotator:
         Total           Self            Source File
         100.00%         50.00%          /path/to/source.c
         ...
+
+        Arguments:
+            summary_fh: File handle to write to
         """
         file_periods = sorted(self.file_periods.values(), key=lambda x: x.period.acc_period, reverse=True)
 
@@ -1385,6 +1606,14 @@ class SourceFileAnnotator:
 
         This section lists all functions and lines in a file that have non-zero periods,
         grouped by function with their lines.
+
+        Line-to-function matching: func_line_dict tracks per-(function, line) periods
+        independently during period generation, keyed by (function_name_id, line_num).
+        This avoids the problem where line_dict's single function_name_id per line gets
+        overwritten when different functions map to the same source line across samples.
+
+        Lines in line_dict that have no entry in func_line_dict (e.g. function_name was
+        empty or start_line was 0) are listed as orphan lines.
 
         Format:
         === Function/Line Summary in /path/to/source.c ===
@@ -1408,27 +1637,18 @@ class SourceFileAnnotator:
             func_start_line, period = file_period.function_dict[func_name_id]
             func_list.append((func_name_id, func_start_line, period))
 
-        func_list.sort(key=lambda x: x[1])
+        func_lines: Dict[int, List] = defaultdict(list)
+        matched_lines: Set[int] = set()
 
-        func_lines = {}
-        for func_name_id, func_start_line, period in func_list:
-            func_lines[func_name_id] = []
+        for (func_name_id, line), period in file_period.func_line_dict.items():
+            func_lines[func_name_id].append((line, period))
+            matched_lines.add(line)
 
+        orphan_lines = []
         for line in sorted(file_period.line_dict.keys()):
-            function_name_id, start_line, period = file_period.line_dict[line]
-
-            found_func_id = None
-            for i in range(len(func_list) - 1, -1, -1):
-                func_name_id, func_start_line, _ = func_list[i]
-                if line >= func_start_line:
-                    found_func_id = func_name_id
-                    break
-
-            if found_func_id is not None:
-                func_lines.get(found_func_id, []).append((line, period))
-            else:
-                func_lines["_orphan"] = func_lines.get("_orphan", [])
-                func_lines["_orphan"].append((line, period))
+            if line not in matched_lines:
+                _, _, period = file_period.line_dict[line]
+                orphan_lines.append((line, period))
 
         func_list_sorted = sorted(func_list, key=lambda x: x[2].acc_period, reverse=True)
 
@@ -1446,12 +1666,11 @@ class SourceFileAnnotator:
                     name = "%s line %d" % (func_name, line)
                     summary_fh.write("%-*s %-*s  %s\n" % (col_width, total_str, col_width, self_str, name))
 
-        if "_orphan" in func_lines:
-            for line, line_period in sorted(func_lines["_orphan"], key=lambda x: x[0]):
-                total_str = self._get_period_str(line_period.acc_period)
-                self_str = self._get_period_str(line_period.period)
-                name = "line %d" % line
-                summary_fh.write("%-*s %-*s  %s\n" % (col_width, total_str, col_width, self_str, name))
+        for line, line_period in sorted(orphan_lines, key=lambda x: x[0]):
+            total_str = self._get_period_str(line_period.acc_period)
+            self_str = self._get_period_str(line_period.period)
+            name = "line %d" % line
+            summary_fh.write("%-*s %-*s  %s\n" % (col_width, total_str, col_width, self_str, name))
 
         summary_fh.write("\n")
 
@@ -1496,7 +1715,7 @@ class SourceFileAnnotator:
         2. If not provided, skip annotation
         3. For each file in file_periods:
            - Use source_searcher to find real source file path
-           - If real path found, annotatee the file
+           - If real path found, annotate the file
         4. Comments are added as C-style comments: /* period_info */
         5. Empty lines get no comment
         6. Lines with period info get aligned comments
@@ -1504,6 +1723,7 @@ class SourceFileAnnotator:
         Optimization:
         - Uses multithreading for parallel file annotation
         - Shows progress for each file
+        - Adaptive worker count based on CPU count
         """
         source_dirs = self.config.get("source_dirs", [])
         if not source_dirs:
@@ -1517,7 +1737,7 @@ class SourceFileAnnotator:
             from_path = self.string_cache.get_string(file_id)
             to_path = self._get_output_path_from_source(from_path, dest_dir, source_dirs)
 
-            if not os.path.isfile(from_path):
+            if not os.path.isfile(to_long_path(from_path)):
                 logger.warning("  Can't find source file: %s" % from_path)
                 continue
 
@@ -1528,6 +1748,9 @@ class SourceFileAnnotator:
 
         logger.info("  Total files: %d" % len(file_tasks))
         logger.info("")
+
+        cpu_count = os.cpu_count() or 4
+        workers = cpu_count * 4
 
         counter = {"value": 0}
         counter_lock = Lock()
@@ -1541,7 +1764,7 @@ class SourceFileAnnotator:
 
             self._annotate_file(from_path, to_path, file_period, current, total_files, progress)
 
-        with ThreadPoolExecutor(max_workers=THREAD_POOL_ANNOTATE_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for from_path, to_path, file_period in file_tasks:
                 future = executor.submit(annotate_file_task, from_path, to_path, file_period)
@@ -1616,10 +1839,13 @@ class SourceFileAnnotator:
         else:
             logger.info("  [1/1, 100.0%%] %s" % (from_path))
 
+        from_path = to_long_path(from_path)
+        to_path = to_long_path(to_path)
+
         with open(from_path, "r", encoding="utf-8", errors="replace") as rf:
             lines = rf.readlines()
 
-        annotations = {}
+        annotations: Dict[int, str] = {}
         for line in file_period.line_dict.keys():
             function_name_id, start_line, period = file_period.line_dict[line]
             annotations[line] = self._get_period_str(period)
@@ -1632,15 +1858,13 @@ class SourceFileAnnotator:
 
         annotations[1] = "[file] " + self._get_period_str(file_period.period)
 
-        max_annotation_cols = 0
-        for key in annotations:
-            max_annotation_cols = max(max_annotation_cols, len(annotations[key]))
+        max_annotation_cols = max(len(annotations[key]) for key in annotations) if annotations else 0
 
         empty_annotation = " " * (max_annotation_cols + 6)
 
         dirname = os.path.dirname(to_path)
-        if not os.path.isdir(dirname):
-            os.makedirs(dirname)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
 
         with open(to_path, "w", encoding="utf-8") as wf:
             for line in range(1, len(lines) + 1):
@@ -1656,7 +1880,10 @@ class SourceFileAnnotator:
                 wf.write(lines[line - 1])
 
     def _generate_disassembly(self, parser):
-        """Generate disassembly annotation
+        """Generate disassembly annotation.
+
+        Creates DisassemblyAnnotator instance and orchestrates the
+        disassembly annotation workflow.
 
         Arguments:
             parser: DumpFileParser object containing parsed samples
@@ -1680,8 +1907,10 @@ class Disassembly:
     - end_addr: Function end addresses
     """
 
+    __slots__ = ['lines', 'function_name', 'start_addr', 'end_addr']
+
     def __init__(self):
-        self.lines = []
+        self.lines: List[Tuple[str, int]] = []
         self.function_name = ""
         self.start_addr = 0
         self.end_addr = 0
@@ -1693,12 +1922,14 @@ class AddrRange:
     Used to specify addresses range for disassembly.
     """
 
+    __slots__ = ['start', 'end']
+
     def __init__(self, start, end):
         self.start = start
         self.end = end
 
     def is_in_range(self, addr):
-        """Check if addresses is within range."""
+        """Check if address is within range."""
         return self.start <= addr < self.end
 
 
@@ -1727,7 +1958,8 @@ class HiperfReadElf:
 
         try:
             result = subprocess.run(
-                [self.readelf_path, "-h", binary_path], capture_output=True, text=True, timeout=READELF_TIMEOUT
+                [self.readelf_path, "-h", binary_path], 
+                capture_output=True, text=True, timeout=READELF_TIMEOUT
             )
             if result.returncode == 0:
                 output = result.stdout
@@ -1755,7 +1987,8 @@ class HiperfReadElf:
 
         try:
             result = subprocess.run(
-                [self.readelf_path, "-n", binary_path], capture_output=True, text=True, timeout=READELF_TIMEOUT
+                [self.readelf_path, "-n", binary_path], 
+                capture_output=True, text=True, timeout=READELF_TIMEOUT
             )
             if result.returncode == 0:
                 for line in result.stdout.split("\n"):
@@ -1791,24 +2024,22 @@ class HiperfReadElf:
 
     def _is_executable_available(self, exe_name):
         """Check if executable is available."""
-        try:
-            result = subprocess.run([exe_name, "--version"], capture_output=True, timeout=SYMBOLIZER_TIMEOUT)
-            return result.returncode == 0
-        except Exception:
-            return False
+        return is_executable_available(exe_name)
 
 
 class HiperfBinaryFinder:
-    """Binary file finder.
+    """Binary file finder class.
 
-    Uses pre-built file index to quickly find binary files and verify build ID.
+    Finds binary files by matching build IDs and validates them.
     """
+
+    __slots__ = ['symbol_dirs', 'file_index', 'readelf', '_validated_build_ids', 'stats', 'stats_lock']
 
     def __init__(self, symbol_dirs, file_index, readelf=None):
         self.symbol_dirs = symbol_dirs if symbol_dirs else []
         self.file_index = file_index if file_index else {}
         self.readelf = readelf
-        self._validated_build_ids = {}
+        self._validated_build_ids: Dict[Tuple[str, str], bool] = {}
         self.stats = {"binary_not_found": 0, "build_id_mismatch": 0, "skipped_large_dso": 0}
         self.stats_lock = Lock()
 
@@ -1877,7 +2108,7 @@ class HiperfObjdump:
         self.file_index = file_index if file_index else {}
         self.objdump_path = self._find_objdump()
         self.readelf = HiperfReadElf(ndk_path)
-        self.objdump_cache = {}
+        self.objdump_cache: Dict[str, str] = {}
         if binary_finder:
             self.binary_finder = binary_finder
         else:
@@ -1973,32 +2204,7 @@ class HiperfObjdump:
 
     def _is_executable_available(self, exe_name):
         """Check if executable is available."""
-        try:
-            result = subprocess.run([exe_name, "--version"], capture_output=True, timeout=SYMBOLIZER_TIMEOUT)
-            return result.returncode == 0
-        except Exception:
-            return False
-
-    def _parse_disassembly_output(self, output, addr_range):
-        """Parse disassembly output.
-
-        Arguments:
-            output: llvm-objdump stdout
-            addr_range: Address range
-
-        Returns:
-            Disassembly object
-        """
-        disassembly = Disassembly()
-        disassembly.start_addr = addr_range.start
-        disassembly.end_addr = addr_range.end
-
-        for line in output.split("\n"):
-            line = line.rstrip()
-            addr = self._get_addr_from_disassembly_line(line)
-            disassembly.lines.append((line, addr))
-
-        return disassembly
+        return is_executable_available(exe_name)
 
     def _parse_disassembly_for_functions(self, fh, addr_ranges):
         """Parse batch disassembly output and split by function.
@@ -2016,7 +2222,7 @@ class HiperfObjdump:
             result[i].start_addr = addr_range.start
             result[i].end_addr = addr_range.end
 
-        all_lines = []
+        all_lines: List[Tuple[str, int]] = []
         while True:
             line = fh.readline()
             if not line:
@@ -2038,7 +2244,7 @@ class HiperfObjdump:
         return result
 
     def _get_addr_from_disassembly_line(self, line):
-        """Extract addresses from disassembly line.
+        """Extract address from disassembly line.
 
         Arguments:
             line: Disassembly output line
@@ -2078,12 +2284,14 @@ class DisassemblyAnnotator:
         self.addr2line = addr2line
 
         self.objdump = HiperfObjdump(
-            config.get("ndk_path"), config.get("symdir", []), file_index, addr2line.binary_finder
+            config.get("ndk_path"), config.get("symdir", []), 
+            file_index, addr2line.binary_finder
         )
 
-        self.function_ranges = {}
-        self.addr_periods = {}
-        self.disassembly_cache = {}
+        self.function_ranges: Dict[Tuple[str, str], Dict] = {}
+        self.addr_periods: Dict[Tuple[str, int], int] = {}
+        self.addr_periods_lock = Lock()
+        self.disassembly_cache: Dict[str, str] = {}
         self.total_period = 0
         self.dso_filter = set(config.get("dso_filters", []))
 
@@ -2127,7 +2335,7 @@ class DisassemblyAnnotator:
         logger.info("  Function ranges: %d" % len(self.function_ranges))
 
     def calculate_addr_periods(self, parser):
-        """Calculate period statistics for each address
+        """Calculate period statistics for each address.
 
         Arguments:
             parser: DumpFileParser object containing parsed samples
@@ -2152,17 +2360,15 @@ class DisassemblyAnnotator:
                 addr = symbol.symbol_addr
 
                 key = (dso_name, addr)
-                if key not in self.addr_periods:
-                    self.addr_periods[key] = 0
-
-                self.addr_periods[key] += sample.period
+                with self.addr_periods_lock:
+                    self.addr_periods[key] = self.addr_periods.get(key, 0) + sample.period
 
         logger.info("  Addresses: %d" % len(self.addr_periods))
         logger.info("  Total period: %d" % self.total_period)
         logger.info("")
 
     def generate_disassembly(self):
-        """Generate annotated disassembly for all functions
+        """Generate annotated disassembly for all functions.
 
         Workflow:
         1. Group functions by DSO
@@ -2173,16 +2379,20 @@ class DisassemblyAnnotator:
             d. Annotate with period data
         3. Write annotated disassembly files
         """
-        dso_groups = {}
+        dso_groups: Dict[str, Dict] = defaultdict(lambda: {"functions": [], "build_id": ""})
+
         for (dso_name, func_name), func_info in self.function_ranges.items():
-            if dso_name not in dso_groups:
-                dso_groups[dso_name] = {"functions": [], "build_id": func_info["build_id"]}
             dso_groups[dso_name]["functions"].append((func_name, func_info))
+            dso_groups[dso_name]["build_id"] = func_info["build_id"]
 
         output_dir = self.config.get("disassembly_output_dir", "annotated_disassembly")
-        if os.path.exists(output_dir):
-            shutil.rmtree(output_dir)
-        os.makedirs(output_dir)
+        long_output_dir = to_long_path(output_dir)
+        if os.path.exists(long_output_dir):
+            shutil.rmtree(long_output_dir)
+        os.makedirs(long_output_dir)
+
+        cpu_count = os.cpu_count() or 4
+        workers = cpu_count
 
         counter = {"value": 0}
         counter_lock = Lock()
@@ -2244,7 +2454,7 @@ class DisassemblyAnnotator:
                 )
                 return
 
-            annotated = {}
+            annotated: Dict[str, str] = {}
             for i, (func_name, addr_range) in enumerate(sorted_ranges):
                 if i < len(disassemblies):
                     disasm = disassemblies[i]
@@ -2259,7 +2469,7 @@ class DisassemblyAnnotator:
                 % (current_width, current, total_dso, progress, dso_basename, elapsed, func_count)
             )
 
-        with ThreadPoolExecutor(max_workers=THREAD_POOL_ANNOTATE_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for dso_name, dso_info in dso_groups.items():
                 future = executor.submit(process_dso, dso_name, dso_info)
@@ -2272,7 +2482,7 @@ class DisassemblyAnnotator:
                     logger.warning("Error processing DSO: %s" % e)
 
     def _annotate_disassembly(self, dso_path, disassembly):
-        """Annotate disassembly with period information
+        """Annotate disassembly with period information.
 
         Arguments:
             dso_path: DSO identifier
@@ -2307,7 +2517,7 @@ class DisassemblyAnnotator:
         return "\n".join(lines)
 
     def _write_disassembly_files(self, output_dir, dso_name, annotated_disassembly):
-        """Write annotated disassembly files
+        """Write annotated disassembly files.
 
         Arguments:
             output_dir: Output directory
@@ -2318,8 +2528,7 @@ class DisassemblyAnnotator:
             return
 
         dso_dir = os.path.join(output_dir, dso_name)
-        if not os.path.exists(dso_dir):
-            os.makedirs(dso_dir)
+        os.makedirs(to_long_path(dso_dir), exist_ok=True)
 
         for i, (func_name, annotated_text) in enumerate(annotated_disassembly.items(), 1):
             safe_func_name = "".join(c if c.isalnum() or c in ["_", "-", "."] else "_" for c in func_name)
@@ -2327,11 +2536,11 @@ class DisassemblyAnnotator:
             safe_func_name = safe_func_name[:SAFE_FUNC_NAME_MAX_LENGTH]
             output_file = os.path.join(dso_dir, "%s.asm" % safe_func_name)
 
-            with open(output_file, "w", encoding="utf-8") as f:
+            with open(to_long_path(output_file), "w", encoding="utf-8") as f:
                 f.write(annotated_text)
 
     def _filter_symbol(self, symbol):
-        """Filter symbols based on DSO filter
+        """Filter symbols based on DSO filter.
 
         Arguments:
             symbol: Symbol object
@@ -2455,7 +2664,7 @@ def parse_size_threshold(size_str):
 
     size_str = size_str.strip().upper()
 
-    match = re.match(r"^(\d+\.?\d*)\s*([KMG]B?)?$", size_str)
+    match = CompiledPatterns.SIZE_THRESHOLD.match(size_str)
     if not match:
         raise ValueError(f"Invalid size format: {size_str}. Expected format: <number>[KB|MB|GB]")
 
