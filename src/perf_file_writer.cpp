@@ -551,6 +551,7 @@ bool PerfFileWriter::AddSymbolsFeature(
         if (symbolsFile->SymbolsLoaded()) {
             auto &symbolsFileStruct = symbolFileStructs.emplace_back();
             symbolsFile->ExportSymbolToFileFormat(symbolsFileStruct);
+            symbolsFile->ReleaseSymbols();
         }
     }
     featureSections_.emplace_back(

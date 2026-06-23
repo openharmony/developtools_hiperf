@@ -48,6 +48,11 @@ sources_base = [
   "unittest/common/native/test_utilities.cpp",
   "unittest/common/native/perf_pipe_test.cpp",
   "unittest/common/native/cmd_output_test.cpp",
+  "unittest/common/native/thread_manager_test.cpp",
+  "unittest/common/native/memory_map_manager_test.cpp",
+  "unittest/common/native/symbol_manager_test.cpp",
+  "unittest/common/native/callstack_processor_test.cpp",
+  "unittest/common/native/record_processor_test.cpp",
 ]
 
 if (hiperf_debug) {
@@ -110,7 +115,7 @@ ohos_unittest("hiperf_unittest") {
   deps = [
     ":hiperf_test_demo",
     "${hiperf_path}/interfaces/innerkits/native/hiperf_client:hiperf_client_static",
-    "${hiperf_path}/interfaces/innerkits/native/hiperf_local:hiperf_local",
+    "${hiperf_path}/interfaces/innerkits/native/hiperf_local",
   ]
   use_exceptions = true
 
@@ -180,6 +185,13 @@ ohos_unittest("hiperf_unittest") {
     "./../src/subcommand_record.cpp",
     "./../src/subcommand_report.cpp",
     "./../src/subcommand_stat.cpp",
+    "./../src/symbol_manager.cpp",
+    "./../src/thread_manager.cpp",
+    "./../src/memory_map_manager.cpp",
+    "./../src/kernel_symbol_loader.cpp",
+    "./../src/record_processor.cpp",
+    "./../src/callstack_processor.cpp",
+    "./../src/smo_processor.cpp",
     "./../src/symbols_file.cpp",
     "./../src/tracked_command.cpp",
     "./../src/unique_stack_table.cpp",

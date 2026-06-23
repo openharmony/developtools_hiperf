@@ -26,6 +26,7 @@
 #if defined(CONFIG_HAS_SYSPARA)
 #include <parameters.h>
 #endif
+
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -34,15 +35,15 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "hiperf_client.h"
-#include "ipc_utilities.h"
 #if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
+#include "ipc_utilities.h"
 #include "option.h"
 #include "perf_event_record.h"
 #include "perf_file_reader.h"
-#include "utilities.h"
 #include "subcommand_report.h"
+#include "utilities.h"
 
 using namespace std::chrono;
 namespace OHOS {
@@ -1071,9 +1072,43 @@ bool SubCommandRecord::PreparePerfEvent()
     perfEvents_.SetRecordCallBack(processRecord);
 
     CHECK_TRUE(HandleArmSpeEvent(), false, 1, "HandleArmSpeEvent failed");
-    ConfigureBasicParams();
-    CHECK_TRUE(ConfigureStackAndBranch(), false, 1, "ConfigureStackAndBranch failed");
-    ConfigureSamplingAndBacktrack();
+
+    PerfEventsBuilder builder(perfEvents_);
+    builder.SetCpu(selectCpus_)
+           .SetPid(selectPids_)
+           .SetOriginPids(originalPids_)
+           .SetSystemTarget(targetSystemWide_)
+           .SetTimeOut(timeStopSec_)
+           .SetVerboseReport(verboseReport_)
+           .SetMmapPages(mmapPages_)
+           .SetSampleRaw(sampleRaw_);
+    if (!clockId_.empty()) {
+        builder.SetClockId(GetClockId(clockId_));
+    }
+    if (isCallStackFp_) {
+        builder.SetSampleStackType(PerfEvents::SampleStackType::FP);
+    } else if (isCallStackDwarf_) {
+        builder.SetSampleStackType(PerfEvents::SampleStackType::DWARF)
+               .SetDwarfSampleStackSize(callStackDwarfSize_);
+    }
+    builder.SetBranchSampleType(branchSampleType_);
+    if (frequency_ > 0) {
+        builder.SetSampleFrequency(static_cast<unsigned int>(frequency_));
+    } else if (period_ > 0) {
+        builder.SetSamplePeriod(static_cast<unsigned int>(period_));
+    }
+    builder.SetBackTrack(backtrack_)
+           .SetBackTrackTime(backtrackTime_)
+           .SetInherit(!noInherit_)
+           .SetTrackedCommand(trackedCommand_);
+    if (!builder.Apply()) {
+        printf("branch sample %s is not supported\n", VectorToString(vecBranchFilters_).c_str());
+        HLOGE("Fail to SetBranchSampleType %" PRIx64 "", branchSampleType_);
+        HIPERF_HILOGE(MODULE_DEFAULT,
+            "[PreparePerfEvent] Fail to SetBranchSampleType %{public}" PRIx64 "", branchSampleType_);
+        return false;
+    }
+
     if (selectEvents_.empty() && selectGroups_.empty()) {
         selectEvents_.push_back("hw-cpu-cycles");
     }
@@ -1094,54 +1129,6 @@ bool SubCommandRecord::HandleArmSpeEvent()
     perfEvents_.SetConfig(speOptMap_);
     isSpe_ = true;
     return true;
-}
-
-void SubCommandRecord::ConfigureBasicParams()
-{
-    perfEvents_.SetCpu(selectCpus_);
-    perfEvents_.SetPid(selectPids_); // Tids has insert Pids in CheckTargetProcessOptions()
-    perfEvents_.SetOriginPids(originalPids_);
-    perfEvents_.SetSystemTarget(targetSystemWide_);
-    perfEvents_.SetTimeOut(timeStopSec_);
-    perfEvents_.SetVerboseReport(verboseReport_);
-    perfEvents_.SetMmapPages(mmapPages_);
-    perfEvents_.SetSampleRaw(sampleRaw_);
-
-    if (!clockId_.empty()) {
-        perfEvents_.SetClockId(GetClockId(clockId_));
-    }
-}
-
-bool SubCommandRecord::ConfigureStackAndBranch()
-{
-    if (isCallStackFp_) {
-        perfEvents_.SetSampleStackType(PerfEvents::SampleStackType::FP);
-    } else if (isCallStackDwarf_) {
-        perfEvents_.SetSampleStackType(PerfEvents::SampleStackType::DWARF);
-        perfEvents_.SetDwarfSampleStackSize(callStackDwarfSize_);
-    }
-    if (!perfEvents_.SetBranchSampleType(branchSampleType_)) {
-        printf("branch sample %s is not supported\n", VectorToString(vecBranchFilters_).c_str());
-        HLOGE("Fail to SetBranchSampleType %" PRIx64 "", branchSampleType_);
-        HIPERF_HILOGE(MODULE_DEFAULT, "[ConfigureStackAndBranch] Fail to SetBranchSampleType %{public}" PRIx64 "",
-            branchSampleType_);
-        return false;
-    }
-    return true;
-}
-
-void SubCommandRecord::ConfigureSamplingAndBacktrack()
-{
-    if (frequency_ > 0) {
-        perfEvents_.SetSampleFrequency(frequency_);
-    } else if (period_ > 0) {
-        perfEvents_.SetSamplePeriod(period_);
-    }
-
-    perfEvents_.SetBackTrack(backtrack_);
-    perfEvents_.SetBackTrackTime(backtrackTime_);
-    perfEvents_.SetInherit(!noInherit_);
-    perfEvents_.SetTrackedCommand(trackedCommand_);
 }
 
 bool SubCommandRecord::AddEventsAndHandleOffCpu()
@@ -1831,6 +1818,7 @@ HiperfError SubCommandRecord::StartSamplingAndFile()
             return HiperfError::POST_PROCESS_RECORD_FILE;
         }
         RecordCompleted();
+        perfEvents_.ReleaseRecordResources();
     }
 
     return HiperfError::NO_ERR;
@@ -2178,7 +2166,7 @@ void SubCommandRecord::AddDevhostFeature()
 {
     if (isHM_) {
         fileWriter_->AddStringFeature(FEATURE::HIPERF_HM_DEVHOST,
-            StringPrintf("%d", virtualRuntime_.devhostPid_));
+            StringPrintf("%d", virtualRuntime_.GetRuntimeContext().devhostPid));
     }
 }
 
@@ -2377,7 +2365,7 @@ bool SubCommandRecord::FinishWriteRecordFile()
     const auto startTime = steady_clock::now();
 #endif
     ProcessSymbolsIfNeeded();
-    if (virtualRuntime_.GetSmoFlag()) {
+    if (virtualRuntime_.GetRuntimeContext().smoFlag) {
         for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
             const VirtualThread &thread = virtualRuntime_.GetThreads().at(it->first);
             if (virtualRuntime_.UpdateProcessSmoInfo(thread)) {
@@ -2386,6 +2374,12 @@ bool SubCommandRecord::FinishWriteRecordFile()
         }
     }
     CHECK_TRUE(!dedupStack_ || fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable()), false, 0, "");
+
+    if (!delayUnwind_) {
+        virtualRuntime_.ReleaseRecordResources();
+        std::map<pid_t, std::vector<pid_t>>().swap(mapPids_);
+    }
+
     CleanupForBacktrack();
     CHECK_TRUE(fileWriter_->Close(), false, 1, "Fail to close record file %s", outputFilename_.c_str());
 #ifdef HIPERF_DEBUG_TIME
@@ -2459,6 +2453,12 @@ bool SubCommandRecord::ProcessUserSymbols()
                false, 1, "Fail to AddSymbolsFeature");
 #endif
 
+#if USE_COLLECT_SYMBOLIC
+    std::unordered_map<pid_t, std::unordered_set<uint64_t>>().swap(kernelThreadSymbolsHits_);
+    kSymbolsHits().swap(kernelSymbolsHits_);
+    uSymbolsHits().swap(userSymbolsHits_);
+#endif
+
     return true;
 }
 
@@ -2477,6 +2477,7 @@ void SubCommandRecord::CleanupForBacktrack()
 #ifdef HIPERF_DEBUG_TIME
 void SubCommandRecord::ReportTime()
 {
+    virtualRuntime_.AggregateDebugTimes();
     printf("updateSymbolsTimes: %0.3f ms\n",
            virtualRuntime_.updateSymbolsTimes_.count() / MS_DURATION);
     printf("saveFeatureTimes: %0.3f ms\n", saveFeatureTimes_.count() / MS_DURATION);
@@ -2563,6 +2564,7 @@ bool SubCommandRecord::RegisterSubCommandRecord(void)
 void SubCommandRecord::SetHM()
 {
     isHM_ = IsHM();
+    virtualRuntime_.SetIsRoot(isRoot_);
     virtualRuntime_.SetHM(isHM_);
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
@@ -2605,11 +2607,18 @@ void SubCommandRecord::HandleRootProcess(const pid_t& pid)
     rootPids_.insert(pid);
 }
 
+void SubCommandRecord::ReleaseRecordResourcesForReport()
+{
+    virtualRuntime_.ReleaseRecordResources();
+    perfEvents_.ReleaseRecordResources();
+}
+
 bool SubCommandRecord::OnlineReportData()
 {
     if (!report_) {
         return true;
     }
+    ReleaseRecordResourcesForReport();
     bool ret = false;
     std::string tempFileName = outputFilename_ + ".tmp";
     if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {

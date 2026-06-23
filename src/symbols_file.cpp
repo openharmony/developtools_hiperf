@@ -214,6 +214,18 @@ public:
         return elfFile_->GetPtLoads();
     }
 
+    void ReleaseDebugInfo() override
+    {
+        if (map_ != nullptr) {
+            map_->elf = nullptr;
+            if (map_->prevMap != nullptr) {
+                map_->prevMap->elf = nullptr;
+            }
+        }
+        elfFile_.reset();
+        SymbolsFile::ReleaseDebugInfo();
+    }
+
 protected:
     bool CreateElfFile(std::shared_ptr<DfxMap> map, std::string &elfPath)
     {
@@ -578,8 +590,6 @@ public:
             return;
         }
         *lineBegin = lineEnd + 1;
-        std::string name = nameRaw;
-        std::string module = moduleRaw;
 
         /*
         T
@@ -595,6 +605,8 @@ public:
         */
         if (addr != 0 && strchr("TtWw", type)) {
             const auto eachNewSymbolTime = steady_clock::now();
+            std::string name = nameRaw;
+            std::string module = moduleRaw;
             // we only need text symbols
             symbols_.emplace_back(addr, name, module.empty() ? filePath_ : module);
             parseTime.newTime += duration_cast<milliseconds>(steady_clock::now() - eachNewSymbolTime);
@@ -633,8 +645,6 @@ public:
             return;
         }
         *lineBegin = lineEnd + 1;
-        std::string name = nameRaw;
-        std::string module = moduleRaw;
 
         /*
         T
@@ -649,6 +659,8 @@ public:
         becomes zero with no error.
         */
         if (addr != 0 && strchr("TtWw", type)) {
+            std::string name = nameRaw;
+            std::string module = moduleRaw;
             // we only need text symbols
             symbols_.emplace_back(addr, name, module.empty() ? filePath_ : module);
         }
@@ -1741,6 +1753,7 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
     }
     symbolsFile->AdjustSymbols(); // reorder
     if (isHapSymbolFile || isJsvmV8SymbolFile || isArkwebV8SymbolFile) {
+        symbolsFile->symbolsMap_.reserve(symbolsFile->symbols_.size());
         for (const auto& symbol : symbolsFile->symbols_) {
             symbolsFile->symbolsMap_.emplace(symbol.funcVaddr_, symbol);
         }

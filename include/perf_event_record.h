@@ -514,6 +514,7 @@ class PerfEventRecordFactory {
 public:
     static PerfEventRecord& GetPerfEventRecord(PerfRecordType type, uint8_t* data,
                                                const perf_event_attr& attr);
+    static void Cleanup();
 private:
     static thread_local std::unordered_map<PerfRecordType, PerfEventRecord*> recordMap_;
 };

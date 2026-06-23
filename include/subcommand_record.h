@@ -486,17 +486,15 @@ private:
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
     bool OnlineReportData();
+    void ReleaseRecordResourcesForReport();
     HiperfError CheckTargetAndApp();
     HiperfError PrepareSystemAndRecorder();
     HiperfError PrepareRuntimeAndThreads();
     HiperfError StartSamplingAndFile();
     bool AddEventsAndHandleOffCpu();
-    bool ConfigureStackAndBranch();
     bool HandleArmSpeEvent();
     bool ProcessSymbolsIfNeeded();
     bool ProcessUserSymbols();
-    void ConfigureBasicParams();
-    void ConfigureSamplingAndBacktrack();
     void CleanupForBacktrack();
     void UpdateKernelRelatedSymbols();
 

@@ -120,6 +120,13 @@ sources_platform_with_ts_common = [
   "./src/report.cpp",
   "./src/subcommand.cpp",
   "./src/symbols_file.cpp",
+  "./src/symbol_manager.cpp",
+  "./src/thread_manager.cpp",
+  "./src/memory_map_manager.cpp",
+  "./src/callstack_processor.cpp",
+  "./src/kernel_symbol_loader.cpp",
+  "./src/smo_processor.cpp",
+  "./src/record_processor.cpp",
   "./src/unique_stack_table.cpp",
   "./src/utilities.cpp",
   "./src/virtual_runtime.cpp",
@@ -253,8 +260,8 @@ ohos_source_set("hiperf_platform_common") {
   ]
   if (is_ohos) {
     external_deps += [
-      "hisysevent:libhisysevent",
       "hiprofiler:libstack_common",
+      "hisysevent:libhisysevent",
       "protobuf:protobuf_lite",
     ]
   } else {
@@ -468,9 +475,7 @@ ohos_executable("hiperf") {
     ]
   }
   if (hiperf_feature_support_usr_symlink) {
-    symlink_target_name = [
-      "../usr/bin/hiperf",
-    ]
+    symlink_target_name = [ "../usr/bin/hiperf" ]
   }
   subsystem_name = "developtools"
   part_name = "hiperf"
