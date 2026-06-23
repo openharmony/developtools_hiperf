@@ -434,11 +434,16 @@ inline bool CheckOutOfRange(const T& value, const T& min, const T& max)
 } while (0)
 
 #ifdef CONFIG_HAS_CCM
+constexpr char PRODUCT_CONFIG_PATH[] = "etc/hiperf/hiperf_cfg.json";
 cJSON* GetProductCfgRoot(const char* cfgPath);
+bool IsProductCfgExists(const char* cfgPath);
 cJSON* ParseJson(const std::string &filePath);
 bool GetJsonNum(cJSON* tag, const char* key, size_t &value);
 bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value);
 #endif
+
+bool IsParallelHitsEnabled();
+bool IsShellOrRootUid();
 
 std::string GetDefaultPathByEnv(const std::string fileType);
 std::string ExtractNumericPrefix(const std::string& str);

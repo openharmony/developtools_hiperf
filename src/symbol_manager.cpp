@@ -27,33 +27,37 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
+thread_local size_t SymbolResolver::currentThreadId_ = 0;
+
 SymbolResolver::SymbolResolver(
     const std::vector<std::unique_ptr<SymbolsFile>>& symbolsFiles)
-    : symbolsFiles_(symbolsFiles), cache_(CACHE_SIZE)
+    : symbolsFiles_(symbolsFiles)
 {
 }
 
 bool SymbolResolver::GetFromCache(uint64_t fileVaddr, DfxSymbol& symbol,
                                   const STRING_VIEW& moduleCheck)
 {
-    auto it = cache_.find(fileVaddr);
-    if (!(it == cache_.end())) {
+    auto& cache = GetCurrentCache();
+    auto it = cache.find(fileVaddr);
+    if (!(it == cache.end())) {
         if (!moduleCheck.empty() && it->module_ != moduleCheck) {
-            ++cacheMisses_;
+            cacheMisses_.fetch_add(1, std::memory_order_relaxed);
             return false;
         }
         symbol = *it;
         ++symbol.hit_;
-        ++cacheHits_;
+        cacheHits_.fetch_add(1, std::memory_order_relaxed);
         return true;
     }
-    ++cacheMisses_;
+    cacheMisses_.fetch_add(1, std::memory_order_relaxed);
     return false;
 }
 
 void SymbolResolver::PutToCache(uint64_t fileVaddr, const DfxSymbol& symbol)
 {
-    cache_.push_front(fileVaddr, symbol);
+    auto& cache = GetCurrentCache();
+    cache.push_front(fileVaddr, symbol);
 }
 
 SymbolsFile* SymbolResolver::FindSymbolsFile(const std::string& filePath) const
@@ -68,21 +72,27 @@ SymbolsFile* SymbolResolver::FindSymbolsFile(const std::string& filePath) const
 
 SymbolResolver::CacheStats SymbolResolver::GetCacheStats() const
 {
+    const size_t hits = cacheHits_.load(std::memory_order_relaxed);
+    const size_t misses = cacheMisses_.load(std::memory_order_relaxed);
     double hitRate = 0.0;
-    if (cacheHits_ + cacheMisses_ > 0) {
-        hitRate = static_cast<double>(cacheHits_) / (cacheHits_ + cacheMisses_);
+    if (hits + misses > 0) {
+        hitRate = static_cast<double>(hits) / (hits + misses);
     }
-    return {cacheHits_, cacheMisses_, hitRate};
+    return {hits, misses, hitRate};
 }
 
 size_t SymbolResolver::GetCacheSize() const
 {
-    return cache_.size();
+    size_t total = 0;
+    for (size_t i = 0; i < PARALLEL_THREAD_COUNT; ++i) {
+        total += threadCaches_[i].cache.size();
+    }
+    return total;
 }
 
 void SymbolResolver::ClearCache()
 {
-    cache_.clear();
+    ClearAllCaches();
 }
 
 UserSymbolResolver::UserSymbolResolver(
@@ -93,6 +103,7 @@ UserSymbolResolver::UserSymbolResolver(
 
 std::string UserSymbolResolver::GetSoNameFromPc(uint64_t pc, const std::string& fileName) const
 {
+    std::shared_lock<std::shared_mutex> lock(soMappingMutex_);
     if (soMappingMap_.empty()) {
         return "";
     }
@@ -158,7 +169,7 @@ DfxSymbol UserSymbolResolver::Resolve(uint64_t ip, const VirtualThread& thread)
             vaddrSymbol.hit_, vaddrSymbol.ToDebugString().c_str());
         return vaddrSymbol;
     }
-    HLOGM("cache miss u %zu", cache_.size());
+    HLOGM("cache miss u %zu", GetCurrentCache().size());
     HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
           vaddrSymbol.fileVaddr_, ip, map->name.c_str());
     if (!symbolsFile->SymbolsLoaded()) {
@@ -193,6 +204,7 @@ DfxSymbol UserSymbolResolver::Resolve(uint64_t ip, const VirtualThread& thread)
 
 void UserSymbolResolver::SetSoMappingMap(const std::map<std::string, std::vector<AdltMapDataFragment>>& soMappingMap)
 {
+    std::unique_lock<std::shared_mutex> lock(soMappingMutex_);
     soMappingMap_ = soMappingMap;
 }
 
@@ -229,7 +241,7 @@ DfxSymbol KernelSymbolResolver::Resolve(uint64_t ip, const VirtualThread& thread
         HLOGV("hit kernel cache 0x%" PRIx64 " %d", vaddrSymbol.fileVaddr_, vaddrSymbol.hit_);
         return vaddrSymbol;
     }
-    HLOGM("cache miss k %zu", cache_.size());
+    HLOGM("cache miss k %zu", GetCurrentCache().size());
     HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64
           " at '%s'", vaddrSymbol.fileVaddr_, ip, map.name.c_str());
     if (!symbolsFile->SymbolsLoaded()) {
@@ -287,7 +299,7 @@ DfxSymbol KernelThreadSymbolResolver::Resolve(uint64_t ip, const VirtualThread& 
         HLOGV("hit kernel thread cache 0x%" PRIx64 " %d", vaddrSymbol.fileVaddr_, vaddrSymbol.hit_);
         return vaddrSymbol;
     }
-    HLOGM("cache miss kt %zu", cache_.size());
+    HLOGM("cache miss kt %zu", GetCurrentCache().size());
     HLOGV("found symbol vaddr 0x%" PRIx64 " for runtime vaddr 0x%" PRIx64 " at '%s'",
           vaddrSymbol.fileVaddr_, ip, map->name.c_str());
     if (!symbolsFile->SymbolsLoaded()) {
@@ -334,7 +346,7 @@ DfxSymbol SymbolManager::ResolveSymbol(
         HLOGM("try found addr in kernel thread %u with %zu maps", thread.pid_,
               thread.GetMaps().size());
         DfxSymbol symbol = kernelThreadResolver_->Resolve(ip, thread);
-        ++kernelThreadResolveCount_;
+        kernelThreadResolveCount_.fetch_add(1, std::memory_order_relaxed);
         HLOGM("add addr to kernel thread cache 0x%" PRIx64 " cache size %zu", ip,
               kernelThreadResolver_->GetCacheSize());
         if (symbol.IsValid()) {
@@ -345,24 +357,24 @@ DfxSymbol SymbolManager::ResolveSymbol(
     if (context == PERF_CONTEXT_KERNEL) {
         HLOGM("try found addr in kernelspace %zu maps", kernelResolver_->GetKernelMapsSize());
         DfxSymbol kernelSymbol = kernelResolver_->Resolve(ip, thread);
-        ++kernelResolveCount_;
+        kernelResolveCount_.fetch_add(1, std::memory_order_relaxed);
         HLOGM("add addr to kernel cache 0x%" PRIx64 " cache size %zu", ip,
               kernelResolver_->GetCacheSize());
         return kernelSymbol;
     } else if (context == PERF_CONTEXT_USER) {
-        ++userResolveCount_;
+        userResolveCount_.fetch_add(1, std::memory_order_relaxed);
         DfxSymbol userSymbol = userResolver_->Resolve(ip, thread);
         HLOGV("cache ip 0x%" PRIx64 " to %s", ip, userSymbol.ToDebugString().c_str());
         return userSymbol;
     } else {
-        ++userResolveCount_;
+        userResolveCount_.fetch_add(1, std::memory_order_relaxed);
         DfxSymbol symbol = userResolver_->Resolve(ip, thread);
         if (symbol.IsValid()) {
             return symbol;
         }
         HLOGM("try found addr in kernelspace %zu maps", kernelResolver_->GetKernelMapsSize());
         DfxSymbol kernelSymbol = kernelResolver_->Resolve(ip, thread);
-        ++kernelResolveCount_;
+        kernelResolveCount_.fetch_add(1, std::memory_order_relaxed);
         HLOGM("add addr to kernel cache 0x%" PRIx64 " cache size %zu", ip,
               kernelResolver_->GetCacheSize());
         return kernelSymbol;
@@ -393,7 +405,9 @@ void SymbolManager::SetRecordMode(bool needRecordCallBack)
 void SymbolManager::DumpStats() const
 {
     HLOGD("[SymbolResolver Stats] resolves: user=%zu kernel=%zu kthread=%zu",
-          userResolveCount_, kernelResolveCount_, kernelThreadResolveCount_);
+          userResolveCount_.load(std::memory_order_relaxed),
+          kernelResolveCount_.load(std::memory_order_relaxed),
+          kernelThreadResolveCount_.load(std::memory_order_relaxed));
     constexpr double PERCENT_MULTIPLIER = 100.0;
     if (userResolver_) {
         auto s = userResolver_->GetCacheStats();

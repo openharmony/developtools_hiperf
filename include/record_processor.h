@@ -47,7 +47,7 @@ public:
     void SetSymbolsPaths(const std::vector<std::string>& paths) { symbolsPaths_ = paths; }
     void SetRecordMode(const RecordCallBack& recordCallBack) { recordCallBack_ = recordCallBack; }
     void SetDisableUnwind(bool disable) { disableUnwind_ = disable; }
-    void UpdateSymbols(std::shared_ptr<DfxMap> map, pid_t pid);
+    void UpdateSymbols(const std::shared_ptr<DfxMap>& map, pid_t pid);
     void UpdateProcessSymbols(VirtualThread& thread, pid_t pid);
 
 #ifdef HIPERF_DEBUG_TIME
@@ -70,7 +70,7 @@ private:
                                  std::shared_ptr<DfxMap>& curMap,
                                  std::shared_ptr<DfxMap>& prevMap,
                                  PerfRecordMmap2& record);
-    bool UpdateHapSymbols(std::shared_ptr<DfxMap> map);
+    bool UpdateHapSymbols(const std::shared_ptr<DfxMap>& map);
 
     ThreadManager& threadManager_;
     MemoryMapManager& mapManager_;

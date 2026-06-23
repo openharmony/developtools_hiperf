@@ -90,6 +90,7 @@ void SymbolManagerTest::PrepareUserSymbol()
     user->textExecVaddrFileOffset_ = testUserVaddr;
     user->textExecVaddr_ = testUserVaddr;
     user->SetSymbolsLoaded(true);
+    user->debugInfoLoadResult_ = true;
     symbolsFiles_.emplace_back(std::move(user));
 }
 
@@ -125,8 +126,7 @@ HWTEST_F(SymbolManagerTest, ResolveSymbolUser, TestSize.Level0)
     PrepareUserSymbol();
 
     SymbolManager mgr(symbolsFiles_, kernelMaps_, runtimeContext_);
-    std::vector<std::unique_ptr<SymbolsFile>> threadFiles;
-    VirtualThread thread(testTid, threadFiles);
+    VirtualThread thread(testTid, symbolsFiles_);
     thread.CreateMapItem("user_symbol", testUserMapBegin, testUserMapLen, 0);
 
     DfxSymbol sym = mgr.ResolveSymbol(testUserVaddr + testUserMapBegin, thread, PERF_CONTEXT_USER);

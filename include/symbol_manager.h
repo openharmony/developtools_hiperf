@@ -15,9 +15,12 @@
 #ifndef HIPERF_SYMBOL_MANAGER_H
 #define HIPERF_SYMBOL_MANAGER_H
 
+#include <array>
+#include <atomic>
 #include <functional>
 #include <map>
 #include <memory>
+#include <shared_mutex>
 #include <vector>
 
 #if defined(is_ohos) && is_ohos
@@ -56,15 +59,46 @@ public:
     size_t GetCacheSize() const;
     void ClearCache();
 
+    // Public constant for parallel thread count (must match cache array size)
+    static constexpr size_t PARALLEL_THREAD_COUNT = 2;
+
+    static void SetCurrentThreadId(size_t id)
+    {
+        currentThreadId_ = id;
+    }
+
 protected:
     bool GetFromCache(uint64_t fileVaddr, DfxSymbol& symbol, const STRING_VIEW& moduleCheck = "");
     void PutToCache(uint64_t fileVaddr, const DfxSymbol& symbol);
     SymbolsFile* FindSymbolsFile(const std::string& filePath) const;
     const std::vector<std::unique_ptr<SymbolsFile>>& symbolsFiles_;
-    HashList<uint64_t, DfxSymbol> cache_;
-    size_t cacheHits_ = 0;
-    size_t cacheMisses_ = 0;
+
+    // Thread-local cache for zero-lock concurrency
     static constexpr size_t CACHE_SIZE = 4000;
+
+    struct ThreadCache {
+        HashList<uint64_t, DfxSymbol> cache;
+        ThreadCache() : cache(CACHE_SIZE) {}
+    };
+
+    std::array<ThreadCache, PARALLEL_THREAD_COUNT> threadCaches_;
+    static thread_local size_t currentThreadId_;
+
+    HashList<uint64_t, DfxSymbol>& GetCurrentCache()
+    {
+        size_t id = currentThreadId_ < PARALLEL_THREAD_COUNT ? currentThreadId_ : 0;
+        return threadCaches_[id].cache;
+    }
+
+    mutable std::atomic_size_t cacheHits_ = 0;
+    mutable std::atomic_size_t cacheMisses_ = 0;
+
+    void ClearAllCaches()
+    {
+        for (auto& tc : threadCaches_) {
+            tc.cache.clear();
+        }
+    }
 };
 
 class UserSymbolResolver : public SymbolResolver {
@@ -80,6 +114,7 @@ public:
 
 private:
     const RuntimeContext& ctx_;
+    mutable std::shared_mutex soMappingMutex_;
     std::map<std::string, std::vector<AdltMapDataFragment>> soMappingMap_;
 };
 
@@ -127,9 +162,9 @@ private:
     std::unique_ptr<UserSymbolResolver> userResolver_;
     std::unique_ptr<KernelSymbolResolver> kernelResolver_;
     std::unique_ptr<KernelThreadSymbolResolver> kernelThreadResolver_;
-    size_t userResolveCount_ = 0;
-    size_t kernelResolveCount_ = 0;
-    size_t kernelThreadResolveCount_ = 0;
+    mutable std::atomic_size_t userResolveCount_ = 0;
+    mutable std::atomic_size_t kernelResolveCount_ = 0;
+    mutable std::atomic_size_t kernelThreadResolveCount_ = 0;
 };
 
 } // namespace HiPerf

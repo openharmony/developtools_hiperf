@@ -112,7 +112,7 @@ void RecordProcessor::UpdateProcessSymbols(VirtualThread& thread, const pid_t pi
     }
 }
 
-bool RecordProcessor::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
+bool RecordProcessor::UpdateHapSymbols(const std::shared_ptr<DfxMap>& map)
 {
     if (map == nullptr) {
         return false;
@@ -134,7 +134,7 @@ bool RecordProcessor::UpdateHapSymbols(std::shared_ptr<DfxMap> map)
     return true;
 }
 
-void RecordProcessor::UpdateSymbols(std::shared_ptr<DfxMap> map, const pid_t pid)
+void RecordProcessor::UpdateSymbols(const std::shared_ptr<DfxMap>& map, const pid_t pid)
 {
     CHECK_TRUE(map != nullptr && map->symbolFileIndex == -1, NO_RETVAL, 0, "");
     HLOGD("try to find symbols for file: %s", map->name.c_str());

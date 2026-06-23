@@ -1227,6 +1227,63 @@ bool GetCfgValue(const char* cfgPath, const char* cfgKey, size_t &value)
 }
 #endif
 
+#ifdef CONFIG_HAS_CCM
+bool IsProductCfgExists(const char* cfgPath)
+{
+    char buf[PATH_MAX] = {0};
+    char* configFilePath = GetOneCfgFile(cfgPath, buf, PATH_MAX);
+    if (configFilePath == nullptr || (configFilePath[0] == '\0') || (strlen(configFilePath) > PATH_MAX)) {
+        HLOGD("get configFilePath from cfgPath %s failed", cfgPath);
+        return false;
+    }
+    std::string resolvedPath = CanonicalizeSpecPath(configFilePath);
+    if (resolvedPath.empty()) {
+        return false;
+    }
+    return access(resolvedPath.c_str(), F_OK) == 0;
+}
+#endif
+
+bool IsShellOrRootUid()
+{
+#if defined(is_ohos) && is_ohos
+    static unsigned int curUid = getuid();
+    constexpr unsigned int ROOT_UID = 0;
+    constexpr unsigned int SHELL_UID = 2000;
+    if (curUid == ROOT_UID || curUid == SHELL_UID) {
+        return true;
+    }
+    HLOGD("IsShellOrRootUid: curUid %u is not shell/root, disable parallel", curUid);
+    return false;
+#else
+    return false;
+#endif
+}
+
+bool IsParallelHitsEnabled()
+{
+#if defined(is_ohos) && is_ohos
+    if (!GetDeveloperMode()) {
+        HLOGD("developer mode is off, using serial mode");
+        return false;
+    }
+    if (!IsShellOrRootUid()) {
+        return false;
+    }
+
+#ifdef CONFIG_HAS_CCM
+    if (IsProductCfgExists(PRODUCT_CONFIG_PATH)) {
+        HLOGD("Product config exists, using serial mode");
+        return false;
+    }
+#endif
+
+    return true;
+#else
+    return false;
+#endif
+}
+
 bool IsDirectoryExists(const std::string& fileName)
 {
     struct stat fileInfo;

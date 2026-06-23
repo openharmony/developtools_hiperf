@@ -64,7 +64,7 @@ void VirtualRuntimeTest::SetUp()
 
 void VirtualRuntimeTest::TearDown()
 {
-    runtime_.release();
+    runtime_.reset();
 }
 
 bool VirtualRuntimeTest::RecordCallBack(PerfEventRecord& record)

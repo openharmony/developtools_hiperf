@@ -91,7 +91,7 @@ public:
     // set symbols path , it will send to every symobile file for search
     bool SetSymbolsPaths(const std::vector<std::string> &symbolsPaths);
     static_assert(sizeof(pid_t) == sizeof(int));
-    const std::map<std::string, std::vector<AdltMapDataFragment>>& GetSoMappingMap();
+    const std::map<std::string, std::vector<AdltMapDataFragment>>& GetSoMappingMap() const;
     const std::vector<std::unique_ptr<SymbolsFile>> &GetSymbolsFiles() const
     {
         return symbolsFiles_;

@@ -17,11 +17,14 @@
 
 #include "subcommand_record.h"
 
+#include <algorithm>
 #include <csignal>
 #include <cstdlib>
 #include <ctime>
 #include <memory>
 #include <random>
+#include <thread>
+#include <unordered_set>
 
 #if defined(CONFIG_HAS_SYSPARA)
 #include <parameters.h>
@@ -159,6 +162,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" disableCallstackExpend_:\t%d\n", disableCallstackExpend_);
     printf(" enableDebugInfoSymbolic:\t%d\n", enableDebugInfoSymbolic_);
     printf(" sampleRaw_:\t%d\n", sampleRaw_);
+    printf(" parallelSymbols_:\t%d\n", parallelSymbols_);
     printf(" symbolDir_:\t%s\n", VectorToString(symbolDir_).c_str());
     printf(" outputFilename_:\t%s\n", outputFilename_.c_str());
     printf(" appPackage_:\t%s\n", appPackage_.c_str());
@@ -274,6 +278,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--raw-data", sampleRaw_)) {
         return false;
     }
+    bool hasCpuLimit = Option::FindOption(args, "--cpu-limit") != args.end();
     if (!Option::GetOptionValue(args, "--cpu-limit", cpuPercent_)) {
         return false;
     }
@@ -346,6 +351,14 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     }
     if (!Option::GetOptionValue(args, "--append-smo-data", appendSmoData_)) {
         appendSmoData_ = true;
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--parallel-symbols", parallelSymbols_)) {
+        return false;
+    }
+    if (parallelSymbols_ && hasCpuLimit) {
+        printf("'--parallel-symbols' and '--cpu-limit' are mutually exclusive\n");
+        HLOGE("'--parallel-symbols' and '--cpu-limit' are mutually exclusive");
         return false;
     }
     if (!callStackType_.empty()) {
@@ -2291,6 +2304,199 @@ void SubCommandRecord::SymbolicHits()
         }
     }
 }
+
+void SubCommandRecord::SymbolicHitsParallel()
+{
+    if (!parallelSymbols_) {
+        SymbolicHits();
+        return;
+    }
+    if (!IsParallelHitsEnabled()) {
+        SymbolicHits();
+        return;
+    }
+
+    constexpr size_t numThreads = SymbolResolver::PARALLEL_THREAD_COUNT;
+    HLOGD("SymbolicHitsParallel: using %zu threads", numThreads);
+    HIPERF_HILOGI(MODULE_DEFAULT, "SymbolicHitsParallel: using %{public}zu threads", numThreads);
+
+    std::unordered_map<SymbolsFile*, std::vector<AddrItem>> userBuckets;
+    std::vector<AddrItem> ktAddrs;
+    std::vector<uint64_t> kAddrs;
+    std::vector<AddrItem> unknownItems;
+    CollectSymbolBuckets(userBuckets, ktAddrs, kAddrs, unknownItems);
+
+    size_t totalSymbols = ktAddrs.size() + kAddrs.size() + unknownItems.size();
+    for (const auto& [sf, items] : userBuckets) {
+        totalSymbols += items.size();
+    }
+    constexpr size_t PARALLEL_MIN_SYMBOL_COUNT = 1000;
+    if (totalSymbols < PARALLEL_MIN_SYMBOL_COUNT) {
+        HLOGD("SymbolicHitsParallel: total symbols %zu < %zu, fallback to serial",
+              totalSymbols, PARALLEL_MIN_SYMBOL_COUNT);
+        HIPERF_HILOGI(MODULE_DEFAULT, "SymbolicHitsParallel: total symbols "
+                      "%{public}zu < %{public}zu, fallback to serial", totalSymbols, PARALLEL_MIN_SYMBOL_COUNT);
+        SymbolicHits();
+        return;
+    }
+
+    std::vector<SymbolBucket> bucketVec;
+    BuildSymbolBuckets(userBuckets, ktAddrs, kAddrs, bucketVec);
+
+    std::vector<std::vector<size_t>> threadBuckets(numThreads);
+    AssignBucketsToThreads(bucketVec, threadBuckets, numThreads);
+
+    ExecuteParallelResolution(bucketVec, threadBuckets, unknownItems, numThreads);
+
+    HLOGD("SymbolicHitsParallel: completed");
+    HIPERF_HILOGI(MODULE_DEFAULT, "SymbolicHitsParallel: completed");
+}
+
+void SubCommandRecord::CollectSymbolBuckets(
+    std::unordered_map<SymbolsFile*, std::vector<AddrItem>>& userBuckets,
+    std::vector<AddrItem>& ktAddrs,
+    std::vector<uint64_t>& kAddrs,
+    std::vector<AddrItem>& unknownItems)
+{
+    // Collect user symbol addresses and bucket by SymbolsFile
+    for (const auto& [pid, addrs] : userSymbolsHits_) {
+        VirtualThread& thread = virtualRuntime_.GetThread(pid, pid);
+        for (const uint64_t ip : addrs) {
+            int64_t mapIdx = thread.FindMapIndexByAddr(ip);
+            if (mapIdx < 0) {
+                unknownItems.emplace_back(pid, ip);
+                continue;
+            }
+            auto map = thread.GetMaps()[mapIdx];
+            if (!map) {
+                unknownItems.emplace_back(pid, ip);
+                continue;
+            }
+            SymbolsFile* sf = thread.FindSymbolsFileByMap(map);
+            if (!sf) {
+                unknownItems.emplace_back(pid, ip);
+                continue;
+            }
+            userBuckets[sf].emplace_back(pid, ip);
+        }
+    }
+    HLOGD("CollectSymbolBuckets: user buckets=%zu, unknown=%zu", userBuckets.size(), unknownItems.size());
+
+    // Collect kernel thread addresses - all in one bucket
+    if (isHM_ && !kernelThreadSymbolsHits_.empty()) {
+        for (const auto& [pid, addrs] : kernelThreadSymbolsHits_) {
+            virtualRuntime_.GetThread(pid, pid);
+            for (const uint64_t vaddr : addrs) {
+                ktAddrs.emplace_back(pid, vaddr);
+            }
+        }
+    }
+
+    // Collect kernel addresses
+    if (!kernelSymbolsHits_.empty()) {
+        kAddrs.reserve(kernelSymbolsHits_.size());
+        for (const uint64_t vaddr : kernelSymbolsHits_) {
+            kAddrs.emplace_back(vaddr);
+        }
+    }
+    HLOGD("CollectSymbolBuckets: kthread addrs=%zu, kernel addrs=%zu", ktAddrs.size(), kAddrs.size());
+}
+
+void SubCommandRecord::BuildSymbolBuckets(
+    std::unordered_map<SymbolsFile*, std::vector<AddrItem>>& userBuckets,
+    std::vector<AddrItem>& ktAddrs,
+    std::vector<uint64_t>& kAddrs,
+    std::vector<SymbolBucket>& bucketVec)
+{
+    bucketVec.reserve(userBuckets.size() + (ktAddrs.empty() ? 0 : 1) + (kAddrs.empty() ? 0 : 1));
+
+    for (auto& [sf, items] : userBuckets) {
+        bucketVec.push_back({BucketType::User, std::move(items)});
+    }
+
+    if (!ktAddrs.empty()) {
+        bucketVec.push_back({BucketType::KernelThread, std::move(ktAddrs)});
+    }
+
+    if (!kAddrs.empty()) {
+        std::vector<AddrItem> kernelItems;
+        kernelItems.reserve(kAddrs.size());
+        for (uint64_t ip : kAddrs) {
+            kernelItems.emplace_back(0, ip);
+        }
+        bucketVec.push_back({BucketType::Kernel, std::move(kernelItems)});
+    }
+}
+
+void SubCommandRecord::AssignBucketsToThreads(
+    std::vector<SymbolBucket>& bucketVec,
+    std::vector<std::vector<size_t>>& threadBuckets,
+    size_t numThreads)
+{
+    std::sort(bucketVec.begin(), bucketVec.end(),
+              [](const SymbolBucket& a, const SymbolBucket& b) {
+                  return a.items.size() > b.items.size();
+              });
+
+    std::vector<size_t> threadLoads(numThreads, 0);
+    for (size_t i = 0; i < bucketVec.size(); ++i) {
+        size_t minThread = std::min_element(
+            threadLoads.begin(), threadLoads.end()) - threadLoads.begin();
+        threadBuckets[minThread].push_back(i);
+        threadLoads[minThread] += bucketVec[i].items.size();
+    }
+}
+
+void SubCommandRecord::ExecuteParallelResolution(
+    const std::vector<SymbolBucket>& bucketVec,
+    const std::vector<std::vector<size_t>>& threadBuckets,
+    const std::vector<AddrItem>& unknownItems,
+    size_t numThreads)
+{
+    std::vector<std::thread> threads;
+    threads.reserve(numThreads);
+    for (size_t i = 0; i < numThreads; ++i) {
+        if (threadBuckets[i].empty()) {
+            continue;
+        }
+        threads.emplace_back([&, i] {
+            SymbolResolver::SetCurrentThreadId(i);
+            for (size_t bucketIdx : threadBuckets[i]) {
+                ResolveBucket(bucketVec[bucketIdx]);
+            }
+        });
+    }
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    for (const auto& [pid, ip] : unknownItems) {
+        virtualRuntime_.GetSymbol(ip, pid, pid, PERF_CONTEXT_USER);
+    }
+}
+
+void SubCommandRecord::ResolveBucket(const SymbolBucket& bucket)
+{
+    switch (bucket.type) {
+        case BucketType::User:
+            for (const auto& [pid, ip] : bucket.items) {
+                virtualRuntime_.GetSymbol(ip, pid, pid, PERF_CONTEXT_USER);
+            }
+            break;
+        case BucketType::KernelThread:
+            for (const auto& [pid, ip] : bucket.items) {
+                virtualRuntime_.GetSymbol(ip, pid, pid, PERF_CONTEXT_MAX);
+            }
+            break;
+        case BucketType::Kernel:
+            for (const auto& [pid, ip] : bucket.items) {
+                virtualRuntime_.GetSymbol(ip, 0, 0, PERF_CONTEXT_KERNEL);
+            }
+            break;
+        default:
+            break;
+    }
+}
 #endif
 
 bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
@@ -2441,7 +2647,7 @@ bool SubCommandRecord::ProcessUserSymbols()
     }
 
 #if USE_COLLECT_SYMBOLIC
-    SymbolicHits();
+    SymbolicHitsParallel();
 #endif
 
 #if HIDEBUG_SKIP_MATCH_SYMBOLS

@@ -194,7 +194,7 @@ bool VirtualRuntime::SetSymbolsPaths(const std::vector<std::string>& symbolsPath
     return accessible;
 }
 
-const std::map<std::string, std::vector<AdltMapDataFragment>>& VirtualRuntime::GetSoMappingMap()
+const std::map<std::string, std::vector<AdltMapDataFragment>>& VirtualRuntime::GetSoMappingMap() const
 {
     return smoProcessor_->GetSoMappingMap();
 }
@@ -277,14 +277,20 @@ void VirtualRuntime::ClearSymbolCache()
         smoProcessor_->Clear();
     }
     symbolsFiles_.clear();
-    kernelSymbolLoader_->SetSymbolsPaths({});
-    recordProcessor_->SetSymbolsPaths({});
+    if (kernelSymbolLoader_) {
+        kernelSymbolLoader_->SetSymbolsPaths({});
+    }
+    if (recordProcessor_) {
+        recordProcessor_->SetSymbolsPaths({});
+    }
 }
 
 void VirtualRuntime::ReleaseRecordResources()
 {
-    if (symbolsFiles_.empty() && threadManager_->GetThreads().empty() &&
-        mapManager_->GetKernelMaps().empty() && callStackProcessor_->GetUniStackTable()->empty()) {
+    if (symbolsFiles_.empty() &&
+        (!threadManager_ || threadManager_->GetThreads().empty()) &&
+        (!mapManager_ || mapManager_->GetKernelMaps().empty()) &&
+        (!callStackProcessor_ || callStackProcessor_->GetUniStackTable()->empty())) {
         return;
     }
 

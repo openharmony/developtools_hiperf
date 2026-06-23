@@ -44,6 +44,7 @@ public:
     std::string ReadFromSavedCmdLines(pid_t tid);
     bool IsKernelThread(pid_t pid) const;
     const std::map<pid_t, VirtualThread>& GetThreads() const { return userSpaceThreadMap_; }
+    std::map<pid_t, VirtualThread>& GetMutableThreads() { return userSpaceThreadMap_; }
     void SetRecordMode(const RecordCallBack& recordCallBack) { recordCallBack_ = recordCallBack; }
     void SetProcessSymbolsCallBack(const ProcessSymbolsCallBack& callback) { processSymbolsCallBack_ = callback; }
     void Clear();
