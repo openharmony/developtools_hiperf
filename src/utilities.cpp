@@ -1541,7 +1541,8 @@ bool IsContainerProcess(pid_t pid)
             pidCount++;
         }
     }
-    bool isContainer = pidCount >= containerProcessPidCount;
+    constexpr int containerPidIndex = 1;
+    bool isContainer = pidCount >= containerProcessPidCount && parts[containerPidIndex] != "1";
     HLOGD("IsContainerProcess pid %d: %s (NSpid count %d)", pid, isContainer ? "true" : "false", pidCount);
     return isContainer;
 }
