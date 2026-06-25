@@ -64,7 +64,7 @@ void VirtualRuntimeTest::SetUp()
 
 void VirtualRuntimeTest::TearDown()
 {
-    runtime_.release();
+    runtime_.reset();
 }
 
 bool VirtualRuntimeTest::RecordCallBack(PerfEventRecord& record)
@@ -83,9 +83,9 @@ HWTEST_F(VirtualRuntimeTest, SetRecordMode, TestSize.Level1)
 {
     auto callBack = std::bind(&VirtualRuntimeTest::RecordCallBack, this, std::placeholders::_1);
 
-    EXPECT_EQ(runtime_->recordCallBack_, nullptr);
+    EXPECT_EQ(runtime_->threadManager_->recordCallBack_, nullptr);
     runtime_->SetRecordMode(callBack);
-    EXPECT_NE(runtime_->recordCallBack_, nullptr);
+    EXPECT_NE(runtime_->threadManager_->recordCallBack_, nullptr);
 }
 
 /**
@@ -133,10 +133,10 @@ HWTEST_F(VirtualRuntimeTest, UpdateKernelModulesSymbols, TestSize.Level1)
     std::string modulesMap = ReadFileToString("/proc/modules");
     size_t lines = std::count(modulesMap.begin(), modulesMap.end(), '\n');
     std::set<std::string> modulesCount;
-    if (runtime_->kernelSpaceMemMaps_.size() == 0) {
+    if (runtime_->mapManager_->kernelSpaceMemMaps_.size() == 0) {
         lines = 0;
     }
-    EXPECT_EQ(runtime_->kernelSpaceMemMaps_.size(), lines);
+    EXPECT_EQ(runtime_->mapManager_->kernelSpaceMemMaps_.size(), lines);
     int hasBuildId = 0;
     int noBuildId = 0;
     for (const std::unique_ptr<SymbolsFile> &symbolsFile : runtime_->GetSymbolsFiles()) {
@@ -205,9 +205,9 @@ HWTEST_F(VirtualRuntimeTest, GetSymbolsFiles, TestSize.Level1)
 HWTEST_F(VirtualRuntimeTest, SetCallStackExpend, TestSize.Level1)
 {
     runtime_->SetCallStackExpend(true);
-    EXPECT_EQ(runtime_->callstackMergeLevel_, true);
+    EXPECT_EQ(runtime_->callStackProcessor_->callstackMergeLevel_, true);
     runtime_->SetCallStackExpend(false);
-    EXPECT_EQ(runtime_->callstackMergeLevel_, false);
+    EXPECT_EQ(runtime_->callStackProcessor_->callstackMergeLevel_, false);
 }
 
 /**
@@ -218,9 +218,9 @@ HWTEST_F(VirtualRuntimeTest, SetCallStackExpend, TestSize.Level1)
 HWTEST_F(VirtualRuntimeTest, SetDisableUnwind, TestSize.Level1)
 {
     runtime_->SetDisableUnwind(true);
-    EXPECT_EQ(runtime_->disableUnwind_, true);
+    EXPECT_EQ(runtime_->callStackProcessor_->disableUnwind_, true);
     runtime_->SetDisableUnwind(false);
-    EXPECT_EQ(runtime_->disableUnwind_, false);
+    EXPECT_EQ(runtime_->callStackProcessor_->disableUnwind_, false);
 }
 
 /**
@@ -260,7 +260,7 @@ void VirtualRuntimeTest::PrepareKernelSymbol()
                                   kernel->filePath_);
     runtime_->symbolsFiles_.emplace_back(std::move(kernel));
 
-    auto &kernelMap = runtime_->kernelSpaceMemMaps_.emplace_back();
+    auto &kernelMap = runtime_->mapManager_->kernelSpaceMemMaps_.emplace_back();
     kernelMap.name = kernelSymbol;
     kernelMap.begin = 0;
     kernelMap.end = 0 + testKernelLen;
@@ -420,27 +420,16 @@ HWTEST_F(VirtualRuntimeTest, Update, TestSize.Level2)
 HWTEST_F(VirtualRuntimeTest, ClearSymbolCache, TestSize.Level2)
 {
     VirtualRuntime runtime;
-    std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles = {};
-    VirtualThread virtualThread(1, symbolsFiles);
-    runtime.userSpaceThreadMap_.emplace(std::piecewise_construct, std::forward_as_tuple(1),
-                                    std::forward_as_tuple(1, symbolsFiles));
-    runtime.kernelSpaceMemMaps_ = {{}, {}};
-    runtime.processStackMap_ = {{1, nullptr}, {2, nullptr}};
-    runtime.symbolsPaths_ = {"abc", "def"};
-    DfxSymbol symbol;
-    runtime.userSymbolCache_.reserve(1);
-    runtime.userSymbolCache_[0] = symbol;
-    runtime.kernelSymbolCache_[0] = symbol;
-    runtime.kThreadSymbolCache_[0] = symbol;
+    runtime.kernelSymbolLoader_->SetSymbolsPaths({"abc", "def"});
+    runtime.recordProcessor_->SetSymbolsPaths({"abc", "def"});
+    runtime.symbolsFiles_.emplace_back(SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE));
     runtime.ClearSymbolCache();
-    EXPECT_EQ(runtime.userSpaceThreadMap_.size(), 0);
-    EXPECT_EQ(runtime.kernelSpaceMemMaps_.size(), 0);
-    EXPECT_EQ(runtime.processStackMap_.size(), 0);
-    EXPECT_EQ(runtime.symbolsFiles_.size(), 0);
-    EXPECT_EQ(runtime.userSymbolCache_.size(), 0);
-    EXPECT_EQ(runtime.kernelSymbolCache_.size(), 0);
-    EXPECT_EQ(runtime.kThreadSymbolCache_.size(), 0);
-    EXPECT_EQ(runtime.symbolsPaths_.size(), 0);
+    EXPECT_EQ(runtime.threadManager_->GetThreads().size(), 0u);
+    EXPECT_EQ(runtime.mapManager_->GetKernelMaps().size(), 0u);
+    EXPECT_EQ(runtime.callStackProcessor_->GetUniStackTable()->size(), 0u);
+    EXPECT_EQ(runtime.symbolsFiles_.size(), 0u);
+    EXPECT_EQ(runtime.kernelSymbolLoader_->GetSymbolsPaths().size(), 0u);
+    EXPECT_EQ(runtime.recordProcessor_->symbolsPaths_.size(), 0u);
 }
 
 /**
@@ -450,7 +439,7 @@ HWTEST_F(VirtualRuntimeTest, ClearSymbolCache, TestSize.Level2)
  */
 HWTEST_F(VirtualRuntimeTest, UpdateHapSymbolsWithNull, TestSize.Level2)
 {
-    EXPECT_FALSE(runtime_->UpdateHapSymbols(nullptr));
+    EXPECT_FALSE(runtime_->recordProcessor_->UpdateHapSymbols(nullptr));
 }
 
 HWTEST_F(VirtualRuntimeTest, UpdateProcessSymbols, TestSize.Level2)
@@ -462,7 +451,7 @@ HWTEST_F(VirtualRuntimeTest, UpdateProcessSymbols, TestSize.Level2)
     EXPECT_EQ(runtime_->IsKernelThread(0), false);
     auto callBack = std::bind(&VirtualRuntimeTest::RecordCallBack, this, std::placeholders::_1);
     runtime_->SetRecordMode(callBack);
-    runtime_->UpdateProcessSymbols(thread, pid);
+    runtime_->recordProcessor_->UpdateProcessSymbols(thread, pid);
 }
 
 /**
@@ -501,20 +490,20 @@ HWTEST_F(VirtualRuntimeTest, CheckGetElfByInvalidMap, TestSize.Level2)
 }
 /**
  * @tc.name: TestSetSmoFlag
- * @tc.desc: Test SetSmoFlag and GetSmoFlag functions
+ * @tc.desc: Test SetSmoFlag function
  * @tc.type: FUNC
  */
 HWTEST_F(VirtualRuntimeTest, TestSetSmoFlag, TestSize.Level2)
 {
     VirtualRuntime runtime;
-    
+
     // Test setting true
     runtime.SetSmoFlag(true);
-    EXPECT_TRUE(runtime.GetSmoFlag());
-    
+    EXPECT_TRUE(runtime.GetRuntimeContext().smoFlag);
+
     // Test setting false
     runtime.SetSmoFlag(false);
-    EXPECT_FALSE(runtime.GetSmoFlag());
+    EXPECT_FALSE(runtime.GetRuntimeContext().smoFlag);
 }
 
 } // namespace HiPerf

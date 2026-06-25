@@ -417,9 +417,9 @@ HWTEST_F(VirtualThreadTest, ParseDevhostMapEachLine, TestSize.Level1)
     if (IsHM()) {
         SubCommandRecord cmd;
         cmd.SetHM();
-        VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.devhostPid_,
-                                                               cmd.virtualRuntime_.devhostPid_);
-        std::string mapPath = StringPrintf("/proc/%d/maps", cmd.virtualRuntime_.devhostPid_);
+        VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.runtimeContext_.devhostPid,
+                                                               cmd.virtualRuntime_.runtimeContext_.devhostPid);
+        std::string mapPath = StringPrintf("/proc/%d/maps", cmd.virtualRuntime_.runtimeContext_.devhostPid);
         EXPECT_EQ(!mapPath.empty(), true);
         std::string mapContent = ReadFileToString(mapPath);
         EXPECT_EQ(!mapContent.empty(), true);

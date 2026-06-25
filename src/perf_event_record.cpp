@@ -36,53 +36,50 @@ std::vector<DfxFrame> PerfRecordSample::callFrames_ = {};
 std::vector<pid_t> PerfRecordSample::serverPidMap_ = {};
 thread_local std::unordered_map<PerfRecordType, PerfEventRecord*> PerfEventRecordFactory::recordMap_ = {};
 
+using PerfRecordCreator = PerfEventRecord* (*)();
+
+template<typename T>
+PerfEventRecord* CreateRecord()
+{
+    return new T();
+}
+
+static const std::unordered_map<PerfRecordType, PerfRecordCreator>& GetRecordCreatorTable()
+{
+    static const std::unordered_map<PerfRecordType, PerfRecordCreator> kTable = {
+        { PERF_RECORD_SAMPLE,          CreateRecord<PerfRecordSample> },
+        { PERF_RECORD_MMAP,            CreateRecord<PerfRecordMmap> },
+        { PERF_RECORD_MMAP2,           CreateRecord<PerfRecordMmap2> },
+        { PERF_RECORD_LOST,            CreateRecord<PerfRecordLost> },
+        { PERF_RECORD_COMM,            CreateRecord<PerfRecordComm> },
+        { PERF_RECORD_EXIT,            CreateRecord<PerfRecordExit> },
+        { PERF_RECORD_THROTTLE,        CreateRecord<PerfRecordThrottle> },
+        { PERF_RECORD_UNTHROTTLE,      CreateRecord<PerfRecordUnthrottle> },
+        { PERF_RECORD_FORK,            CreateRecord<PerfRecordFork> },
+        { PERF_RECORD_READ,            CreateRecord<PerfRecordRead> },
+        { PERF_RECORD_AUX,             CreateRecord<PerfRecordAux> },
+        { PERF_RECORD_AUXTRACE,        CreateRecord<PerfRecordAuxtrace> },
+        { PERF_RECORD_AUXTRACE_INFO,   CreateRecord<PerfRecordAuxTraceInfo> },
+        { PERF_RECORD_TIME_CONV,       CreateRecord<PerfRecordTimeConv> },
+        { PERF_RECORD_CPU_MAP,         CreateRecord<PerfRecordCpuMap> },
+        { PERF_RECORD_ITRACE_START,    CreateRecord<PerfRecordItraceStart> },
+        { PERF_RECORD_LOST_SAMPLES,    CreateRecord<PerfRecordLostSamples> },
+        { PERF_RECORD_SWITCH,          CreateRecord<PerfRecordSwitch> },
+        { PERF_RECORD_SWITCH_CPU_WIDE, CreateRecord<PerfRecordSwitchCpuWide> },
+        { PERF_RECORD_TYPE_SMO_NUM,    CreateRecord<PerfRecordSmoDetachingEvent> },
+    };
+    return kTable;
+}
+
 static PerfEventRecord* CreatePerfEventRecord(PerfRecordType type)
 {
-    switch (type) {
-        case PERF_RECORD_SAMPLE:
-            return new PerfRecordSample();
-        case PERF_RECORD_MMAP:
-            return new PerfRecordMmap();
-        case PERF_RECORD_MMAP2:
-            return new PerfRecordMmap2();
-        case PERF_RECORD_LOST:
-            return new PerfRecordLost();
-        case PERF_RECORD_COMM:
-            return new PerfRecordComm();
-        case PERF_RECORD_EXIT:
-            return new PerfRecordExit();
-        case PERF_RECORD_THROTTLE:
-            return new PerfRecordThrottle();
-        case PERF_RECORD_UNTHROTTLE:
-            return new PerfRecordUnthrottle();
-        case PERF_RECORD_FORK:
-            return new PerfRecordFork();
-        case PERF_RECORD_READ:
-            return new PerfRecordRead();
-        case PERF_RECORD_AUX:
-            return new PerfRecordAux();
-        case PERF_RECORD_AUXTRACE:
-            return new PerfRecordAuxtrace();
-        case PERF_RECORD_AUXTRACE_INFO:
-            return new PerfRecordAuxTraceInfo();
-        case PERF_RECORD_TIME_CONV:
-            return new PerfRecordTimeConv();
-        case PERF_RECORD_CPU_MAP:
-            return new PerfRecordCpuMap();
-        case PERF_RECORD_ITRACE_START:
-            return new PerfRecordItraceStart();
-        case PERF_RECORD_LOST_SAMPLES:
-            return new PerfRecordLostSamples();
-        case PERF_RECORD_SWITCH:
-            return new PerfRecordSwitch();
-        case PERF_RECORD_SWITCH_CPU_WIDE:
-            return new PerfRecordSwitchCpuWide();
-        case PERF_RECORD_TYPE_SMO_NUM:
-            return new PerfRecordSmoDetachingEvent();
-        default:
-            HLOGE("unknown record type %d\n", type);
-            return new PerfRecordNull();
+    const auto& table = GetRecordCreatorTable();
+    auto it = table.find(type);
+    if (it != table.end()) {
+        return it->second();
     }
+    HLOGE("unknown record type %d\n", type);
+    return new PerfRecordNull();
 }
 
 template<typename T>
@@ -1421,6 +1418,14 @@ void PerfRecordSwitchCpuWide::DumpData(const int indent) const
 {
     PRINT_INDENT(indent, "next_prev_pid %u, next_prev_tid %u\n", data_.next_prev_pid,
                  data_.next_prev_tid);
+}
+
+void PerfEventRecordFactory::Cleanup()
+{
+    for (auto &kv : recordMap_) {
+        delete kv.second;
+    }
+    recordMap_.clear();
 }
 
 PerfEventRecord& PerfEventRecordFactory::GetPerfEventRecord(PerfRecordType type, uint8_t* data,

@@ -547,6 +547,7 @@ public:
 
     void SetHM(const bool isHM);
     void SetConfig(std::map<const std::string, uint64_t> &speOptMaps);
+    void ReleaseRecordResources();
 private:
     size_t recordEventCount_ = 0; // only for debug time
 #ifdef HIPERF_DEBUG_TIME
@@ -583,6 +584,7 @@ private:
     inline void WaitDataFromRingBuffer();
     inline bool ProcessRecord(const perf_event_attr* attr, uint8_t* data);
     void ReadRecordFromBuf();
+    void ReleaseCpuMmap();
     size_t CalcBufferSize();
     bool PrepareRecordThread();
     void WaitRecordThread();
@@ -593,7 +595,6 @@ private:
         __u64 &durationInSec, int64_t thresholdTimeInMs);
 
 #ifdef CONFIG_HAS_CCM
-    static constexpr char PRODUCT_CONFIG_PATH[] = "etc/hiperf/hiperf_cfg.json";
     static constexpr char CFG_MAX_BUFFER_SIZE[] = "MaxBufferSize";
     static constexpr char CFG_MIN_BUFFER_SIZE[] = "MinBufferSize";
     void GetBufferSizeCfg(size_t &maxBufferSize, size_t &minBufferSize);
@@ -758,6 +759,175 @@ private:
                                   bool& excludeUser, bool& excludeKernel, bool& isTracePoint);
     bool SetupTrackingState();
     void DisableTrackingStep();
+};
+
+class PerfEventsBuilder {
+public:
+    explicit PerfEventsBuilder(PerfEvents &target) : target_(target) {}
+
+    PerfEventsBuilder &SetCpu(const std::vector<pid_t> &cpus)
+    {
+        cpus_ = cpus;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetPid(const std::vector<pid_t> &pids)
+    {
+        pids_ = pids;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetOriginPids(const std::vector<pid_t> &originalPids)
+    {
+        originalPids_ = originalPids;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetSystemTarget(bool systemTarget)
+    {
+        systemTarget_ = systemTarget;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetTimeOut(float timeOut)
+    {
+        timeOut_ = timeOut;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetVerboseReport(bool verbose)
+    {
+        verboseReport_ = verbose;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetMmapPages(size_t mmapPages)
+    {
+        mmapPages_ = mmapPages;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetSampleRaw(bool sampleRaw)
+    {
+        sampleRaw_ = sampleRaw;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetClockId(int clockId)
+    {
+        clockId_ = clockId;
+        hasClockId_ = true;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetSampleStackType(PerfEvents::SampleStackType type)
+    {
+        stackType_ = type;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetDwarfSampleStackSize(uint32_t stackSize)
+    {
+        dwarfSampleStackSize_ = stackSize;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetBranchSampleType(uint64_t branchSampleType)
+    {
+        branchSampleType_ = branchSampleType;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetSampleFrequency(unsigned int frequency)
+    {
+        sampleFrequency_ = frequency;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetSamplePeriod(unsigned int period)
+    {
+        samplePeriod_ = period;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetBackTrack(bool backtrack)
+    {
+        backtrack_ = backtrack;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetBackTrackTime(uint64_t backtrackTime)
+    {
+        backtrackTime_ = backtrackTime;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetInherit(bool inherit)
+    {
+        inherit_ = inherit;
+        return *this;
+    }
+
+    PerfEventsBuilder &SetTrackedCommand(const std::vector<std::string> &trackedCommand)
+    {
+        trackedCommand_ = trackedCommand;
+        return *this;
+    }
+
+    bool Apply()
+    {
+        target_.SetCpu(cpus_);
+        target_.SetPid(pids_);
+        target_.SetOriginPids(originalPids_);
+        target_.SetSystemTarget(systemTarget_);
+        target_.SetTimeOut(timeOut_);
+        target_.SetVerboseReport(verboseReport_);
+        target_.SetMmapPages(mmapPages_);
+        target_.SetSampleRaw(sampleRaw_);
+        if (hasClockId_) {
+            target_.SetClockId(clockId_);
+        }
+        target_.SetSampleStackType(stackType_);
+        if (stackType_ == PerfEvents::SampleStackType::DWARF) {
+            target_.SetDwarfSampleStackSize(dwarfSampleStackSize_);
+        }
+        if (!target_.SetBranchSampleType(branchSampleType_)) {
+            return false;
+        }
+        if (sampleFrequency_ > 0) {
+            target_.SetSampleFrequency(sampleFrequency_);
+        } else if (samplePeriod_ > 0) {
+            target_.SetSamplePeriod(samplePeriod_);
+        }
+        target_.SetBackTrack(backtrack_);
+        target_.SetBackTrackTime(backtrackTime_);
+        target_.SetInherit(inherit_);
+        target_.SetTrackedCommand(trackedCommand_);
+        return true;
+    }
+
+private:
+    PerfEvents &target_;
+
+    std::vector<pid_t> cpus_;
+    std::vector<pid_t> pids_;
+    std::vector<pid_t> originalPids_;
+    bool systemTarget_ = false;
+    float timeOut_ = 0.0f;
+    bool verboseReport_ = false;
+    size_t mmapPages_ = 0;
+    bool sampleRaw_ = false;
+    int clockId_ = -1;
+    bool hasClockId_ = false;
+    PerfEvents::SampleStackType stackType_ = PerfEvents::SampleStackType::NONE;
+    uint32_t dwarfSampleStackSize_ = MAX_SAMPLE_STACK_SIZE;
+    uint64_t branchSampleType_ = 0;
+    unsigned int sampleFrequency_ = 0;
+    unsigned int samplePeriod_ = 0;
+    bool backtrack_ = false;
+    uint64_t backtrackTime_ = 0;
+    bool inherit_ = false;
+    std::vector<std::string> trackedCommand_;
 };
 } // namespace HiPerf
 } // namespace Developtools

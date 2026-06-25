@@ -273,7 +273,7 @@ bool SubCommandReport::RecordCallBack(PerfEventRecord& record)
     if (jsonFormat_ && record.GetType() == PERF_RECORD_TYPE_SMO_NUM) {
         reportJsonFile_->SupplementSymbolsFiles(GetReport().virtualRuntime_.GetSymbolsFiles());
     }
-    
+
     if (record.GetType() == PERF_RECORD_SAMPLE) {
         std::unique_ptr<PerfRecordSample> sample
             = std::make_unique<PerfRecordSample>(static_cast<PerfRecordSample&>(record));
@@ -693,6 +693,7 @@ HiperfError SubCommandReport::OnSubCommand(std::vector<std::string>& args)
 #endif
     CHECK_TRUE(OutputReport(), HiperfError::OUTPUT_REPORT_FAIL, 1, "OutputReport failed");
 #ifdef HIPERF_DEBUG_TIME
+    GetReport(FIRST).virtualRuntime_.AggregateDebugTimes();
     printf("SymbolicRecordTimes: %0.3f ms\n",
            GetReport(FIRST).virtualRuntime_.symbolicRecordTimes_.count() / MS_DURATION);
 #endif

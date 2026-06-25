@@ -29,10 +29,10 @@
 #include <parameters.h>
 #endif
 
-#include "spe_decoder.h"
 #include "debug_logger.h"
 #include "hiperf_hilog.h"
 #include "register.h"
+#include "spe_decoder.h"
 #include "subcommand_dump.h"
 #include "symbols_file.h"
 #include "utilities.h"
@@ -178,25 +178,7 @@ PerfEvents::PerfEvents() : timeOut_(DEFAULT_TIMEOUT * THOUSANDS), timeReport_(0)
 
 PerfEvents::~PerfEvents()
 {
-    // close mmap
-    for (auto it = cpuMmap_.begin(); it != cpuMmap_.end();) {
-        const MmapFd &mmapItem = it->second;
-        if (!isSpe_) {
-            if (munmap(mmapItem.mmapPage, (1 + mmapPages_) * pageSize_) == -1) {
-                HLOGW("munmap failed.");
-            }
-        } else {
-            if (munmap(mmapItem.mmapPage, (1 + auxMmapPages_) * pageSize_) == -1) {
-                HLOGW("munmap failed.");
-            }
-            if (munmap(mmapItem.auxBuf, auxMmapPages_ * pageSize_) == -1) {
-                HLOGW("munmap failed.");
-            }
-        }
-        it = cpuMmap_.erase(it);
-    }
-
-    ExitReadRecordBufThread();
+    ReleaseRecordResources();
     if (reportPtr_ != nullptr) {
         fclose(reportPtr_);
         reportPtr_ = nullptr;
@@ -703,6 +685,26 @@ bool PerfEvents::PrepareTracking(void)
     return true;
 }
 
+void PerfEvents::ReleaseCpuMmap()
+{
+    for (auto it = cpuMmap_.begin(); it != cpuMmap_.end();) {
+        const MmapFd &mmapItem = it->second;
+        if (!isSpe_) {
+            if (munmap(mmapItem.mmapPage, (1 + mmapPages_) * pageSize_) == -1) {
+                HLOGW("munmap failed.");
+            }
+        } else {
+            if (munmap(mmapItem.mmapPage, (1 + auxMmapPages_) * pageSize_) == -1) {
+                HLOGW("munmap failed.");
+            }
+            if (munmap(mmapItem.auxBuf, auxMmapPages_ * pageSize_) == -1) {
+                HLOGW("munmap failed.");
+            }
+        }
+        it = cpuMmap_.erase(it);
+    }
+}
+
 void PerfEvents::ExitReadRecordBufThread()
 {
     if (isLowPriorityThread_) {
@@ -758,6 +760,7 @@ void PerfEvents::WaitRecordThread()
     printf("Process and Saving data...\n");
     HIPERF_HILOGI(MODULE_DEFAULT, "Process and Saving data...");
     ExitReadRecordBufThread();
+    recordBuf_.reset();
 
     const auto usedTimeMsTick = duration_cast<milliseconds>(steady_clock::now() - trackingEndTime_);
     if (verboseReport_) {
@@ -797,6 +800,7 @@ void PerfEvents::DisableTrackingStep()
     if (recordCallBack_) {
         // 禁用事件后读取剩余样本
         ReadRecordsFromMmaps();
+        ReleaseCpuMmap();
     }
     trackingEndTime_ = steady_clock::now();
     RecoverCaptureSig();
@@ -1136,6 +1140,23 @@ bool PerfEvents::PerfEventsEnable(const bool enable)
         }
     }
     return true;
+}
+
+void PerfEvents::ReleaseRecordResources()
+{
+    ExitReadRecordBufThread();
+    recordBuf_.reset();
+
+    ReleaseCpuMmap();
+
+    { std::vector<OHOS::UniqueFd>().swap(groups_); }
+    { std::vector<EventGroupItem>().swap(eventGroupItem_); }
+
+    startedTracking_ = false;
+    prepared_ = false;
+    readRecordThreadRunning_ = false;
+    outputTracking_ = false;
+    recordBufReady_ = false;
 }
 
 void PerfEvents::SetHM(const bool isHM)
@@ -1966,6 +1987,7 @@ void PerfEvents::ReadRecordFromBuf()
         ProcessRecord(attr, p);
     }
     HLOGD("read all records from buffer");
+    PerfEventRecordFactory::Cleanup();
 }
 
 bool PerfEvents::HaveTargetsExit(const std::chrono::steady_clock::time_point &startTime)

@@ -184,6 +184,11 @@ public:
         "   --chkms <millisec>\n"
         "         Set the interval of querying the <package_name>.\n"
         "         <millisec> is in range [1-200], default is 10.\n"
+        "   --parallel-symbols\n"
+        "         Enable parallel symbol resolution after recording to speed up\n"
+        "         symbol collection. Only effective when developer mode is on and\n"
+        "         the process is started by shell/root uid. Mutually exclusive\n"
+        "         with --cpu-limit. Falls back to serial mode otherwise.\n"
         "   --data-limit <SIZE[K|M|G]>\n"
         "         Stop recording after SIZE bytes of records. Default is unlimited.\n"
         "   --append-smo-data\n"
@@ -322,7 +327,6 @@ private:
     bool PostOutputRecordFile(const bool output);
 
 #ifdef CONFIG_HAS_CCM
-    static constexpr char PRODUCT_CONFIG_PATH[] = "etc/hiperf/hiperf_cfg.json";
     static constexpr char CFG_MAP_PAGES[] = "MmapPages";
     void GetMmapPagesCfg();
 #endif
@@ -380,6 +384,7 @@ private:
     bool isFifoServer_ = false;
     bool isFifoClient_ = false;
     bool dedupStack_ = false;
+    bool parallelSymbols_ = false;
     std::map<pid_t, std::vector<pid_t>> mapPids_;
     bool ProcessControl();
     bool CreateFifoServer();
@@ -471,6 +476,41 @@ private:
     kSymbolsHits kernelSymbolsHits_;
     uSymbolsHits userSymbolsHits_;
     void SymbolicHits();
+    void SymbolicHitsParallel();
+
+    using AddrItem = std::pair<pid_t, uint64_t>;
+
+    enum class BucketType {
+        User,           // User symbols (bucketed by SymbolsFile)
+        KernelThread,   // Kernel thread symbols (all pids merged)
+        Kernel          // Kernel symbols
+    };
+
+    struct SymbolBucket {
+        BucketType type;
+        std::vector<AddrItem> items;
+    };
+
+    void CollectSymbolBuckets(
+        std::unordered_map<SymbolsFile*, std::vector<AddrItem>>& userBuckets,
+        std::vector<AddrItem>& ktAddrs,
+        std::vector<uint64_t>& kAddrs,
+        std::vector<AddrItem>& unknownItems);
+    void BuildSymbolBuckets(
+        std::unordered_map<SymbolsFile*, std::vector<AddrItem>>& userBuckets,
+        std::vector<AddrItem>& ktAddrs,
+        std::vector<uint64_t>& kAddrs,
+        std::vector<SymbolBucket>& bucketVec);
+    void AssignBucketsToThreads(
+        std::vector<SymbolBucket>& bucketVec,
+        std::vector<std::vector<size_t>>& threadBuckets,
+        size_t numThreads);
+    void ExecuteParallelResolution(
+        const std::vector<SymbolBucket>& bucketVec,
+        const std::vector<std::vector<size_t>>& threadBuckets,
+        const std::vector<AddrItem>& unknownItems,
+        size_t numThreads);
+    void ResolveBucket(const SymbolBucket& bucket);
 #endif
 
 #ifdef HIPERF_DEBUG_TIME
@@ -486,17 +526,15 @@ private:
     void SetSavedCmdlinesSize();
     void RecoverSavedCmdlinesSize();
     bool OnlineReportData();
+    void ReleaseRecordResourcesForReport();
     HiperfError CheckTargetAndApp();
     HiperfError PrepareSystemAndRecorder();
     HiperfError PrepareRuntimeAndThreads();
     HiperfError StartSamplingAndFile();
     bool AddEventsAndHandleOffCpu();
-    bool ConfigureStackAndBranch();
     bool HandleArmSpeEvent();
     bool ProcessSymbolsIfNeeded();
     bool ProcessUserSymbols();
-    void ConfigureBasicParams();
-    void ConfigureSamplingAndBacktrack();
     void CleanupForBacktrack();
     void UpdateKernelRelatedSymbols();
 

@@ -17,15 +17,19 @@
 
 #include "subcommand_record.h"
 
+#include <algorithm>
 #include <csignal>
 #include <cstdlib>
 #include <ctime>
 #include <memory>
 #include <random>
+#include <thread>
+#include <unordered_set>
 
 #if defined(CONFIG_HAS_SYSPARA)
 #include <parameters.h>
 #endif
+
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -34,15 +38,15 @@
 #include "command.h"
 #include "debug_logger.h"
 #include "hiperf_client.h"
-#include "ipc_utilities.h"
 #if defined(is_ohos) && is_ohos
 #include "hiperf_hilog.h"
 #endif
+#include "ipc_utilities.h"
 #include "option.h"
 #include "perf_event_record.h"
 #include "perf_file_reader.h"
-#include "utilities.h"
 #include "subcommand_report.h"
+#include "utilities.h"
 
 using namespace std::chrono;
 namespace OHOS {
@@ -158,6 +162,7 @@ void SubCommandRecord::DumpOptions() const
     printf(" disableCallstackExpend_:\t%d\n", disableCallstackExpend_);
     printf(" enableDebugInfoSymbolic:\t%d\n", enableDebugInfoSymbolic_);
     printf(" sampleRaw_:\t%d\n", sampleRaw_);
+    printf(" parallelSymbols_:\t%d\n", parallelSymbols_);
     printf(" symbolDir_:\t%s\n", VectorToString(symbolDir_).c_str());
     printf(" outputFilename_:\t%s\n", outputFilename_.c_str());
     printf(" appPackage_:\t%s\n", appPackage_.c_str());
@@ -273,6 +278,7 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     if (!Option::GetOptionValue(args, "--raw-data", sampleRaw_)) {
         return false;
     }
+    bool hasCpuLimit = Option::FindOption(args, "--cpu-limit") != args.end();
     if (!Option::GetOptionValue(args, "--cpu-limit", cpuPercent_)) {
         return false;
     }
@@ -345,6 +351,14 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
     }
     if (!Option::GetOptionValue(args, "--append-smo-data", appendSmoData_)) {
         appendSmoData_ = true;
+        return false;
+    }
+    if (!Option::GetOptionValue(args, "--parallel-symbols", parallelSymbols_)) {
+        return false;
+    }
+    if (parallelSymbols_ && hasCpuLimit) {
+        printf("'--parallel-symbols' and '--cpu-limit' are mutually exclusive\n");
+        HLOGE("'--parallel-symbols' and '--cpu-limit' are mutually exclusive");
         return false;
     }
     if (!callStackType_.empty()) {
@@ -1071,9 +1085,43 @@ bool SubCommandRecord::PreparePerfEvent()
     perfEvents_.SetRecordCallBack(processRecord);
 
     CHECK_TRUE(HandleArmSpeEvent(), false, 1, "HandleArmSpeEvent failed");
-    ConfigureBasicParams();
-    CHECK_TRUE(ConfigureStackAndBranch(), false, 1, "ConfigureStackAndBranch failed");
-    ConfigureSamplingAndBacktrack();
+
+    PerfEventsBuilder builder(perfEvents_);
+    builder.SetCpu(selectCpus_)
+           .SetPid(selectPids_)
+           .SetOriginPids(originalPids_)
+           .SetSystemTarget(targetSystemWide_)
+           .SetTimeOut(timeStopSec_)
+           .SetVerboseReport(verboseReport_)
+           .SetMmapPages(mmapPages_)
+           .SetSampleRaw(sampleRaw_);
+    if (!clockId_.empty()) {
+        builder.SetClockId(GetClockId(clockId_));
+    }
+    if (isCallStackFp_) {
+        builder.SetSampleStackType(PerfEvents::SampleStackType::FP);
+    } else if (isCallStackDwarf_) {
+        builder.SetSampleStackType(PerfEvents::SampleStackType::DWARF)
+               .SetDwarfSampleStackSize(callStackDwarfSize_);
+    }
+    builder.SetBranchSampleType(branchSampleType_);
+    if (frequency_ > 0) {
+        builder.SetSampleFrequency(static_cast<unsigned int>(frequency_));
+    } else if (period_ > 0) {
+        builder.SetSamplePeriod(static_cast<unsigned int>(period_));
+    }
+    builder.SetBackTrack(backtrack_)
+           .SetBackTrackTime(backtrackTime_)
+           .SetInherit(!noInherit_)
+           .SetTrackedCommand(trackedCommand_);
+    if (!builder.Apply()) {
+        printf("branch sample %s is not supported\n", VectorToString(vecBranchFilters_).c_str());
+        HLOGE("Fail to SetBranchSampleType %" PRIx64 "", branchSampleType_);
+        HIPERF_HILOGE(MODULE_DEFAULT,
+            "[PreparePerfEvent] Fail to SetBranchSampleType %{public}" PRIx64 "", branchSampleType_);
+        return false;
+    }
+
     if (selectEvents_.empty() && selectGroups_.empty()) {
         selectEvents_.push_back("hw-cpu-cycles");
     }
@@ -1094,54 +1142,6 @@ bool SubCommandRecord::HandleArmSpeEvent()
     perfEvents_.SetConfig(speOptMap_);
     isSpe_ = true;
     return true;
-}
-
-void SubCommandRecord::ConfigureBasicParams()
-{
-    perfEvents_.SetCpu(selectCpus_);
-    perfEvents_.SetPid(selectPids_); // Tids has insert Pids in CheckTargetProcessOptions()
-    perfEvents_.SetOriginPids(originalPids_);
-    perfEvents_.SetSystemTarget(targetSystemWide_);
-    perfEvents_.SetTimeOut(timeStopSec_);
-    perfEvents_.SetVerboseReport(verboseReport_);
-    perfEvents_.SetMmapPages(mmapPages_);
-    perfEvents_.SetSampleRaw(sampleRaw_);
-
-    if (!clockId_.empty()) {
-        perfEvents_.SetClockId(GetClockId(clockId_));
-    }
-}
-
-bool SubCommandRecord::ConfigureStackAndBranch()
-{
-    if (isCallStackFp_) {
-        perfEvents_.SetSampleStackType(PerfEvents::SampleStackType::FP);
-    } else if (isCallStackDwarf_) {
-        perfEvents_.SetSampleStackType(PerfEvents::SampleStackType::DWARF);
-        perfEvents_.SetDwarfSampleStackSize(callStackDwarfSize_);
-    }
-    if (!perfEvents_.SetBranchSampleType(branchSampleType_)) {
-        printf("branch sample %s is not supported\n", VectorToString(vecBranchFilters_).c_str());
-        HLOGE("Fail to SetBranchSampleType %" PRIx64 "", branchSampleType_);
-        HIPERF_HILOGE(MODULE_DEFAULT, "[ConfigureStackAndBranch] Fail to SetBranchSampleType %{public}" PRIx64 "",
-            branchSampleType_);
-        return false;
-    }
-    return true;
-}
-
-void SubCommandRecord::ConfigureSamplingAndBacktrack()
-{
-    if (frequency_ > 0) {
-        perfEvents_.SetSampleFrequency(frequency_);
-    } else if (period_ > 0) {
-        perfEvents_.SetSamplePeriod(period_);
-    }
-
-    perfEvents_.SetBackTrack(backtrack_);
-    perfEvents_.SetBackTrackTime(backtrackTime_);
-    perfEvents_.SetInherit(!noInherit_);
-    perfEvents_.SetTrackedCommand(trackedCommand_);
 }
 
 bool SubCommandRecord::AddEventsAndHandleOffCpu()
@@ -1831,6 +1831,7 @@ HiperfError SubCommandRecord::StartSamplingAndFile()
             return HiperfError::POST_PROCESS_RECORD_FILE;
         }
         RecordCompleted();
+        perfEvents_.ReleaseRecordResources();
     }
 
     return HiperfError::NO_ERR;
@@ -2178,7 +2179,7 @@ void SubCommandRecord::AddDevhostFeature()
 {
     if (isHM_) {
         fileWriter_->AddStringFeature(FEATURE::HIPERF_HM_DEVHOST,
-            StringPrintf("%d", virtualRuntime_.devhostPid_));
+            StringPrintf("%d", virtualRuntime_.GetRuntimeContext().devhostPid));
     }
 }
 
@@ -2303,6 +2304,199 @@ void SubCommandRecord::SymbolicHits()
         }
     }
 }
+
+void SubCommandRecord::SymbolicHitsParallel()
+{
+    if (!parallelSymbols_) {
+        SymbolicHits();
+        return;
+    }
+    if (!IsParallelHitsEnabled()) {
+        SymbolicHits();
+        return;
+    }
+
+    constexpr size_t numThreads = SymbolResolver::PARALLEL_THREAD_COUNT;
+    HLOGD("SymbolicHitsParallel: using %zu threads", numThreads);
+    HIPERF_HILOGI(MODULE_DEFAULT, "SymbolicHitsParallel: using %{public}zu threads", numThreads);
+
+    std::unordered_map<SymbolsFile*, std::vector<AddrItem>> userBuckets;
+    std::vector<AddrItem> ktAddrs;
+    std::vector<uint64_t> kAddrs;
+    std::vector<AddrItem> unknownItems;
+    CollectSymbolBuckets(userBuckets, ktAddrs, kAddrs, unknownItems);
+
+    size_t totalSymbols = ktAddrs.size() + kAddrs.size() + unknownItems.size();
+    for (const auto& [sf, items] : userBuckets) {
+        totalSymbols += items.size();
+    }
+    constexpr size_t PARALLEL_MIN_SYMBOL_COUNT = 1000;
+    if (totalSymbols < PARALLEL_MIN_SYMBOL_COUNT) {
+        HLOGD("SymbolicHitsParallel: total symbols %zu < %zu, fallback to serial",
+              totalSymbols, PARALLEL_MIN_SYMBOL_COUNT);
+        HIPERF_HILOGI(MODULE_DEFAULT, "SymbolicHitsParallel: total symbols "
+                      "%{public}zu < %{public}zu, fallback to serial", totalSymbols, PARALLEL_MIN_SYMBOL_COUNT);
+        SymbolicHits();
+        return;
+    }
+
+    std::vector<SymbolBucket> bucketVec;
+    BuildSymbolBuckets(userBuckets, ktAddrs, kAddrs, bucketVec);
+
+    std::vector<std::vector<size_t>> threadBuckets(numThreads);
+    AssignBucketsToThreads(bucketVec, threadBuckets, numThreads);
+
+    ExecuteParallelResolution(bucketVec, threadBuckets, unknownItems, numThreads);
+
+    HLOGD("SymbolicHitsParallel: completed");
+    HIPERF_HILOGI(MODULE_DEFAULT, "SymbolicHitsParallel: completed");
+}
+
+void SubCommandRecord::CollectSymbolBuckets(
+    std::unordered_map<SymbolsFile*, std::vector<AddrItem>>& userBuckets,
+    std::vector<AddrItem>& ktAddrs,
+    std::vector<uint64_t>& kAddrs,
+    std::vector<AddrItem>& unknownItems)
+{
+    // Collect user symbol addresses and bucket by SymbolsFile
+    for (const auto& [pid, addrs] : userSymbolsHits_) {
+        VirtualThread& thread = virtualRuntime_.GetThread(pid, pid);
+        for (const uint64_t ip : addrs) {
+            int64_t mapIdx = thread.FindMapIndexByAddr(ip);
+            if (mapIdx < 0) {
+                unknownItems.emplace_back(pid, ip);
+                continue;
+            }
+            auto map = thread.GetMaps()[mapIdx];
+            if (!map) {
+                unknownItems.emplace_back(pid, ip);
+                continue;
+            }
+            SymbolsFile* sf = thread.FindSymbolsFileByMap(map);
+            if (!sf) {
+                unknownItems.emplace_back(pid, ip);
+                continue;
+            }
+            userBuckets[sf].emplace_back(pid, ip);
+        }
+    }
+    HLOGD("CollectSymbolBuckets: user buckets=%zu, unknown=%zu", userBuckets.size(), unknownItems.size());
+
+    // Collect kernel thread addresses - all in one bucket
+    if (isHM_ && !kernelThreadSymbolsHits_.empty()) {
+        for (const auto& [pid, addrs] : kernelThreadSymbolsHits_) {
+            virtualRuntime_.GetThread(pid, pid);
+            for (const uint64_t vaddr : addrs) {
+                ktAddrs.emplace_back(pid, vaddr);
+            }
+        }
+    }
+
+    // Collect kernel addresses
+    if (!kernelSymbolsHits_.empty()) {
+        kAddrs.reserve(kernelSymbolsHits_.size());
+        for (const uint64_t vaddr : kernelSymbolsHits_) {
+            kAddrs.emplace_back(vaddr);
+        }
+    }
+    HLOGD("CollectSymbolBuckets: kthread addrs=%zu, kernel addrs=%zu", ktAddrs.size(), kAddrs.size());
+}
+
+void SubCommandRecord::BuildSymbolBuckets(
+    std::unordered_map<SymbolsFile*, std::vector<AddrItem>>& userBuckets,
+    std::vector<AddrItem>& ktAddrs,
+    std::vector<uint64_t>& kAddrs,
+    std::vector<SymbolBucket>& bucketVec)
+{
+    bucketVec.reserve(userBuckets.size() + (ktAddrs.empty() ? 0 : 1) + (kAddrs.empty() ? 0 : 1));
+
+    for (auto& [sf, items] : userBuckets) {
+        bucketVec.push_back({BucketType::User, std::move(items)});
+    }
+
+    if (!ktAddrs.empty()) {
+        bucketVec.push_back({BucketType::KernelThread, std::move(ktAddrs)});
+    }
+
+    if (!kAddrs.empty()) {
+        std::vector<AddrItem> kernelItems;
+        kernelItems.reserve(kAddrs.size());
+        for (uint64_t ip : kAddrs) {
+            kernelItems.emplace_back(0, ip);
+        }
+        bucketVec.push_back({BucketType::Kernel, std::move(kernelItems)});
+    }
+}
+
+void SubCommandRecord::AssignBucketsToThreads(
+    std::vector<SymbolBucket>& bucketVec,
+    std::vector<std::vector<size_t>>& threadBuckets,
+    size_t numThreads)
+{
+    std::sort(bucketVec.begin(), bucketVec.end(),
+              [](const SymbolBucket& a, const SymbolBucket& b) {
+                  return a.items.size() > b.items.size();
+              });
+
+    std::vector<size_t> threadLoads(numThreads, 0);
+    for (size_t i = 0; i < bucketVec.size(); ++i) {
+        size_t minThread = std::min_element(
+            threadLoads.begin(), threadLoads.end()) - threadLoads.begin();
+        threadBuckets[minThread].push_back(i);
+        threadLoads[minThread] += bucketVec[i].items.size();
+    }
+}
+
+void SubCommandRecord::ExecuteParallelResolution(
+    const std::vector<SymbolBucket>& bucketVec,
+    const std::vector<std::vector<size_t>>& threadBuckets,
+    const std::vector<AddrItem>& unknownItems,
+    size_t numThreads)
+{
+    std::vector<std::thread> threads;
+    threads.reserve(numThreads);
+    for (size_t i = 0; i < numThreads; ++i) {
+        if (threadBuckets[i].empty()) {
+            continue;
+        }
+        threads.emplace_back([&, i] {
+            SymbolResolver::SetCurrentThreadId(i);
+            for (size_t bucketIdx : threadBuckets[i]) {
+                ResolveBucket(bucketVec[bucketIdx]);
+            }
+        });
+    }
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    for (const auto& [pid, ip] : unknownItems) {
+        virtualRuntime_.GetSymbol(ip, pid, pid, PERF_CONTEXT_USER);
+    }
+}
+
+void SubCommandRecord::ResolveBucket(const SymbolBucket& bucket)
+{
+    switch (bucket.type) {
+        case BucketType::User:
+            for (const auto& [pid, ip] : bucket.items) {
+                virtualRuntime_.GetSymbol(ip, pid, pid, PERF_CONTEXT_USER);
+            }
+            break;
+        case BucketType::KernelThread:
+            for (const auto& [pid, ip] : bucket.items) {
+                virtualRuntime_.GetSymbol(ip, pid, pid, PERF_CONTEXT_MAX);
+            }
+            break;
+        case BucketType::Kernel:
+            for (const auto& [pid, ip] : bucket.items) {
+                virtualRuntime_.GetSymbol(ip, 0, 0, PERF_CONTEXT_KERNEL);
+            }
+            break;
+        default:
+            break;
+    }
+}
 #endif
 
 bool SubCommandRecord::CollectionSymbol(PerfEventRecord& record)
@@ -2377,7 +2571,7 @@ bool SubCommandRecord::FinishWriteRecordFile()
     const auto startTime = steady_clock::now();
 #endif
     ProcessSymbolsIfNeeded();
-    if (virtualRuntime_.GetSmoFlag()) {
+    if (virtualRuntime_.GetRuntimeContext().smoFlag) {
         for (auto it = mapPids_.begin(); it != mapPids_.end(); ++it) {
             const VirtualThread &thread = virtualRuntime_.GetThreads().at(it->first);
             if (virtualRuntime_.UpdateProcessSmoInfo(thread)) {
@@ -2386,6 +2580,12 @@ bool SubCommandRecord::FinishWriteRecordFile()
         }
     }
     CHECK_TRUE(!dedupStack_ || fileWriter_->AddUniStackTableFeature(virtualRuntime_.GetUniStackTable()), false, 0, "");
+
+    if (!delayUnwind_) {
+        virtualRuntime_.ReleaseRecordResources();
+        std::map<pid_t, std::vector<pid_t>>().swap(mapPids_);
+    }
+
     CleanupForBacktrack();
     CHECK_TRUE(fileWriter_->Close(), false, 1, "Fail to close record file %s", outputFilename_.c_str());
 #ifdef HIPERF_DEBUG_TIME
@@ -2447,7 +2647,7 @@ bool SubCommandRecord::ProcessUserSymbols()
     }
 
 #if USE_COLLECT_SYMBOLIC
-    SymbolicHits();
+    SymbolicHitsParallel();
 #endif
 
 #if HIDEBUG_SKIP_MATCH_SYMBOLS
@@ -2457,6 +2657,12 @@ bool SubCommandRecord::ProcessUserSymbols()
 #if !HIDEBUG_SKIP_SAVE_SYMBOLS
     CHECK_TRUE(fileWriter_->AddSymbolsFeature(virtualRuntime_.GetSymbolsFiles()),
                false, 1, "Fail to AddSymbolsFeature");
+#endif
+
+#if USE_COLLECT_SYMBOLIC
+    std::unordered_map<pid_t, std::unordered_set<uint64_t>>().swap(kernelThreadSymbolsHits_);
+    kSymbolsHits().swap(kernelSymbolsHits_);
+    uSymbolsHits().swap(userSymbolsHits_);
 #endif
 
     return true;
@@ -2477,6 +2683,7 @@ void SubCommandRecord::CleanupForBacktrack()
 #ifdef HIPERF_DEBUG_TIME
 void SubCommandRecord::ReportTime()
 {
+    virtualRuntime_.AggregateDebugTimes();
     printf("updateSymbolsTimes: %0.3f ms\n",
            virtualRuntime_.updateSymbolsTimes_.count() / MS_DURATION);
     printf("saveFeatureTimes: %0.3f ms\n", saveFeatureTimes_.count() / MS_DURATION);
@@ -2563,6 +2770,7 @@ bool SubCommandRecord::RegisterSubCommandRecord(void)
 void SubCommandRecord::SetHM()
 {
     isHM_ = IsHM();
+    virtualRuntime_.SetIsRoot(isRoot_);
     virtualRuntime_.SetHM(isHM_);
     perfEvents_.SetHM(isHM_);
     HLOGD("Set isHM_: %d", isHM_);
@@ -2605,11 +2813,18 @@ void SubCommandRecord::HandleRootProcess(const pid_t& pid)
     rootPids_.insert(pid);
 }
 
+void SubCommandRecord::ReleaseRecordResourcesForReport()
+{
+    virtualRuntime_.ReleaseRecordResources();
+    perfEvents_.ReleaseRecordResources();
+}
+
 bool SubCommandRecord::OnlineReportData()
 {
     if (!report_) {
         return true;
     }
+    ReleaseRecordResourcesForReport();
     bool ret = false;
     std::string tempFileName = outputFilename_ + ".tmp";
     if (rename(outputFilename_.c_str(), tempFileName.c_str()) != 0) {

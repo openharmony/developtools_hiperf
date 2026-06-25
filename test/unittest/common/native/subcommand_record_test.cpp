@@ -2051,9 +2051,9 @@ HWTEST_F(SubCommandRecordTest, CheckDevhostMapOffset, TestSize.Level1)
         bool checkRet = false;
         SubCommandRecord cmd;
         cmd.SetHM();
-        VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.devhostPid_,
-                                                            cmd.virtualRuntime_.devhostPid_);
-        kthread.ParseDevhostMap(cmd.virtualRuntime_.devhostPid_);
+        VirtualThread &kthread = cmd.virtualRuntime_.GetThread(cmd.virtualRuntime_.runtimeContext_.devhostPid,
+                                                            cmd.virtualRuntime_.runtimeContext_.devhostPid);
+        kthread.ParseDevhostMap(cmd.virtualRuntime_.runtimeContext_.devhostPid);
         TestRecordCommand("-d 5 -s dwarf -o /data/local/tmp/test_maps.data", true, true);
         StdoutRecord stdoutRecord;
         stdoutRecord.Start();
@@ -2089,7 +2089,8 @@ HWTEST_F(SubCommandRecordTest, CheckDevhostMapOffset, TestSize.Level1)
 
             if (isMmapRecord) {
                 isMmapRecord = false;
-                isMmapFirstLine = GetMemMapOffset(cmd.virtualRuntime_.devhostPid_, mapOffset, kthread.memMaps_, line);
+                isMmapFirstLine = GetMemMapOffset(cmd.virtualRuntime_.runtimeContext_.devhostPid,
+                                                  mapOffset, kthread.memMaps_, line);
             }
         }
         EXPECT_EQ(checkRet, true);
@@ -2108,10 +2109,10 @@ HWTEST_F(SubCommandRecordTest, CheckGetCountFromFile, TestSize.Level1)
 HWTEST_F(SubCommandRecordTest, CheckProductCfg, TestSize.Level1)
 {
     SubCommandRecord cmd;
-    cJSON* root = GetProductCfgRoot(cmd.PRODUCT_CONFIG_PATH);
+    cJSON* root = GetProductCfgRoot(PRODUCT_CONFIG_PATH);
     if (root) {
         size_t mmapPages = 0;
-        EXPECT_EQ(GetCfgValue(cmd.PRODUCT_CONFIG_PATH, cmd.CFG_MAP_PAGES, mmapPages), true);
+        EXPECT_EQ(GetCfgValue(PRODUCT_CONFIG_PATH, cmd.CFG_MAP_PAGES, mmapPages), true);
         cmd.GetMmapPagesCfg();
         cJSON_Delete(root);
     }
