@@ -15,7 +15,11 @@
 
 #include "ipc_utilities.h"
 
+#include <algorithm>
 #include <atomic>
+#include <mutex>
+#include <utility>
+#include <vector>
 
 #include "debug_logger.h"
 #include "hiperf_hilog.h"
@@ -130,20 +134,41 @@ bool IsDebugableApp(const std::string& bundleName)
 bool IsApplicationEncryped(const int pid)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    static std::mutex cacheMutex;
+    static std::vector<std::pair<int, bool>> cache;
     g_haveIpc.store(true);
     CHECK_TRUE(pid > 0, true, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
-    std::string bundleName = GetProcessName(pid);
-    CHECK_TRUE(!bundleName.empty(), true, 1, "bundleName is empty,pid is %d", pid);
-    auto pos = bundleName.find(":");
-    if (pos != std::string::npos) {
-        bundleName = bundleName.substr(0, pos);
+    {
+        std::lock_guard<std::mutex> lock(cacheMutex);
+        auto it = std::find_if(cache.begin(), cache.end(),
+                               [pid](const std::pair<int, bool> &entry) { return entry.first == pid; });
+        if (it != cache.end()) {
+            HLOGD("use cached encryped result.%d : pid:%d", it->second, pid);
+            return it->second;
+        }
     }
-    AppExecFwk::ApplicationInfo appInfo;
-    bool ret = GetAppInfo(bundleName, appInfo, GET_BUNDLEINFO_FLAGS);
-    CHECK_TRUE(ret, true, 1, "%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
-    bool isEncrypted = (appInfo.applicationReservedFlag &
-                        static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
-    HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);
+    std::string bundleName = GetProcessName(pid);
+    bool isEncrypted = true;
+    if (bundleName.empty()) {
+        HLOGE("bundleName is empty,pid is %d", pid);
+    } else {
+        auto pos = bundleName.find(":");
+        if (pos != std::string::npos) {
+            bundleName = bundleName.substr(0, pos);
+        }
+        AppExecFwk::ApplicationInfo appInfo;
+        if (!GetAppInfo(bundleName, appInfo, GET_BUNDLEINFO_FLAGS)) {
+            HLOGE("%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
+        } else {
+            isEncrypted = (appInfo.applicationReservedFlag &
+                           static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
+            HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);
+        }
+    }
+    {
+        std::lock_guard<std::mutex> lock(cacheMutex);
+        cache.emplace_back(pid, isEncrypted);
+    }
     return isEncrypted;
 #else
     return false;
