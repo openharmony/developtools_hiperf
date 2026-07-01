@@ -249,6 +249,9 @@ ohos_fuzztest("CommandLineFuzzTest") {
   cflags = fuzz_cflags
   deps = common_deps
   deps += [ "${hiperf_path}/:adapt_mingw_sourceset" ]
+  if (!hiperf_target_static && is_ohos) {
+    deps += [ "${hiperf_path}/:support_protobuf" ]
+  }
   external_deps = [
     "abseil-cpp:absl_container",
     "abseil-cpp:absl_cord",

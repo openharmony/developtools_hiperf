@@ -549,11 +549,15 @@ group("hiperf_etc") {
 ohos_source_set("hiperf_platform_host") {
   part_name = "hiperf"
   subsystem_name = "developtools"
+  public_configs = common_configs
   sources = [ "./src/hiperf_libreport.cpp" ]
   deps = [
     ":adapt_mingw_sourceset",
     ":hiperf_platform_common",
   ]
+  if (!hiperf_target_static && is_ohos) {
+    deps += [ ":support_protobuf" ]
+  }
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
