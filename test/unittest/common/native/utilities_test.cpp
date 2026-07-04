@@ -15,6 +15,9 @@
 
 #include "utilities_test.h"
 #include <chrono>
+#include <fstream>
+#include <sstream>
+#include <sys/utsname.h>
 #include <thread>
 #include "ipc_utilities.h"
 #include "test_utilities.h"
@@ -1472,6 +1475,272 @@ HWTEST_F(UtilitiesTest, TestIsStringToIntSuccessEdgeCases, TestSize.Level2)
     // Test leading zeros (should be valid)
     EXPECT_TRUE(IsStringToIntSuccess("007", num));
     EXPECT_EQ(num, 7);
+}
+
+/**
+ * @tc.name: IscontainDigits_HasDigits
+ * @tc.desc: Test IscontainDigits returns true when string contains digits
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IscontainDigits_HasDigits, TestSize.Level2)
+{
+    EXPECT_TRUE(IscontainDigits("abc123def"));
+    EXPECT_TRUE(IscontainDigits("1"));
+    EXPECT_TRUE(IscontainDigits("a1b"));
+    EXPECT_TRUE(IscontainDigits("0"));
+}
+
+/**
+ * @tc.name: IsNumeric_ValidNumber
+ * @tc.desc: Test IsNumeric returns true for valid integer strings
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsNumeric_ValidNumber, TestSize.Level2)
+{
+    EXPECT_TRUE(IsNumeric("123"));
+    EXPECT_TRUE(IsNumeric("0"));
+    EXPECT_TRUE(IsNumeric("-456"));
+    EXPECT_FALSE(IsNumeric(""));
+}
+
+/**
+ * @tc.name: StringToUint64_ZeroAndHexBase
+ * @tc.desc: Test StringToUint64 with zero value and hex base
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringToUint64_ZeroAndHexBase, TestSize.Level2)
+{
+    uint64_t val = 1;
+    EXPECT_TRUE(StringToUint64("0", val));
+    EXPECT_EQ(val, 0u);
+    EXPECT_TRUE(StringToUint64("ff", val, 16));
+    EXPECT_EQ(val, 255u);
+}
+
+/**
+ * @tc.name: ReadFileToString_WithFileSize
+ * @tc.desc: Test ReadFileToString 3-arg overload with fileSize parameter
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadFileToString_WithFileSize, TestSize.Level2)
+{
+    std::string content;
+    EXPECT_TRUE(ReadFileToString("/proc/self/comm", content, 0));
+    EXPECT_FALSE(content.empty());
+    std::string content2;
+    EXPECT_TRUE(ReadFileToString("/proc/self/comm", content2, 64));
+    EXPECT_FALSE(content2.empty());
+    std::string content3;
+    EXPECT_FALSE(ReadFileToString("/nonexistent/file/path", content3, 0));
+}
+
+/**
+ * @tc.name: WriteStringToFile_NonexistentDir
+ * @tc.desc: Test WriteStringToFile fails when directory does not exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, WriteStringToFile_NonexistentDir, TestSize.Level2)
+{
+    EXPECT_FALSE(WriteStringToFile("/nonexistent_dir_xyz/test.txt", "data"));
+}
+
+/**
+ * @tc.name: CompressFile_NonexistentSource
+ * @tc.desc: Test CompressFile returns false when source file does not exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CompressFile_NonexistentSource, TestSize.Level2)
+{
+    EXPECT_FALSE(CompressFile("/nonexistent_source_file.data", "/data/local/tmp/test_out.gz"));
+}
+
+/**
+ * @tc.name: UncompressFile_NonexistentGzip
+ * @tc.desc: Test UncompressFile returns false when gzip file does not exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, UncompressFile_NonexistentGzip, TestSize.Level2)
+{
+    EXPECT_FALSE(UncompressFile("/nonexistent_file.gz", "/data/local/tmp/test_out.data"));
+}
+
+/**
+ * @tc.name: GetSubthreadIDs_WithThreadMap
+ * @tc.desc: Test GetSubthreadIDs overload with thread_map parameter
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetSubthreadIDs_WithThreadMap, TestSize.Level1)
+{
+    std::map<pid_t, ThreadInfos> threadMap;
+    std::vector<pid_t> tids = GetSubthreadIDs(getpid(), threadMap);
+    EXPECT_GE(threadMap.size(), 0u);
+}
+
+/**
+ * @tc.name: HandleAppInfo_EmptyAppPackage
+ * @tc.desc: Test HandleAppInfo with empty appPackage exercises pid branch
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, HandleAppInfo_EmptyAppPackage, TestSize.Level2)
+{
+    std::string err = HandleAppInfo("", {});
+    EXPECT_EQ(err, "");
+}
+
+/**
+ * @tc.name: IsSupportNonDebuggableApp_RootMode
+ * @tc.desc: Test IsSupportNonDebuggableApp returns true in root mode, false otherwise
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsSupportNonDebuggableApp_RootMode, TestSize.Level2)
+{
+    if (IsRoot()) {
+        EXPECT_TRUE(IsSupportNonDebuggableApp());
+    } else {
+        EXPECT_EQ(IsSupportNonDebuggableApp(), IsBeta() && IsAllowProfilingUid());
+    }
+}
+
+/**
+ * @tc.name: LittleMemory_Test
+ * @tc.desc: Test LittleMemory reads /proc/meminfo and returns result
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, LittleMemory_Test, TestSize.Level2)
+{
+    // Compute expected result from /proc/meminfo independently
+    std::ifstream file("/proc/meminfo");
+    std::string line;
+    long memTotalKB = -1;
+    while (getline(file, line)) {
+        if (line.find("MemTotal:") != std::string::npos) {
+            std::istringstream iss(line.substr(line.find(":") + 1));
+            iss >> memTotalKB;
+            break;
+        }
+    }
+    ASSERT_GE(memTotalKB, 0);
+    EXPECT_EQ(LittleMemory(),
+              memTotalKB < (LITTLE_MEMORY_SIZE * MULTIPLE_SIZE * MULTIPLE_SIZE));
+}
+
+/**
+ * @tc.name: GetProcessName_CurrentProcess
+ * @tc.desc: Test GetProcessName returns non-empty for current process
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetProcessName_CurrentProcess, TestSize.Level2)
+{
+    std::string name = GetProcessName(getpid());
+    EXPECT_FALSE(name.empty());
+}
+
+/**
+ * @tc.name: IsHiviewCall_NotHiview
+ * @tc.desc: Test IsHiviewCall returns false when parent is not hiview
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsHiviewCall_NotHiview, TestSize.Level2)
+{
+    EXPECT_FALSE(IsHiviewCall());
+}
+
+/**
+ * @tc.name: IsHM_Test
+ * @tc.desc: Test IsHM matches uname release against HMKERNEL
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsHM_Test, TestSize.Level2)
+{
+    utsname unameBuf;
+    bool expected = false;
+    if (uname(&unameBuf) == 0) {
+        expected = std::string(unameBuf.release).find(HMKERNEL) != std::string::npos;
+    }
+    EXPECT_EQ(IsHM(), expected);
+}
+
+/**
+ * @tc.name: IsAllowProfilingUid_Test
+ * @tc.desc: Test IsAllowProfilingUid matches current uid against allow list
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsAllowProfilingUid_Test, TestSize.Level2)
+{
+    bool expected = (ALLOW_UIDS.find(getuid()) != ALLOW_UIDS.end());
+    EXPECT_EQ(IsAllowProfilingUid(), expected);
+}
+
+/**
+ * @tc.name: NeedAdaptSandboxPath_AdaptsPath
+ * @tc.desc: Test NeedAdaptSandboxPath adapts /data/storage path when file not exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, NeedAdaptSandboxPath_AdaptsPath, TestSize.Level2)
+{
+    char filename[1024] = "/data/storage/nonexistent_test_file.txt";
+    u16 headerSize = 0;
+    EXPECT_TRUE(NeedAdaptSandboxPath(filename, getpid(), headerSize));
+    EXPECT_EQ(std::string(filename).find("/proc/"), 0u);
+}
+
+/**
+ * @tc.name: NeedAdaptSandboxPath_NoPrefix
+ * @tc.desc: Test NeedAdaptSandboxPath returns false when path has no /data/storage prefix
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, NeedAdaptSandboxPath_NoPrefix, TestSize.Level2)
+{
+    char filename[1024] = "/data/local/tmp/test.txt";
+    u16 headerSize = 0;
+    EXPECT_FALSE(NeedAdaptSandboxPath(filename, getpid(), headerSize));
+}
+
+/**
+ * @tc.name: GetDefaultPathByEnv_Default
+ * @tc.desc: Test GetDefaultPathByEnv returns default path containing file type
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetDefaultPathByEnv_Default, TestSize.Level2)
+{
+    std::string path = GetDefaultPathByEnv("perf.data");
+    EXPECT_FALSE(path.empty());
+    EXPECT_NE(path.find("perf.data"), std::string::npos);
+}
+
+/**
+ * @tc.name: CheckAppIsRunning_EmptyAppPackage
+ * @tc.desc: Test CheckAppIsRunning returns true when appPackage is empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CheckAppIsRunning_EmptyAppPackage, TestSize.Level2)
+{
+    std::vector<pid_t> pids;
+    EXPECT_TRUE(CheckAppIsRunning(pids, "", 100));
+}
+
+/**
+ * @tc.name: StringEndsWith_NotAtEnd
+ * @tc.desc: Test StringEndsWith returns false when substring found but not at end
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringEndsWith_NotAtEnd, TestSize.Level2)
+{
+    EXPECT_FALSE(StringEndsWith("test1test2", "test"));
+    EXPECT_FALSE(StringEndsWith("abcdef", "abc"));
+    EXPECT_TRUE(StringEndsWith("test1test2", "test2"));
+}
+
+/**
+ * @tc.name: StringReplace_MultipleOccurrences
+ * @tc.desc: Test StringReplace replaces multiple occurrences and handles no match
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringReplace_MultipleOccurrences, TestSize.Level2)
+{
+    EXPECT_EQ(StringReplace("a,b,c,d", ",", "-"), "a-b-c-d");
+    EXPECT_EQ(StringReplace("no match here", "xyz", "123"), "no match here");
+    EXPECT_EQ(StringReplace("", "a", "b"), "");
 }
 
 } // namespace HiPerf

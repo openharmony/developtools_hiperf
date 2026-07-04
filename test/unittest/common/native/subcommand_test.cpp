@@ -243,6 +243,186 @@ HWTEST_F(HiPerfSubcommandTest, RegisterCommandComponent, TestSize.Level1)
 {
     EXPECT_TRUE(RegisterCommandComponent());
 }
+
+class SubcommandParseFail : public SubCommand {
+public:
+    SubcommandParseFail() : SubCommand("parsefail", "test", "ut") {}
+    bool ParseOption(std::vector<std::string> &args) override { return false; }
+    HiperfError OnSubCommand(std::vector<std::string>& args) override { return HiperfError::NO_ERR; }
+};
+
+class SubcommandLeaveArgs : public SubCommand {
+public:
+    SubcommandLeaveArgs() : SubCommand("leaveargs", "test", "ut") {}
+    bool ParseOption(std::vector<std::string> &args) override { return true; }
+    HiperfError OnSubCommand(std::vector<std::string>& args) override { return HiperfError::NO_ERR; }
+};
+
+/**
+ * @tc.name: CheckRestartOption_NoRestart
+ * @tc.desc: Test CheckRestartOption returns true when restart is false
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, CheckRestartOption_NoRestart, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> selectPids;
+    EXPECT_TRUE(subcomm.CheckRestartOption("app", false, false, selectPids));
+}
+
+/**
+ * @tc.name: CheckRestartOption_EmptyAppPackage
+ * @tc.desc: Test CheckRestartOption returns false when restart true but appPackage empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, CheckRestartOption_EmptyAppPackage, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> selectPids;
+    EXPECT_FALSE(subcomm.CheckRestartOption("", false, true, selectPids));
+}
+
+/**
+ * @tc.name: CheckRestartOption_ConflictSystemWide
+ * @tc.desc: Test CheckRestartOption returns false when restart conflicts with system wide
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, CheckRestartOption_ConflictSystemWide, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> selectPids;
+    EXPECT_FALSE(subcomm.CheckRestartOption("app", true, true, selectPids));
+}
+
+/**
+ * @tc.name: CheckRestartOption_ConflictSelectPids
+ * @tc.desc: Test CheckRestartOption returns false when restart conflicts with select pids
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, CheckRestartOption_ConflictSelectPids, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> selectPids = {1};
+    EXPECT_FALSE(subcomm.CheckRestartOption("app", false, true, selectPids));
+}
+
+/**
+ * @tc.name: HandleSubCommandExclude_BothNonEmpty_Conflict
+ * @tc.desc: Test HandleSubCommandExclude returns false when both exclude options given
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, HandleSubCommandExclude_BothNonEmpty_Conflict, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> excludeTids = {1};
+    std::vector<std::string> excludeNames = {"thread"};
+    std::vector<pid_t> selectTids = {1};
+    EXPECT_FALSE(subcomm.HandleSubCommandExclude(excludeTids, excludeNames, selectTids));
+}
+
+/**
+ * @tc.name: HandleSubCommandExclude_BothEmpty
+ * @tc.desc: Test HandleSubCommandExclude returns true when no exclude options given
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, HandleSubCommandExclude_BothEmpty, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> selectTids = {1};
+    EXPECT_TRUE(subcomm.HandleSubCommandExclude({}, {}, selectTids));
+}
+
+/**
+ * @tc.name: HandleSubCommandExclude_NoSelectTids
+ * @tc.desc: Test HandleSubCommandExclude returns true when selectTids empty but excludes given
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, HandleSubCommandExclude_NoSelectTids, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> excludeTids = {1};
+    std::vector<pid_t> selectTids;
+    EXPECT_TRUE(subcomm.HandleSubCommandExclude(excludeTids, {}, selectTids));
+}
+
+/**
+ * @tc.name: HandleSubCommandExclude_ExcludeTids_RemovesMatch
+ * @tc.desc: Test HandleSubCommandExclude removes matching tids from selectTids
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, HandleSubCommandExclude_ExcludeTids_RemovesMatch, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> excludeTids = {2};
+    std::vector<pid_t> selectTids = {1, 2, 3};
+    EXPECT_TRUE(subcomm.HandleSubCommandExclude(excludeTids, {}, selectTids));
+    EXPECT_EQ(selectTids.size(), 2u);
+    EXPECT_EQ(std::find(selectTids.begin(), selectTids.end(), 2), selectTids.end());
+}
+
+/**
+ * @tc.name: HandleSubCommandExclude_ExcludeTidNotFound
+ * @tc.desc: Test HandleSubCommandExclude when excluded tid not in selectTids
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, HandleSubCommandExclude_ExcludeTidNotFound, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<pid_t> excludeTids = {99};
+    std::vector<pid_t> selectTids = {1, 2};
+    EXPECT_TRUE(subcomm.HandleSubCommandExclude(excludeTids, {}, selectTids));
+    EXPECT_EQ(selectTids.size(), 2u);
+}
+
+/**
+ * @tc.name: HandleSubCommandExclude_ExcludeThreadNames_NoMatch
+ * @tc.desc: Test HandleSubCommandExclude with thread names that do not match
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, HandleSubCommandExclude_ExcludeThreadNames_NoMatch, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<std::string> excludeNames = {"nonexistent_thread_name_xyz"};
+    std::vector<pid_t> selectTids = {getpid()};
+    EXPECT_TRUE(subcomm.HandleSubCommandExclude({}, excludeNames, selectTids));
+    EXPECT_EQ(selectTids.size(), 1u);
+}
+
+/**
+ * @tc.name: OnSubCommandOptions_DumpOptionsEnabled
+ * @tc.desc: Test OnSubCommandOptions with --dumpoptions triggers DumpOptions
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, OnSubCommandOptions_DumpOptionsEnabled, TestSize.Level2)
+{
+    SubcommandObj subcomm;
+    std::vector<std::string> args = {"--dumpoptions"};
+    EXPECT_TRUE(subcomm.OnSubCommandOptions(args));
+}
+
+/**
+ * @tc.name: OnSubCommandOptions_ParseOptionFalse
+ * @tc.desc: Test OnSubCommandOptions returns false when ParseOption fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, OnSubCommandOptions_ParseOptionFalse, TestSize.Level2)
+{
+    SubcommandParseFail subcomm;
+    std::vector<std::string> args = {"test"};
+    EXPECT_FALSE(subcomm.OnSubCommandOptions(args));
+}
+
+/**
+ * @tc.name: OnSubCommandOptions_UnknownOptionAfterParse
+ * @tc.desc: Test OnSubCommandOptions returns false when unknown args remain after parse
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiPerfSubcommandTest, OnSubCommandOptions_UnknownOptionAfterParse, TestSize.Level2)
+{
+    SubcommandLeaveArgs subcomm;
+    std::vector<std::string> args = {"unknownopt"};
+    EXPECT_FALSE(subcomm.OnSubCommandOptions(args));
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
