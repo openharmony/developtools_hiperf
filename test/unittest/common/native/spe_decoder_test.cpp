@@ -14,6 +14,7 @@
  */
 #include "spe_decoder_test.h"
 
+#include <cstring>
 #include "command.h"
 #include "perf_events.h"
 #include "subcommand_dump.h"
@@ -461,6 +462,811 @@ HWTEST_F(SpeDecoderTest, TestSpeDumpRawData2, TestSize.Level1)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     EXPECT_EQ(SpeDumpRawData(rawData, dataDize, 1, nullptr), true);
 }
+
+// ========== 新增测试用例：Packet解析（通过公共API间接测试） ==========
+
+/**
+ * @tc.name: TestSpePktDescEventAllBits
+ * @tc.desc: Test SpePktDescEvent with all event bits
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescEventAllBits, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_EVENTS;
+    char buf[256] = {};
+    
+    // Test each event bit individually
+    packet.payload = BIT(EVENT_EXCEPTION_GEN);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_RETIRED);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_L1D_ACCESS);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_L1D_REFILL);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_TLB_ACCESS);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_TLB_WALK);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_NOT_TAKEN);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_MISPRED);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_LLC_ACCESS);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_LLC_MISS);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_REMOTE_ACCESS);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_ALIGNMENT);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_PARTIAL_PREDICATE);
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = BIT(EVENT_EMPTY_PREDICATE);
+    SpePktDesc(&packet, buf, 256);
+    
+    // Multiple events combined
+    packet.payload = BIT(EVENT_L1D_ACCESS) | BIT(EVENT_L1D_REFILL) | BIT(EVENT_TLB_ACCESS);
+    SpePktDesc(&packet, buf, 256);
+    
+    // Null pointer
+    EXPECT_EQ(SpePktDesc(nullptr, buf, 256), -1);
+    EXPECT_EQ(SpePktDesc(&packet, nullptr, 256), -1);
+}
+
+/**
+ * @tc.name: TestSpePktDescOpTypeAllClasses
+ * @tc.desc: Test SpePktDescOpType with all operation classes
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescOpTypeAllClasses, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_OP_TYPE;
+    char buf[256] = {};
+    
+    // OTHER class
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_OTHER;
+    packet.payload = 0x00; // Non-SVE
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = 0x08; // SVE-OTHER
+    SpePktDesc(&packet, buf, 256);
+    
+    // LD_ST_ATOMIC class
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC;
+    packet.payload = 0x00; // LD
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = 0x01; // ST
+    SpePktDesc(&packet, buf, 256);
+    
+    // BR_ERET class
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_BR_ERET;
+    packet.payload = 0x00; // B
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = 0x01; // B COND
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.payload = 0x02; // B IND
+    SpePktDesc(&packet, buf, 256);
+    
+    // Unknown index
+    packet.index = 100;
+    int ret = SpePktDesc(&packet, buf, 256);
+    EXPECT_EQ(ret, 0); // SpePktDesc resets err to 0 after raw data output
+}
+
+/**
+ * @tc.name: TestSpePktDescAddrAllIndices
+ * @tc.desc: Test SpePktDescAddr with all address indices
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescAddrAllIndices, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_ADDRESS;
+    char buf[256] = {};
+    
+    // INS index
+    packet.index = PERF_SPE_ADDR_PKT_HDR_INDEX_INS;
+    packet.payload = 0x123456789ABCDEF0ULL;
+    SpePktDesc(&packet, buf, 256);
+    
+    // BRANCH index
+    packet.index = PERF_SPE_ADDR_PKT_HDR_INDEX_BRANCH;
+    SpePktDesc(&packet, buf, 256);
+    
+    // PREV_BRANCH index
+    packet.index = PERF_SPE_ADDR_PKT_HDR_INDEX_PREV_BRANCH;
+    SpePktDesc(&packet, buf, 256);
+    
+    // DATA_VIRT index
+    packet.index = PERF_SPE_ADDR_PKT_HDR_INDEX_DATA_VIRT;
+    packet.payload = 0x0000123456789ABCULL;
+    SpePktDesc(&packet, buf, 256);
+    
+    // DATA_PHYS index
+    packet.index = PERF_SPE_ADDR_PKT_HDR_INDEX_DATA_PHYS;
+    packet.payload = 0xF000123456789ABCULL;
+    SpePktDesc(&packet, buf, 256);
+    
+    // Unknown index
+    packet.index = 100;
+    int ret = SpePktDesc(&packet, buf, 256);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: TestSpePktDesContAllIndices
+ * @tc.desc: Test SpePktDesCont with all counter indices
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDesContAllIndices, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_COUNTER;
+    char buf[256] = {};
+    
+    // TOTAL_LAT
+    packet.index = PERF_SPE_CNT_PKT_HDR_INDEX_TOTAL_LAT;
+    packet.payload = 100;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // ISSUE_LAT
+    packet.index = PERF_SPE_CNT_PKT_HDR_INDEX_ISSUE_LAT;
+    packet.payload = 50;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // TRANS_LAT
+    packet.index = PERF_SPE_CNT_PKT_HDR_INDEX_TRANS_LAT;
+    packet.payload = 25;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpePktDescAllTypes
+ * @tc.desc: Test SpePktDesc with all packet types
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescAllTypes, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    char buf[256] = {};
+    
+    // BAD/PAD/END
+    packet.type = PERF_SPE_BAD;
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.type = PERF_SPE_PAD;
+    SpePktDesc(&packet, buf, 256);
+    
+    packet.type = PERF_SPE_END;
+    SpePktDesc(&packet, buf, 256);
+    
+    // TIMESTAMP
+    packet.type = PERF_SPE_TIMESTAMP;
+    packet.payload = 1234567890ULL;
+    SpePktDesc(&packet, buf, 256);
+    
+    // DATA_SOURCE
+    packet.type = PERF_SPE_DATA_SOURCE;
+    packet.payload = 0x0AULL;
+    SpePktDesc(&packet, buf, 256);
+    
+    // CONTEXT
+    packet.type = PERF_SPE_CONTEXT;
+    packet.index = 2;
+    packet.payload = 0x1234ULL;
+    SpePktDesc(&packet, buf, 256);
+    
+    // Unknown type
+    packet.type = static_cast<SpePktType>(100);
+    int ret = SpePktDesc(&packet, buf, 256);
+    EXPECT_EQ(ret, 0);
+}
+
+// ========== 新增测试用例：地址计算函数 ==========
+
+/**
+ * @tc.name: TestSpeCalcIpInsBranch
+ * @tc.desc: Test SpeCalcIp with INS/BRANCH indices via packet decoding
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeCalcIpInsBranch, TestSize.Level2)
+{
+    // Test INS address (from_ip) via packet decoding
+    // EL0 (ns=0, el=0)
+    u8 bufIns[20] = {0x71, 0x00, 0x00, 0x00, 0x00,
+                     0xb0, 0x00, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12,
+                     0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(bufIns, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // decoder->record.from_ip processed by SpeCalcIp
+        SpeDecoderFree(decoder);
+    }
+    
+    // Test BRANCH address (to_ip)
+    u8 bufBr[20] = {0x71, 0x00, 0x00, 0x00, 0x00,
+                    0xb1, 0x00, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12,
+                    0x01};
+    decoder = SpeDecoderDataNew(bufBr, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeCalcIpDataPhys
+ * @tc.desc: Test SpeCalcIp with DATA_PHYS index via packet decoding
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeCalcIpDataPhys, TestSize.Level2)
+{
+    // Test DATA_PHYS address calculation
+    u8 buf[20] = {0x71, 0x00, 0x00, 0x00, 0x00,
+                  0xb3, 0x00, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12,
+                  0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // decoder->record.phys_addr should be cleaned by SpeCalcIp
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeCalcIpUnknownIndex
+ * @tc.desc: Test address packet with unknown index via packet decoding
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeCalcIpUnknownIndex, TestSize.Level2)
+{
+    // PREV_BRANCH index (index=4)
+    u8 buf[20] = {0x71, 0x00, 0x00, 0x00, 0x00,
+                  0xb4, 0x00, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12,
+                  0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // PREV_BRANCH address handling
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeCalcIpDataVirt
+ * @tc.desc: Test SpeCalcIp with DATA_VIRT index via packet decoding
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeCalcIpDataVirt, TestSize.Level2)
+{
+    // Test DATA_VIRT address calculation via full packet decoding
+    u8 buf[20] = {0x71, 0x00, 0x00, 0x00, 0x00, // Timestamp
+                  0xb2, 0x00, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12, // DATA_VIRT address
+                  0x01}; // END
+    
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // decoder->record.virt_addr should be processed by SpeCalcIp
+        SpeDecoderFree(decoder);
+    }
+    
+    // Test kernel space pattern (bits [55:52] = 0xf)
+    u8 bufKernel[20] = {0x71, 0x00, 0x00, 0x00, 0x00,
+                        0xb2, 0x00, 0x0B, 0xF0, 0x12, 0x34, 0x56, 0x78, 0x90,
+                        0x01};
+    decoder = SpeDecoderDataNew(bufKernel, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // Should fill 0xff in highest byte for kernel pattern
+        SpeDecoderFree(decoder);
+    }
+}
+
+// ========== 新增测试用例：公共API函数 ==========
+
+/**
+ * @tc.name: TestSpeDecoderDataNewNull
+ * @tc.desc: Test SpeDecoderDataNew with null pointer
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeDecoderDataNewNull, TestSize.Level2)
+{
+    EXPECT_EQ(SpeDecoderDataNew(nullptr, 100), nullptr);
+}
+
+/**
+ * @tc.name: TestSpeDecoderFreeNull
+ * @tc.desc: Test SpeDecoderFree with null pointer
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeDecoderFreeNull, TestSize.Level2)
+{
+    u8 buf[20] = {0x01};
+    SpeDecoder *d1 = SpeDecoderDataNew(buf, 20);
+    ASSERT_NE(d1, nullptr);
+    SpeDecoderFree(d1);
+    SpeDecoderFree(nullptr); // null should be safe no-op
+    SpeDecoder *d2 = SpeDecoderDataNew(buf, 20);
+    EXPECT_NE(d2, nullptr); // heap not corrupted by null free
+    SpeDecoderFree(d2);
+}
+
+/**
+ * @tc.name: TestSpeDecodeNull
+ * @tc.desc: Test SpeDecode with null pointer
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeDecodeNull, TestSize.Level2)
+{
+    EXPECT_EQ(SpeDecode(nullptr), -1);
+}
+
+/**
+ * @tc.name: TestSpeDumpRawDataNull
+ * @tc.desc: Test SpeDumpRawData with null pointer
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeDumpRawDataNull, TestSize.Level2)
+{
+    EXPECT_EQ(SpeDumpRawData(nullptr, 100, 1, nullptr), false);
+}
+
+// ========== 新增测试用例：Record处理函数 ==========
+
+/**
+ * @tc.name: TestSpeReadRecordOpTypeAllClasses
+ * @tc.desc: Test SpeReadRecordOpType indirectly via SpeDecode
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordOpTypeAllClasses, TestSize.Level2)
+{
+    // Test via SpeDecode with constructed data
+    // LD_ST_ATOMIC class
+    u8 bufLdSt[20] = {0x71, 0x00, 0x00, 0x00, 0x00, // Timestamp
+                      0x48, 0x01,                   // Op-Type LD_ST_ATOMIC
+                      0x01};                        // END
+    SpeDecoder *decoder = SpeDecoderDataNew(bufLdSt, 20);
+    EXPECT_NE(decoder, nullptr);
+    
+    if (decoder) {
+        while (SpeDecode(decoder) > 0) {
+            // Process record
+        }
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordEventsAll
+ * @tc.desc: Test SpeReadRecordEvents with all event types
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordEventsAll, TestSize.Level2)
+{
+    // Construct packet data with events
+    u8 buf[30] = {0x71, 0x00, 0x00, 0x00, 0x00, // Timestamp
+                  0x42, 0xFF, 0x03,             // Events with multiple bits
+                  0x01};                        // END
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 30);
+    EXPECT_NE(decoder, nullptr);
+    
+    if (decoder) {
+        while (SpeDecode(decoder) > 0) {
+            // Check record.type for event flags
+        }
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordAddressAllIndices
+ * @tc.desc: Test SpeReadRecordAddress with all address indices
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordAddressAllIndices, TestSize.Level2)
+{
+    // Test INS address (from_ip)
+    u8 bufIns[30] = {0x71, 0x00, 0x00, 0x00, 0x00,
+                     0xb0, 0x00, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12, // Address INS
+                     0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(bufIns, 30);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // Check decoder->record.from_ip
+        SpeDecoderFree(decoder);
+    }
+    
+    // Test BRANCH address (to_ip)
+    u8 bufBr[30] = {0x71, 0x00, 0x00, 0x00, 0x00,
+                    0xb1, 0x00, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12, // Address BRANCH
+                    0x01};
+    decoder = SpeDecoderDataNew(bufBr, 30);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // Check decoder->record.to_ip
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestAddReportItemsAndUpdateHeating
+ * @tc.desc: Test AddReportItems and UpdateHeating functions
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestAddReportItemsAndUpdateHeating, TestSize.Level2)
+{
+    std::vector<ReportItemAuxRawData> testData;
+    
+    // Add test report items
+    testData.push_back({PERF_SPE_L1D_ACCESS, 0.0f, 1, "test", 0x1000, "lib.so", "func", 0x100});
+    testData.push_back({PERF_SPE_L1D_ACCESS, 0.0f, 1, "test", 0x2000, "lib.so", "func2", 0x200});
+    testData.push_back({PERF_SPE_L1D_MISS, 0.0f, 1, "test", 0x1000, "lib.so", "func", 0x100});
+    
+    AddReportItems(testData);
+    UpdateHeating();
+
+    // Verify report data was added by dumping to temp file
+    FILE *fp = tmpfile();
+    ASSERT_NE(fp, nullptr);
+    DumpSpeReportData(0, fp);
+    EXPECT_GT(ftell(fp), 0);
+    fclose(fp);
+    
+    // Test duplicate pc (should increment count)
+    testData.push_back({PERF_SPE_L1D_ACCESS, 0.0f, 1, "test", 0x1000, "lib.so", "func", 0x100});
+    AddReportItems(testData);
+}
+
+/**
+ * @tc.name: TestDumpSpeReportData
+ * @tc.desc: Test DumpSpeReportData function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestDumpSpeReportData, TestSize.Level2)
+{
+    // Add test data first
+    std::vector<ReportItemAuxRawData> testData;
+    testData.push_back({PERF_SPE_L1D_ACCESS, 50.0f, 10, "test", 0x1000, "lib.so", "func", 0x100});
+    AddReportItems(testData);
+    UpdateHeating();
+
+    // Dump report to temp file and verify output
+    FILE *fp = tmpfile();
+    ASSERT_NE(fp, nullptr);
+    DumpSpeReportData(0, fp);
+    long pos = ftell(fp);
+    EXPECT_GT(pos, 0);
+    fclose(fp);
+}
+
+/**
+ * @tc.name: TestSpeAlignmentCalculation
+ * @tc.desc: Test alignment packet via full decode
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeAlignmentCalculation, TestSize.Level2)
+{
+    // Alignment header 0x20, 0x00 (extended + alignment)
+    u8 buf[20] = {0x20, 0x00, 0x01}; // Extended header + alignment + END
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // Should handle alignment packet
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeGetNextPacketPadSkip
+ * @tc.desc: Test SpeGetNextPacket PAD skipping logic
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeGetNextPacketPadSkip, TestSize.Level2)
+{
+    // Multiple PADs followed by END
+    u8 buf[20] = {0x00, 0x00, 0x00, 0x01}; // 3 PADs + END
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 20);
+    EXPECT_NE(decoder, nullptr);
+    
+    if (decoder) {
+        SpeDecode(decoder);
+        // Should skip PADs and return END record
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeGetNextPacketErrorHandling
+ * @tc.desc: Test SpeGetNextPacket error handling
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeGetNextPacketErrorHandling, TestSize.Level2)
+{
+    // Bad packet followed by good packet
+    u8 buf[20] = {0xFF, 0x71, 0x00, 0x00, 0x00, 0x00, 0x01}; // BAD + Timestamp + END
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 20);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        // Bad packet should cause SpeDecode to return negative error code
+        EXPECT_LT(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordCounter
+ * @tc.desc: Test SpeReadRecord with COUNTER packet
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordCounter, TestSize.Level2)
+{
+    u8 buf[30] = {0x71, 0x00, 0x00, 0x00, 0x00, // Timestamp
+                  0x98, 0x00, 0x64,             // Counter TOTAL_LAT = 100
+                  0x01};                        // END
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 30);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // Check decoder->record.latency
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordContext
+ * @tc.desc: Test SpeReadRecord with CONTEXT packet
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordContext, TestSize.Level2)
+{
+    u8 buf[30] = {0x71, 0x00, 0x00, 0x00, 0x00, // Timestamp
+                  0x64, 0x00, 0x12, 0x34,       // Context
+                  0x01};                        // END
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 30);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // Check decoder->record.context_id
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordDataSource
+ * @tc.desc: Test SpeReadRecord with DATA_SOURCE packet
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordDataSource, TestSize.Level2)
+{
+    u8 buf[30] = {0x71, 0x00, 0x00, 0x00, 0x00, // Timestamp
+                  0x43, 0x00, 0x0A,             // Data source
+                  0x01};                        // END
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, 30);
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        // Check decoder->record.source
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpePktDescStatAtomicOpTypeAllFlags
+ * @tc.desc: Test SpePktDescStatAtomicOpType with all flags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescStatAtomicOpTypeAllFlags, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_OP_TYPE;
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC;
+    char buf[256] = {};
+    
+    // Test AT flag
+    packet.payload = PERF_SPE_OP_PKT_AT;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // Test EXCL flag
+    packet.payload = PERF_SPE_OP_PKT_EXCL;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // Test AR flag
+    packet.payload = PERF_SPE_OP_PKT_AR;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // Test LDST + SVE
+    packet.payload = 0x08; // SVE LDST
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // Test SVE EVL
+    packet.payload = 0x18; // EVL bits set
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // Test SVE PRED
+    packet.payload = PERF_SPE_OP_PKT_SVE_PRED;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // Test SVE SG
+    packet.payload = PERF_SPE_OP_PKT_SVE_SG;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpePktDescStatAtomicOpTypeAllSubclass
+ * @tc.desc: Test SpePktDescStatAtomicOpType with all subclass
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescStatAtomicOpTypeAllSubclass, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_OP_TYPE;
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC;
+    char buf[256] = {};
+    
+    // SIMD-FP
+    packet.payload = PERF_SPE_OP_PKT_LDST_SUBCLASS_SIMD_FP;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // GP-REG
+    packet.payload = PERF_SPE_OP_PKT_LDST_SUBCLASS_GP_REG;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // UNSPEC-REG
+    packet.payload = PERF_SPE_OP_PKT_LDST_SUBCLASS_UNSPEC_REG;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // NV-SYSREG
+    packet.payload = PERF_SPE_OP_PKT_LDST_SUBCLASS_NV_SYSREG;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // MTE-TAG
+    packet.payload = PERF_SPE_OP_PKT_LDST_SUBCLASS_MTE_TAG;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // MEMCPY
+    packet.payload = PERF_SPE_OP_PKT_LDST_SUBCLASS_MEMCPY;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // MEMSET
+    packet.payload = PERF_SPE_OP_PKT_LDST_SUBCLASS_MEMSET;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpePktDescOpTypeOtherSve
+ * @tc.desc: Test SpePktDescOpType OTHER SVE-OTHER
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescOpTypeOtherSve, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_OP_TYPE;
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_OTHER;
+    char buf[256] = {};
+    
+    // SVE-OTHER
+    packet.payload = 0x08; // SVE pattern
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // SVE-OTHER with FP
+    packet.payload = 0x08 | PERF_SPE_OP_PKT_SVE_FP;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // SVE-OTHER with PRED
+    packet.payload = 0x08 | PERF_SPE_OP_PKT_SVE_PRED;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // OTHER non-SVE with COND
+    packet.payload = PERF_SPE_OP_PKT_COND;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpePktDescOpTypeBrEretAllFlags
+ * @tc.desc: Test SpePktDescOpType BR_ERET with all flags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescOpTypeBrEretAllFlags, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_OP_TYPE;
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_BR_ERET;
+    char buf[256] = {};
+    
+    // B
+    packet.payload = 0x00;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // B COND
+    packet.payload = PERF_SPE_OP_PKT_COND;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // B IND
+    packet.payload = 0x02;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // B COND IND
+    packet.payload = PERF_SPE_OP_PKT_COND | 0x02;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpePktDescAddrPhysWithFlags
+ * @tc.desc: Test SpePktDescAddr DATA_PHYS with ns/ch/pat flags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktDescAddrPhysWithFlags, TestSize.Level2)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_ADDRESS;
+    packet.index = PERF_SPE_ADDR_PKT_HDR_INDEX_DATA_PHYS;
+    char buf[256] = {};
+    
+    // With ns=1, ch=1, pat=0xF
+    packet.payload = 0xF000123456789ABCULL; // pat=0xF in bits 59:56
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+    
+    // With ns=0, ch=0
+    packet.payload = 0x0000123456789ABCULL;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
