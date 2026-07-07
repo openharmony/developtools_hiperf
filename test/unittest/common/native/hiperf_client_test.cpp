@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cinttypes>
+#include <csignal>
 #include <thread>
 
 #include "test_utilities.h"
@@ -835,6 +836,382 @@ HWTEST_F(HiperfClientTest, RunCmdSyncStoppable_NotReady, TestSize.Level1)
     opt.SetTimeStopSec(1);
     opt.SetSyncCmdStoppable(true);
     EXPECT_FALSE(client.RunCmdSyncStoppable(opt));
+}
+
+/**
+ * @tc.name: SetOptionBool_EnableAlreadyExists
+ * @tc.desc: Test SetOption(bool) when enable=true and arg already exists (no-op)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionBool_EnableAlreadyExists, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", true);
+    opt.SetOption("-a", true);
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 1u);
+    EXPECT_EQ(args[0], "-a");
+}
+
+/**
+ * @tc.name: SetOptionBool_DisableWhenNotExists
+ * @tc.desc: Test SetOption(bool) when enable=false and arg not present (no-op)
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionBool_DisableWhenNotExists, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-a", false);
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 0u);
+}
+
+/**
+ * @tc.name: SetOptionInt_UpdateExistingValue
+ * @tc.desc: Test SetOption(int) updates value when key and value both exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionInt_UpdateExistingValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("-f", 100);
+    opt.SetOption("-f", 500);
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2u);
+    EXPECT_EQ(args[0], "-f");
+    EXPECT_EQ(args[1], "500");
+}
+
+/**
+ * @tc.name: SetOptionString_UpdateExistingValue
+ * @tc.desc: Test SetOption(string) updates value when key and value both exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SetOptionString_UpdateExistingValue, TestSize.Level2)
+{
+    HiperfClient::RecordOption opt;
+    opt.SetOption("--clockid", std::string("monotonic"));
+    opt.SetOption("--clockid", std::string("realtime"));
+    auto args = opt.GetOptionVecString();
+    ASSERT_EQ(args.size(), 2u);
+    EXPECT_EQ(args[0], "--clockid");
+    EXPECT_EQ(args[1], "realtime");
+}
+
+/**
+ * @tc.name: Setup_AppendsTrailingSlash
+ * @tc.desc: Test Setup appends '/' when outputDir lacks trailing slash
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Setup_AppendsTrailingSlash, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    EXPECT_TRUE(client.Setup("/data/local/tmp"));
+    EXPECT_EQ(client.GetOutputDir(), "/data/local/tmp/");
+}
+
+/**
+ * @tc.name: Setup_EmptyOutputDirFallsBack
+ * @tc.desc: Test Setup with empty outputDir falls back to current path
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Setup_EmptyOutputDirFallsBack, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    EXPECT_TRUE(client.Setup(""));
+    EXPECT_EQ(client.GetOutputDir(), "./");
+}
+
+/**
+ * @tc.name: Setup_NonWritableDirFallsBack
+ * @tc.desc: Test Setup falls back to current path when outputDir is not writable
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Setup_NonWritableDirFallsBack, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    EXPECT_TRUE(client.Setup("/nonexistent_dir/"));
+    EXPECT_EQ(client.GetOutputDir(), "./");
+}
+
+/**
+ * @tc.name: PrepareExecCmd_NoDebug
+ * @tc.desc: Test PrepareExecCmd without debug or debugMuch mode
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, PrepareExecCmd_NoDebug, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    std::vector<std::string> cmd;
+    client.PrepareExecCmd(cmd);
+    EXPECT_EQ(std::find(cmd.begin(), cmd.end(), "--verbose"), cmd.end());
+    EXPECT_EQ(std::find(cmd.begin(), cmd.end(), "--much"), cmd.end());
+}
+
+/**
+ * @tc.name: PrepareExecCmd_DebugMuchOnly
+ * @tc.desc: Test PrepareExecCmd with debugMuch mode only
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, PrepareExecCmd_DebugMuchOnly, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.SetDebugMuchMode();
+    std::vector<std::string> cmd;
+    client.PrepareExecCmd(cmd);
+    EXPECT_NE(std::find(cmd.begin(), cmd.end(), "--much"), cmd.end());
+    EXPECT_EQ(std::find(cmd.begin(), cmd.end(), "--verbose"), cmd.end());
+}
+
+/**
+ * @tc.name: PrepareExecCmd_DebugPrioritizedOverMuch
+ * @tc.desc: Test PrepareExecCmd prioritizes debug over debugMuch
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, PrepareExecCmd_DebugPrioritizedOverMuch, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.SetDebugMode();
+    client.SetDebugMuchMode();
+    std::vector<std::string> cmd;
+    client.PrepareExecCmd(cmd);
+    EXPECT_NE(std::find(cmd.begin(), cmd.end(), "--verbose"), cmd.end());
+    EXPECT_EQ(std::find(cmd.begin(), cmd.end(), "--much"), cmd.end());
+}
+
+/**
+ * @tc.name: GetExecCmd_WithPipe
+ * @tc.desc: Test GetExecCmd with pipe fds adds pipe arguments
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, GetExecCmd_WithPipe, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    std::vector<std::string> cmd;
+    std::vector<std::string> args = {"-a"};
+    client.GetExecCmd(cmd, 3, 4, args);
+    EXPECT_NE(std::find(cmd.begin(), cmd.end(), "--pipe_input"), cmd.end());
+    EXPECT_NE(std::find(cmd.begin(), cmd.end(), "--pipe_output"), cmd.end());
+}
+
+/**
+ * @tc.name: GetExecCmd_WithoutPipe
+ * @tc.desc: Test GetExecCmd without pipe fds has no pipe arguments
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, GetExecCmd_WithoutPipe, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    std::vector<std::string> cmd;
+    std::vector<std::string> args = {"-a"};
+    client.GetExecCmd(cmd, args);
+    EXPECT_EQ(std::find(cmd.begin(), cmd.end(), "--pipe_input"), cmd.end());
+    EXPECT_EQ(std::find(cmd.begin(), cmd.end(), "--pipe_output"), cmd.end());
+}
+
+/**
+ * @tc.name: Start_WithArgs_NotReady
+ * @tc.desc: Test Start(args) returns false when client not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Start_WithArgs_NotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    std::vector<std::string> args = {"-a"};
+    EXPECT_FALSE(client.Start(args, false));
+}
+
+/**
+ * @tc.name: StartRun_NotReady
+ * @tc.desc: Test StartRun returns false when client not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, StartRun_NotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    EXPECT_FALSE(client.StartRun());
+}
+
+/**
+ * @tc.name: Pause_NotReady
+ * @tc.desc: Test Pause returns false when client not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Pause_NotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    EXPECT_FALSE(client.Pause());
+}
+
+/**
+ * @tc.name: Resume_NotReady
+ * @tc.desc: Test Resume returns false when client not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Resume_NotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    EXPECT_FALSE(client.Resume());
+}
+
+/**
+ * @tc.name: Output_NotReady
+ * @tc.desc: Test Output returns false when client not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Output_NotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    EXPECT_FALSE(client.Output());
+}
+
+/**
+ * @tc.name: Stop_NotReady
+ * @tc.desc: Test Stop returns false when client not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Stop_NotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    EXPECT_FALSE(client.Stop());
+}
+
+/**
+ * @tc.name: RunHiperfCmdSync_NotReady
+ * @tc.desc: Test RunHiperfCmdSync returns false when client not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, RunHiperfCmdSync_NotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.ready_ = false;
+    HiperfClient::RecordOption opt;
+    opt.SetTimeStopSec(1);
+    EXPECT_FALSE(client.RunHiperfCmdSync(opt));
+}
+
+/**
+ * @tc.name: SendCommandAndWait_FdNotReady
+ * @tc.desc: Test SendCommandAndWait returns false when fd not ready
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, SendCommandAndWait_FdNotReady, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.clientToServerFd_ = -1;
+    EXPECT_FALSE(client.SendCommandAndWait("PAUSE\n"));
+}
+
+/**
+ * @tc.name: KillChild_NoChildren
+ * @tc.desc: Test KillChild is no-op when no children running
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, KillChild_NoChildren, TestSize.Level2)
+{
+    HiperfClient::Client client;
+    client.clientToServerFd_ = -1;
+    client.serverToClientFd_ = -1;
+    client.hiperfPid_ = -1;
+    client.hperfPrePid_ = -1;
+    client.KillChild();
+    EXPECT_EQ(client.clientToServerFd_, -1);
+    EXPECT_EQ(client.hiperfPid_.load(), -1);
+}
+
+/**
+ * @tc.name: ParentWait_ChildExitsZero
+ * @tc.desc: Test ParentWait returns true when child exits with zero
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, ParentWait_ChildExitsZero, TestSize.Level2)
+{
+    pid_t pid = fork();
+    ASSERT_GE(pid, 0);
+    if (pid == 0) {
+        _exit(0);
+    }
+    pid_t wpid = 0;
+    int childStatus = 0;
+    HiperfClient::Client client;
+    EXPECT_TRUE(client.ParentWait(wpid, pid, childStatus));
+}
+
+/**
+ * @tc.name: ParentWait_ChildExitsNonZero
+ * @tc.desc: Test ParentWait returns false when child exits with non-zero
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, ParentWait_ChildExitsNonZero, TestSize.Level2)
+{
+    pid_t pid = fork();
+    ASSERT_GE(pid, 0);
+    if (pid == 0) {
+        _exit(1);
+    }
+    pid_t wpid = 0;
+    int childStatus = 0;
+    HiperfClient::Client client;
+    EXPECT_FALSE(client.ParentWait(wpid, pid, childStatus));
+}
+
+/**
+ * @tc.name: ParentWait_ChildKilledBySignal
+ * @tc.desc: Test ParentWait returns false when child killed by signal
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, ParentWait_ChildKilledBySignal, TestSize.Level2)
+{
+    pid_t pid = fork();
+    ASSERT_GE(pid, 0);
+    if (pid == 0) {
+        raise(SIGTERM);
+        _exit(1);
+    }
+    pid_t wpid = 0;
+    int childStatus = 0;
+    HiperfClient::Client client;
+    EXPECT_FALSE(client.ParentWait(wpid, pid, childStatus));
+}
+
+/**
+ * @tc.name: WaitCommandReply_TimeoutReturnsFalse
+ * @tc.desc: Test WaitCommandReply returns false on timeout with no data
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, WaitCommandReply_TimeoutReturnsFalse, TestSize.Level2)
+{
+    int pipefd[2];
+    ASSERT_EQ(pipe(pipefd), 0);
+    HiperfClient::Client client;
+    client.serverToClientFd_ = pipefd[0];
+    EXPECT_FALSE(client.WaitCommandReply(std::chrono::milliseconds(100)));
+    client.serverToClientFd_ = -1;
+    close(pipefd[0]);
+    close(pipefd[1]);
+}
+
+/**
+ * @tc.name: Start_RecordOption_WithSyncStoppable
+ * @tc.desc: Test Start(RecordOption) with SyncCmdStoppable exercises RunCmdSyncStoppable
+ * @tc.type: FUNC
+ */
+HWTEST_F(HiperfClientTest, Start_RecordOption_WithSyncStoppable, TestSize.Level1)
+{
+    HiperfClient::RecordOption opt;
+    std::vector<pid_t> selectPids = {getpid()};
+    opt.SetSelectPids(selectPids);
+    opt.SetTimeStopSec(1);
+    opt.SetSyncCmdStoppable(true);
+    HiperfClient::Client myHiperf;
+    ASSERT_TRUE(myHiperf.IsReady());
+    EXPECT_TRUE(myHiperf.Start(opt));
 }
 } // namespace HiPerf
 } // namespace Developtools

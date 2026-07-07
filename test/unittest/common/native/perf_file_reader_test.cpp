@@ -182,6 +182,132 @@ HWTEST_F(PerfFileReaderTest, ReadIdsForAttr_NoZero, TestSize.Level1)
     fclose(fp);
     unlink(tempFile.c_str());
 }
+
+/**
+ * @tc.name: Instance_RealPerfData
+ * @tc.desc: Test Instance with real perf.data covers ReadFileHeader and ReadAttrSection
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfFileReaderTest, Instance_RealPerfData, TestSize.Level0)
+{
+    const std::string fileName = "/data/test/resource/testdata/perf.data";
+    if (access(fileName.c_str(), R_OK) != 0) {
+        printf("perf.data not exist.\n");
+        return;
+    }
+    auto reader = PerfFileReader::Instance(fileName);
+    ASSERT_NE(reader, nullptr);
+    EXPECT_TRUE(reader->IsValidDataFile());
+    EXPECT_FALSE(reader->IsGzipFile());
+    EXPECT_GT(reader->GetFeatures().size(), 0u);
+    EXPECT_GT(reader->GetAttrSection().size(), 0u);
+}
+
+/**
+ * @tc.name: ReadDataSection_RealPerfData
+ * @tc.desc: Test ReadDataSection with real perf.data covers ReadRecord and callback
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfFileReaderTest, ReadDataSection_RealPerfData, TestSize.Level0)
+{
+    const std::string fileName = "/data/test/resource/testdata/perf.data";
+    if (access(fileName.c_str(), R_OK) != 0) {
+        printf("perf.data not exist.\n");
+        return;
+    }
+    auto reader = PerfFileReader::Instance(fileName);
+    ASSERT_NE(reader, nullptr);
+    int recordCount = 0;
+    ProcessRecordCB callback = [&recordCount](PerfEventRecord& record) -> bool {
+        recordCount++;
+        return true;
+    };
+    reader->ReadDataSection(callback);
+    EXPECT_GT(recordCount, 0);
+}
+
+/**
+ * @tc.name: ReadFeatureSection_RealPerfData
+ * @tc.desc: Test ReadFeatureSection with real perf.data covers feature section parsing
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfFileReaderTest, ReadFeatureSection_RealPerfData, TestSize.Level1)
+{
+    const std::string fileName = "/data/test/resource/testdata/perf.data";
+    if (access(fileName.c_str(), R_OK) != 0) {
+        printf("perf.data not exist.\n");
+        return;
+    }
+    auto reader = PerfFileReader::Instance(fileName);
+    ASSERT_NE(reader, nullptr);
+    EXPECT_TRUE(reader->ReadFeatureSection());
+    EXPECT_GE(reader->GetFeatureSections().size(), 0u);
+}
+
+/**
+ * @tc.name: GetFeatureString_RealPerfData
+ * @tc.desc: Test GetFeatureString with real perf.data covers GetFeatureSection and ToString
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfFileReaderTest, GetFeatureString_RealPerfData, TestSize.Level1)
+{
+    const std::string fileName = "/data/test/resource/testdata/perf.data";
+    if (access(fileName.c_str(), R_OK) != 0) {
+        printf("perf.data not exist.\n");
+        return;
+    }
+    auto reader = PerfFileReader::Instance(fileName);
+    ASSERT_NE(reader, nullptr);
+    reader->ReadFeatureSection();
+    const std::string archStr = reader->GetFeatureString(FEATURE::ARCH);
+    EXPECT_FALSE(archStr.empty());
+    const std::string nonStr = reader->GetFeatureString(FEATURE::BUILD_ID);
+    EXPECT_TRUE(nonStr.empty());
+}
+
+/**
+ * @tc.name: GetFeatureSection_NotFound
+ * @tc.desc: Test GetFeatureSection returns nullptr when feature not found
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfFileReaderTest, GetFeatureSection_NotFound, TestSize.Level2)
+{
+    const std::string fileName = "/data/test/resource/testdata/perf.data";
+    if (access(fileName.c_str(), R_OK) != 0) {
+        printf("perf.data not exist.\n");
+        return;
+    }
+    auto reader = PerfFileReader::Instance(fileName);
+    ASSERT_NE(reader, nullptr);
+    EXPECT_EQ(reader->GetFeatureSection(FEATURE::RESERVED), nullptr);
+}
+
+/**
+ * @tc.name: ReadIdsForAttr_SizeZero
+ * @tc.desc: Test ReadIdsForAttr returns true when attr.ids.size is zero
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfFileReaderTest, ReadIdsForAttr_SizeZero, TestSize.Level2)
+{
+    perf_file_attr attr;
+    attr.ids.size = 0;
+    std::vector<uint64_t> v;
+    PerfFileReader reader("", nullptr);
+    EXPECT_TRUE(reader.ReadIdsForAttr(attr, &v));
+    EXPECT_EQ(v.size(), 0u);
+}
+
+/**
+ * @tc.name: GetHeader_Default
+ * @tc.desc: Test GetHeader returns default header when no file read
+ * @tc.type: FUNC
+ */
+HWTEST_F(PerfFileReaderTest, GetHeader_Default, TestSize.Level2)
+{
+    PerfFileReader reader("", nullptr);
+    const perf_file_header &header = reader.GetHeader();
+    EXPECT_EQ(header.attrSize, (uint64_t)sizeof(perf_file_attr));
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

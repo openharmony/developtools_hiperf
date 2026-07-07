@@ -20,6 +20,7 @@
 #include <hilog/log.h>
 #include <random>
 #include <unistd.h>
+#include "unwinder_config.h"
 
 using namespace testing::ext;
 
@@ -1370,6 +1371,745 @@ HWTEST_F(SymbolsFileTest, TestCJFileSymbolsCreate, TestSize.Level2)
     auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_CJ_FILE);
     ASSERT_NE(symbolsFile, nullptr);
     EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_CJ_FILE);
+}
+
+/**
+ * @tc.name: TestUpdateBuildIdIfMatchBothEmpty
+ * @tc.desc: Test UpdateBuildIdIfMatch when both buildId_ and buildId are empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestUpdateBuildIdIfMatchBothEmpty, TestSize.Level2)
+{
+    auto file = SymbolsFile::CreateSymbolsFile();
+    file->buildId_ = "";
+    bool result = file->UpdateBuildIdIfMatch("");
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(file->buildId_.empty(), true);
+}
+
+/**
+ * @tc.name: TestUpdateBuildIdIfMatchEmptyBuildIdSetNew
+ * @tc.desc: Test UpdateBuildIdIfMatch when buildId_ is empty but buildId is not
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestUpdateBuildIdIfMatchEmptyBuildIdSetNew, TestSize.Level2)
+{
+    auto file = SymbolsFile::CreateSymbolsFile();
+    file->buildId_ = "";
+    bool result = file->UpdateBuildIdIfMatch("new_build_id");
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(file->buildId_, "new_build_id");
+}
+
+/**
+ * @tc.name: TestUpdateBuildIdIfMatchNonEmptyMatch
+ * @tc.desc: Test UpdateBuildIdIfMatch when buildId_ matches buildId
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestUpdateBuildIdIfMatchNonEmptyMatch, TestSize.Level2)
+{
+    auto file = SymbolsFile::CreateSymbolsFile();
+    file->buildId_ = "existing_id";
+    bool result = file->UpdateBuildIdIfMatch("existing_id");
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(file->buildId_, "existing_id");
+}
+
+/**
+ * @tc.name: TestSearchReadableFileEmptyFilePath
+ * @tc.desc: Test SearchReadableFile with empty filePath
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSearchReadableFileEmptyFilePath, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    std::vector<std::string> searchPaths = {PATH_RESOURCE_TEST_DATA};
+    std::string result = symbolsFile->SearchReadableFile(searchPaths, "");
+    EXPECT_EQ(result.empty(), true);
+}
+
+/**
+ * @tc.name: TestSearchReadableFileEmptySearchPath
+ * @tc.desc: Test SearchReadableFile with empty searchPath in vector
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSearchReadableFileEmptySearchPath, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    std::vector<std::string> searchPaths = {"", PATH_RESOURCE_TEST_DATA};
+    std::string result = symbolsFile->SearchReadableFile(searchPaths, TEST_FILE_ELF);
+    EXPECT_EQ(result.empty(), false);
+}
+
+/**
+ * @tc.name: TestSearchReadableFileNotFound
+ * @tc.desc: Test SearchReadableFile when file not found in any path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSearchReadableFileNotFound, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    std::vector<std::string> searchPaths = {PATH_RESOURCE_TEST_DATA};
+    std::string result = symbolsFile->SearchReadableFile(searchPaths, "nonexistent_file");
+    EXPECT_EQ(result.empty(), true);
+}
+
+/**
+ * @tc.name: TestFindSymbolFileEmptySymbolFilePath
+ * @tc.desc: Test FindSymbolFile with empty symbolFilePath
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestFindSymbolFileEmptySymbolFilePath, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    symbolsFile->filePath_ = TEST_FILE_ELF;
+    std::vector<std::string> searchPaths;
+    std::string result = symbolsFile->FindSymbolFile(searchPaths, "");
+    // Should use default filePath_ when symbolFilePath is empty
+    EXPECT_EQ(result.empty(), true);
+}
+
+/**
+ * @tc.name: TestFindSymbolFileOnRecordingMode
+ * @tc.desc: Test FindSymbolFile in recording mode with direct path access
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestFindSymbolFileOnRecordingMode, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    symbolsFile->filePath_ = "";
+    SymbolsFile::onRecording_ = true;
+    std::vector<std::string> searchPaths;
+    std::string fullPath = PATH_RESOURCE_TEST_DATA + TEST_FILE_ELF;
+    std::string result = symbolsFile->FindSymbolFile(searchPaths, fullPath);
+    EXPECT_EQ(result.empty(), false);
+}
+
+/**
+ * @tc.name: TestGetSymbolWithVaddrNotFound
+ * @tc.desc: Test GetSymbolWithVaddr when symbol not found
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetSymbolWithVaddrNotFound, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    // Empty symbols
+    auto symbol = symbolsFile->GetSymbolWithVaddr(0x1000);
+    EXPECT_EQ(symbol.IsValid(), false);
+}
+
+/**
+ * @tc.name: TestGetSymbolWithVaddrEndOfSymbols
+ * @tc.desc: Test GetSymbolWithVaddr at end of symbols vector
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetSymbolWithVaddrEndOfSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    DfxSymbol symbol1(0x1000, 0x100, "func1", "");
+    DfxSymbol symbol2(0x2000, 0x100, "func2", "");
+    symbolsFile->AddSymbol(symbol1);
+    symbolsFile->AddSymbol(symbol2);
+    
+    // Search for vaddr beyond last symbol
+    auto result = symbolsFile->GetSymbolWithVaddr(0x3000);
+    EXPECT_EQ(result.IsValid(), false);
+}
+
+/**
+ * @tc.name: TestGetSymbolWithVaddrExactMatch
+ * @tc.desc: Test GetSymbolWithVaddr with exact vaddr match
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetSymbolWithVaddrExactMatch, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    DfxSymbol symbol1(0x1000, 0x100, "func1", "test_mod");
+    symbolsFile->AddSymbol(symbol1);
+    symbolsFile->AdjustSymbols();
+    
+    auto result = symbolsFile->GetSymbolWithVaddr(0x1000);
+    EXPECT_EQ(result.IsValid(), true);
+    EXPECT_EQ(result.funcVaddr_, 0x1000u);
+}
+
+/**
+ * @tc.name: TestGetSymbolWithVaddrWithinRange
+ * @tc.desc: Test GetSymbolWithVaddr within symbol range
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetSymbolWithVaddrWithinRange, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    DfxSymbol symbol1(0x1000, 0x200, "func1", "test_mod"); // range: 0x1000-0x1200
+    symbolsFile->AddSymbol(symbol1);
+    symbolsFile->AdjustSymbols();
+    
+    auto result = symbolsFile->GetSymbolWithVaddr(0x1100);
+    EXPECT_EQ(result.IsValid(), true);
+    EXPECT_EQ(result.funcVaddr_, 0x1000u);
+    EXPECT_EQ(result.offsetToVaddr_, 0x100u);
+}
+
+/**
+ * @tc.name: TestAdjustSymbolsWithDuplicates
+ * @tc.desc: Test AdjustSymbols removes duplicate symbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestAdjustSymbolsWithDuplicates, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    DfxSymbol symbol1(0x1000, 0x100, "func1", "");
+    DfxSymbol symbol2(0x1000, 0x100, "func1_dup", ""); // duplicate vaddr
+    DfxSymbol symbol3(0x2000, 0x100, "func2", "");
+    
+    symbolsFile->AddSymbol(symbol1);
+    symbolsFile->AddSymbol(symbol2);
+    symbolsFile->AddSymbol(symbol3);
+    symbolsFile->AdjustSymbols();
+    
+    auto symbols = symbolsFile->GetSymbols();
+    // After AdjustSymbols, duplicates should be removed
+    EXPECT_LE(symbols.size(), 2u);
+}
+
+/**
+ * @tc.name: TestCheckPathReadableWithAccess
+ * @tc.desc: Test CheckPathReadable when access succeeds
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestCheckPathReadableWithAccess, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    bool result = symbolsFile->CheckPathReadable(PATH_RESOURCE_TEST_DATA);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.name: TestCheckPathReadableNonExistent
+ * @tc.desc: Test CheckPathReadable for non-existent path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestCheckPathReadableNonExistent, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    bool result = symbolsFile->CheckPathReadable("/nonexistent/path/test.txt");
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.name: TestSetSymbolsFilePathAllInvalid
+ * @tc.desc: Test setSymbolsFilePath with all invalid paths
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSetSymbolsFilePathAllInvalid, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    std::vector<std::string> invalidPaths = {"/nonexistent1", "/nonexistent2", "/nonexistent3"};
+    bool result = symbolsFile->setSymbolsFilePath(invalidPaths);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.name: TestLoadSymbolsFromSavedHapFile
+ * @tc.desc: Test LoadSymbolsFromSaved for HAP file type
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestLoadSymbolsFromSavedHapFile, TestSize.Level2)
+{
+    SymbolFileStruct sfs;
+    sfs.filePath_ = "test.hap";
+    sfs.symbolType_ = SYMBOL_HAP_FILE;
+    sfs.textExecVaddr_ = 0x1000;
+    sfs.textExecVaddrFileOffset_ = 0x100;
+    sfs.buildId_ = "hap_build_id";
+    sfs.symbolStructs_.emplace_back(0x1000, 0x50, "hap_func1");
+    sfs.symbolStructs_.emplace_back(0x2000, 0x60, "hap_func2");
+    
+    auto symbolsFile = SymbolsFile::LoadSymbolsFromSaved(sfs);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_HAP_FILE);
+    EXPECT_EQ(symbolsFile->filePath_, "test.hap");
+    EXPECT_EQ(symbolsFile->GetSymbols().size(), 2u);
+}
+
+/**
+ * @tc.name: TestLoadSymbolsFromSavedJsvmFile
+ * @tc.desc: Test LoadSymbolsFromSaved for JSVM file type
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestLoadSymbolsFromSavedJsvmFile, TestSize.Level2)
+{
+    SymbolFileStruct sfs;
+    sfs.filePath_ = "[anon:JSVM_JIT]";
+    sfs.symbolType_ = SYMBOL_JSVM_V8_FILE;
+    sfs.textExecVaddr_ = 0x1000;
+    sfs.textExecVaddrFileOffset_ = 0;
+    sfs.buildId_ = "jsvm_build_id";
+    sfs.symbolStructs_.emplace_back(0x1000, 0x100, "jsvm_func");
+    
+    auto symbolsFile = SymbolsFile::LoadSymbolsFromSaved(sfs);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_JSVM_V8_FILE);
+}
+
+/**
+ * @tc.name: TestLoadSymbolsFromSavedArkwebFile
+ * @tc.desc: Test LoadSymbolsFromSaved for Arkweb file type
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestLoadSymbolsFromSavedArkwebFile, TestSize.Level2)
+{
+    SymbolFileStruct sfs;
+    sfs.filePath_ = "[anon:ARKWEB_JIT]";
+    sfs.symbolType_ = SYMBOL_ARKWEB_V8_FILE;
+    sfs.textExecVaddr_ = 0x1000;
+    sfs.textExecVaddrFileOffset_ = 0;
+    sfs.buildId_ = "arkweb_build_id";
+    sfs.symbolStructs_.emplace_back(0x1000, 0x100, "arkweb_func");
+    
+    auto symbolsFile = SymbolsFile::LoadSymbolsFromSaved(sfs);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_ARKWEB_V8_FILE);
+}
+
+/**
+ * @tc.name: TestExportSymbolToFileFormatMultipleMatched
+ * @tc.desc: Test ExportSymbolToFileFormat with multiple matched symbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestExportSymbolToFileFormatMultipleMatched, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    symbolsFile->filePath_ = "test_elf";
+    symbolsFile->symbolFileType_ = SYMBOL_ELF_FILE;
+    symbolsFile->textExecVaddrFileOffset_ = 0x1000;
+    symbolsFile->buildId_ = "test_build_id";
+    
+    DfxSymbol symbol1(0x1000, 0x50, "func1", "");
+    DfxSymbol symbol2(0x2000, 0x60, "func2", "");
+    DfxSymbol symbol3(0x3000, 0x70, "func3", "");
+    
+    symbolsFile->symbols_.push_back(symbol1);
+    symbolsFile->symbols_.push_back(symbol2);
+    symbolsFile->symbols_.push_back(symbol3);
+    
+    // Access symbols to make them matched
+    symbolsFile->GetSymbolWithVaddr(0x1000);
+    symbolsFile->GetSymbolWithVaddr(0x2000);
+    
+    SymbolFileStruct sfs;
+    symbolsFile->ExportSymbolToFileFormat(sfs);
+    
+    EXPECT_EQ(sfs.filePath_, "test_elf");
+    EXPECT_EQ(sfs.symbolType_, SYMBOL_ELF_FILE);
+    EXPECT_GE(sfs.symbolStructs_.size(), 2u);
+}
+
+/**
+ * @tc.name: TestSortMatchedSymbols
+ * @tc.desc: Test SortMatchedSymbols with multiple matched symbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSortMatchedSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    
+    DfxSymbol symbol1(0x3000, 0x50, "func3", "");
+    DfxSymbol symbol2(0x1000, 0x50, "func1", "");
+    DfxSymbol symbol3(0x2000, 0x50, "func2", "");
+    
+    symbolsFile->symbols_.push_back(symbol2);
+    symbolsFile->symbols_.push_back(symbol3);
+    symbolsFile->symbols_.push_back(symbol1);
+    symbolsFile->AdjustSymbols();
+    
+    // Make symbols matched
+    symbolsFile->GetSymbolWithVaddr(0x3000);
+    symbolsFile->GetSymbolWithVaddr(0x1000);
+    symbolsFile->GetSymbolWithVaddr(0x2000);
+    symbolsFile->SortMatchedSymbols();
+    
+    // matchedSymbols_ should be sorted
+    auto matchedSymbols = symbolsFile->GetMatchedSymbols();
+    EXPECT_GE(matchedSymbols.size(), 3u);
+    
+    // After SortMatchedSymbols (called internally), should be sorted
+    for (size_t i = 1; i < matchedSymbols.size(); i++) {
+        EXPECT_LE(matchedSymbols[i-1]->funcVaddr_, matchedSymbols[i]->funcVaddr_);
+    }
+}
+
+/**
+ * @tc.name: TestGetVaddrInSymbolsDefault
+ * @tc.desc: Test GetVaddrInSymbols default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetVaddrInSymbolsDefault, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    uint64_t ip = 0x1234;
+    uint64_t mapStart = 0x1000;
+    uint64_t mapOffset = 0x100;
+    
+    uint64_t result = symbolsFile->GetVaddrInSymbols(ip, mapStart, mapOffset);
+    // Default implementation returns ip unchanged
+    EXPECT_EQ(result, ip);
+}
+
+/**
+ * @tc.name: TestGetVaddrByLoadBase
+ * @tc.desc: Test GetVaddrByLoadBase calculation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetVaddrByLoadBase, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    
+    uint64_t ip = 0x2000;
+    uint64_t loadBase = 0x1000;
+    uint64_t result = symbolsFile->GetVaddrByLoadBase(ip, loadBase);
+    EXPECT_EQ(result, 0x1000u);
+    
+    // Edge case: ip equals loadBase
+    result = symbolsFile->GetVaddrByLoadBase(0x1000, 0x1000);
+    EXPECT_EQ(result, 0u);
+}
+
+/**
+ * @tc.name: TestSymbolsLoadedFlag
+ * @tc.desc: Test SymbolsLoaded flag after adding symbols
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSymbolsLoadedFlag, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    EXPECT_EQ(symbolsFile->SymbolsLoaded(), false);
+    
+    DfxSymbol symbol(0x1000, 0x100, "test_func", "");
+    symbolsFile->AddSymbol(symbol);
+    
+    EXPECT_EQ(symbolsFile->SymbolsLoaded(), true);
+}
+
+/**
+ * @tc.name: TestSetMapsInfo
+ * @tc.desc: Test SetMapsInfo function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSetMapsInfo, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    
+    uint64_t begin = 0x1000;
+    uint64_t end = 0x2000;
+    uint64_t offset = 0x100;
+    uint32_t prot = PROT_READ | PROT_EXEC;
+    std::string name = "test.so";
+    
+    auto map = std::make_shared<DfxMap>(begin, end, offset, prot, name);
+    symbolsFile->SetMapsInfo(map);
+    
+    EXPECT_EQ(symbolsFile->map_, map);
+    EXPECT_EQ(symbolsFile->map_->name, "test.so");
+}
+
+/**
+ * @tc.name: TestCreateSymbolsFileWithNegativeType
+ * @tc.desc: Test CreateSymbolsFile with negative type value
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestCreateSymbolsFileWithNegativeType, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(static_cast<SymbolsFileType>(-100));
+    ASSERT_NE(symbolsFile, nullptr);
+    // Negative types should default to UNKNOWN
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_UNKNOW_FILE);
+}
+
+/**
+ * @tc.name: TestCreateSymbolsFileByPathKernelModule
+ * @tc.desc: Test CreateSymbolsFile by path with .ko extension
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestCreateSymbolsFileByPathKernelModule, TestSize.Level2)
+{
+    std::string koPath = "test_module.ko";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(koPath);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_KERNEL_MODULE_FILE);
+}
+
+/**
+ * @tc.name: TestCreateSymbolsFileByPathDevhost
+ * @tc.desc: Test CreateSymbolsFile by path with devhost prefix
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestCreateSymbolsFileByPathDevhost, TestSize.Level2)
+{
+    std::string devhostPath = DEVHOST_LINUX_FILE_NAME;
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(devhostPath);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_KERNEL_THREAD_FILE);
+}
+
+/**
+ * @tc.name: TestCreateSymbolsFileByPathDevhostPrefix
+ * @tc.desc: Test CreateSymbolsFile by path with devhost linux prefix
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestCreateSymbolsFileByPathDevhostPrefix, TestSize.Level2)
+{
+    std::string devhostPath = "/liblinux/test.so";
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(devhostPath);
+    ASSERT_NE(symbolsFile, nullptr);
+    EXPECT_EQ(symbolsFile->symbolFileType_, SYMBOL_KERNEL_THREAD_FILE);
+}
+
+/**
+ * @tc.name: TestLoadDebugInfoDefaultFalse
+ * @tc.desc: Test LoadDebugInfo returns false for default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestLoadDebugInfoDefaultFalse, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    bool result = symbolsFile->LoadDebugInfo();
+    // Default virtual function implementation
+    EXPECT_EQ(result, false);
+    EXPECT_EQ(symbolsFile->debugInfoLoaded_, true);
+}
+
+/**
+ * @tc.name: TestGetPtLoadsDefaultEmpty
+ * @tc.desc: Test GetPtLoads returns empty for default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetPtLoadsDefaultEmpty, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    auto ptLoads = symbolsFile->GetPtLoads();
+    EXPECT_EQ(ptLoads.size(), 0u);
+}
+
+/**
+ * @tc.name: TestGetElfFileDefaultNull
+ * @tc.desc: Test GetElfFile returns nullptr for default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetElfFileDefaultNull, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    auto elfFile = symbolsFile->GetElfFile();
+    EXPECT_EQ(elfFile, nullptr);
+}
+
+/**
+ * @tc.name: TestEnableMiniDebugInfo
+ * @tc.desc: Test EnableMiniDebugInfo function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestEnableMiniDebugInfo, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    symbolsFile->EnableMiniDebugInfo();
+    EXPECT_TRUE(UnwinderConfig::GetEnableMiniDebugInfo());
+}
+
+/**
+ * @tc.name: TestIsAbcDefaultFalse
+ * @tc.desc: Test IsAbc returns false for default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestIsAbcDefaultFalse, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    EXPECT_EQ(symbolsFile->IsAbc(), false);
+}
+
+/**
+ * @tc.name: TestIsJsvmDefaultFalse
+ * @tc.desc: Test IsJsvm returns false for default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestIsJsvmDefaultFalse, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    EXPECT_EQ(symbolsFile->IsJsvm(), false);
+}
+
+/**
+ * @tc.name: TestIsArkwebDefaultFalse
+ * @tc.desc: Test IsArkweb returns false for default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestIsArkwebDefaultFalse, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    EXPECT_EQ(symbolsFile->IsArkweb(), false);
+}
+
+/**
+ * @tc.name: TestSetBoolValueDefault
+ * @tc.desc: Test SetBoolValue default implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestSetBoolValueDefault, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    // ElfFileSymbols uses base SetBoolValue (no-op), IsAbc stays false
+    EXPECT_FALSE(symbolsFile->IsAbc());
+    symbolsFile->SetBoolValue(true);
+    EXPECT_FALSE(symbolsFile->IsAbc());
+    symbolsFile->SetBoolValue(false);
+    EXPECT_FALSE(symbolsFile->IsAbc());
+}
+
+/**
+ * @tc.name: TestGetMatchedSymbolsEmpty
+ * @tc.desc: Test GetMatchedSymbols when no symbols matched
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetMatchedSymbolsEmpty, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    auto matchedSymbols = symbolsFile->GetMatchedSymbols();
+    EXPECT_EQ(matchedSymbols.size(), 0u);
+}
+
+/**
+ * @tc.name: TestJavaFileSymbolsLoadSymbols
+ * @tc.desc: Test JavaFileSymbols LoadSymbols returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestJavaFileSymbolsLoadSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_JAVA_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    bool result = symbolsFile->LoadSymbols();
+    EXPECT_EQ(result, false);
+    EXPECT_EQ(symbolsFile->SymbolsLoaded(), true);
+}
+
+/**
+ * @tc.name: TestJSFileSymbolsLoadSymbols
+ * @tc.desc: Test JSFileSymbols LoadSymbols returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestJSFileSymbolsLoadSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_JS_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    bool result = symbolsFile->LoadSymbols();
+    EXPECT_EQ(result, false);
+    EXPECT_EQ(symbolsFile->SymbolsLoaded(), true);
+}
+
+/**
+ * @tc.name: TestUnknowFileSymbolsLoadSymbols
+ * @tc.desc: Test UnknowFileSymbols LoadSymbols returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestUnknowFileSymbolsLoadSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    bool result = symbolsFile->LoadSymbols();
+    EXPECT_EQ(result, false);
+    EXPECT_EQ(symbolsFile->SymbolsLoaded(), true);
+}
+
+/**
+ * @tc.name: TestJavaFileSymbolsGetVaddrInSymbols
+ * @tc.desc: Test JavaFileSymbols GetVaddrInSymbols special implementation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestJavaFileSymbolsGetVaddrInSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_JAVA_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    
+    uint64_t ip = 0x2000;
+    uint64_t mapStart = 0x1000;
+    uint64_t mapPageOffset = 0x100;
+    
+    // JavaFileSymbols: ip - mapStart + mapPageOffset
+    uint64_t expected = ip - mapStart + mapPageOffset;
+    uint64_t result = symbolsFile->GetVaddrInSymbols(ip, mapStart, mapPageOffset);
+    EXPECT_EQ(result, expected);
+}
+
+/**
+ * @tc.name: TestKernelSymbolsGetVaddrInSymbols
+ * @tc.desc: Test KernelSymbols GetVaddrInSymbols returns ip unchanged
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestKernelSymbolsGetVaddrInSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    
+    uint64_t ip = 0x1234;
+    uint64_t mapStart = 0x1000;
+    uint64_t mapPageOffset = 0x100;
+    
+    // KernelSymbols: returns ip unchanged
+    uint64_t result = symbolsFile->GetVaddrInSymbols(ip, mapStart, mapPageOffset);
+    EXPECT_EQ(result, ip);
+}
+
+/**
+ * @tc.name: TestKernelModuleSymbolsGetVaddrInSymbols
+ * @tc.desc: Test KernelModuleSymbols GetVaddrInSymbols returns ip - mapStart
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestKernelModuleSymbolsGetVaddrInSymbols, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_KERNEL_MODULE_FILE);
+    ASSERT_NE(symbolsFile, nullptr);
+    
+    uint64_t ip = 0x2000;
+    uint64_t mapStart = 0x1000;
+    uint64_t mapPageOffset = 0x100; // ignored
+    
+    // KernelModuleSymbols: ip - mapStart
+    uint64_t expected = ip - mapStart;
+    uint64_t result = symbolsFile->GetVaddrInSymbols(ip, mapStart, mapPageOffset);
+    EXPECT_EQ(result, expected);
+}
+
+/**
+ * @tc.name: TestGetSymbolWithPcAndMapDefault
+ * @tc.desc: Test GetSymbolWithPcAndMap default implementation returns empty symbol
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestGetSymbolWithPcAndMapDefault, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_UNKNOW_FILE);
+    uint64_t pc = 0x1000;
+    auto map = std::make_shared<DfxMap>(0x1000, 0x2000, 0, PROT_READ, "test");
+    
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(pc, map);
+    EXPECT_EQ(symbol.IsValid(), false);
+}
+
+/**
+ * @tc.name: TestElfFileSymbolsGetSymbolWithPcAndMap
+ * @tc.desc: Test ElfFileSymbols GetSymbolWithPcAndMap
+ * @tc.type: FUNC
+ */
+HWTEST_F(SymbolsFileTest, TestElfFileSymbolsGetSymbolWithPcAndMap, TestSize.Level2)
+{
+    auto symbolsFile = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    ASSERT_EQ(symbolsFile->setSymbolsFilePath(PATH_RESOURCE_TEST_DATA), true);
+    ASSERT_EQ(symbolsFile->LoadSymbols(nullptr, TEST_FILE_ELF), true);
+    
+    uint64_t pc = 0x1000;
+    auto map = std::make_shared<DfxMap>(0x1000, 0x2000, 0, PROT_READ | PROT_EXEC, "test");
+    
+    auto symbol = symbolsFile->GetSymbolWithPcAndMap(pc, map);
+    // ElfFileSymbols returns empty symbol (not implemented in base ElfFileSymbols)
+    EXPECT_EQ(symbol.IsValid(), false);
 }
 
 } // namespace HiPerf
