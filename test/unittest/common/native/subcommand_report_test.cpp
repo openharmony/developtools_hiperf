@@ -1334,6 +1334,186 @@ HWTEST_F(SubCommandReportTest, GetInstance, TestSize.Level2)
 
     EXPECT_EQ(SubCommandReport::GetInstance().Name(), "report");
 }
+
+/**
+ * @tc.name: VerifyOption_SortKeyCount
+ * @tc.desc: Test VerifyOption returns false when sort key is "count"
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_SortKeyCount, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.reportOption_.sortKeys_ = {"count"};
+    EXPECT_FALSE(reportCmd.VerifyOption());
+}
+
+/**
+ * @tc.name: VerifyOption_SortKeyUnknown
+ * @tc.desc: Test VerifyOption returns false when sort key is unknown
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_SortKeyUnknown, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.reportOption_.sortKeys_ = {"unknown_key"};
+    EXPECT_FALSE(reportCmd.VerifyOption());
+}
+
+/**
+ * @tc.name: VerifyOption_CallStackHeatLimitInvalid
+ * @tc.desc: Test VerifyOption returns false when callStackHeatLimit out of range
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_CallStackHeatLimitInvalid, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.reportOption_.callStackHeatLimit_ = 101.0;
+    EXPECT_FALSE(reportCmd.VerifyOption());
+}
+
+/**
+ * @tc.name: VerifyOption_EmptyRecordFile
+ * @tc.desc: Test VerifyOption returns false when first record file is empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_EmptyRecordFile, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.recordFile_[0] = "";
+    EXPECT_FALSE(reportCmd.VerifyOption());
+}
+
+/**
+ * @tc.name: VerifyOption_DiffConflict
+ * @tc.desc: Test VerifyOption diff with json format keeps diffMode false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_DiffConflict, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.recordFile_[1] = "diff.data";
+    reportCmd.jsonFormat_ = true;
+    EXPECT_TRUE(reportCmd.VerifyOption());
+    EXPECT_FALSE(reportCmd.diffMode_);
+}
+
+/**
+ * @tc.name: VerifyOption_DiffMode
+ * @tc.desc: Test VerifyOption enables diffMode when diff file given without conflict
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_DiffMode, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.recordFile_[1] = "diff.data";
+    EXPECT_TRUE(reportCmd.VerifyOption());
+    EXPECT_TRUE(reportCmd.diffMode_);
+}
+
+/**
+ * @tc.name: VerifyOption_InvalidOutPath
+ * @tc.desc: Test VerifyOption returns false when output path is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_InvalidOutPath, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.reportFile_ = "/data/log/hiperflog/output.txt";
+    EXPECT_FALSE(reportCmd.VerifyOption());
+}
+
+/**
+ * @tc.name: VerifyOption_DefaultProtoFile
+ * @tc.desc: Test VerifyOption sets default proto file name when empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_DefaultProtoFile, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.protobufFormat_ = true;
+    EXPECT_TRUE(reportCmd.VerifyOption());
+    EXPECT_EQ(reportCmd.reportFile_, "perf.proto");
+}
+
+/**
+ * @tc.name: VerifyOption_DefaultJsonFile
+ * @tc.desc: Test VerifyOption sets default json file name when empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyOption_DefaultJsonFile, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.jsonFormat_ = true;
+    EXPECT_TRUE(reportCmd.VerifyOption());
+    EXPECT_EQ(reportCmd.reportFile_, "perf.json");
+}
+
+/**
+ * @tc.name: VerifyDisplayOption_InvalidTid
+ * @tc.desc: Test VerifyDisplayOption returns false when tid is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, VerifyDisplayOption_InvalidTid, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.reportOption_.displayTids_ = {"-1"};
+    EXPECT_FALSE(reportCmd.VerifyDisplayOption());
+}
+
+/**
+ * @tc.name: PrepareOutput_StdoutDefault
+ * @tc.desc: Test PrepareOutput uses stdout when reportFile is empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, PrepareOutput_StdoutDefault, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    EXPECT_TRUE(reportCmd.PrepareOutput());
+    EXPECT_EQ(reportCmd.output_, stdout);
+}
+
+/**
+ * @tc.name: OutputReport_NullOutput
+ * @tc.desc: Test OutputReport returns true when output is null
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, OutputReport_NullOutput, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.output_ = nullptr;
+    EXPECT_TRUE(reportCmd.OutputReport());
+}
+
+/**
+ * @tc.name: ProcessSample_UnknownId
+ * @tc.desc: Test ProcessSample skips sample with unknown id
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, ProcessSample_UnknownId, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    auto sample = std::make_unique<PerfRecordSample>(false, 1, 2, 3);
+    sample->data_.id = 99999;
+    reportCmd.ProcessSample(sample);
+    EXPECT_TRUE(reportCmd.GetReport().configs_.empty());
+}
+
+/**
+ * @tc.name: ProcessSample_BranchMode
+ * @tc.desc: Test ProcessSample with branch mode calls AddReportItemBranch
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandReportTest, ProcessSample_BranchMode, TestSize.Level2)
+{
+    SubCommandReport reportCmd;
+    reportCmd.branch_ = true;
+    reportCmd.GetReport().configs_.emplace_back("event", PERF_TYPE_SOFTWARE, PERF_COUNT_SW_TASK_CLOCK);
+    reportCmd.GetReport().configIdIndexMaps_[7] = 0;
+    auto sample = std::make_unique<PerfRecordSample>(false, 10, 20, 99);
+    sample->data_.id = 7;
+    reportCmd.ProcessSample(sample);
+    EXPECT_GE(reportCmd.GetReport().configs_[0].sampleCount_, 1u);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
