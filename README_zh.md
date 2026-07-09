@@ -102,7 +102,7 @@ host/
     │   │
     │   │										# 下面都是python文件,在PC侧执行
     │   ├── command_script.py					# hiperf 命令行的包装脚本,产生采样数据
-    │   ├── hiperf_utils.py						# 脚本自己的工具类
+    │   ├── hiperf_utils.py						# 脚本工具类
     │   ├── loadlib_test.py						# lib 测试脚本
     │   ├── make_diff.py						# 产生Diff数据的脚本
     │   ├── make_report.py						# 从采样数据产生报告的脚本
@@ -126,7 +126,7 @@ host/
 
 ### 测试代码
 
-我们在 hiperf_example_cmd.cpp 里面提供了一些测试代码，
+hiperf_example_cmd.cpp 中提供了一些测试代码，
 
 用来验证一些采样功能，比如线程调度，内存申请，CPU 负荷等等。
 
