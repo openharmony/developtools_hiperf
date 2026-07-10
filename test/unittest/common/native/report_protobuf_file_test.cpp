@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
+#include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "report_protobuf_file.h"
 #include "report_protobuf_file_test.h"
@@ -66,6 +69,26 @@ void ReportProtobufFileTest::SetUp()
     PrepareSymbolsFile();
 }
 void ReportProtobufFileTest::TearDown() {}
+
+// build a protobuf data file with the same on-disk format as ReportProtobufFileWriter,
+// but with caller controlled (partial) records.
+static void MakeRawProtobufFile(const std::string &fileName,
+                                const std::vector<HiperfRecord> &records)
+{
+    std::ofstream fs(fileName, std::ios::binary | std::ios::trunc);
+    fs.write(FILE_MAGIC, sizeof(FILE_MAGIC) - 1);
+    uint16_t version = FILE_VERSION;
+    fs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+    for (const auto &record : records) {
+        std::string bytes;
+        record.SerializeToString(&bytes);
+        uint32_t len = static_cast<uint32_t>(bytes.size());
+        fs.write(reinterpret_cast<const char *>(&len), sizeof(len));
+        fs.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    }
+    uint32_t zero = 0;
+    fs.write(reinterpret_cast<const char *>(&zero), sizeof(zero));
+}
 
 /**
  * @tc.name: Create
@@ -369,6 +392,263 @@ HWTEST_F(ReportProtobufFileTest, ReadCallBackWithNull, TestSize.Level2)
     protobufOutputFileWriter_->ProcessReportInfo(configNames, workloadCmd);
     protobufOutputFileWriter_->Close();
 
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
+}
+
+/**
+ * @tc.name: WriterWithNullStream
+ * @tc.desc: Close/Write/Create with a null file stream
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, WriterWithNullStream, TestSize.Level2)
+{
+    protobufOutputFileWriter_->protobufFileStream_.reset(nullptr);
+    char buffer[4] = {0};
+    EXPECT_EQ(protobufOutputFileWriter_->Write(buffer, sizeof(buffer)), false);
+    EXPECT_EQ(protobufOutputFileWriter_->Create("perf.proto"), false);
+    protobufOutputFileWriter_->Close();
+}
+
+/**
+ * @tc.name: WriteWithoutOpen
+ * @tc.desc: Write before any file is opened
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, WriteWithoutOpen, TestSize.Level2)
+{
+    char buffer[4] = {0};
+    EXPECT_EQ(protobufOutputFileWriter_->Write(buffer, sizeof(buffer)), false);
+}
+
+/**
+ * @tc.name: ProcessRecordSampleType
+ * @tc.desc: ProcessRecord with a PERF_RECORD_SAMPLE record
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, ProcessRecordSampleType, TestSize.Level2)
+{
+    // HLOGF is LEVEL_FATAL and would call exit(-1); disable fatal-exit temporarily
+    // so the SAMPLE branch can be exercised without killing the test process.
+    DebugLogger::GetInstance()->exitOnFatal_ = false;
+    PerfRecordSample sample(false, 1, 2, 100, 200u);
+    EXPECT_EQ(protobufOutputFileWriter_->ProcessRecord(sample), true);
+    DebugLogger::GetInstance()->exitOnFatal_ = true;
+}
+
+/**
+ * @tc.name: ProcessSampleRecordNegativeSymbolIndex
+ * @tc.desc: ProcessSampleRecord with a negative symbolFileIndex callframe
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, ProcessSampleRecordNegativeSymbolIndex, TestSize.Level2)
+{
+    std::string fileName = "perf.proto";
+    PerfRecordSample sample(false, 1, 2, 100, 200u);
+    sample.callFrames_.emplace_back(0x1, 0x1234, "user_symbol", "first_user_func");
+    sample.callFrames_.at(0).symbolFileIndex = -1;
+    ASSERT_EQ(protobufOutputFileWriter_->Create(fileName), true);
+    EXPECT_EQ(protobufOutputFileWriter_->ProcessSampleRecord(sample, 0u, symbolsFiles_), true);
+    protobufOutputFileWriter_->Close();
+}
+
+/**
+ * @tc.name: ReadNotOpenStream
+ * @tc.desc: Read before any file is opened
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, ReadNotOpenStream, TestSize.Level2)
+{
+    char buffer[4] = {0};
+    EXPECT_EQ(protobufInputFileReader_->Read(buffer, sizeof(buffer)), 0);
+}
+
+/**
+ * @tc.name: CheckFileMagicWrongMagic
+ * @tc.desc: Dump a file whose magic does not match
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, CheckFileMagicWrongMagic, TestSize.Level2)
+{
+    std::string fileName = "perf_bad_magic.proto";
+    {
+        std::ofstream fs(fileName, std::ios::binary | std::ios::trunc);
+        std::string badMagic(sizeof(FILE_MAGIC) - 1, 'X');
+        fs.write(badMagic.data(), badMagic.size());
+        uint16_t version = FILE_VERSION;
+        fs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+    }
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), false);
+}
+
+/**
+ * @tc.name: CheckFileMagicWrongVersion
+ * @tc.desc: Dump a file whose version does not match
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, CheckFileMagicWrongVersion, TestSize.Level2)
+{
+    std::string fileName = "perf_bad_version.proto";
+    {
+        std::ofstream fs(fileName, std::ios::binary | std::ios::trunc);
+        fs.write(FILE_MAGIC, sizeof(FILE_MAGIC) - 1);
+        uint16_t badVersion = FILE_VERSION + 1;
+        fs.write(reinterpret_cast<const char *>(&badVersion), sizeof(badVersion));
+    }
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), false);
+}
+
+/**
+ * @tc.name: DumpTruncatedNoRecord
+ * @tc.desc: Dump a file truncated before any record
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpTruncatedNoRecord, TestSize.Level2)
+{
+    std::string fileName = "perf_truncated.proto";
+    {
+        std::ofstream fs(fileName, std::ios::binary | std::ios::trunc);
+        fs.write(FILE_MAGIC, sizeof(FILE_MAGIC) - 1);
+        uint16_t version = FILE_VERSION;
+        fs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+    }
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), false);
+}
+
+/**
+ * @tc.name: DumpTruncatedRecord
+ * @tc.desc: Dump a record whose body is shorter than its length
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpTruncatedRecord, TestSize.Level2)
+{
+    std::string fileName = "perf_truncated_rec.proto";
+    {
+        std::ofstream fs(fileName, std::ios::binary | std::ios::trunc);
+        fs.write(FILE_MAGIC, sizeof(FILE_MAGIC) - 1);
+        uint16_t version = FILE_VERSION;
+        fs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+        uint32_t len = 100; // declared length larger than the real body
+        fs.write(reinterpret_cast<const char *>(&len), sizeof(len));
+        std::string body(10, '\0');
+        fs.write(body.data(), body.size());
+    }
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), false);
+}
+
+/**
+ * @tc.name: DumpCorruptRecord
+ * @tc.desc: Dump a record with an unparseable body
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpCorruptRecord, TestSize.Level2)
+{
+    std::string fileName = "perf_corrupt.proto";
+    {
+        std::ofstream fs(fileName, std::ios::binary | std::ios::trunc);
+        fs.write(FILE_MAGIC, sizeof(FILE_MAGIC) - 1);
+        uint16_t version = FILE_VERSION;
+        fs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+        uint32_t len = 8;
+        fs.write(reinterpret_cast<const char *>(&len), sizeof(len));
+        // 0xFF -> wire type 7 (invalid), ParseFromArray fails
+        std::string body(8, '\xFF');
+        fs.write(body.data(), body.size());
+    }
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), false);
+}
+
+/**
+ * @tc.name: DumpPartialCallStackSample
+ * @tc.desc: Dump a CallStackSample with no fields set
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpPartialCallStackSample, TestSize.Level2)
+{
+    std::string fileName = "perf_partial_sample.proto";
+    HiperfRecord record;
+    CallStackSample *sample = record.mutable_sample();
+    sample->add_callstackframe(); // empty frame, no symbols_vaddr
+    MakeRawProtobufFile(fileName, {record});
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
+}
+
+/**
+ * @tc.name: DumpPartialSampleStatistic
+ * @tc.desc: Dump a SampleStatistic with no fields set
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpPartialSampleStatistic, TestSize.Level2)
+{
+    std::string fileName = "perf_partial_statistic.proto";
+    HiperfRecord record;
+    record.mutable_statistic(); // no count, no lost
+    MakeRawProtobufFile(fileName, {record});
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
+}
+
+/**
+ * @tc.name: DumpPartialSymbolTableFile
+ * @tc.desc: Dump a SymbolTableFile with no fields set
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpPartialSymbolTableFile, TestSize.Level2)
+{
+    std::string fileName = "perf_partial_file.proto";
+    HiperfRecord record;
+    record.mutable_file(); // no id, no path
+    MakeRawProtobufFile(fileName, {record});
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
+}
+
+/**
+ * @tc.name: DumpPartialVirtualThreadInfo
+ * @tc.desc: Dump a VirtualThreadInfo with no fields set
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpPartialVirtualThreadInfo, TestSize.Level2)
+{
+    std::string fileName = "perf_partial_thread.proto";
+    HiperfRecord record;
+    record.mutable_thread(); // no pid, no tid, no name
+    MakeRawProtobufFile(fileName, {record});
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
+}
+
+/**
+ * @tc.name: DumpPartialReportInfo
+ * @tc.desc: Dump a ReportInfo with no fields set
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpPartialReportInfo, TestSize.Level2)
+{
+    std::string fileName = "perf_partial_info.proto";
+    HiperfRecord record;
+    record.mutable_info(); // no config names, no workload_cmd
+    MakeRawProtobufFile(fileName, {record});
+    EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
+}
+
+/**
+ * @tc.name: DumpUnknownHiperfRecord
+ * @tc.desc: Dump a HiperfRecord with no known message set
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportProtobufFileTest, DumpUnknownHiperfRecord, TestSize.Level2)
+{
+    std::string fileName = "perf_unknown.proto";
+    {
+        std::ofstream fs(fileName, std::ios::binary | std::ios::trunc);
+        fs.write(FILE_MAGIC, sizeof(FILE_MAGIC) - 1);
+        uint16_t version = FILE_VERSION;
+        fs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+        // a record carrying only an unknown field (field 100, varint 1)
+        const unsigned char recordBytes[] = {0xA0, 0x06, 0x01};
+        uint32_t len = sizeof(recordBytes);
+        fs.write(reinterpret_cast<const char *>(&len), sizeof(len));
+        fs.write(reinterpret_cast<const char *>(recordBytes), sizeof(recordBytes));
+        uint32_t zero = 0;
+        fs.write(reinterpret_cast<const char *>(&zero), sizeof(zero));
+    }
     EXPECT_EQ(protobufInputFileReader_->Dump(fileName, nullptr), true);
 }
 } // namespace HiPerf

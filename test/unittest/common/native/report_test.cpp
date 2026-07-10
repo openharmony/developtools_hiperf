@@ -22,6 +22,8 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+static const pid_t TEST_PID = 1;
+static const pid_t TEST_TID = 2;
 template<class T>
 void CompareNumberTest(T &lowValue, T &midValue, T &highValue,
                        ReportKeyCompareFunction &compareFunction)
@@ -914,6 +916,601 @@ HWTEST_F(ReportTest, OverConfigIndex, TestSize.Level1)
     } else {
         printf("exit.\n");
     }
+}
+
+// helper: read everything written to a tmpfile back into a string
+static std::string ReadAllFromTmpFile(FILE *f)
+{
+    std::string content;
+    if (f == nullptr) {
+        return content;
+    }
+    (void)fflush(f);
+    rewind(f);
+    char buf[256];
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
+        content.append(buf, n);
+    }
+    return content;
+}
+
+// helper: build a ReportItem with explicit heat for output tests
+static ReportItem MakeReportItem(uint64_t eventCount, const char *func, float heat)
+{
+    ReportItem item(TEST_PID, TEST_TID, "comm", "dso.so", func, 0x100, eventCount);
+    item.heat = heat;
+    return item;
+}
+
+/**
+ * @tc.name: GetAdltExtendMapNameBranch
+ * @tc.desc: test GetAdltExtendMapName with and without originSoName
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, GetAdltExtendMapNameBranch, TestSize.Level1)
+{
+    EXPECT_EQ(report_->GetAdltExtendMapName("map.so", "origin.so"), "map.so:origin.so");
+    EXPECT_EQ(report_->GetAdltExtendMapName("map.so", ""), "map.so");
+}
+
+/**
+ * @tc.name: FormatCounterValuesSingleElement
+ * @tc.desc: test FormatCounterValues with single and multiple counters
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, FormatCounterValuesSingleElement, TestSize.Level2)
+{
+    EXPECT_EQ(report_->FormatCounterValues({1}, {"a"}), "a=1");
+    EXPECT_EQ(report_->FormatCounterValues({1, 2}, {"a", "b"}), "a=1,b=2");
+}
+
+/**
+ * @tc.name: FillReportItemCounterValuesNullCases
+ * @tc.desc: test FillReportItemCounterValues with null and empty edge cases
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, FillReportItemCounterValuesNullCases, TestSize.Level1)
+{
+    report_->addCounterNames_ = {"ca", "cb"};
+    report_->addCounterIdIndexMaps_ = {{1001, 0}, {2002, 1}};
+
+    // sampleType without PERF_SAMPLE_READ
+    {
+        PerfRecordSample sample(false, 1, 2, 10);
+        sample.sampleType_ = 0;
+        ReportItem item(TEST_PID, TEST_TID, "comm", "dso", "func", 0x1, 10);
+        report_->FillReportItemCounterValues(item, sample);
+        ASSERT_EQ(item.counts_.size(), 2u);
+        EXPECT_EQ(item.counts_[0], 0u);
+        EXPECT_EQ(item.counts_[1], 0u);
+    }
+    // read_nr == 0
+    {
+        PerfRecordSample sample(false, 1, 2, 10);
+        sample.sampleType_ = PERF_SAMPLE_READ;
+        sample.data_.read_nr = 0;
+        ReportItem item(TEST_PID, TEST_TID, "comm", "dso", "func", 0x1, 10);
+        report_->FillReportItemCounterValues(item, sample);
+        EXPECT_EQ(item.counts_[0], 0u);
+    }
+    // read_values == nullptr
+    {
+        PerfRecordSample sample(false, 1, 2, 10);
+        sample.sampleType_ = PERF_SAMPLE_READ;
+        sample.readFormat_ = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
+        sample.data_.read_nr = 2;
+        sample.data_.read_values = nullptr;
+        sample.data_.read_ids = nullptr;
+        ReportItem item(TEST_PID, TEST_TID, "comm", "dso", "func", 0x1, 10);
+        report_->FillReportItemCounterValues(item, sample);
+        EXPECT_EQ(item.counts_[0], 0u);
+    }
+    // read_ids == nullptr
+    {
+        u64 data[] = {111, 1001, 222, 2002};
+        PerfRecordSample sample(false, 1, 2, 10);
+        sample.sampleType_ = PERF_SAMPLE_READ;
+        sample.readFormat_ = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
+        sample.data_.read_nr = 2;
+        sample.data_.read_values = data;
+        sample.data_.read_ids = nullptr;
+        ReportItem item(TEST_PID, TEST_TID, "comm", "dso", "func", 0x1, 10);
+        report_->FillReportItemCounterValues(item, sample);
+        EXPECT_EQ(item.counts_[0], 0u);
+    }
+}
+
+/**
+ * @tc.name: FillReportItemCounterValuesValueCases
+ * @tc.desc: test FillReportItemCounterValues with actual counter values
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, FillReportItemCounterValuesValueCases, TestSize.Level1)
+{
+    report_->addCounterNames_ = {"ca", "cb"};
+    report_->addCounterIdIndexMaps_ = {{1001, 0}, {2002, 1}};
+
+    // read id not in map
+    {
+        u64 data[] = {111, 9999, 222, 2002}; // 9999 not in map, 2002 found at idx 1
+        PerfRecordSample sample(false, 1, 2, 10);
+        sample.sampleType_ = PERF_SAMPLE_READ;
+        sample.readFormat_ = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
+        sample.data_.read_nr = 2;
+        sample.data_.read_values = data;
+        sample.data_.read_ids = data + 1;
+        ReportItem item(TEST_PID, TEST_TID, "comm", "dso", "func", 0x1, 10);
+        report_->FillReportItemCounterValues(item, sample);
+        EXPECT_EQ(item.counts_[0], 0u);
+        EXPECT_EQ(item.counts_[1], 222u);
+        EXPECT_EQ(item.accCounts_[1], 222u);
+    }
+    // idx out of range
+    {
+        report_->addCounterIdIndexMaps_ = {{1001, 5}}; // idx 5 >= size 2
+        u64 data[] = {111, 1001};
+        PerfRecordSample sample(false, 1, 2, 10);
+        sample.sampleType_ = PERF_SAMPLE_READ;
+        sample.readFormat_ = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
+        sample.data_.read_nr = 1;
+        sample.data_.read_values = data;
+        sample.data_.read_ids = data + 1;
+        ReportItem item(TEST_PID, TEST_TID, "comm", "dso", "func", 0x1, 10);
+        report_->FillReportItemCounterValues(item, sample);
+        EXPECT_EQ(item.counts_[0], 0u);
+        EXPECT_EQ(item.counts_[1], 0u);
+        report_->addCounterIdIndexMaps_ = {{1001, 0}, {2002, 1}}; // restore
+    }
+    // normal values
+    {
+        u64 data[] = {111, 1001, 222, 2002};
+        PerfRecordSample sample(false, 1, 2, 10);
+        sample.sampleType_ = PERF_SAMPLE_READ;
+        sample.readFormat_ = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
+        sample.data_.read_nr = 2;
+        sample.data_.read_values = data;
+        sample.data_.read_ids = data + 1;
+        ReportItem item(TEST_PID, TEST_TID, "comm", "dso", "func", 0x1, 10);
+        report_->FillReportItemCounterValues(item, sample);
+        EXPECT_EQ(item.counts_[0], 111u);
+        EXPECT_EQ(item.counts_[1], 222u);
+        EXPECT_EQ(item.accCounts_[0], 111u);
+        EXPECT_EQ(item.accCounts_[1], 222u);
+    }
+}
+
+/**
+ * @tc.name: AddReportItemEdgeCases
+ * @tc.desc: test AddReportItem edge cases
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, AddReportItemEdgeCases, TestSize.Level1)
+{
+    // empty callFrames_
+    {
+        report_->configs_[0].reportItems_.clear();
+        report_->configs_[0].sampleCount_ = 0;
+        report_->configs_[0].eventCount_ = 0;
+        PerfRecordSample sample(false, 1, 2, 100);
+        report_->AddReportItem(sample, false);
+        EXPECT_EQ(report_->configs_[0].sampleCount_, 1u);
+        EXPECT_EQ(report_->configs_[0].eventCount_, 100u);
+        EXPECT_EQ(report_->configs_[0].reportItems_.size(), 0u);
+    }
+    // stub.an with a following frame
+    {
+        report_->configs_[0].reportItems_.clear();
+        report_->configs_[0].sampleCount_ = 0;
+        report_->configs_[0].eventCount_ = 0;
+        PerfRecordSample sample(false, 1, 2, 50);
+        sample.callFrames_.emplace_back(0x1, 0x100, "libstub.an", "stubFunc");
+        sample.callFrames_.emplace_back(0x2, 0x200, "libreal.so", "realFunc");
+        report_->AddReportItem(sample, false);
+        ASSERT_EQ(report_->configs_[0].reportItems_.size(), 1u);
+        EXPECT_STREQ(report_->configs_[0].reportItems_[0].func_.data(), "realFunc");
+    }
+    // single stub.an frame
+    {
+        report_->configs_[0].reportItems_.clear();
+        report_->configs_[0].sampleCount_ = 0;
+        report_->configs_[0].eventCount_ = 0;
+        PerfRecordSample sample(false, 1, 2, 40);
+        sample.callFrames_.emplace_back(0x1, 0x100, "libstub.an", "onlyStub");
+        report_->AddReportItem(sample, false);
+        ASSERT_EQ(report_->configs_[0].reportItems_.size(), 1u);
+        EXPECT_STREQ(report_->configs_[0].reportItems_[0].func_.data(), "onlyStub");
+    }
+    // originSoName non-empty
+    {
+        report_->configs_[0].reportItems_.clear();
+        report_->configs_[0].sampleCount_ = 0;
+        report_->configs_[0].eventCount_ = 0;
+        PerfRecordSample sample(false, 1, 2, 30);
+        auto &frame = sample.callFrames_.emplace_back(0x3, 0x300, "libmap.so", "funcX");
+        frame.originSoName = "liborigin.so";
+        report_->AddReportItem(sample, false);
+        ASSERT_EQ(report_->configs_[0].reportItems_.size(), 1u);
+        const auto &ritem = report_->configs_[0].reportItems_[0];
+        std::string dso(ritem.dso_.data(), ritem.dso_.size());
+        EXPECT_EQ(dso, "libmap.so:liborigin.so");
+    }
+}
+
+/**
+ * @tc.name: FilterDisplayRecordsBranches
+ * @tc.desc: test FilterDisplayRecords with and without display filter
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, FilterDisplayRecordsBranches, TestSize.Level1)
+{
+    auto addSample = [this](const char *func, uint64_t period) {
+        PerfRecordSample sample(false, 1, 2, period);
+        sample.callFrames_.emplace_back(0x1, 0x100, "d.so", func);
+        report_->AddReportItem(sample, false);
+    };
+    addSample("funcA", 50);
+    addSample("funcB", 30);
+    addSample("funcA", 70);
+
+    auto &config = report_->configs_[0];
+    ASSERT_EQ(config.reportItems_.size(), 3u);
+    uint64_t totalBefore = config.eventCount_;
+
+    // only keep funcA
+    report_->option_.displayFuncs_ = {"funcA"};
+    report_->FilterDisplayRecords();
+    EXPECT_EQ(config.reportItems_.size(), 2u);          // funcB filtered out
+    EXPECT_EQ(config.eventCount_, totalBefore - 30);    // eventCount reduced
+
+    // empty displayFilter
+    report_->option_.displayFuncs_.clear();
+    report_->FilterDisplayRecords();
+    EXPECT_EQ(config.reportItems_.size(), 2u);          // unchanged
+}
+
+/**
+ * @tc.name: AdjustReportItemsBranches
+ * @tc.desc: test AdjustReportItems pipeline
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, AdjustReportItemsBranches, TestSize.Level1)
+{
+    auto addSample = [this](const char *func, uint64_t period) {
+        PerfRecordSample sample(false, 1, 2, period);
+        sample.callFrames_.emplace_back(0x1, 0x100, "d.so", func);
+        report_->AddReportItem(sample, false);
+    };
+    addSample("funcA", 50);
+    addSample("funcA", 30); // duplicate funcA
+    addSample("funcB", 20);
+
+    report_->option_.sortKeys_ = {"func"};
+    // debug_ true
+    report_->option_.debug_ = true;
+    report_->AdjustReportItems();
+    // debug_ false
+    report_->option_.debug_ = false;
+    report_->AdjustReportItems();
+
+    auto &config = report_->configs_[0];
+    EXPECT_EQ(config.eventCount_, 100u); // total event count
+    ASSERT_EQ(config.reportItems_.size(), 2u);
+    // heat computed
+    EXPECT_GT(config.reportItems_[0].heat, 0.0f);
+}
+
+/**
+ * @tc.name: OutputStdStatisticsBranches
+ * @tc.desc: test OutputStdStatistics with different coutMode and counters
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdStatisticsBranches, TestSize.Level1)
+{
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+    // coutMode true, no addCounterNames
+    report_->configs_[0].coutMode_ = true;
+    report_->configs_[0].addCounterNames_.clear();
+    report_->OutputStdStatistics(report_->configs_[0]);
+    // coutMode false, with addCounterNames
+    report_->configs_[0].coutMode_ = false;
+    report_->configs_[0].addCounterNames_ = {"ca", "cb"};
+    report_->OutputStdStatistics(report_->configs_[0]);
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("Event Count:"), std::string::npos);
+    EXPECT_NE(out.find("Time in ns:"), std::string::npos);
+    EXPECT_NE(out.find("Add counters:"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+}
+
+/**
+ * @tc.name: OutputStdHeadBranches
+ * @tc.desc: test OutputStdHead with diff mode, hide count and counters
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdHeadBranches, TestSize.Level1)
+{
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+    report_->option_.sortKeys_ = {"comm", "pid", "tid", "dso", "func"};
+
+    auto setMaxLen = [this](const std::string &k, size_t v) {
+        report_->reportKeyMap_.at(k).maxLen_ = v;
+    };
+    setMaxLen("count", 1);
+    setMaxLen("comm", 1);
+    setMaxLen("pid", 1);
+    setMaxLen("tid", 1);
+    setMaxLen("dso", 1);
+    setMaxLen("func", 1);
+
+    // consoleWidth equals total key width
+    report_->consoleWidth_ = 6;
+    report_->OutputStdHead(report_->configs_[0], false); // diffMode false
+
+    // diffMode true
+    report_->OutputStdHead(report_->configs_[0], true);
+
+    // hideCount true
+    report_->option_.hideCount_ = true;
+    setMaxLen("comm", 1);
+    setMaxLen("pid", 1);
+    setMaxLen("tid", 1);
+    setMaxLen("dso", 1);
+    setMaxLen("func", 1);
+    report_->consoleWidth_ = 5;
+    report_->OutputStdHead(report_->configs_[0], false);
+    report_->option_.hideCount_ = false;
+
+    // addCounterNames present
+    report_->configs_[0].addCounterNames_ = {"ca"};
+    report_->consoleWidth_ = 1000; // plenty of width
+    report_->OutputStdHead(report_->configs_[0], false);
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("Diff"), std::string::npos);
+    EXPECT_NE(out.find("counts"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+}
+
+/**
+ * @tc.name: OutputStdCallFrameBranches
+ * @tc.desc: test OutputStdCallFrame with different heat and debug mode
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdCallFrameBranches, TestSize.Level1)
+{
+    report_->option_.callStackHeatLimit_ = 50.0f;
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+
+    // heat below limit
+    EXPECT_FALSE(report_->OutputStdCallFrame(0, "low", 10, 100));
+    // heat == 100
+    EXPECT_TRUE(report_->OutputStdCallFrame(0, "full", 100, 100));
+    // heat between
+    EXPECT_TRUE(report_->OutputStdCallFrame(0, "half", 50, 100));
+    // debug_ true
+    report_->option_.debug_ = true;
+    EXPECT_TRUE(report_->OutputStdCallFrame(0, "half", 50, 100));
+    report_->option_.debug_ = false;
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("full"), std::string::npos);
+    EXPECT_NE(out.find("half"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+}
+
+/**
+ * @tc.name: OutputStdCallFramesBranches
+ * @tc.desc: test OutputStdCallFrames with self count and child frames
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdCallFramesBranches, TestSize.Level1)
+{
+    report_->option_.callStackHeatLimit_ = 0.0f;
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+
+    // frame with self event count and a single child
+    {
+        ReportItemCallFrame root("root", 0x1, "d.so", 100, 30);
+        root.childs.emplace_back("child", 0x2, "d.so", 100, 0);
+        report_->OutputStdCallFrames(0, root, 100);
+    }
+    // frame without self event count and multiple children
+    {
+        ReportItemCallFrame root("root2", 0x3, "d.so", 100, 0);
+        root.childs.emplace_back("c1", 0x4, "d.so", 60, 0);
+        root.childs.emplace_back("c2", 0x5, "d.so", 40, 0);
+        report_->OutputStdCallFrames(0, root, 100);
+    }
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("root"), std::string::npos);
+    EXPECT_NE(out.find("[run in self function]"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+}
+
+/**
+ * @tc.name: OutputStdContentItemBranches
+ * @tc.desc: test OutputStdContentItem with and without counters
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdContentItemBranches, TestSize.Level1)
+{
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+    report_->displayKeyNames_ = {"func"};
+    ReportItem item(TEST_PID, TEST_TID, "comm", "d.so", "funcA", 0x1, 50);
+
+    // no addCounterNames
+    report_->configs_[0].addCounterNames_.clear();
+    report_->OutputStdContentItem(report_->configs_[0], item);
+    // with addCounterNames
+    report_->configs_[0].addCounterNames_ = {"ca", "cb"};
+    item.counts_ = {10, 20};
+    item.accCounts_ = {10, 20};
+    report_->OutputStdContentItem(report_->configs_[0], item);
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("funcA"), std::string::npos);
+    EXPECT_NE(out.find("ca=10"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+}
+
+/**
+ * @tc.name: OutputStdContentBranches
+ * @tc.desc: test OutputStdContent with heat limit and callstacks
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdContentBranches, TestSize.Level1)
+{
+    report_->option_.heatLimit_ = 50.0f;
+    report_->option_.callStackHeatLimit_ = 10.0f;
+    report_->configs_[0].coutMode_ = true;
+    report_->configs_[0].addCounterNames_ = {"ca", "cb"};
+
+    auto &items = report_->configs_[0].reportItems_;
+    ReportItem it1(1, 2, "comm", "dso.so", "funcA", 0x1, 80);
+    it1.heat = 80.0f;
+    auto &cf = it1.callStacks_.emplace_back("funcA", 0x1, "dso.so", 80, 30);
+    cf.childs.emplace_back("funcB", 0x2, "dso.so", 80, 0);
+    items.push_back(std::move(it1));
+
+    ReportItem it2(1, 2, "comm", "dso.so", "funcB", 0x2, 30);
+    it2.heat = 30.0f; // below heat limit
+    items.push_back(std::move(it2));
+
+    ReportItem it3(1, 2, "comm", "dso.so", "funcC", 0x3, 60);
+    it3.heat = 60.0f; // no callstacks
+    items.push_back(std::move(it3));
+
+    report_->configs_[0].eventCount_ = 80 + 30 + 60;
+
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+    report_->PrepareConsole();
+    report_->OutputStd(report_->output_);
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("funcA"), std::string::npos);
+    EXPECT_NE(out.find("funcC"), std::string::npos);
+    EXPECT_EQ(out.find("something error"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+}
+
+/**
+ * @tc.name: OutputStdItemHeatingBranches
+ * @tc.desc: test OutputStdItemHeating with various heat pairs
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdItemHeatingBranches, TestSize.Level1)
+{
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+
+    report_->OutputStdItemHeating(0.0f, 0.0f);    // both zero
+    report_->OutputStdItemHeating(50.0f, 0.0f);   // only first
+    report_->OutputStdItemHeating(0.0f, 50.0f);   // only second
+    report_->OutputStdItemHeating(30.0f, 50.0f);  // heat2 > heat
+    report_->OutputStdItemHeating(50.0f, 30.0f);  // heat2 < heat
+    report_->OutputStdItemHeating(50.0f, 50.0f);  // same
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("something error"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+}
+
+/**
+ * @tc.name: OutputStdContentDiffBranches
+ * @tc.desc: test OutputStdContentDiff with matched and unmatched items
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdContentDiffBranches, TestSize.Level1)
+{
+    report_->option_.heatLimit_ = 50.0f;
+    report_->option_.sortKeys_ = {"func"};
+
+    // left items
+    auto &leftItems = report_->configs_[0].reportItems_;
+    leftItems.push_back(MakeReportItem(80, "funcA", 80.0f));
+    leftItems.push_back(MakeReportItem(60, "funcC", 60.0f));
+    leftItems.push_back(MakeReportItem(55, "funcD", 55.0f));
+    leftItems.push_back(MakeReportItem(30, "funcE", 30.0f));
+    report_->configs_[0].eventCount_ = 80 + 60 + 55 + 30;
+
+    // second left config without a matching right config
+    report_->configs_.emplace_back("other", 1, 1);
+
+    // right report
+    Report other;
+    other.option_.heatLimit_ = 50.0f;
+    other.option_.sortKeys_ = {"func"};
+    other.displayKeyNames_ = {"func"};
+    other.configs_.emplace_back("dummy", 0, 0);
+    auto &rightItems = other.configs_[0].reportItems_;
+    // right items
+    rightItems.push_back(MakeReportItem(80, "funcA", 80.0f));
+    rightItems.push_back(MakeReportItem(70, "funcX", 70.0f));
+    rightItems.push_back(MakeReportItem(30, "funcZ", 30.0f));
+    rightItems.push_back(MakeReportItem(75, "funcY", 75.0f));
+    other.configs_[0].eventCount_ = 80 + 70 + 30 + 75;
+
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+    report_->OutputStdDiff(report_->output_, other);
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("funcA"), std::string::npos);
+    EXPECT_NE(out.find("funcY"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
+    // remove the extra config added for this test
+    report_->configs_.pop_back();
+}
+
+/**
+ * @tc.name: OutputStdContentDiffMatchedBelowLimit
+ * @tc.desc: test OutputStdContentDiff with matched pair below limit and trailing items
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportTest, OutputStdContentDiffMatchedBelowLimit, TestSize.Level1)
+{
+    report_->option_.heatLimit_ = 50.0f;
+    report_->option_.sortKeys_ = {"func"};
+
+    auto &leftItems = report_->configs_[0].reportItems_;
+    leftItems.push_back(MakeReportItem(40, "funcB", 40.0f)); // below limit
+    report_->configs_[0].eventCount_ = 40;
+
+    Report other;
+    other.option_.heatLimit_ = 50.0f;
+    other.option_.sortKeys_ = {"func"};
+    other.displayKeyNames_ = {"func"};
+    other.configs_.emplace_back("dummy", 0, 0);
+    auto &rightItems = other.configs_[0].reportItems_;
+    rightItems.push_back(MakeReportItem(40, "funcB", 40.0f)); // below limit
+    rightItems.push_back(MakeReportItem(70, "funcY", 70.0f)); // trailing right
+    other.configs_[0].eventCount_ = 40 + 70;
+
+    report_->output_ = tmpfile();
+    ASSERT_NE(report_->output_, nullptr);
+    report_->OutputStdDiff(report_->output_, other);
+
+    std::string out = ReadAllFromTmpFile(report_->output_);
+    EXPECT_NE(out.find("funcY"), std::string::npos);
+    fclose(report_->output_);
+    report_->output_ = nullptr;
 }
 } // namespace HiPerf
 } // namespace Developtools

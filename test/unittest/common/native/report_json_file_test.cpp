@@ -753,6 +753,254 @@ HWTEST_F(ReportJsonFileTest, ParseJson02, TestSize.Level2)
     root = cJSON_Parse(testStr.c_str());
     EXPECT_TRUE(root != nullptr);
 }
+
+/**
+ * @tc.name: SupplementSymbolsFiles
+ * @tc.desc: Test SupplementSymbolsFiles supplements libList_ when symbolsFiles is larger.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, SupplementSymbolsFiles, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+
+    json->libList_ = {"liba"};
+    std::vector<std::unique_ptr<SymbolsFile>> symbolsFiles;
+    auto user1 = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    user1->filePath_ = "user_symbol1";
+    symbolsFiles.emplace_back(std::move(user1));
+    auto user2 = SymbolsFile::CreateSymbolsFile(SYMBOL_ELF_FILE);
+    user2->filePath_ = "user_symbol2";
+    symbolsFiles.emplace_back(std::move(user2));
+
+    json->SupplementSymbolsFiles(symbolsFiles);
+    EXPECT_EQ(json->libList_.size(), 2u);
+
+    json->SupplementSymbolsFiles(symbolsFiles);
+    EXPECT_EQ(json->libList_.size(), 2u);
+}
+
+/**
+ * @tc.name: HiddenFunctionInLib
+ * @tc.desc: Test HiddenFunctionInLib with non-existent lib, non-existent function, and existing function.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, HiddenFunctionInLib, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    json->libList_ = {"liba", "libb"};
+    json->AddNewFunction(0, "funca1");
+    json->AddNewFunction(1, "funcb1");
+
+    json->HiddenFunctionInLib(5, "funca1");
+    json->HiddenFunctionInLib(0, "func_not_exist");
+    json->HiddenFunctionInLib(0, "funca1");
+
+    EXPECT_TRUE(json->functionMap_.at(0).at("funca1").hiddenFlag);
+    EXPECT_FALSE(json->functionMap_.at(1).at("funcb1").hiddenFlag);
+}
+
+/**
+ * @tc.name: OutputJsonFunctionMapHidden
+ * @tc.desc: Test OutputJsonFunctionMap skips output of hidden functions.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, OutputJsonFunctionMapHidden, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    json->AddNewFunction(0, "funca1");
+    json->AddNewFunction(0, "funca2");
+    json->HiddenFunctionInLib(0, "funca1");
+
+    StdoutRecord output;
+    output.Start();
+    json->OutputJsonFunctionMap(stdout);
+    std::string result = output.Stop();
+
+    EXPECT_NE(result.find("funca2"), std::string::npos);
+    EXPECT_EQ(result.find("\"funca1\""), std::string::npos);
+}
+
+/**
+ * @tc.name: OutputJsonFunctionMapFail
+ * @tc.desc: Test OutputJsonFunctionMap with a failing FILE*.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, OutputJsonFunctionMapFail, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    json->AddNewFunction(0, "funca1");
+
+    StdoutRecord output;
+    output.Start();
+    json->OutputJsonFunctionMap(stdout);
+    std::string result = output.Stop();
+
+    EXPECT_NE(result.find("SymbolMap"), std::string::npos);
+    EXPECT_NE(result.find("funca1"), std::string::npos);
+}
+
+/**
+ * @tc.name: UpdateReportCallStackDebug
+ * @tc.desc: Test UpdateReportCallStack with debug mode enabled.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, UpdateReportCallStackDebug, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    std::vector<uint64_t> ids = {1, 2, 3};
+    json->reportConfigItems_.emplace(
+        ids, ReportConfigItem(json->reportConfigItems_.size(), "eventName"));
+    json->libList_ = {"liba", "libb"};
+    json->AddNewFunction(0, "funca1");
+    json->AddNewFunction(1, "funcb1");
+    std::vector<DfxFrame> frames = {
+        {0x1u, 0x1u, "liba", "funca1"},
+        {0x2u, 0x1u, "libb", "funcb1"},
+    };
+
+    ReportJsonFile::debug_ = true;
+    json->UpdateReportCallStack(1, 2, 3, 10, frames);
+    ReportJsonFile::debug_ = false;
+
+    EXPECT_GT(json->nodeIndex_, 0);
+}
+
+/**
+ * @tc.name: GetLibIDLibadlt
+ * @tc.desc: Test GetLibID with libadlt filepath and various originSoName.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, GetLibIDLibadlt, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    json->libList_ = {"libadlt_test.so", "libnormal.so"};
+    json->AddNewFunction(0, "func_in_adlt");
+    json->AddNewFunction(1, "func_normal");
+
+    EXPECT_EQ(json->GetLibID("libadlt_test.so", "", "func_in_adlt"), 0);
+
+    EXPECT_EQ(json->GetLibID("libadlt_test.so", "origin.so", "func_in_adlt"), -1);
+    EXPECT_TRUE(json->functionMap_.at(0).at("func_in_adlt").hiddenFlag);
+
+    EXPECT_EQ(json->GetLibID("libadlt_other.so", "origin2.so", "func_other"), -1);
+}
+
+/**
+ * @tc.name: UpdateReportCallStackJsFrame
+ * @tc.desc: Test UpdateReportCallStack with a JS stub frame.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, UpdateReportCallStackJsFrame, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    std::vector<uint64_t> ids = {1, 2, 3};
+    json->reportConfigItems_.emplace(
+        ids, ReportConfigItem(json->reportConfigItems_.size(), "eventName"));
+    json->libList_ = {"test_stub.an", "libnormal.so"};
+    json->AddNewFunction(0, "js_func");
+    json->AddNewFunction(1, "native_func");
+    std::vector<DfxFrame> frames = {
+        {0x1u, 0x1u, "test_stub.an", "js_func"},
+        {0x2u, 0x1u, "libnormal.so", "native_func"},
+    };
+
+    json->UpdateReportCallStack(1, 2, 3, 10, frames);
+
+    auto &config = json->reportConfigItems_.begin()->second;
+    ASSERT_EQ(config.processes_.size(), 1u);
+    auto &process = config.processes_.begin()->second;
+    ASSERT_EQ(process.threads_.size(), 1u);
+    auto &thread = process.threads_.begin()->second;
+    ASSERT_EQ(thread.libs_.size(), 2u);
+}
+
+/**
+ * @tc.name: UpdateReportCallStackRepeatFunc
+ * @tc.desc: Test UpdateReportCallStack with repeated function IDs in frames.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, UpdateReportCallStackRepeatFunc, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    std::vector<uint64_t> ids = {1, 2, 3};
+    json->reportConfigItems_.emplace(
+        ids, ReportConfigItem(json->reportConfigItems_.size(), "eventName"));
+    json->libList_ = {"liba", "libb"};
+    json->AddNewFunction(0, "funca1");
+    json->AddNewFunction(1, "funcb1");
+    std::vector<DfxFrame> frames = {
+        {0x1u, 0x1u, "liba", "funca1"},
+        {0x2u, 0x1u, "liba", "funca1"},
+        {0x3u, 0x1u, "libb", "funcb1"},
+    };
+
+    json->UpdateReportCallStack(1, 2, 3, 10, frames);
+
+    auto &config = json->reportConfigItems_.begin()->second;
+    auto &process = config.processes_.begin()->second;
+    auto &thread = process.threads_.begin()->second;
+    auto &lib = thread.libs_.at(0);
+    ASSERT_EQ(lib.funcs_.size(), 1u);
+    auto &func = lib.funcs_.at(0);
+    EXPECT_EQ(func.sampleCount_, 1u);
+}
+
+/**
+ * @tc.name: OutputJsonRuntimeInfoFail
+ * @tc.desc: Test OutputJsonRuntimeInfo with a failing FILE*.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, OutputJsonRuntimeInfoFail, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+    json->AddNewFunction(0, "funca1");
+
+    StdoutRecord output;
+    output.Start();
+    json->output_ = stdout;
+    json->OutputJsonRuntimeInfo();
+    std::string result = output.Stop();
+
+    EXPECT_FALSE(result.empty());
+}
+
+/**
+ * @tc.name: OutputJsonFail
+ * @tc.desc: Test OutputJson with a failing FILE*.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReportJsonFileTest, OutputJsonFail, TestSize.Level2)
+{
+    VirtualRuntime virtualRuntime;
+    std::unique_ptr<ReportJsonFile> json =
+        std::make_unique<ReportJsonFile>(nullptr, virtualRuntime);
+
+    FILE *failFile = fopen("/dev/full", "w");
+    if (failFile == nullptr) {
+        return;
+    }
+    setvbuf(failFile, nullptr, _IONBF, 0);
+    EXPECT_FALSE(json->OutputJson(failFile));
+    fclose(failFile);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
