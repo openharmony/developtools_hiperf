@@ -2645,6 +2645,370 @@ HWTEST_F(SubCommandStatTest, CheckPathErrInfo, TestSize.Level2)
         }
     }
 }
+
+/**
+ * @tc.name: Destructor_FilePtr
+ * @tc.desc: Test destructor closes filePtr_ when non-null
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, Destructor_FilePtr, TestSize.Level2)
+{
+    const std::string tmpPath = "/data/local/tmp/hiperf_stat_destructor_test.txt";
+    FILE* fp = fopen(tmpPath.c_str(), "w");
+    ASSERT_NE(fp, nullptr);
+    {
+        SubCommandStat cmdStat;
+        cmdStat.filePtr_ = fp;
+    }
+    remove(tmpPath.c_str());
+}
+
+/**
+ * @tc.name: PrintPerValue_NullReportSum
+ * @tc.desc: Test PrintPerValue returns early when reportSum is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, PrintPerValue_NullReportSum, TestSize.Level2)
+{
+    FILE *tmp = tmpfile();
+    ASSERT_NE(tmp, nullptr);
+    SubCommandStat::PrintPerValue(nullptr, 100.0f, "test", tmp);
+    (void)fflush(tmp);
+    rewind(tmp);
+    char buf[256] = {};
+    size_t n = fread(buf, 1, sizeof(buf), tmp);
+    EXPECT_EQ(n, 0u);
+    fclose(tmp);
+}
+
+/**
+ * @tc.name: PrintPerValue_WithFile
+ * @tc.desc: Test PrintPerValue output to file with different report flag combos
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, PrintPerValue_WithFile, TestSize.Level2)
+{
+    const std::string tmpPath = "/data/local/tmp/hiperf_stat_printpervalue_test.txt";
+    SubCommandStat cmdStat;
+    auto reportSum = std::make_unique<PerfEvents::ReportSum>();
+    reportSum->eventCountSum = 1000;
+    reportSum->cpu = 0;
+    reportSum->pid = 1;
+    reportSum->tid = 1;
+    reportSum->threadName = "test";
+    reportSum->scaleSum = 1.0;
+    reportSum->commentSum = 0;
+
+    FILE* fp = fopen(tmpPath.c_str(), "w");
+    ASSERT_NE(fp, nullptr);
+    cmdStat.SetReportFlags(true, true);
+    SubCommandStat::PrintPerValue(reportSum, 100.0f, "hw-cpu-cycles", fp);
+    cmdStat.SetReportFlags(true, false);
+    SubCommandStat::PrintPerValue(reportSum, 100.0f, "hw-cpu-cycles", fp);
+    cmdStat.SetReportFlags(false, false);
+    SubCommandStat::PrintPerValue(reportSum, 100.0f, "hw-cpu-cycles", fp);
+    fclose(fp);
+    remove(tmpPath.c_str());
+}
+
+/**
+ * @tc.name: PrintPerHead_WithFile
+ * @tc.desc: Test PrintPerHead output to file with different report flag combos
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, PrintPerHead_WithFile, TestSize.Level2)
+{
+    const std::string tmpPath = "/data/local/tmp/hiperf_stat_printperhead_test.txt";
+    SubCommandStat cmdStat;
+    FILE* fp = fopen(tmpPath.c_str(), "w");
+    ASSERT_NE(fp, nullptr);
+    cmdStat.SetReportFlags(true, true);
+    SubCommandStat::PrintPerHead(fp);
+    cmdStat.SetReportFlags(true, false);
+    SubCommandStat::PrintPerHead(fp);
+    cmdStat.SetReportFlags(false, true);
+    SubCommandStat::PrintPerHead(fp);
+    fclose(fp);
+    remove(tmpPath.c_str());
+}
+
+/**
+ * @tc.name: ReportNormal_WithFile
+ * @tc.desc: Test ReportNormal output to file
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, ReportNormal_WithFile, TestSize.Level2)
+{
+    const std::string tmpPath = "/data/local/tmp/hiperf_stat_reportnormal_test.txt";
+    std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> countEvents;
+    auto ce = std::make_unique<PerfEvents::CountEvent>();
+    ce->eventCount = 1000;
+    ce->timeEnabled = 2000;
+    ce->timeRunning = 1000;
+    countEvents["test-event"] = std::move(ce);
+
+    FILE* fp = fopen(tmpPath.c_str(), "w");
+    ASSERT_NE(fp, nullptr);
+    SubCommandStat::ReportNormal(countEvents, fp);
+    fclose(fp);
+    remove(tmpPath.c_str());
+}
+
+/**
+ * @tc.name: ReportDetailInfos_WithFile
+ * @tc.desc: Test Report output to file with per-core flag
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, ReportDetailInfos_WithFile, TestSize.Level2)
+{
+    const std::string tmpPath = "/data/local/tmp/hiperf_stat_reportdetail_test.txt";
+    SubCommandStat cmdStat;
+    cmdStat.SetReportFlags(true, false);
+    std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> countEvents;
+    auto ce = std::make_unique<PerfEvents::CountEvent>();
+    ce->eventCount = 1000;
+    ce->userOnly = false;
+    ce->kernelOnly = false;
+    PerfEvents::Summary summary(0, 1, 100, 200, 150);
+    ce->summaries.push_back(summary);
+    countEvents["hw-cpu-cycles"] = std::move(ce);
+
+    FILE* fp = fopen(tmpPath.c_str(), "w");
+    ASSERT_NE(fp, nullptr);
+    SubCommandStat::Report(countEvents, fp);
+    fclose(fp);
+    remove(tmpPath.c_str());
+}
+
+/**
+ * @tc.name: GetCommentConfigName_UserOnly
+ * @tc.desc: Test GetCommentConfigName with userOnly event
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, GetCommentConfigName_UserOnly, TestSize.Level2)
+{
+    auto ce = std::make_unique<PerfEvents::CountEvent>();
+    ce->userOnly = true;
+    ce->kernelOnly = false;
+    EXPECT_EQ(SubCommandStat::GetCommentConfigName(ce, "hw-cpu-cycles"), "hw-cpu-cycles:u");
+}
+
+/**
+ * @tc.name: MakeComments_RateRanges
+ * @tc.desc: Test MakeComments rate formatting in different ranges
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, MakeComments_RateRanges, TestSize.Level2)
+{
+    auto rs1 = std::make_unique<PerfEvents::ReportSum>();
+    rs1->commentSum = 5000;
+    rs1->configName = "hw-cache-misses";
+    std::string comment1;
+    SubCommandStat::MakeComments(rs1, comment1);
+    EXPECT_TRUE(comment1.find("K/sec") != std::string::npos);
+
+    auto rs2 = std::make_unique<PerfEvents::ReportSum>();
+    rs2->commentSum = 500;
+    rs2->configName = "hw-cache-misses";
+    std::string comment2;
+    SubCommandStat::MakeComments(rs2, comment2);
+    EXPECT_TRUE(comment2.find("/sec") != std::string::npos);
+    EXPECT_TRUE(comment2.find("K/sec") == std::string::npos);
+}
+
+/**
+ * @tc.name: GetDetailComments_SwCpuClock
+ * @tc.desc: Test GetDetailComments with sw-cpu-clock config
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, GetDetailComments_SwCpuClock, TestSize.Level2)
+{
+    auto countEvent = std::make_unique<PerfEvents::CountEvent>();
+    countEvent->userOnly = false;
+    countEvent->kernelOnly = false;
+    PerfEvents::Summary summary(0, 1, 1000, 1000, 1000);
+    double comment = 1.0;
+    std::string configName = "sw-cpu-clock";
+    EXPECT_EQ(SubCommandStat::GetDetailComments(countEvent, comment, summary, configName), "sw-cpu-clock");
+    EXPECT_EQ(comment, 0.0);
+}
+
+/**
+ * @tc.name: GetComments_SwCpuClock
+ * @tc.desc: Test GetComments with sw-cpu-clock event
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, GetComments_SwCpuClock, TestSize.Level2)
+{
+    std::map<std::string, std::unique_ptr<PerfEvents::CountEvent>> countEvents;
+    auto ce = std::make_unique<PerfEvents::CountEvent>();
+    ce->userOnly = false;
+    ce->kernelOnly = false;
+    ce->eventCount = 1000;
+    countEvents["sw-cpu-clock"] = std::move(ce);
+    std::map<std::string, std::string> comments;
+    SubCommandStat::GetComments(countEvents, comments);
+    EXPECT_EQ(comments["sw-cpu-clock"], "");
+}
+
+/**
+ * @tc.name: ParseControlCmd_Invalid
+ * @tc.desc: Test ParseControlCmd with invalid command
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, ParseControlCmd_Invalid, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    EXPECT_FALSE(cmdStat.ParseControlCmd("pause"));
+}
+
+/**
+ * @tc.name: ProcessControl_StartCmd
+ * @tc.desc: Test ProcessControl with start command
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, ProcessControl_StartCmd, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.controlCmd_ = CONTROL_CMD_START;
+    cmdStat.isFifoClient_ = false;
+    bool ret = cmdStat.ProcessControl();
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(cmdStat.isFifoClient_);
+}
+
+/**
+ * @tc.name: OnSubCommand_InvalidControl
+ * @tc.desc: Test OnSubCommand with invalid control command
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, OnSubCommand_InvalidControl, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.controlCmd_ = "pause";
+    cmdStat.helpOption_ = false;
+    std::vector<std::string> args;
+    EXPECT_EQ(cmdStat.OnSubCommand(args), HiperfError::WRONG_CONTROL_CMD);
+}
+
+/**
+ * @tc.name: OnSubCommand_ProcessControlFail
+ * @tc.desc: Test OnSubCommand when ProcessControl fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, OnSubCommand_ProcessControlFail, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.controlCmd_ = CONTROL_CMD_START;
+    cmdStat.helpOption_ = false;
+    cmdStat.outputFilename_ = "";
+    std::vector<std::string> args;
+    EXPECT_EQ(cmdStat.OnSubCommand(args), HiperfError::PROCESS_CONTROL_FAIL);
+}
+
+/**
+ * @tc.name: CheckStatOption_PidAndAppFail
+ * @tc.desc: Test CheckStatOption when CheckOptionPidAndApp fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckStatOption_PidAndAppFail, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.targetSystemWide_ = false;
+    cmdStat.restart_ = false;
+    cmdStat.appPackage_ = "";
+    cmdStat.trackedCommand_.clear();
+    cmdStat.selectPids_.clear();
+    cmdStat.selectTids_ = {700011};
+    cmdStat.inputPidTidArgs_ = {700011};
+    cmdStat.checkAppMs_ = SubCommandStat::DEFAULT_CHECK_APP_MS;
+    cmdStat.timeStopSec_ = PerfEvents::DEFAULT_TIMEOUT;
+    cmdStat.timeReportMs_ = 0;
+    cmdStat.allowIpc_ = true;
+    EXPECT_EQ(cmdStat.CheckStatOption(), HiperfError::CHECK_OPTION_PID_APP_FAIL);
+}
+
+/**
+ * @tc.name: CheckStatOption_IsExistDebugByPidFail
+ * @tc.desc: Test CheckStatOption when IsExistDebugByPid fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckStatOption_IsExistDebugByPidFail, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.targetSystemWide_ = false;
+    cmdStat.restart_ = false;
+    cmdStat.appPackage_ = "";
+    cmdStat.trackedCommand_.clear();
+    cmdStat.selectPids_.clear();
+    cmdStat.selectTids_ = {1};
+    cmdStat.inputPidTidArgs_ = {0};
+    cmdStat.checkAppMs_ = SubCommandStat::DEFAULT_CHECK_APP_MS;
+    cmdStat.timeStopSec_ = PerfEvents::DEFAULT_TIMEOUT;
+    cmdStat.timeReportMs_ = 0;
+    cmdStat.allowIpc_ = true;
+    EXPECT_EQ(cmdStat.CheckStatOption(), HiperfError::CHECK_OPTION_PID_APP_FAIL);
+}
+
+/**
+ * @tc.name: CheckOutPutFile_NonPrepareWithOutput
+ * @tc.desc: Test CheckOutPutFile with -o but without --control prepare
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckOutPutFile_NonPrepareWithOutput, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.controlCmd_ = "";
+    cmdStat.outputFilename_ = "/data/local/tmp/test.txt";
+    EXPECT_FALSE(cmdStat.CheckOutPutFile());
+}
+
+/**
+ * @tc.name: CheckOutPutFile_PrepareEmptyDefault
+ * @tc.desc: Test CheckOutPutFile with prepare and empty output name uses default
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckOutPutFile_PrepareEmptyDefault, TestSize.Level2)
+{
+    ASSERT_TRUE(RunCmd("hiperf stat --control stop"));
+    SubCommandStat cmdStat;
+    cmdStat.controlCmd_ = CONTROL_CMD_PREPARE;
+    cmdStat.outputFilename_ = "";
+    EXPECT_TRUE(cmdStat.CheckOutPutFile());
+    EXPECT_FALSE(cmdStat.outputFilename_.empty());
+    if (cmdStat.filePtr_ != nullptr) {
+        fclose(cmdStat.filePtr_);
+        cmdStat.filePtr_ = nullptr;
+    }
+    remove(TEST_FILE.c_str());
+}
+
+/**
+ * @tc.name: CheckOutPutFile_InvalidPath
+ * @tc.desc: Test CheckOutPutFile with invalid path
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckOutPutFile_InvalidPath, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.controlCmd_ = CONTROL_CMD_PREPARE;
+    cmdStat.outputFilename_ = "/data/log/hiperflog/stat.txt";
+    EXPECT_FALSE(cmdStat.CheckOutPutFile());
+}
+
+/**
+ * @tc.name: CheckOutPutFile_FopenFail
+ * @tc.desc: Test CheckOutPutFile when fopen fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(SubCommandStatTest, CheckOutPutFile_FopenFail, TestSize.Level2)
+{
+    SubCommandStat cmdStat;
+    cmdStat.controlCmd_ = CONTROL_CMD_PREPARE;
+    cmdStat.outputFilename_ = "/data/nonexistent_dir_xyz/stat.txt";
+    EXPECT_FALSE(cmdStat.CheckOutPutFile());
+    EXPECT_EQ(cmdStat.filePtr_, nullptr);
+}
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS

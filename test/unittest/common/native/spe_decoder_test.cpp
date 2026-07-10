@@ -1267,6 +1267,274 @@ HWTEST_F(SpeDecoderTest, TestSpePktDescAddrPhysWithFlags, TestSize.Level2)
     EXPECT_GT(strlen(buf), 0u);
 }
 
+/**
+ * @tc.name: TestSpePayloadShortBuffer
+ * @tc.desc: Test SpeGetPayload with insufficient buffer and extended header edge cases
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePayloadShortBuffer, TestSize.Level1)
+{
+    u8 bufShortTs[2] = {0x71, 0x00};
+    EXPECT_EQ(SpeDumpRawData(bufShortTs, sizeof(bufShortTs), 1, stderr), true);
+
+    u8 bufExtOne[1] = {0x20};
+    EXPECT_EQ(SpeDumpRawData(bufExtOne, sizeof(bufExtOne), 1, stderr), true);
+
+    u8 bufAlignShort[2] = {0x21, 0x00};
+    EXPECT_EQ(SpeDumpRawData(bufAlignShort, sizeof(bufAlignShort), 1, stderr), true);
+
+    u8 bufAlignOk[8] = {0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    EXPECT_EQ(SpeDumpRawData(bufAlignOk, sizeof(bufAlignOk), 1, stderr), true);
+}
+
+/**
+ * @tc.name: TestSpeExtendedCounterAndAddr
+ * @tc.desc: Test extended header counter and address packets with extHdr=1
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeExtendedCounterAndAddr, TestSize.Level1)
+{
+    u8 bufExtCounter[6] = {0x20, 0x98, 0x64, 0x00, 0x00, 0x00};
+    EXPECT_EQ(SpeDumpRawData(bufExtCounter, sizeof(bufExtCounter), 1, stderr), true);
+
+    u8 bufExtAddr[11] = {0x20, 0xb0, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12, 0x00, 0x00};
+    EXPECT_EQ(SpeDumpRawData(bufExtAddr, sizeof(bufExtAddr), 1, stderr), true);
+}
+
+/**
+ * @tc.name: TestSpeDataSourceBranch
+ * @tc.desc: Test SpeGetDataSource, DATA_SOURCE desc and record paths
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeDataSourceBranch, TestSize.Level1)
+{
+    u8 bufDs[3] = {0x43, 0x0A, 0x01};
+    EXPECT_EQ(SpeDumpRawData(bufDs, sizeof(bufDs), 1, stderr), true);
+
+    struct SpePkt packet = {};
+    char buf[256] = {};
+    packet.type = PERF_SPE_DATA_SOURCE;
+    packet.payload = 0x0A;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+
+    packet.type = PERF_SPE_TIMESTAMP;
+    packet.payload = 1234567890ULL;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+
+    u8 bufRec[3] = {0x43, 0x0A, 0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(bufRec, sizeof(bufRec));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpePktOutStringTruncation
+ * @tc.desc: Test SpePktOutString truncation and zero bufLen paths
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpePktOutStringTruncation, TestSize.Level1)
+{
+    struct SpePkt packet = {};
+    char buf[256] = {};
+
+    packet.type = PERF_SPE_EVENTS;
+    packet.payload = BIT(EVENT_L1D_ACCESS) | BIT(EVENT_L1D_REFILL);
+    char bufSmall[1] = {0};
+    int ret1 = SpePktDesc(&packet, bufSmall, 1);
+    EXPECT_EQ(ret1, -1);
+
+    packet.type = PERF_SPE_EVENTS;
+    packet.payload = BIT(EVENT_L1D_ACCESS) | BIT(EVENT_LLC_MISS);
+    int ret2 = SpePktDesc(&packet, buf, 0);
+    EXPECT_EQ(ret2, 0);
+}
+
+/**
+ * @tc.name: TestSpeOpTypeDescAtomicFlags
+ * @tc.desc: Test SpePktDescStatAtomicOpType with IS_LDST_ATOMIC and AT/EXCL/AR flags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeOpTypeDescAtomicFlags, TestSize.Level1)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_OP_TYPE;
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC;
+    char buf[256] = {};
+    packet.payload = 0x02 | PERF_SPE_OP_PKT_AT | PERF_SPE_OP_PKT_EXCL | PERF_SPE_OP_PKT_AR;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpeOpTypeDescSvePredSg
+ * @tc.desc: Test SpePktDescStatAtomicOpType with SVE PRED and SG flags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeOpTypeDescSvePredSg, TestSize.Level1)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_OP_TYPE;
+    packet.index = PERF_SPE_OP_PKT_HDR_CLASS_LD_ST_ATOMIC;
+    char buf[256] = {};
+    packet.payload = 0x08 | PERF_SPE_OP_PKT_SVE_PRED | PERF_SPE_OP_PKT_SVE_SG;
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpeCounterDescDefaultIndex
+ * @tc.desc: Test SpePktDesCont switch default case with counter index not 0/1/2
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeCounterDescDefaultIndex, TestSize.Level1)
+{
+    struct SpePkt packet = {};
+    packet.type = PERF_SPE_COUNTER;
+    packet.index = 5;
+    packet.payload = 42;
+    char buf[256] = {};
+    EXPECT_GE(SpePktDesc(&packet, buf, 256), 0);
+    EXPECT_GT(strlen(buf), 0u);
+}
+
+/**
+ * @tc.name: TestSpeCalcIpEl1El2PhysPrevBranch
+ * @tc.desc: Test SpeCalcIp with ns=1 EL1/EL2, DATA_PHYS and PREV_BRANCH indices
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeCalcIpEl1El2PhysPrevBranch, TestSize.Level1)
+{
+    u8 bufEl1[10] = {0xb0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA0, 0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(bufEl1, sizeof(bufEl1));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+
+    u8 bufEl2[10] = {0xb0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x01};
+    decoder = SpeDecoderDataNew(bufEl2, sizeof(bufEl2));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+
+    u8 bufPhys[10] = {0xb3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+    decoder = SpeDecoderDataNew(bufPhys, sizeof(bufPhys));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+
+    u8 bufPrev[10] = {0xb4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+    decoder = SpeDecoderDataNew(bufPrev, sizeof(bufPrev));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordOpTypeBranches
+ * @tc.desc: Test SpeReadRecordOpType with LD_ST_ATOMIC, OTHER, BR_ERET and default classes
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordOpTypeBranches, TestSize.Level1)
+{
+    u8 bufLdSt[3] = {0x49, 0x01, 0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(bufLdSt, sizeof(bufLdSt));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+
+    u8 bufSve[3] = {0x49, 0x08, 0x01};
+    decoder = SpeDecoderDataNew(bufSve, sizeof(bufSve));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+
+    u8 bufBr[3] = {0x4A, 0x01, 0x01};
+    decoder = SpeDecoderDataNew(bufBr, sizeof(bufBr));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+
+    u8 bufOther[3] = {0x48, 0x08, 0x01};
+    decoder = SpeDecoderDataNew(bufOther, sizeof(bufOther));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+
+    u8 bufDef[3] = {0x4B, 0x01, 0x01};
+    decoder = SpeDecoderDataNew(bufDef, sizeof(bufDef));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordEventsZeroPayload
+ * @tc.desc: Test SpeReadRecordEvents with payload=0
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordEventsZeroPayload, TestSize.Level1)
+{
+    u8 buf[3] = {0x42, 0x00, 0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, sizeof(buf));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeReadRecordContextPacket
+ * @tc.desc: Test SpeReadRecord with CONTEXT packet
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeReadRecordContextPacket, TestSize.Level1)
+{
+    u8 buf[6] = {0x64, 0x12, 0x34, 0x56, 0x78, 0x01};
+    SpeDecoder *decoder = SpeDecoderDataNew(buf, sizeof(buf));
+    EXPECT_NE(decoder, nullptr);
+    if (decoder) {
+        EXPECT_GE(SpeDecode(decoder), 0);
+        SpeDecoderFree(decoder);
+    }
+}
+
+/**
+ * @tc.name: TestSpeDumpAndReportWithFile
+ * @tc.desc: Test SpeDumpRawData and DumpSpeReportData with non-null FILE*
+ * @tc.type: FUNC
+ */
+HWTEST_F(SpeDecoderTest, TestSpeDumpAndReportWithFile, TestSize.Level1)
+{
+    u8 buf[2] = {0x00, 0x01};
+    EXPECT_EQ(SpeDumpRawData(buf, sizeof(buf), 1, stderr), true);
+
+    DumpSpeReportData(0, stderr);
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
