@@ -1106,6 +1106,54 @@ HWTEST_F(UtilitiesTest, IsProfileableApp, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsApplicationEncryped
+ * @tc.desc: Test IsApplicationEncryped fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsApplicationEncryped, TestSize.Level1)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    EXPECT_TRUE(IsApplicationEncryped(1));
+#else
+    EXPECT_FALSE(IsApplicationEncryped(1));
+#endif
+}
+
+/**
+ * @tc.name: IsApplicationEncrypedCache
+ * @tc.desc: Test IsApplicationEncryped cache returns consistent result
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsApplicationEncrypedCache, TestSize.Level1)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    bool first = IsApplicationEncryped(999999);
+    bool second = IsApplicationEncryped(999999);
+    EXPECT_EQ(first, second);
+    EXPECT_TRUE(first);
+#else
+    EXPECT_FALSE(IsApplicationEncryped(999999));
+    EXPECT_FALSE(IsApplicationEncryped(999999));
+#endif
+}
+
+/**
+ * @tc.name: IsApplicationEncrypedInvalidPid
+ * @tc.desc: Test IsApplicationEncryped with invalid pid
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsApplicationEncrypedInvalidPid, TestSize.Level1)
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    EXPECT_TRUE(IsApplicationEncryped(0));
+    EXPECT_TRUE(IsApplicationEncryped(-1));
+#else
+    EXPECT_FALSE(IsApplicationEncryped(0));
+    EXPECT_FALSE(IsApplicationEncryped(-1));
+#endif
+}
+
+/**
  * @tc.name: GetUidFromPid
  * @tc.desc: Test GetUidFromPid fun
  * @tc.type: FUNC
