@@ -14,11 +14,18 @@
  */
 
 #include "utilities_test.h"
+#include <algorithm>
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <dirent.h>
 #include <fstream>
 #include <sstream>
+#include <sys/stat.h>
 #include <sys/utsname.h>
 #include <thread>
+#include <unistd.h>
+#include "cJSON.h"
 #include "ipc_utilities.h"
 #include "test_utilities.h"
 #include "utilities.h"
@@ -1741,6 +1748,741 @@ HWTEST_F(UtilitiesTest, StringReplace_MultipleOccurrences, TestSize.Level2)
     EXPECT_EQ(StringReplace("a,b,c,d", ",", "-"), "a-b-c-d");
     EXPECT_EQ(StringReplace("no match here", "xyz", "123"), "no match here");
     EXPECT_EQ(StringReplace("", "a", "b"), "");
+}
+
+/**
+ * @tc.name: CanonicalizeSpecPath_RealProcFile
+ * @tc.desc: Test CanonicalizeSpecPath with an existing /proc path
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CanonicalizeSpecPath_RealProcFile, TestSize.Level2)
+{
+    std::string result = CanonicalizeSpecPath("/proc/self/comm");
+    EXPECT_NE(result, "");
+    EXPECT_EQ(result.find("/proc/"), 0u);
+    EXPECT_NE(result.find("comm"), std::string::npos);
+    EXPECT_NE(CanonicalizeSpecPath("/data/local/tmp"), "");
+}
+
+/**
+ * @tc.name: IsHexDigits_HexPrefixAndZeros
+ * @tc.desc: Test IsHexDigits with 0x prefix, leading zeros and all-zero strings
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsHexDigits_HexPrefixAndZeros, TestSize.Level2)
+{
+    EXPECT_TRUE(IsHexDigits("0xabc"));
+    EXPECT_TRUE(IsHexDigits("0x0"));
+    EXPECT_TRUE(IsHexDigits("0x000"));
+    EXPECT_TRUE(IsHexDigits("0"));
+    EXPECT_TRUE(IsHexDigits("000"));
+    EXPECT_FALSE(IsHexDigits("0x"));
+}
+
+/**
+ * @tc.name: ReadFileToString_NonexistentFile
+ * @tc.desc: Test ReadFileToString returns empty when file open fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadFileToString_NonexistentFile, TestSize.Level2)
+{
+    EXPECT_EQ(ReadFileToString("/nonexistent/path/to/file.txt"), "");
+}
+
+/**
+ * @tc.name: ReadFileToString_3Arg_ZeroSizeFile
+ * @tc.desc: Test ReadFileToString 3-arg overload with /dev/null
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadFileToString_3Arg_ZeroSizeFile, TestSize.Level2)
+{
+    std::string content;
+    EXPECT_TRUE(ReadFileToString("/dev/null", content, 0));
+    EXPECT_TRUE(content.empty());
+}
+
+/**
+ * @tc.name: StringTrim_EmptyString
+ * @tc.desc: Test StringTrim with empty string
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringTrim_EmptyString, TestSize.Level3)
+{
+    std::string empty;
+    EXPECT_EQ(StringTrim(empty), "");
+}
+
+/**
+ * @tc.name: GetEntriesInDir_EmptyDir
+ * @tc.desc: Test GetEntriesInDir with an empty directory (only . and ..)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetEntriesInDir_EmptyDir, TestSize.Level2)
+{
+    std::string emptyDir = "/data/local/tmp/hiperf_empty_dir_test";
+    rmdir(emptyDir.c_str());
+    ASSERT_EQ(mkdir(emptyDir.c_str(), 0755), 0);
+    auto result = GetEntriesInDir(emptyDir);
+    EXPECT_TRUE(result.empty());
+    rmdir(emptyDir.c_str());
+}
+
+/**
+ * @tc.name: GetEntriesInDir_WithFiles
+ * @tc.desc: Test GetEntriesInDir with a directory containing real files
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetEntriesInDir_WithFiles, TestSize.Level2)
+{
+    std::string dir = "/data/local/tmp/hiperf_dir_test";
+    rmdir(dir.c_str());
+    ASSERT_EQ(mkdir(dir.c_str(), 0755), 0);
+    FILE* f = fopen((dir + "/testfile.txt").c_str(), "w");
+    ASSERT_NE(f, nullptr);
+    fclose(f);
+    auto result = GetEntriesInDir(dir);
+    auto it = std::find(result.begin(), result.end(), "testfile.txt");
+    EXPECT_NE(it, result.end());
+    remove((dir + "/testfile.txt").c_str());
+    rmdir(dir.c_str());
+}
+
+/**
+ * @tc.name: GetSubDirs_MixedFileAndDir
+ * @tc.desc: Test GetSubDirs filters out non-directory entries
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetSubDirs_MixedFileAndDir, TestSize.Level2)
+{
+    std::string dir = "/data/local/tmp/hiperf_subdir_test";
+    rmdir((dir + "/sub").c_str());
+    rmdir(dir.c_str());
+    ASSERT_EQ(mkdir(dir.c_str(), 0755), 0);
+    ASSERT_EQ(mkdir((dir + "/sub").c_str(), 0755), 0);
+    FILE* f = fopen((dir + "/file.txt").c_str(), "w");
+    ASSERT_NE(f, nullptr);
+    fclose(f);
+    auto result = GetSubDirs(dir);
+    auto it = std::find(result.begin(), result.end(), "sub");
+    EXPECT_NE(it, result.end());
+    EXPECT_EQ(std::find(result.begin(), result.end(), "file.txt"), result.end());
+    remove((dir + "/file.txt").c_str());
+    rmdir((dir + "/sub").c_str());
+    rmdir(dir.c_str());
+}
+
+/**
+ * @tc.name: IsSameCommand_PathMatch
+ * @tc.desc: Test IsSameCommand matches the last path component
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsSameCommand_PathMatch, TestSize.Level2)
+{
+    EXPECT_TRUE(IsSameCommand("/system/bin/init", "init"));
+    EXPECT_TRUE(IsSameCommand("a/b/c", "c"));
+}
+
+/**
+ * @tc.name: IsSameCommand_VectorMultiMatch
+ * @tc.desc: Test IsSameCommand vector overload with multiple names and no match
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsSameCommand_VectorMultiMatch, TestSize.Level2)
+{
+    std::vector<std::string> v = {"foo", "bar", "init"};
+    EXPECT_TRUE(IsSameCommand("/system/bin/init", v));
+    std::vector<std::string> v2 = {"foo", "bar"};
+    EXPECT_FALSE(IsSameCommand("/system/bin/init", v2));
+}
+
+/**
+ * @tc.name: HexDump_WithMaxSize
+ * @tc.desc: Test HexDump with non-zero maxSize
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, HexDump_WithMaxSize, TestSize.Level2)
+{
+    const unsigned char buf[] = "12345678";
+    const void *vbuf = static_cast<const void *>(buf);
+    ScopeDebugLevel tempLogLevel(LEVEL_MUCH, true);
+    StdoutRecord stdoutRecord;
+    stdoutRecord.Start();
+    EXPECT_EQ(HexDump(vbuf, 8, 4), true);
+    EXPECT_EQ(HexDump(vbuf, 4, 8), true);
+    stdoutRecord.Stop();
+}
+
+/**
+ * @tc.name: ReadIntFromProcFile_NoDigits
+ * @tc.desc: Test ReadIntFromProcFile returns false when content has no digits
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadIntFromProcFile_NoDigits, TestSize.Level2)
+{
+    std::string path = "/data/local/tmp/hiperf_nodigits.txt";
+    ASSERT_TRUE(WriteStringToFile(path, "abcdef\n"));
+    int val = 0;
+    EXPECT_FALSE(ReadIntFromProcFile(path, val));
+    remove(path.c_str());
+}
+
+/**
+ * @tc.name: ReadIntFromProcFile_ShortNoNewline
+ * @tc.desc: Test ReadIntFromProcFile with single-char content without newline
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadIntFromProcFile_ShortNoNewline, TestSize.Level2)
+{
+    std::string path = "/data/local/tmp/hiperf_short.txt";
+    ASSERT_TRUE(WriteStringToFile(path, "5"));
+    int val = 0;
+    EXPECT_TRUE(ReadIntFromProcFile(path, val));
+    EXPECT_EQ(val, 5);
+    remove(path.c_str());
+}
+
+/**
+ * @tc.name: ReadIntFromProcFile_Overflow
+ * @tc.desc: Test ReadIntFromProcFile returns false on integer overflow
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadIntFromProcFile_Overflow, TestSize.Level2)
+{
+    std::string path = "/data/local/tmp/hiperf_overflow.txt";
+    ASSERT_TRUE(WriteStringToFile(path, "99999999999999999999\n"));
+    int val = 0;
+    EXPECT_FALSE(ReadIntFromProcFile(path, val));
+    remove(path.c_str());
+}
+
+/**
+ * @tc.name: CompressFile_GzopenFail
+ * @tc.desc: Test CompressFile returns false when gzopen fails on bad dest path
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CompressFile_GzopenFail, TestSize.Level2)
+{
+    std::string src = "./resource/testdata/elf_test_stripped_broken";
+    std::string dest = "/nonexistent_dir_xyz/out.gz";
+    EXPECT_FALSE(CompressFile(src, dest));
+}
+
+/**
+ * @tc.name: UncompressFile_CorruptGzip
+ * @tc.desc: Test UncompressFile returns false on corrupt gzip content
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, UncompressFile_CorruptGzip, TestSize.Level2)
+{
+    std::string gzipPath = "/data/local/tmp/hiperf_corrupt.gz";
+    std::string dataPath = "/data/local/tmp/hiperf_corrupt_out";
+    std::ofstream gz(gzipPath, std::ios::binary);
+    ASSERT_TRUE(gz.is_open());
+    const unsigned char header[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff};
+    gz.write(reinterpret_cast<const char *>(header), sizeof(header));
+    const std::string garbage(100, 'x');
+    gz.write(garbage.data(), garbage.size());
+    gz.close();
+    EXPECT_FALSE(UncompressFile(gzipPath, dataPath));
+    remove(gzipPath.c_str());
+    remove(dataPath.c_str());
+}
+
+/**
+ * @tc.name: FindMatchingPidInProc_NotFound
+ * @tc.desc: Test FindMatchingPidInProc returns -1 when no process matches
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, FindMatchingPidInProc_NotFound, TestSize.Level2)
+{
+    std::string basePath {"/proc/"};
+    std::string cmdline {"/cmdline"};
+    EXPECT_EQ(FindMatchingPidInProc(basePath, cmdline, "nonexistent_app_xyz"), -1);
+}
+
+/**
+ * @tc.name: GetAppPackagePid_NotFound
+ * @tc.desc: Test GetAppPackagePid returns -1 for a non-running app
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetAppPackagePid_NotFound, TestSize.Level2)
+{
+    EXPECT_EQ(GetAppPackagePid("nonexistent_app_xyz", -1, 100, 1), -1);
+}
+
+/**
+ * @tc.name: IsEnableUnlockedDevicePerf_Call
+ * @tc.desc: Test IsEnableUnlockedDevicePerf executes and matches param value
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsEnableUnlockedDevicePerf_Call, TestSize.Level2)
+{
+    bool result = IsEnableUnlockedDevicePerf();
+    EXPECT_EQ(result, GetEnableUnlockDevicePerfParam() == "true");
+}
+
+/**
+ * @tc.name: GetDeveloperMode_Call
+ * @tc.desc: Test GetDeveloperMode executes the param read path
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetDeveloperMode_Call, TestSize.Level2)
+{
+    bool result1 = GetDeveloperMode();
+    bool result2 = GetDeveloperMode();
+    EXPECT_EQ(result1, result2);
+}
+
+/**
+ * @tc.name: IsUnlockedDevice_MatchParam
+ * @tc.desc: Test IsUnlockedDevice matches the device type param value
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsUnlockedDevice_MatchParam, TestSize.Level2)
+{
+    EXPECT_EQ(IsUnlockedDevice(), GetDeviceType() == "orange");
+}
+
+/**
+ * @tc.name: NeedAdaptHMBundlePath_NoBundlePath
+ * @tc.desc: Test NeedAdaptHMBundlePath returns false when path has no bundle prefix
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, NeedAdaptHMBundlePath_NoBundlePath, TestSize.Level2)
+{
+    std::string filename = "/data/local/tmp/test.so";
+    EXPECT_FALSE(NeedAdaptHMBundlePath(filename, "threadname"));
+    EXPECT_EQ(filename, "/data/local/tmp/test.so");
+}
+
+/**
+ * @tc.name: NeedAdaptHMBundlePath_NotExistBoth
+ * @tc.desc: Test NeedAdaptHMBundlePath returns false when neither old nor new path exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, NeedAdaptHMBundlePath_NotExistBoth, TestSize.Level2)
+{
+    std::string filename = "/data/storage/el1/bundle/libs/arm64/libentry.so";
+    EXPECT_FALSE(NeedAdaptHMBundlePath(filename, "nonexistent_proc"));
+    EXPECT_EQ(filename, "/data/storage/el1/bundle/libs/arm64/libentry.so");
+}
+
+/**
+ * @tc.name: IsNumeric_Comprehensive
+ * @tc.desc: Test IsNumeric with valid, invalid and trailing-character inputs
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsNumeric_Comprehensive, TestSize.Level2)
+{
+    EXPECT_TRUE(IsNumeric("0"));
+    EXPECT_TRUE(IsNumeric("123"));
+    EXPECT_TRUE(IsNumeric("-456"));
+    EXPECT_FALSE(IsNumeric(""));
+    EXPECT_FALSE(IsNumeric("abc"));
+    EXPECT_FALSE(IsNumeric("12a"));
+    EXPECT_FALSE(IsNumeric("1.5"));
+}
+
+/**
+ * @tc.name: ParseJson_Nonexistent
+ * @tc.desc: Test ParseJson returns nullptr when file cannot be opened
+ * @tc.type: FUNC
+ */
+#ifdef CONFIG_HAS_CCM
+HWTEST_F(UtilitiesTest, ParseJson_Nonexistent, TestSize.Level2)
+{
+    cJSON* root = ParseJson("/nonexistent/json/file.json");
+    EXPECT_EQ(root, nullptr);
+}
+
+/**
+ * @tc.name: ParseJson_ValidJson
+ * @tc.desc: Test ParseJson parses a valid JSON file successfully
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ParseJson_ValidJson, TestSize.Level2)
+{
+    std::string path = "/data/local/tmp/hiperf_test.json";
+    ASSERT_TRUE(WriteStringToFile(path, "{\"key\": 42}"));
+    cJSON* root = ParseJson(path);
+    ASSERT_NE(root, nullptr);
+    cJSON_Delete(root);
+    remove(path.c_str());
+}
+
+/**
+ * @tc.name: GetJsonNum_ValidAndInvalid
+ * @tc.desc: Test GetJsonNum with valid number, missing key and non-number node
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetJsonNum_ValidAndInvalid, TestSize.Level2)
+{
+    cJSON* root = cJSON_CreateObject();
+    ASSERT_NE(root, nullptr);
+    cJSON_AddNumberToObject(root, "num", 100);
+    size_t val = 0;
+    EXPECT_TRUE(GetJsonNum(root, "num", val));
+    EXPECT_EQ(val, 100u);
+    EXPECT_FALSE(GetJsonNum(root, "missing", val));
+    cJSON_AddItemToObject(root, "str", cJSON_CreateString("abc"));
+    EXPECT_FALSE(GetJsonNum(root, "str", val));
+    cJSON_Delete(root);
+}
+
+/**
+ * @tc.name: GetCfgValue_InvalidConfig
+ * @tc.desc: Test GetCfgValue returns false when config root is null
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetCfgValue_InvalidConfig, TestSize.Level2)
+{
+    size_t value = 0;
+    EXPECT_FALSE(GetCfgValue("nonexistent/cfg.json", "key", value));
+}
+#endif
+
+/**
+ * @tc.name: IsDirectoryExists_Nonexistent
+ * @tc.desc: Test IsDirectoryExists returns false for nonexistent path
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsDirectoryExists_Nonexistent, TestSize.Level2)
+{
+    EXPECT_FALSE(IsDirectoryExists("/nonexistent/dir/xyz"));
+}
+
+/**
+ * @tc.name: CreateDirectory_ExistingDir
+ * @tc.desc: Test CreateDirectory on an already existing directory (skip mkdir)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CreateDirectory_ExistingDir, TestSize.Level2)
+{
+    std::string dir = "/data/local/tmp/hiperf_exist_dir";
+    rmdir(dir.c_str());
+    ASSERT_EQ(mkdir(dir.c_str(), 0755), 0);
+    EXPECT_TRUE(CreateDirectory(dir, 0755));
+    rmdir(dir.c_str());
+}
+
+/**
+ * @tc.name: CreateDirectory_Nested
+ * @tc.desc: Test CreateDirectory creates nested directories recursively
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CreateDirectory_Nested, TestSize.Level2)
+{
+    std::string dir = "/data/local/tmp/hiperf_nested/a/b/c";
+    EXPECT_TRUE(CreateDirectory(dir, 0755));
+    rmdir("/data/local/tmp/hiperf_nested/a/b/c");
+    rmdir("/data/local/tmp/hiperf_nested/a/b");
+    rmdir("/data/local/tmp/hiperf_nested/a");
+    rmdir("/data/local/tmp/hiperf_nested");
+}
+
+/**
+ * @tc.name: CreateDirectory_MkdirFail
+ * @tc.desc: Test CreateDirectory returns false when mkdir fails (read-only location)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, CreateDirectory_MkdirFail, TestSize.Level2)
+{
+    EXPECT_FALSE(CreateDirectory("/proc/hiperf_cannot_create_dir", 0755));
+}
+
+/**
+ * @tc.name: GetStatusLineId_TrailingChars
+ * @tc.desc: Test GetStatusLineId fails when id has trailing non-numeric chars
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetStatusLineId_TrailingChars, TestSize.Level2)
+{
+    std::string line = "Uid:\t100abc\t200";
+    uint32_t target = 0;
+    EXPECT_FALSE(GetStatusLineId(line, target));
+}
+
+/**
+ * @tc.name: GetUidFromPid_Nonexistent
+ * @tc.desc: Test GetUidFromPid returns false for nonexistent pid
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetUidFromPid_Nonexistent, TestSize.Level2)
+{
+    uint32_t uid = 0;
+    EXPECT_FALSE(GetUidFromPid(9999999, uid));
+}
+
+/**
+ * @tc.name: IsRootThread_NonexistentPid
+ * @tc.desc: Test IsRootThread returns false for nonexistent pid
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsRootThread_NonexistentPid, TestSize.Level2)
+{
+    EXPECT_FALSE(IsRootThread(9999999));
+}
+
+/**
+ * @tc.name: IsAllowReleaseApp_NonexistentApp
+ * @tc.desc: Test IsAllowReleaseApp returns false for a non-running app
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsAllowReleaseApp_NonexistentApp, TestSize.Level2)
+{
+    EXPECT_FALSE(IsAllowReleaseApp("nonexistent_app_xyz"));
+}
+
+/**
+ * @tc.name: GetEntriesInDir_NonexistentDir
+ * @tc.desc: Test GetEntriesInDir returns empty for a nonexistent directory
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, GetEntriesInDir_NonexistentDir, TestSize.Level2)
+{
+    auto result = GetEntriesInDir("/nonexistent_dir_xyz_dir");
+    EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.name: WriteStringToFile_ReadOnlyPath
+ * @tc.desc: Test WriteStringToFile returns false when output open fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, WriteStringToFile_ReadOnlyPath, TestSize.Level2)
+{
+    EXPECT_FALSE(WriteStringToFile("/proc/hiperf_cannot_write.txt", "data"));
+}
+
+/**
+ * @tc.name: ReadFileToString_3Arg_Directory
+ * @tc.desc: Test ReadFileToString 3-arg returns false when reading a directory fd
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, ReadFileToString_3Arg_Directory, TestSize.Level2)
+{
+    std::string content;
+    EXPECT_FALSE(ReadFileToString("/data/local/tmp", content, 0));
+}
+
+/**
+ * @tc.name: IsRootThread_NonRootPid
+ * @tc.desc: Test IsRootThread returns false for a non-root pid found in /proc
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsRootThread_NonRootPid, TestSize.Level2)
+{
+    DIR *dir = opendir("/proc");
+    ASSERT_NE(dir, nullptr);
+    bool found = false;
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        int pid = atoi(entry->d_name);
+        if (pid <= 1) {
+            continue;
+        }
+        uint32_t uid = 0;
+        if (GetUidFromPid(pid, uid) && uid != 0) {
+            EXPECT_FALSE(IsRootThread(pid));
+            found = true;
+            break;
+        }
+    }
+    closedir(dir);
+    if (!found) {
+        GTEST_LOG_(INFO) << "No non-root pid found in /proc";
+    }
+}
+
+/**
+ * @tc.name: AgeHiperflogFiles_RemovesTempFile
+ * @tc.desc: Test AgeHiperflogFiles removes non-whitelist temp files
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, AgeHiperflogFiles_RemovesTempFile, TestSize.Level2)
+{
+    std::string tempFile = "/data/log/hiperflog/hiperf_age_test_temp.txt";
+    FILE *f = fopen(tempFile.c_str(), "w");
+    if (f == nullptr) {
+        GTEST_LOG_(INFO) << "Cannot create file in hiperflog, skip";
+        SUCCEED();
+        return;
+    }
+    fclose(f);
+    ASSERT_EQ(access(tempFile.c_str(), F_OK), 0);
+    AgeHiperflogFiles();
+    EXPECT_EQ(access(tempFile.c_str(), F_OK), -1);
+}
+
+/**
+ * @tc.name: IsContainDigits_Various
+ * @tc.desc: Test IscontainDigits with empty, numeric and mixed strings
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsContainDigits_Various, TestSize.Level2)
+{
+    EXPECT_FALSE(IscontainDigits(""));
+    EXPECT_FALSE(IscontainDigits("   "));
+    EXPECT_TRUE(IscontainDigits("0"));
+    EXPECT_TRUE(IscontainDigits(" 9 "));
+}
+
+/**
+ * @tc.name: StringToUnsignedLong_EdgeCases
+ * @tc.desc: Test StringToUnsignedLong with hex, octal and overflow inputs
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringToUnsignedLong_EdgeCases, TestSize.Level2)
+{
+    unsigned long val = 0;
+    EXPECT_TRUE(StringToUnsignedLong("0777", val));
+    EXPECT_TRUE(StringToUnsignedLong("0xFFFFFFFF", val, 16));
+    EXPECT_FALSE(StringToUnsignedLong("0xFFFFFFFFFFFFFFFFFF", val, 16));
+    EXPECT_FALSE(StringToUnsignedLong("12 34", val));
+}
+
+/**
+ * @tc.name: StringToLongLong_EdgeCases
+ * @tc.desc: Test StringToLongLong with octal, overflow and whitespace inputs
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringToLongLong_EdgeCases, TestSize.Level2)
+{
+    long long val = 0;
+    EXPECT_TRUE(StringToLongLong("0777", val));
+    EXPECT_TRUE(StringToLongLong("0x7FFFFFFFFFFFFFFF", val, 16));
+    EXPECT_FALSE(StringToLongLong("0x8000000000000000", val, 16));
+    EXPECT_FALSE(StringToLongLong("12 34", val));
+}
+
+/**
+ * @tc.name: StringToUint64_EdgeCases
+ * @tc.desc: Test StringToUint64 with hex, plus sign and boundary values
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringToUint64_EdgeCases, TestSize.Level2)
+{
+    uint64_t val = 1;
+    EXPECT_TRUE(StringToUint64("+123", val));
+    EXPECT_EQ(val, 123u);
+    EXPECT_TRUE(StringToUint64("0xFF", val, 16));
+    EXPECT_EQ(val, 255u);
+    EXPECT_TRUE(StringToUint64("0777", val));
+    EXPECT_EQ(val, 511u);
+    EXPECT_FALSE(StringToUint64("123 456", val));
+    EXPECT_FALSE(StringToUint64("+", val));
+}
+
+/**
+ * @tc.name: IsStringToIntSuccess_Boundary
+ * @tc.desc: Test IsStringToIntSuccess with INT_MAX, INT_MIN and overflow values
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsStringToIntSuccess_Boundary, TestSize.Level2)
+{
+    int num = 0;
+    EXPECT_TRUE(IsStringToIntSuccess("2147483647", num));
+    EXPECT_EQ(num, 2147483647);
+    EXPECT_TRUE(IsStringToIntSuccess("-2147483648", num));
+    EXPECT_EQ(num, -2147483648);
+    EXPECT_FALSE(IsStringToIntSuccess("2147483648", num));
+    EXPECT_FALSE(IsStringToIntSuccess("-2147483649", num));
+    EXPECT_FALSE(IsStringToIntSuccess("9999999999999999999", num));
+}
+
+/**
+ * @tc.name: StringEndsWith_SuffixVariations
+ * @tc.desc: Test StringEndsWith with longer suffix, partial and exact matches
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringEndsWith_SuffixVariations, TestSize.Level2)
+{
+    EXPECT_FALSE(StringEndsWith("ab", "abc"));
+    EXPECT_TRUE(StringEndsWith("abc", "abc"));
+    EXPECT_TRUE(StringEndsWith("abc", "c"));
+    EXPECT_TRUE(StringEndsWith("abc", ""));
+    EXPECT_FALSE(StringEndsWith("abc", "b"));
+    EXPECT_FALSE(StringEndsWith("a", "abc"));
+}
+
+/**
+ * @tc.name: StringStartsWith_PrefixVariations
+ * @tc.desc: Test StringStartsWith with longer prefix, partial and exact matches
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringStartsWith_PrefixVariations, TestSize.Level2)
+{
+    EXPECT_FALSE(StringStartsWith("ab", "abc"));
+    EXPECT_TRUE(StringStartsWith("abc", "abc"));
+    EXPECT_TRUE(StringStartsWith("abc", "a"));
+    EXPECT_TRUE(StringStartsWith("abc", ""));
+    EXPECT_FALSE(StringStartsWith("abc", "bc"));
+}
+
+/**
+ * @tc.name: IsPath_RelativeAndAbsolute
+ * @tc.desc: Test IsPath with absolute, relative and plain name inputs
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsPath_RelativeAndAbsolute, TestSize.Level2)
+{
+    EXPECT_TRUE(IsPath("/data/local/tmp"));
+    EXPECT_TRUE(IsPath("./test"));
+    EXPECT_FALSE(IsPath("test"));
+    EXPECT_FALSE(IsPath("abc/def"));
+}
+
+/**
+ * @tc.name: IsDir_FileAndNonexistent
+ * @tc.desc: Test IsDir returns false for a file and nonexistent path
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, IsDir_FileAndNonexistent, TestSize.Level2)
+{
+    EXPECT_FALSE(IsDir("/proc/self/comm"));
+    EXPECT_FALSE(IsDir("/nonexistent_dir_xyz"));
+    EXPECT_TRUE(IsDir("/data"));
+}
+
+/**
+ * @tc.name: PowerOfTwo_Various
+ * @tc.desc: Test PowerOfTwo with zero, one and non-power values
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, PowerOfTwo_Various, TestSize.Level2)
+{
+    EXPECT_FALSE(PowerOfTwo(0));
+    EXPECT_TRUE(PowerOfTwo(1));
+    EXPECT_TRUE(PowerOfTwo(2));
+    EXPECT_TRUE(PowerOfTwo(1024));
+    EXPECT_FALSE(PowerOfTwo(3));
+    EXPECT_FALSE(PowerOfTwo(1023));
+}
+
+/**
+ * @tc.name: SubStringCount_EdgeCases
+ * @tc.desc: Test SubStringCount with empty source, empty sub and no match
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, SubStringCount_EdgeCases, TestSize.Level2)
+{
+    EXPECT_EQ(SubStringCount("", "a"), 0u);
+    EXPECT_EQ(SubStringCount("aaa", ""), 3u);
+    EXPECT_EQ(SubStringCount("abc", "d"), 0u);
+    EXPECT_EQ(SubStringCount("aaaa", "aa"), 2u);
+}
+
+/**
+ * @tc.name: StringSplit_EdgeCases
+ * @tc.desc: Test StringSplit with only separator, leading/trailing separators
+ * @tc.type: FUNC
+ */
+HWTEST_F(UtilitiesTest, StringSplit_EdgeCases, TestSize.Level2)
+{
+    EXPECT_EQ(StringSplit(",", ",").size(), 0u);
+    EXPECT_EQ(StringSplit(",a,b,", ",").size(), 2u);
+    EXPECT_EQ(StringSplit("a,,b", ",").size(), 2u);
+    EXPECT_EQ(StringSplit("abc", "abc").size(), 0u);
 }
 
 } // namespace HiPerf
