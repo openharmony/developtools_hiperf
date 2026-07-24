@@ -214,20 +214,6 @@ public:
         return elfFile_->GetPtLoads();
     }
 
-    void ReleaseDebugInfo() override
-    {
-        if (map_ != nullptr) {
-            map_->elf = nullptr;
-            if (map_->prevMap != nullptr) {
-                map_->prevMap->elf = nullptr;
-            }
-        }
-        elfFile_.reset();
-        debugInfoLoaded_ = false;
-        debugInfoLoadResult_ = false;
-        SymbolsFile::ReleaseDebugInfo();
-    }
-
 protected:
     bool CreateElfFile(std::shared_ptr<DfxMap> map, std::string &elfPath)
     {
@@ -257,6 +243,7 @@ protected:
 
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
     {
+        std::lock_guard<std::mutex> lock(mutex_);
         if (debugInfoLoadResult_) {
             return true; // it must have been loaded
         } else if (debugInfoLoaded_) {
@@ -591,6 +578,8 @@ public:
             return;
         }
         *lineBegin = lineEnd + 1;
+        std::string name = nameRaw;
+        std::string module = moduleRaw;
 
         /*
         T
@@ -606,8 +595,6 @@ public:
         */
         if (addr != 0 && strchr("TtWw", type)) {
             const auto eachNewSymbolTime = steady_clock::now();
-            std::string name = nameRaw;
-            std::string module = moduleRaw;
             // we only need text symbols
             symbols_.emplace_back(addr, name, module.empty() ? filePath_ : module);
             parseTime.newTime += duration_cast<milliseconds>(steady_clock::now() - eachNewSymbolTime);
@@ -646,6 +633,8 @@ public:
             return;
         }
         *lineBegin = lineEnd + 1;
+        std::string name = nameRaw;
+        std::string module = moduleRaw;
 
         /*
         T
@@ -660,8 +649,6 @@ public:
         becomes zero with no error.
         */
         if (addr != 0 && strchr("TtWw", type)) {
-            std::string name = nameRaw;
-            std::string module = moduleRaw;
             // we only need text symbols
             symbols_.emplace_back(addr, name, module.empty() ? filePath_ : module);
         }
@@ -893,11 +880,20 @@ public:
         }
 
         found = std::prev(found);
-        if (found != symbols_.end() && found->Contain(ip)) {
-            found->offsetToVaddr_ = ip - found->funcVaddr_;
-            CacheMatchedSymbol(ip, *found);
-            symbol = *found; // copy
-            HLOGV("found '%s' for vaddr 0x%016" PRIx64 "", symbol.ToString().c_str(), ip);
+        if (found != symbols_.end()) {
+            if (found->Contain(ip)) {
+                found->offsetToVaddr_ = ip - found->funcVaddr_;
+                if (!found->matched_) {
+                    found->matched_ = true;
+                    DfxSymbol matchedSymbol = *found;
+                    // in func UpdateDevHostCallChains add offset to ips, need add offset when saveing
+                    matchedSymbol.funcVaddr_ += SymbolsFile::offsetNum_;
+                    this->symbolsMap_.emplace(ip, matchedSymbol);
+                    matchedSymbols_.push_back(&(symbolsMap_[ip]));
+                }
+                symbol = *found; // copy
+                HLOGV("found '%s' for vaddr 0x%016" PRIx64 "", symbol.ToString().c_str(), ip);
+            }
         }
 
         if (!symbol.IsValid()) {
@@ -908,22 +904,6 @@ public:
         symbol.symbolFileIndex_ = id_;
 
         return symbol;
-    }
-
-    void CacheMatchedSymbol(uint64_t ip, DfxSymbol& matched)
-    {
-        if (matched.matched_) {
-            return;
-        }
-        matched.matched_ = true;
-        DfxSymbol matchedSymbol = matched;
-        // in func UpdateDevHostCallChains add offset to ips, need add offset when saveing
-        matchedSymbol.funcVaddr_ += SymbolsFile::offsetNum_;
-
-        auto insertResult = this->symbolsMap_.emplace(ip, matchedSymbol);
-        if (insertResult.second) {
-            matchedSymbols_.push_back(&(insertResult.first->second));
-        }
     }
 
     bool LoadDebugInfo(std::shared_ptr<DfxMap> map, const std::string &symbolFilePath) override
@@ -1163,41 +1143,49 @@ public:
             return DfxSymbol(ip, "");
         }
         HLOGD("map name:%s", map->name.c_str());
+
 #if defined(is_ohos) && is_ohos
         if (IsAbc()) {
             JsFunction jsFunc;
-            if (StringEndsWith(map->name, ".hap") || StringEndsWith(map->name, ".hsp") ||
-                StringEndsWith(map->name, ".hqf") || StringEndsWith(map->name, ".abc")) {
+            std::string module = map->name;
+            HLOGD("map->name module:%s", module.c_str());
+            if (StringEndsWith(map->name, ".hap") || StringEndsWith(map->name, ".hsp")
+                || StringEndsWith(map->name, ".hqf") || StringEndsWith(map->name, ".abc")) {
                 auto ret = DfxArk::Instance().ParseArkFileInfo(static_cast<uintptr_t>(ip),
-                    static_cast<uintptr_t>(map->begin), static_cast<uintptr_t>(map->offset),
-                    filePath_.c_str(), arkExtractorPtr_, &jsFunc, false);
+                                                               static_cast<uintptr_t>(map->begin),
+                                                               static_cast<uintptr_t>(map->offset), filePath_.c_str(),
+                                                               arkExtractorPtr_, &jsFunc, false);
                 if (ret == -1) {
                     HLOGD("failed to call ParseArkFileInfo, the symbol file is : %s", map->name.c_str());
                     return DfxSymbol(ip, "");
                 }
             } else {
                 auto ret = DfxArk::Instance().ParseArkFrameInfo(static_cast<uintptr_t>(ip),
-                    static_cast<uintptr_t>(map->begin), loadOffSet_, abcDataPtr_.get(),
-                    abcDataSize_, arkExtractorPtr_, &jsFunc);
+                                                                static_cast<uintptr_t>(map->begin),
+                                                                loadOffSet_, abcDataPtr_.get(), abcDataSize_,
+                                                                arkExtractorPtr_, &jsFunc);
                 if (ret == -1) {
                     HLOGD("failed to call ParseArkFrameInfo, the symbol file is : %s", map->name.c_str());
                     return DfxSymbol(ip, "");
                 }
             }
-            DfxSymbol newSymbol(ip, jsFunc.codeBegin, jsFunc.functionName, jsFunc.ToString(), map->name);
-            newSymbol.matched_ = true;
-            newSymbol.symbolFileIndex_ = id_;
-            auto insertResult = symbolsMap_.emplace(ip, newSymbol);
-            DfxSymbol &foundSymbol = insertResult.first->second;
-            if (insertResult.second) {
-                matchedSymbols_.push_back(&foundSymbol);
+            this->symbolsMap_.insert(std::make_pair(ip, DfxSymbol(ip, jsFunc.codeBegin, jsFunc.functionName,
+                                                    jsFunc.ToString(), map->name)));
+
+            DfxSymbol &foundSymbol = symbolsMap_[ip];
+            if (!foundSymbol.matched_) {
+                foundSymbol.matched_ = true;
+                foundSymbol.symbolFileIndex_ = id_;
+                matchedSymbols_.push_back(&(symbolsMap_[ip]));
             }
+
             HLOGD("ip : 0x%" PRIx64 " the symbol file is : %s, function is %s demangle_ : %s", ip,
-                  foundSymbol.module_.data(), jsFunc.functionName, foundSymbol.demangle_.data());
-            return foundSymbol;
+                  symbolsMap_[ip].module_.data(), jsFunc.functionName, matchedSymbols_.back()->demangle_.data());
+            return symbolsMap_[ip];
         }
 #endif
-        return DfxSymbol(ip, "");
+        DfxSymbol symbol(ip, "");
+        return symbol;
     }
 };
 
@@ -1320,19 +1308,18 @@ public:
 
             std::string demangle = GetDemangle(jsvmFunction);
             DfxSymbol symbol = DfxSymbol(ip, 0, jsvmFunction.functionName, demangle, map->name);
-            symbol.matched_ = true;
-            symbol.symbolFileIndex_ = id_;
+            this->symbolsMap_.insert(std::make_pair(ip, symbol));
 
-            auto insertResult = symbolsMap_.emplace(ip, symbol);
-            DfxSymbol &foundSymbol = insertResult.first->second;
-
-            if (insertResult.second) {
-                matchedSymbols_.push_back(&foundSymbol);
+            DfxSymbol &foundSymbol = symbolsMap_[ip];
+            if (!foundSymbol.matched_) {
+                foundSymbol.matched_ = true;
+                foundSymbol.symbolFileIndex_ = id_;
+                matchedSymbols_.push_back(&(symbolsMap_[ip]));
             }
 
             HLOGD("ip : 0x%" PRIx64 " the symbol file is : %s, function is %s demangle_ : %s", ip,
-                  foundSymbol.module_.data(), jsvmFunction.functionName, foundSymbol.demangle_.data());
-            return foundSymbol;
+                  symbolsMap_[ip].module_.data(), jsvmFunction.functionName, matchedSymbols_.back()->demangle_.data());
+            return symbolsMap_[ip];
         }
 #endif
         DfxSymbol symbol(ip, "");
@@ -1456,19 +1443,18 @@ public:
             }
             std::string demangle = GetDemangle(jsvmFunction);
             DfxSymbol symbol = DfxSymbol(ip, 0, jsvmFunction.functionName, demangle, map->name);
-            symbol.matched_ = true;
-            symbol.symbolFileIndex_ = id_;
+            this->symbolsMap_.insert(std::make_pair(ip, symbol));
 
-            auto insertResult = symbolsMap_.emplace(ip, symbol);
-            DfxSymbol &foundSymbol = insertResult.first->second;
-
-            if (insertResult.second) {
-                matchedSymbols_.push_back(&foundSymbol);
+            DfxSymbol &foundSymbol = symbolsMap_[ip];
+            if (!foundSymbol.matched_) {
+                foundSymbol.matched_ = true;
+                foundSymbol.symbolFileIndex_ = id_;
+                matchedSymbols_.push_back(&(symbolsMap_[ip]));
             }
 
             HLOGD("ip : 0x%" PRIx64 " the symbol file is : %s, function is %s demangle_ : %s", ip,
-                  foundSymbol.module_.data(), jsvmFunction.functionName, foundSymbol.demangle_.data());
-            return foundSymbol;
+                  symbolsMap_[ip].module_.data(), jsvmFunction.functionName, matchedSymbols_.back()->demangle_.data());
+            return symbolsMap_[ip];
         }
 #endif
         DfxSymbol symbol(ip, "");
@@ -1755,7 +1741,6 @@ std::unique_ptr<SymbolsFile> SymbolsFile::LoadSymbolsFromSaved(
     }
     symbolsFile->AdjustSymbols(); // reorder
     if (isHapSymbolFile || isJsvmV8SymbolFile || isArkwebV8SymbolFile) {
-        symbolsFile->symbolsMap_.reserve(symbolsFile->symbols_.size());
         for (const auto& symbol : symbolsFile->symbols_) {
             symbolsFile->symbolsMap_.emplace(symbol.funcVaddr_, symbol);
         }

@@ -20,7 +20,6 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 
 #include "dfx_elf.h"
 #include "dfx_symbol.h"
@@ -205,26 +204,7 @@ public:
         return symbolsLoaded_;
     }
 
-    void SetSymbolsLoaded(bool loaded)
-    {
-        symbolsLoaded_ = loaded;
-    }
-
     void AddSymbol(DfxSymbol symbol);
-
-    void ReleaseSymbols()
-    {
-        { std::vector<DfxSymbol>().swap(symbols_); }
-        { std::vector<DfxSymbol *>().swap(matchedSymbols_); }
-        { std::unordered_map<uint64_t, DfxSymbol>().swap(symbolsMap_); }
-        symbolsLoaded_ = false;
-    }
-
-    virtual void ReleaseDebugInfo()
-    {
-        { std::vector<std::string>().swap(symbolsFileSearchPaths_); }
-        map_.reset();
-    }
 
     // this means we are in recording
     // will try read some elf in runtime path
@@ -232,9 +212,8 @@ public:
     static bool needJsvm_;
     std::vector<DfxSymbol> symbols_ {};
     std::vector<DfxSymbol *> matchedSymbols_ {};
-    std::unordered_map<uint64_t, DfxSymbol> symbolsMap_;
+    std::map<uint64_t, DfxSymbol> symbolsMap_;
     static uint32_t offsetNum_;
-
     virtual DfxSymbol GetSymbolWithPcAndMap(const uint64_t pc, std::shared_ptr<DfxMap> map)
     {
         return DfxSymbol();
@@ -259,7 +238,9 @@ protected:
     bool UpdateBuildIdIfMatch(const std::string &buildId);
     std::string buildId_ = "";
     std::vector<std::string> symbolsFileSearchPaths_;
+
     std::vector<FileSymbol> fileSymbols_ {};
+    std::mutex mutex_;
 
     void AdjustSymbols();
     void SortMatchedSymbols();
