@@ -294,12 +294,11 @@ static void InitTestRecordSample(TestRecordSamplest &record)
 {
     record.header_.size = sizeof(perf_event_header);
     record.header_.size +=
-        sizeof(record.data_.sample_id) + sizeof(record.data_.sample_id) + sizeof(record.data_.ip) +
+        sizeof(record.data_.sample_id) + sizeof(record.data_.ip) +
         sizeof(record.data_.pid) + sizeof(record.data_.tid) + sizeof(record.data_.time) +
         sizeof(record.data_.addr) + sizeof(record.data_.id) + sizeof(record.data_.stream_id) +
         sizeof(record.data_.cpu) + sizeof(record.data_.res) + sizeof(record.data_.period);
-
-    // v??
+    record.header_.size += sizeof(record.data_.v.value);
 
     record.data_.nr = 0;
     record.data_.ips = nullptr;
@@ -313,6 +312,8 @@ static void InitTestRecordSample(TestRecordSamplest &record)
     record.data_.user_abi = 0;
     record.data_.reg_mask = 0;
     record.header_.size += sizeof(record.data_.user_abi);
+    record.data_.server_nr = 0;
+    record.header_.size += sizeof(record.data_.server_nr);
     record.data_.stack_size = 0;
     record.header_.size += sizeof(record.data_.stack_size);
     // others
@@ -1199,8 +1200,8 @@ HWTEST_F(PerfEventRecordTest, AuxtraceInitErr, TestSize.Level3)
                  sizeof(perf_event_header)) != 0) {
         printf("memcpy_s perf_event_header return failed");
     }
-    if (memcpy_s(p + sizeof(perf_event_header), sizeof(PerfRecordAuxtraceData),
-                 reinterpret_cast<const uint8_t *>(&data), sizeof(PerfRecordAuxtraceData)) != 0) {
+    if (memcpy_s(p + sizeof(perf_event_header), header.size - sizeof(perf_event_header),
+                 reinterpret_cast<const uint8_t *>(&data), header.size - sizeof(perf_event_header)) != 0) {
         printf("memcpy_s data return failed");
     }
     PerfRecordAuxtrace record;
