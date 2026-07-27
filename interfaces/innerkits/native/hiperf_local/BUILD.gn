@@ -23,6 +23,7 @@ config("hiperf_local_config") {
 }
 
 ohos_shared_library("hiperf_local") {
+  branch_protector_ret = "pac_ret"
   install_enable = true
   public_configs = [ ":hiperf_local_config" ]
   sources = [
