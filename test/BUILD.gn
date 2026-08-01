@@ -148,7 +148,7 @@ ohos_unittest("hiperf_unittest") {
     "hisysevent:libhisyseventmanager",
     "ipc:ipc_single",
     "protobuf:protobuf_lite",
-    "zlib:libz",
+    "zlib:shared_libz",
   ]
 
   cflags = [

@@ -258,7 +258,7 @@ ohos_source_set("hiperf_platform_common") {
   }
   external_deps += [
     "bounds_checking_function:libsec_shared",
-    "zlib:libz",
+    "zlib:shared_libz",
   ]
   if (is_ohos) {
     external_deps += [
@@ -302,7 +302,7 @@ ohos_source_set("hiperf_platform_linux") {
   external_deps += [
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
-    "zlib:libz",
+    "zlib:shared_libz",
   ]
   if (is_ohos) {
     external_deps += [ "protobuf:protobuf_lite" ]
