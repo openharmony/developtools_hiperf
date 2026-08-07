@@ -44,6 +44,20 @@ static std::atomic<bool> g_haveIpc = false;
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
 static constexpr int32_t GET_BUNDLEINFO_FLAGS =
     static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+
+namespace {
+std::mutex& GetEncrypedCacheMutex()
+{
+    static std::mutex mutex;
+    return mutex;
+}
+
+std::vector<std::pair<std::string, bool>>& GetEncrypedCache()
+{
+    static std::vector<std::pair<std::string, bool>> cache;
+    return cache;
+}
+} // namespace
 #endif
 
 BundleMgrProxy GetBundleMgrProxy(std::string& err)
@@ -134,46 +148,57 @@ bool IsDebugableApp(const std::string& bundleName)
 bool IsApplicationEncryped(const int pid)
 {
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
-    static std::mutex cacheMutex;
-    static std::vector<std::pair<int, bool>> cache;
     g_haveIpc.store(true);
     CHECK_TRUE(pid > 0, true, LOG_TYPE_PRINTF, "Invalid -p value '%d', the pid should be larger than 0\n", pid);
+    std::string bundleName = GetProcessName(pid);
+    if (bundleName.empty()) {
+        HLOGE("bundleName is empty,pid is %d", pid);
+        return true;
+    }
+    auto pos = bundleName.find(":");
+    if (pos != std::string::npos) {
+        bundleName = bundleName.substr(0, pos);
+    }
     {
-        std::lock_guard<std::mutex> lock(cacheMutex);
+        std::lock_guard<std::mutex> lock(GetEncrypedCacheMutex());
+        auto& cache = GetEncrypedCache();
         auto it = std::find_if(cache.begin(), cache.end(),
-                               [pid](const std::pair<int, bool> &entry) { return entry.first == pid; });
+                               [&bundleName](const std::pair<std::string, bool> &entry) {
+                                   return entry.first == bundleName;
+                               });
         if (it != cache.end()) {
-            HLOGD("use cached encryped result.%d : pid:%d", it->second, pid);
+            HLOGD("use cached encryped result.%d : %s", it->second, bundleName.c_str());
             return it->second;
         }
     }
-    std::string bundleName = GetProcessName(pid);
-    bool isEncrypted = true;
-    if (bundleName.empty()) {
-        HLOGE("bundleName is empty,pid is %d", pid);
-    } else {
-        auto pos = bundleName.find(":");
-        if (pos != std::string::npos) {
-            bundleName = bundleName.substr(0, pos);
-        }
-        AppExecFwk::ApplicationInfo appInfo;
-        if (!GetAppInfo(bundleName, appInfo, GET_BUNDLEINFO_FLAGS)) {
-            HLOGE("%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
-        } else {
-            isEncrypted = (appInfo.applicationReservedFlag &
-                           static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
-            HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);
-        }
+    AppExecFwk::ApplicationInfo appInfo;
+    if (!GetAppInfo(bundleName, appInfo, GET_BUNDLEINFO_FLAGS)) {
+        HLOGE("%s:%s GetApplicationInfo failed!", __func__, bundleName.c_str());
+        return true;
     }
+    bool isEncrypted = (appInfo.applicationReservedFlag &
+                        static_cast<uint32_t>(AppExecFwk::ApplicationReservedFlag::ENCRYPTED_APPLICATION)) != 0;
+    HLOGD("check application encryped.%d : %s, pid:%d", isEncrypted, bundleName.c_str(), pid);
     {
-        std::lock_guard<std::mutex> lock(cacheMutex);
-        cache.emplace_back(pid, isEncrypted);
+        std::lock_guard<std::mutex> lock(GetEncrypedCacheMutex());
+        GetEncrypedCache().emplace_back(bundleName, isEncrypted);
     }
     return isEncrypted;
 #else
     return false;
 #endif
 }
+
+#ifdef HIPERF_UNITTEST
+void ClearIsApplicationEncrypedCache()
+{
+#if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
+    std::lock_guard<std::mutex> lock(GetEncrypedCacheMutex());
+    GetEncrypedCache().clear();
+    HLOGD("clear encryped cache");
+#endif
+}
+#endif
 
 bool IsProfileableApp(const std::string& bundleName)
 {

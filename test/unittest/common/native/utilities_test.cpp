@@ -1112,11 +1112,13 @@ HWTEST_F(UtilitiesTest, IsProfileableApp, TestSize.Level1)
  */
 HWTEST_F(UtilitiesTest, IsApplicationEncryped, TestSize.Level1)
 {
+    ClearIsApplicationEncrypedCache();
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     EXPECT_TRUE(IsApplicationEncryped(1));
 #else
     EXPECT_FALSE(IsApplicationEncryped(1));
 #endif
+    ClearIsApplicationEncrypedCache();
 }
 
 /**
@@ -1126,6 +1128,7 @@ HWTEST_F(UtilitiesTest, IsApplicationEncryped, TestSize.Level1)
  */
 HWTEST_F(UtilitiesTest, IsApplicationEncrypedCache, TestSize.Level1)
 {
+    ClearIsApplicationEncrypedCache();
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     bool first = IsApplicationEncryped(999999);
     bool second = IsApplicationEncryped(999999);
@@ -1135,6 +1138,7 @@ HWTEST_F(UtilitiesTest, IsApplicationEncrypedCache, TestSize.Level1)
     EXPECT_FALSE(IsApplicationEncryped(999999));
     EXPECT_FALSE(IsApplicationEncryped(999999));
 #endif
+    ClearIsApplicationEncrypedCache();
 }
 
 /**
@@ -1144,6 +1148,7 @@ HWTEST_F(UtilitiesTest, IsApplicationEncrypedCache, TestSize.Level1)
  */
 HWTEST_F(UtilitiesTest, IsApplicationEncrypedInvalidPid, TestSize.Level1)
 {
+    ClearIsApplicationEncrypedCache();
 #if defined(is_ohos) && is_ohos && defined(BUNDLE_FRAMEWORK_ENABLE)
     EXPECT_TRUE(IsApplicationEncryped(0));
     EXPECT_TRUE(IsApplicationEncryped(-1));
@@ -1151,6 +1156,7 @@ HWTEST_F(UtilitiesTest, IsApplicationEncrypedInvalidPid, TestSize.Level1)
     EXPECT_FALSE(IsApplicationEncryped(0));
     EXPECT_FALSE(IsApplicationEncryped(-1));
 #endif
+    ClearIsApplicationEncrypedCache();
 }
 
 /**
