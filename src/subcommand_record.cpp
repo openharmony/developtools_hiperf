@@ -353,12 +353,12 @@ bool SubCommandRecord::GetOptions(std::vector<std::string> &args)
         appendSmoData_ = true;
         return false;
     }
-    if (!Option::GetOptionValue(args, "--parallel-symbols", parallelSymbols_)) {
+    if (!Option::GetOptionValue(args, "--parallel-symbolic", parallelSymbols_)) {
         return false;
     }
     if (parallelSymbols_ && hasCpuLimit) {
-        printf("'--parallel-symbols' and '--cpu-limit' are mutually exclusive\n");
-        HLOGE("'--parallel-symbols' and '--cpu-limit' are mutually exclusive");
+        printf("--parallel-symbolic option is conflict with --cpu-limit.\n");
+        HLOGE("--parallel-symbolic option is conflict with --cpu-limit.");
         return false;
     }
     if (!callStackType_.empty()) {

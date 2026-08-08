@@ -57,6 +57,7 @@ public:
 
     CacheStats GetCacheStats() const;
     size_t GetCacheSize() const;
+    size_t GetCurrentCacheSize() const;
     void ClearCache();
 
     // Public constant for parallel thread count (must match cache array size)
