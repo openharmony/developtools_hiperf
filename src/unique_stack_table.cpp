@@ -182,7 +182,8 @@ bool UniqueStackTable::GetIpsByStackId(const StackId stackId, std::vector<u64>& 
 
 bool UniqueStackTable::ImportNode(const uint32_t index, const Node& node)
 {
-    CHECK_TRUE(index < tableSize_, false, 0, "");
+    CHECK_TRUE(tableBuf_ != nullptr, false, 1, "Hashtable not exist, fatal error!");
+    CHECK_TRUE(index < totalNodes_, false, 0, "");
     Node *tableHead = reinterpret_cast<Node *>(tableBuf_.get());
     tableHead[index].value = node.value;
     return true;
