@@ -224,11 +224,15 @@ ArchType GetDeviceArch()
 #endif
 }
 
-void UpdateRegForABI(const ArchType arch, u64 *regs)
+void UpdateRegForABI(const ArchType arch, u64 *regs, const size_t regNum)
 {
     if (g_deviceArchType == ArchType::ARCH_ARM64 && arch == ArchType::ARCH_ARM) {
         // arm in arm64
-        regs[PERF_REG_ARM_PC] = regs[PERF_REG_ARM64_PC];
+        if (regNum > PERF_REG_ARM_PC && regNum > PERF_REG_ARM64_PC) {
+            regs[PERF_REG_ARM_PC] = regs[PERF_REG_ARM64_PC];
+        } else {
+            HLOGW("regNum %zu too small for arm32 ABI fixup", regNum);
+        }
     }
 }
 } // namespace HiPerf
