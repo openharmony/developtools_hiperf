@@ -176,6 +176,50 @@ HWTEST_F(UniqueStackTableTest, TestGetWriteSize, TestSize.Level2)
     EXPECT_GT(writeSize, 0u);
 }
 
+/**
+ * @tc.name: Test_ImportNode_BoundsCheck
+ * @tc.desc: ImportNode must reject out-of-bounds index (node count, not byte count)
+ * @tc.type: FUNC
+ */
+HWTEST_F(UniqueStackTableTest, Test_ImportNode_BoundsCheck, TestSize.Level1)
+{
+    // tableSize_ = 1024 bytes -> totalNodes_ = 1024 / sizeof(Node) = 128
+    std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(1, 1024);
+
+    uint64_t expected = 0x1234ULL;
+    Node node;
+    node.value = expected;
+
+    // valid index within totalNodes_ writes through and round-trips
+    EXPECT_TRUE(table->ImportNode(0, node));
+    EXPECT_EQ(table->GetHeadNode()[0].value, expected);
+
+    // index == totalNodes_ is out of bounds
+    EXPECT_FALSE(table->ImportNode(128, node));
+
+    // index = tableSize_ - 1 used to bypass the byte-based check and cause OOB write;
+    // now must be rejected because it far exceeds the node count
+    EXPECT_FALSE(table->ImportNode(1023, node));
+}
+
+/**
+ * @tc.name: Test_ImportNode_InitFailed
+ * @tc.desc: ImportNode must not deref null tableBuf_ when Init() failed on oversize
+ * @tc.type: FUNC
+ */
+HWTEST_F(UniqueStackTableTest, Test_ImportNode_InitFailed, TestSize.Level1)
+{
+    // oversize makes Init() fail: tableBuf_ stays null while totalNodes_ is huge
+    uint32_t oversize = 128 * 1024 * 1024;
+    std::shared_ptr<UniqueStackTable> table = std::make_shared<UniqueStackTable>(1, oversize);
+
+    Node node;
+    node.value = 0x5678ULL;
+
+    // must return false instead of crashing on null pointer write
+    EXPECT_FALSE(table->ImportNode(0, node));
+}
+
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
