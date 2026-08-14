@@ -84,7 +84,7 @@ bool CallStack::UnwindCallStack(const VirtualThread &thread, const bool abi32, u
     stackSize_ = stackSize;
 
     arch_ = GetArchTypeFromABI(abi32);
-    UpdateRegForABI(arch_, regs_);
+    UpdateRegForABI(arch_, regs_, regsNum_);
     if (!RegisterGetSPValue(stackPoint_, arch_, regs_, regsNum_)) {
         HLOGE("RegisterGetSPValue failed");
         return false;

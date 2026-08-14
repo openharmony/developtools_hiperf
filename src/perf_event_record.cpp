@@ -651,6 +651,12 @@ void PerfRecordSample::ParseSampleTailData(uint8_t *&p, const perf_event_attr &a
         data_.stack_data = p;
         SetPointerOffset(p, data_.stack_size, dataSize);
         PopFromBinary(true, p, data_.dyn_size, dataSize);
+
+        if (data_.dyn_size > data_.stack_size) {
+            HLOGW("invalid dyn_size %llu > stack_size %llu, clamp",
+                  (unsigned long long)data_.dyn_size, (unsigned long long)data_.stack_size);
+            data_.dyn_size = data_.stack_size;
+        }
     }
     uint32_t remain = header_.size - (p - start);
     if (data_.nr == 0 && dumpRemoveStack_ && remain == sizeof(stackId_)) {

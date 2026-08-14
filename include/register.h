@@ -157,7 +157,7 @@ ArchType GetDeviceArch();
 ArchType SetDeviceArch(const ArchType arch);
 ArchType GetArchTypeFromUname(const std::string &machine);
 ArchType GetArchTypeFromABI(const bool abi32);
-void UpdateRegForABI(const ArchType arch, u64 *registers);
+void UpdateRegForABI(const ArchType arch, u64 *registers, const size_t regNum);
 } // namespace HiPerf
 } // namespace Developtools
 } // namespace OHOS
