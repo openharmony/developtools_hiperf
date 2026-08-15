@@ -90,6 +90,12 @@ size_t SymbolResolver::GetCacheSize() const
     return total;
 }
 
+size_t SymbolResolver::GetCurrentCacheSize() const
+{
+    size_t id = currentThreadId_ < PARALLEL_THREAD_COUNT ? currentThreadId_ : 0;
+    return threadCaches_[id].cache.size();
+}
+
 void SymbolResolver::ClearCache()
 {
     ClearAllCaches();
@@ -348,7 +354,7 @@ DfxSymbol SymbolManager::ResolveSymbol(
         DfxSymbol symbol = kernelThreadResolver_->Resolve(ip, thread);
         kernelThreadResolveCount_.fetch_add(1, std::memory_order_relaxed);
         HLOGM("add addr to kernel thread cache 0x%" PRIx64 " cache size %zu", ip,
-              kernelThreadResolver_->GetCacheSize());
+              kernelThreadResolver_->GetCurrentCacheSize());
         if (symbol.IsValid()) {
             return symbol;
         }
@@ -359,7 +365,7 @@ DfxSymbol SymbolManager::ResolveSymbol(
         DfxSymbol kernelSymbol = kernelResolver_->Resolve(ip, thread);
         kernelResolveCount_.fetch_add(1, std::memory_order_relaxed);
         HLOGM("add addr to kernel cache 0x%" PRIx64 " cache size %zu", ip,
-              kernelResolver_->GetCacheSize());
+              kernelResolver_->GetCurrentCacheSize());
         return kernelSymbol;
     } else if (context == PERF_CONTEXT_USER) {
         userResolveCount_.fetch_add(1, std::memory_order_relaxed);
@@ -376,7 +382,7 @@ DfxSymbol SymbolManager::ResolveSymbol(
         DfxSymbol kernelSymbol = kernelResolver_->Resolve(ip, thread);
         kernelResolveCount_.fetch_add(1, std::memory_order_relaxed);
         HLOGM("add addr to kernel cache 0x%" PRIx64 " cache size %zu", ip,
-              kernelResolver_->GetCacheSize());
+              kernelResolver_->GetCurrentCacheSize());
         return kernelSymbol;
     }
 }
