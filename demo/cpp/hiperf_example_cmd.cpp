@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "parse_hiperf_int.h"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -393,8 +394,7 @@ void Help()
 bool GetIntFromArg(std::vector<std::string> &args, int &value)
 {
     if (!args.empty()) {
-        if (std::all_of(args.begin()->begin(), args.begin()->end(), ::isdigit)) {
-            value = std::stoi(args[0]);
+        if (ParseHiperfInt(args[0], value)) {
             args.erase(args.begin());
         } else {
             printf("unknown format '%s'\n", args[0].c_str());
