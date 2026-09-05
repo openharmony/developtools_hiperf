@@ -73,7 +73,7 @@ inline const std::string PERF_DISABLE_PARAM = "security.perf_harden";
 // define convert from linux/perf_event.h
 // description from https://man7.org/linux/man-pages/man2/perf_event_open.2.html
 
-const ConfigTable PERF_HW_CONFIGS = {
+inline const ConfigTable PERF_HW_CONFIGS = {
     {PERF_COUNT_HW_CPU_CYCLES, "hw-cpu-cycles"},
     {PERF_COUNT_HW_INSTRUCTIONS, "hw-instructions"},
     {PERF_COUNT_HW_CACHE_REFERENCES, "hw-cache-references"},
@@ -85,22 +85,22 @@ const ConfigTable PERF_HW_CONFIGS = {
     {PERF_COUNT_HW_STALLED_CYCLES_BACKEND, "hw-stalled-cycles-backend"},
     {PERF_COUNT_HW_REF_CPU_CYCLES, "hw-ref-cpu-cycles"},
 };
-const ConfigTable PERF_HW_CACHE_CONFIGS = {
+inline const ConfigTable PERF_HW_CACHE_CONFIGS = {
     {PERF_COUNT_HW_CACHE_L1D, "hw-cache-l1d"},   {PERF_COUNT_HW_CACHE_L1I, "hw-cache-l1i"},
     {PERF_COUNT_HW_CACHE_LL, "hw-cache-ll"},     {PERF_COUNT_HW_CACHE_DTLB, "hw-cache-dtlb"},
     {PERF_COUNT_HW_CACHE_ITLB, "hw-cache-itlb"}, {PERF_COUNT_HW_CACHE_BPU, "hw-cache-bpu"},
     {PERF_COUNT_HW_CACHE_NODE, "hw-cache-node"},
 };
-const ConfigTable PERF_HW_CACHE_OP_CONFIGS = {
+inline const ConfigTable PERF_HW_CACHE_OP_CONFIGS = {
     {PERF_COUNT_HW_CACHE_OP_READ, "hw-cache-op-read"},
     {PERF_COUNT_HW_CACHE_OP_WRITE, "hw-cache-op-write"},
     {PERF_COUNT_HW_CACHE_OP_PREFETCH, "hw-cache-op-prefetch"},
 };
-const ConfigTable PERF_HW_CACHE_OP_RESULT_CONFIGS = {
+inline const ConfigTable PERF_HW_CACHE_OP_RESULT_CONFIGS = {
     {PERF_COUNT_HW_CACHE_RESULT_ACCESS, "hw-cache-result-access"},
     {PERF_COUNT_HW_CACHE_RESULT_MISS, "hw-cache-result-miss"},
 };
-const ConfigTable PERF_SW_CONFIGS = {
+inline const ConfigTable PERF_SW_CONFIGS = {
     {PERF_COUNT_SW_CPU_CLOCK, "sw-cpu-clock"},
     {PERF_COUNT_SW_TASK_CLOCK, "sw-task-clock"},
     {PERF_COUNT_SW_PAGE_FAULTS, "sw-page-faults"},
@@ -113,7 +113,7 @@ const ConfigTable PERF_SW_CONFIGS = {
     {PERF_COUNT_SW_DUMMY, "sw-dummy"},
     {PERF_COUNT_SW_BPF_OUTPUT, "sw-bpf-output"},
 };
-const ConfigTable PERF_RAW_CONFIGS = {
+inline const ConfigTable PERF_RAW_CONFIGS = {
     {0x0, "raw-sw-incr"},
     {0x1, "raw-l1-icache-refill"},
     {0x2, "raw-l1-itlb-refill"},
@@ -278,7 +278,7 @@ const ConfigTable PERF_RAW_CONFIGS = {
     {0x00A7, "raw-l3d-cache-wb-clean"},
     {0x00A8, "raw-l3d-cache-inval"},
 };
-static ConfigTable PERF_TRACEPOINT_CONFIGS = {
+inline const ConfigTable PERF_TRACEPOINT_CONFIGS = {
 
 };
 
@@ -290,7 +290,7 @@ inline const std::map<perf_type_id, std::string> PERF_TYPES = {
     {PERF_TYPE_RAW, "raw"},
 };
 
-inline static std::map<perf_type_id, ConfigTable> TYPE_CONFIGS = {
+inline std::map<perf_type_id, ConfigTable> TYPE_CONFIGS = {
     {PERF_TYPE_HARDWARE, (PERF_HW_CONFIGS)},           {PERF_TYPE_SOFTWARE, (PERF_SW_CONFIGS)},
     {PERF_TYPE_HW_CACHE, (PERF_HW_CACHE_CONFIGS)},     {PERF_TYPE_RAW, (PERF_RAW_CONFIGS)},
     {PERF_TYPE_TRACEPOINT, (PERF_TRACEPOINT_CONFIGS)},

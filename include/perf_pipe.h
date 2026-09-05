@@ -28,12 +28,12 @@ enum class CommandType {
     RECORD = 0,
     STAT,
 };
-inline const std::string CONTROL_CMD_PREPARE = "prepare";
-inline const std::string CONTROL_CMD_START = "start";
-inline const std::string CONTROL_CMD_PAUSE = "pause";
-inline const std::string CONTROL_CMD_RESUME = "resume";
-inline const std::string CONTROL_CMD_OUTPUT = "output";
-inline const std::string CONTROL_CMD_STOP = "stop";
+extern const std::string CONTROL_CMD_PREPARE;
+extern const std::string CONTROL_CMD_START;
+extern const std::string CONTROL_CMD_PAUSE;
+extern const std::string CONTROL_CMD_RESUME;
+extern const std::string CONTROL_CMD_OUTPUT;
+extern const std::string CONTROL_CMD_STOP;
 class PerfPipe {
 private:
     std::string fifoFileC2S_;

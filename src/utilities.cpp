@@ -49,6 +49,12 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
+const std::string EMPTY_STRING = "";
+const std::set<int> ALLOW_UIDS = {1201};
+const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
+const std::string PATH_SEPARATOR_STR = std::string(1, PATH_SEPARATOR);
+const std::string HMKERNEL = "HongMeng";
+
 static const std::string USER_DOMESTIC_BETA = "beta";
 static const std::string USER_TYPE_PARAM = "const.logsystem.versiontype";
 static const std::string USER_TYPE_PARAM_GET = "";

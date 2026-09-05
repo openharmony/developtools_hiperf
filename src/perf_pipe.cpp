@@ -25,6 +25,12 @@ using namespace std::chrono;
 namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
+const std::string CONTROL_CMD_PREPARE = "prepare";
+const std::string CONTROL_CMD_START = "start";
+const std::string CONTROL_CMD_PAUSE = "pause";
+const std::string CONTROL_CMD_RESUME = "resume";
+const std::string CONTROL_CMD_OUTPUT = "output";
+const std::string CONTROL_CMD_STOP = "stop";
 const std::string RECORD_CONTROL_FIFO_FILE_C2S = "/data/log/hiperflog/.hiperf_record_control_c2s";
 const std::string RECORD_CONTROL_FIFO_FILE_S2C = "/data/log/hiperflog/.hiperf_record_control_s2c";
 const std::string STAT_CONTROL_FIFO_FILE_C2S = "/data/log/hiperflog/.hiperf_stat_control_c2s";

@@ -17,8 +17,6 @@
 #define HIPERF_SYMBOLS_H
 
 #include <cinttypes>
-#include <iomanip>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 
@@ -41,25 +39,25 @@ constexpr const char MMAP_VDSO_NAME[] = "[vdso]";
 constexpr const char MMAP_ANONYMOUS_NAME[] = "[anon]";
 constexpr const char MMAP_ANONYMOUS_OHOS_NAME[] = "//anon";
 
-inline const std::string NOTE_GNU_BUILD_ID = ".note.gnu.build-id";
-inline const std::string EH_FRAME_HR = ".eh_frame_hdr";
-inline const std::string EH_FRAME = ".eh_frame";
-inline const std::string ARM_EXIDX = ".ARM.exidx";
-inline const std::string SYMTAB = ".symtab";
-inline const std::string DYNSYM = ".dynsym";
-inline const std::string GNU_DEBUGDATA = ".gnu_debugdata";
-inline const std::string PLT = ".plt";
-inline const std::string LINKER_PREFIX = "__dl_";
-inline const std::string LINKER_PREFIX_NAME = "[linker]";
+extern const std::string NOTE_GNU_BUILD_ID;
+extern const std::string EH_FRAME_HR;
+extern const std::string EH_FRAME;
+extern const std::string ARM_EXIDX;
+extern const std::string SYMTAB;
+extern const std::string DYNSYM;
+extern const std::string GNU_DEBUGDATA;
+extern const std::string PLT;
+extern const std::string LINKER_PREFIX;
+extern const std::string LINKER_PREFIX_NAME;
 
 const int MAX_SYMBOLS_TYPE_NAME_LEN = 10;
 
 const pid_t SYSMGR_PID = 2;
-inline const std::string SYSMGR_NAME = "sysmgr";
-inline const std::string SYSMGR_FILE_NAME = "sysmgr.elf";
-inline const std::string DEVHOST_FILE_NAME = "devhost.elf";
-inline const std::string DEVHOST_LINUX_FILE_NAME = "/lib/libdh-linux.so";
-inline const std::string DEVHOST_LINUX_PREFIX = "/liblinux/";
+extern const std::string SYSMGR_NAME;
+extern const std::string SYSMGR_FILE_NAME;
+extern const std::string DEVHOST_FILE_NAME;
+extern const std::string DEVHOST_LINUX_FILE_NAME;
+extern const std::string DEVHOST_LINUX_PREFIX;
 
 class FileSymbol {
     [[maybe_unused]] uint64_t vaddr_ = 0;
