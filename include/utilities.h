@@ -99,11 +99,11 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 std::string CanonicalizeSpecPath(const char* src);
-inline const std::string EMPTY_STRING = "";
+extern const std::string EMPTY_STRING;
 const ssize_t ERRINFOLEN = 512;
-inline const std::set<int> ALLOW_UIDS = {1201};
+extern const std::set<int> ALLOW_UIDS;
 
-inline const std::string SAVED_CMDLINES = "/sys/kernel/tracing/saved_cmdlines";
+extern const std::string SAVED_CMDLINES;
 static FILE *g_outputDump = nullptr;
 const uint64_t waitAppRunCheckTimeOut = 20;
 constexpr mode_t HIPERF_FILE_PERM_770 = S_IRWXU | S_IRWXG;
@@ -253,7 +253,7 @@ const char PATH_SEPARATOR = '\\';
 #else
 const char PATH_SEPARATOR = '/';
 #endif
-inline const std::string PATH_SEPARATOR_STR = std::string(1, PATH_SEPARATOR);
+extern const std::string PATH_SEPARATOR_STR;
 
 std::string PlatformPathConvert(const std::string &path);
 
@@ -354,7 +354,7 @@ bool GetUidFromPid(const pid_t& pid, uint32_t& ruid);
 bool GetStatusLineId(const std::string& line, uint32_t& target);
 void AgeHiperflogFiles();
 
-inline const std::string HMKERNEL = "HongMeng";
+extern const std::string HMKERNEL;
 
 #define PRINT_INDENT(indent, format, ...)                                                          \
     if (indent >= 0) {                                                                             \

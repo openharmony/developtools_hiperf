@@ -32,6 +32,9 @@ namespace OHOS {
 namespace Developtools {
 namespace HiPerf {
 
+const std::string MMAP_NAME_HEAP = "[heap]";
+const std::string MMAP_NAME_ANON = "[anon]";
+
 static constexpr int MMAP_PROT_CHARS = 4;
 static constexpr int MAP_PROT_EXEC_INDEX = 2;
 
