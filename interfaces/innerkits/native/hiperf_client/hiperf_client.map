@@ -1,0 +1,9 @@
+{
+    global:
+        extern "C++" {
+            OHOS::Developtools::HiPerf::HiperfClient::RecordOption*;
+            OHOS::Developtools::HiPerf::HiperfClient::Client*;
+        };
+    local:
+        *;
+};
