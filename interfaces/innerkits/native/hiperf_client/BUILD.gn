@@ -41,6 +41,7 @@ ohos_shared_library("hiperf_client") {
   subsystem_name = "developtools"
   innerapi_tags = [ "platformsdk" ]
   part_name = "hiperf"
+  version_script = "hiperf_client.map"
 }
 
 ohos_static_library("hiperf_client_static") {
