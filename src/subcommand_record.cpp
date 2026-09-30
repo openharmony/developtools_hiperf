@@ -121,11 +121,13 @@ SubCommandRecord::~SubCommandRecord()
     CloseReplyThread();
     CloseClientThread();
     if (readFd_ != -1) {
-        close(readFd_);
+        fdsan_exchange_owner_tag(readFd_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(readFd_, LOG_DOMAIN);
         readFd_ = -1;
     }
     if (writeFd_ != -1) {
-        close(writeFd_);
+        fdsan_exchange_owner_tag(writeFd_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(writeFd_, LOG_DOMAIN);
         writeFd_ = -1;
     }
 }
@@ -1472,7 +1474,8 @@ void SubCommandRecord::ClientCommandHandle()
         if (isFifoServer_ && hasRead) {
             if (clientPipeInput_ != -1) {
                 // after read(), block is disabled, the poll will be waked neven if no data
-                close(clientPipeInput_);
+                fdsan_exchange_owner_tag(clientPipeInput_, 0, LOG_DOMAIN);
+                fdsan_close_with_tag(clientPipeInput_, LOG_DOMAIN);
             }
             clientPipeInput_ = open(fifoFileC2S_.c_str(), O_RDONLY | O_NONBLOCK);
         }
@@ -1580,8 +1583,10 @@ bool SubCommandRecord::CreateFifoServer()
         strerror_r(errno, errInfo, ERRINFOLEN);
         HLOGE("fork failed. %d:%s", errno, errInfo);
         HIPERF_HILOGE(MODULE_DEFAULT, "[CreateFifoServer] fork failed. %{public}d:%{public}s", errno, errInfo);
-        close(pipeFd[PIPE_READ]);
-        close(pipeFd[PIPE_WRITE]);
+        fdsan_exchange_owner_tag(pipeFd[PIPE_READ], 0, LOG_DOMAIN);
+        fdsan_close_with_tag(pipeFd[PIPE_READ], LOG_DOMAIN);
+        fdsan_exchange_owner_tag(pipeFd[PIPE_WRITE], 0, LOG_DOMAIN);
+        fdsan_close_with_tag(pipeFd[PIPE_WRITE], LOG_DOMAIN);
         return false;
     } else if (pid == 0) { // child process
         HandleChildProcess(pipeFd);
@@ -1593,9 +1598,12 @@ bool SubCommandRecord::CreateFifoServer()
 
 void SubCommandRecord::HandleChildProcess(int pipeFd[2])
 {
-    close(STDIN_FILENO);
-    close(STDERR_FILENO);
-    close(pipeFd[PIPE_READ]);
+    fdsan_exchange_owner_tag(STDIN_FILENO, 0, LOG_DOMAIN);
+    fdsan_close_with_tag(STDIN_FILENO, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(STDERR_FILENO, 0, LOG_DOMAIN);
+    fdsan_close_with_tag(STDERR_FILENO, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(pipeFd[PIPE_READ], 0, LOG_DOMAIN);
+    fdsan_close_with_tag(pipeFd[PIPE_READ], LOG_DOMAIN);
     writeFd_ = pipeFd[PIPE_WRITE];
     isFifoServer_ = true;
     nullFd_ = open("/dev/null", O_WRONLY);
@@ -1604,7 +1612,8 @@ void SubCommandRecord::HandleChildProcess(int pipeFd[2])
 
 bool SubCommandRecord::HandleParentProcess(int pipeFd[2], pid_t pid)
 {
-    close(pipeFd[PIPE_WRITE]);
+    fdsan_exchange_owner_tag(pipeFd[PIPE_WRITE], 0, LOG_DOMAIN);
+    fdsan_close_with_tag(pipeFd[PIPE_WRITE], LOG_DOMAIN);
     readFd_ = pipeFd[PIPE_READ];
     isFifoClient_ = true;
     bool isSuccess = false;
@@ -1885,11 +1894,14 @@ void SubCommandRecord::CloseClientThread()
         clientRunning_.store(false);
         HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
-            close(nullFd_);
+            fdsan_exchange_owner_tag(nullFd_, 0, LOG_DOMAIN);
+            fdsan_close_with_tag(nullFd_, LOG_DOMAIN);
         }
         clientCommandHandle_.join();
-        close(clientPipeInput_);
-        close(clientPipeOutput_);
+        fdsan_exchange_owner_tag(clientPipeInput_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(clientPipeInput_, LOG_DOMAIN);
+        fdsan_exchange_owner_tag(clientPipeOutput_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(clientPipeOutput_, LOG_DOMAIN);
         if (isFifoServer_) {
             RemoveFifoFile();
         }
