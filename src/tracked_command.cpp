@@ -19,6 +19,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "debug_logger.h"
+#include "hiperf_hilog.h"
 #include "ipc_utilities.h"
 
 namespace OHOS {
@@ -63,8 +64,10 @@ bool TrackedCommand::InitSignalPipes(int &startFd, int &ackFd)
     int ackSignalPipe[2] {-1, -1};
     if (pipe2(ackSignalPipe, O_CLOEXEC) != 0) {
         HLOGE("pipe2() failed in TrackedCommand::InitSignalPipes()");
-        close(startFd);
-        close(startFd_);
+        fdsan_exchange_owner_tag(startFd, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(startFd, LOG_DOMAIN);
+        fdsan_exchange_owner_tag(startFd_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(startFd_, LOG_DOMAIN);
         startFd = -1;
         startFd_ = -1;
         return false;
@@ -88,13 +91,17 @@ bool TrackedCommand::CreateChildProcess()
         MakeInvalid();
         return false;
     } else if (pid == 0) {
-        close(startFd_);
-        close(ackFd_);
+        fdsan_exchange_owner_tag(startFd_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(startFd_, LOG_DOMAIN);
+        fdsan_exchange_owner_tag(ackFd_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(ackFd_, LOG_DOMAIN);
         ExecuteCommand(startFd, ackFd);
         _exit(0);
     } else {
-        close(startFd);
-        close(ackFd);
+        fdsan_exchange_owner_tag(startFd, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(startFd, LOG_DOMAIN);
+        fdsan_exchange_owner_tag(ackFd, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(ackFd, LOG_DOMAIN);
         childPid_ = pid;
         state_ = State::COMMAND_WAITING;
         return true;
@@ -224,11 +231,13 @@ void TrackedCommand::MakeInvalid()
         state_ = State::COMMAND_STOPPED;
     }
     if (startFd_ != -1) {
-        close(startFd_);
+        fdsan_exchange_owner_tag(startFd_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(startFd_, LOG_DOMAIN);
         startFd_ = -1;
     }
     if (ackFd_ != -1) {
-        close(ackFd_);
+        fdsan_exchange_owner_tag(ackFd_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(ackFd_, LOG_DOMAIN);
         ackFd_ = -1;
     }
 }

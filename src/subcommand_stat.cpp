@@ -775,8 +775,10 @@ bool SubCommandStat::CreateFifoServer()
 
 bool SubCommandStat::HandleChildProcess()
 {
-    close(STDIN_FILENO);
-    close(STDERR_FILENO);
+    fdsan_exchange_owner_tag(STDIN_FILENO, 0, LOG_DOMAIN);
+    fdsan_close_with_tag(STDIN_FILENO, LOG_DOMAIN);
+    fdsan_exchange_owner_tag(STDERR_FILENO, 0, LOG_DOMAIN);
+    fdsan_close_with_tag(STDERR_FILENO, LOG_DOMAIN);
     isFifoServer_ = true;
 
     clientPipeOutput_ = open(fifoFileS2C_.c_str(), O_WRONLY);
@@ -814,11 +816,13 @@ bool SubCommandStat::HandleParentProcess(const pid_t& pid)
 
     if (reply != HiperfClient::REPLY_OK) {
         HandleCommunicationError(fd, pid, reply);
-        close(fd);
+        fdsan_exchange_owner_tag(fd, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(fd, LOG_DOMAIN);
         return false;
     }
 
-    close(fd);
+    fdsan_exchange_owner_tag(fd, 0, LOG_DOMAIN);
+    fdsan_close_with_tag(fd, LOG_DOMAIN);
     printf("%s control hiperf counting success.\n", restart_ ? "start" : "create");
     printf("stat result will saved in %s.\n", outputFilename_.c_str());
     return true;
@@ -914,7 +918,8 @@ void SubCommandStat::ClientCommandHandle()
         if (isFifoServer_ && hasRead) {
             if (clientPipeInput_ != -1) {
                 // after read(), block is disabled, the poll will be waked neven if no data
-                close(clientPipeInput_);
+                fdsan_exchange_owner_tag(clientPipeInput_, 0, LOG_DOMAIN);
+                fdsan_close_with_tag(clientPipeInput_, LOG_DOMAIN);
             }
             clientPipeInput_ = open(fifoFileC2S_.c_str(), O_RDONLY | O_NONBLOCK);
         }
@@ -1070,11 +1075,14 @@ void SubCommandStat::CloseClientThread()
         clientRunning_.store(false);
         HLOGI("CloseClientThread");
         if (nullFd_ != -1) {
-            close(nullFd_);
+            fdsan_exchange_owner_tag(nullFd_, 0, LOG_DOMAIN);
+            fdsan_close_with_tag(nullFd_, LOG_DOMAIN);
         }
         clientCommandHandle_.join();
-        close(clientPipeInput_);
-        close(clientPipeOutput_);
+        fdsan_exchange_owner_tag(clientPipeInput_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(clientPipeInput_, LOG_DOMAIN);
+        fdsan_exchange_owner_tag(clientPipeOutput_, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(clientPipeOutput_, LOG_DOMAIN);
         if (isFifoServer_) {
             remove(fifoFileC2S_.c_str());
             remove(fifoFileS2C_.c_str());

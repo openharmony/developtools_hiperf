@@ -121,7 +121,8 @@ bool PerfPipe::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::m
         HIPERF_HILOGE(MODULE_DEFAULT,
             "[SendFifoAndWaitReply] can not open fifo file: %{public}s, errno:(%{public}d:%{public}s)",
             fifoFileC2S_.c_str(), errno, errInfo);
-        close(fdRead);
+        fdsan_exchange_owner_tag(fdRead, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(fdRead, LOG_DOMAIN);
         return false;
     }
     ssize_t size = write(fdWrite, cmd.c_str(), cmd.size());
@@ -129,14 +130,18 @@ bool PerfPipe::SendFifoAndWaitReply(const std::string &cmd, const std::chrono::m
         HLOGE("failed to write fifo file(%s) command(%s)", fifoFileC2S_.c_str(), cmd.c_str());
         HIPERF_HILOGE(MODULE_DEFAULT, "failed to write fifo file(%{public}s) command(%{public}s).",
             fifoFileC2S_.c_str(), cmd.c_str());
-        close(fdWrite);
-        close(fdRead);
+        fdsan_exchange_owner_tag(fdWrite, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(fdWrite, LOG_DOMAIN);
+        fdsan_exchange_owner_tag(fdRead, 0, LOG_DOMAIN);
+        fdsan_close_with_tag(fdRead, LOG_DOMAIN);
         return false;
     }
-    close(fdWrite);
+    fdsan_exchange_owner_tag(fdWrite, 0, LOG_DOMAIN);
+    fdsan_close_with_tag(fdWrite, LOG_DOMAIN);
 
     bool ret = WaitFifoReply(fdRead, timeOut);
-    close(fdRead);
+    fdsan_exchange_owner_tag(fdRead, 0, LOG_DOMAIN);
+    fdsan_close_with_tag(fdRead, LOG_DOMAIN);
     return ret;
 }
 
